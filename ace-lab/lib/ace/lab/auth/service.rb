@@ -26,7 +26,8 @@ module Ace
         # credential reference — the issuer's whole environment (and
         # any ambient credential override like GH_TOKEN in it) is never
         # inherited past the lease's own scope.
-        CHILD_ENV_ALLOWLIST = %w[PATH HOME TMPDIR LANG LC_ALL TZ USER LOGNAME SHELL].freeze
+        CHILD_ENV_ALLOWLIST = %w[PATH HOME TMPDIR LANG LC_ALL TZ USER LOGNAME SHELL
+          ACE_TOOLCHAIN GEM_HOME GEM_PATH].freeze
 
         attr_reader :config, :store
 
@@ -257,7 +258,18 @@ module Ace
               end
             end
 
-            exit_code = @runner.call(argv, child_env)
+            provider = Providers.resolve(profile["provider"])
+            begin
+              exit_code = if provider.respond_to?(:with_exec_environment)
+                provider.with_exec_environment(profile: profile, credential: credential) do |provider_env|
+                  @runner.call(argv, child_env.merge(provider_env))
+                end
+              else
+                @runner.call(argv, child_env)
+              end
+            rescue Providers::RefusedError => e
+              raise Refusal.new("provider execution refused: #{e.message}")
+            end
             cleanup = cleanup(lease, profile, handoff)
             if exit_code.zero? && cleanup != :revoked && cleanup != :cleared
               raise Error.new("process succeeded (exit 0) but cleanup failed: #{cleanup}")

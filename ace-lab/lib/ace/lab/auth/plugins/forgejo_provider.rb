@@ -5,6 +5,9 @@ require "base64"
 require "openssl"
 require "open3"
 require "tempfile"
+require "tmpdir"
+require "fileutils"
+require "uri"
 
 module Ace
   module Lab
@@ -29,6 +32,52 @@ module Ace
           # derived from the lease id alone — known before any response.
           def token_ref_for(lease_id:)
             "ace-lab-#{lease_id}"
+          end
+
+          # fj and ACE's Forgejo HTTP adapters read the same XDG login file.
+          # Give this child only its leased token, with no ambient fj aliases
+          # or logins, and remove the private directory when it exits.
+          def with_exec_environment(profile:, credential:)
+            url = begin
+              URI.parse(profile.fetch("issuer").fetch("url"))
+            rescue URI::InvalidURIError, KeyError
+              raise Providers::RefusedError, "forgejo issuer url is invalid"
+            end
+            unless %w[http https].include?(url.scheme) && url.host && url.userinfo.nil? &&
+                ["", "/"].include?(url.path.to_s) && url.query.nil? && url.fragment.nil?
+              raise Providers::RefusedError, "forgejo issuer url must be a bare HTTP(S) origin"
+            end
+            authority = url.host.include?(":") ? "[#{url.host}]" : url.host
+            authority += ":#{url.port}" if url.port != url.default_port
+            account = profile.fetch("issuer")["account"].to_s
+            raise Providers::RefusedError, "forgejo role account is invalid" unless account.match?(/\A[a-zA-Z0-9_.-]+\z/)
+            token = File.read(credential).strip
+            raise Providers::RefusedError, "forgejo lease credential is empty" if token.empty?
+            prefix = "#{File.basename(credential)}.forgejo-session-"
+            Dir.mktmpdir(prefix, File.dirname(credential)) do |dir|
+              login_dir = File.join(dir, "forgejo-cli")
+              Dir.mkdir(login_dir, 0o700)
+              File.open(File.join(login_dir, "keys.json"), File::WRONLY | File::CREAT | File::EXCL, 0o600) do |file|
+                file.write(JSON.generate({"hosts" => {authority => {"type" => "Application", "token" => token}},
+                  "aliases" => {}, "default_ssh" => []}))
+              end
+              askpass = File.join(dir, "git-askpass")
+              File.open(askpass, File::WRONLY | File::CREAT | File::EXCL, 0o700) do |file|
+                file.write(<<~'SH')
+                  #!/bin/sh
+                  case "$1" in
+                    "Username for '$ACE_LAB_FORGEJO_ORIGIN': "*) printf '%s\n' "$ACE_LAB_FORGEJO_ACCOUNT" ;;
+                    "Password for '$ACE_LAB_FORGEJO_SCHEME://$ACE_LAB_FORGEJO_ACCOUNT@$ACE_LAB_FORGEJO_AUTHORITY': "*) cat "$ACE_LAB_CREDENTIAL_FILE" ;;
+                    *) exit 1 ;;
+                  esac
+                SH
+              end
+              yield({"XDG_DATA_HOME" => dir, "GIT_ASKPASS" => askpass, "GIT_TERMINAL_PROMPT" => "0",
+                "GIT_CONFIG_COUNT" => "2", "GIT_CONFIG_KEY_0" => "credential.helper", "GIT_CONFIG_VALUE_0" => "",
+                "GIT_CONFIG_KEY_1" => "credential.useHttpPath", "GIT_CONFIG_VALUE_1" => "false", "LC_ALL" => "C",
+                "ACE_LAB_FORGEJO_ORIGIN" => "#{url.scheme}://#{authority}", "ACE_LAB_FORGEJO_SCHEME" => url.scheme,
+                "ACE_LAB_FORGEJO_AUTHORITY" => authority, "ACE_LAB_FORGEJO_ACCOUNT" => account})
+            end
           end
 
           def issue(profile:, lease:)

@@ -710,7 +710,8 @@ Contract highlights:
   one exec at a time per lease; normal end/cancel revokes immediately, a
   SIGKILL'd executor is cleaned up no later than the recorded deadline (host
   scheduler) and `reconcile` resolves interrupted cycles. The child runs with
-  an ALLOWLISTED environment (PATH/HOME &c. plus the leased credential
+  an ALLOWLISTED environment (PATH/HOME, ACE_TOOLCHAIN, GEM_HOME, GEM_PATH,
+  and the leased credential
   reference) — ambient credential overrides (GH_TOKEN, GIT_* auth, ...) are
   never inherited past the profile's scope.
 - Refusals are non-zero with a reason and the escalation addressee; there is
@@ -738,3 +739,8 @@ Contract highlights:
   Forgejo-shaped subjects like `write:repository`. Provider Authorization
   headers travel in 0600 ephemeral files (`curl -H @file`), never in argv
   visible to `ps`.
+
+  During a Forgejo `auth exec`, the child receives a private temporary `fj`
+  login and Git askpass bound to the issuer origin and role account. Ambient
+  credential helpers are disabled for that child. The projection is removed
+  on exit or by lease cleanup after an interrupted executor.

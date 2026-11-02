@@ -272,6 +272,36 @@ module Ace
           assert_equal "revoked", report["cleanup"]
         end
 
+        def test_exec_preserves_the_selected_installed_runtime
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          selected = {"ACE_TOOLCHAIN" => "installed", "GEM_HOME" => "/opt/ace/gems", "GEM_PATH" => "/opt/ace/gems"}
+          original = selected.to_h { |key, _| [key, ENV[key]] }
+          selected.each { |key, value| ENV[key] = value }
+          begin
+            svc.exec(lease_id: lease["id"], argv: %w[true])
+            _argv, env = @exec_seen
+            selected.each { |key, value| assert_equal value, env[key], "#{key} must survive the auth boundary" }
+          ensure
+            original.each { |key, value| value ? ENV[key] = value : ENV.delete(key) }
+          end
+        end
+
+        def test_exec_uses_the_provider_session_environment
+          @fake.define_singleton_method(:with_exec_environment) do |profile:, credential:, &block|
+            raise "missing handoff" unless File.file?(credential)
+            block.call({"XDG_DATA_HOME" => "/private/session"})
+          end
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          svc.exec(lease_id: lease["id"], argv: %w[true])
+          _argv, env = @exec_seen
+          assert_equal "/private/session", env["XDG_DATA_HOME"]
+          assert_equal "revoked", svc.status(lease_id: lease["id"])["state"]
+        end
+
         def test_exec_on_a_dead_or_parallel_lease_is_refused
           svc = service
           lease = svc.request(profile_name: "developer", role: "developer",
