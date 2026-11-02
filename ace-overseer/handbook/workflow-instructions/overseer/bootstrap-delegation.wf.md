@@ -108,7 +108,8 @@ Before submitting a commission, record the pane and its current agent status,
 then arm one eyes deadline for first-turn evidence:
 call `ace_eyes` with `action=deadline`, `key=bootstrap-<assignment-id>`
 (using only letters, digits, underscore or hyphen), `revision` set to the
-assignment ID, and `at` set to the current Unix time in milliseconds plus 60000. Submit with `herdr agent prompt <pane> <prompt>`,
+assignment ID, and `at` set to the current Unix time in milliseconds plus
+60000. Submit with `herdr agent prompt <pane> <prompt>`,
 passing the prompt as one safely quoted argument and excluding secrets. Omit
 `--wait` and `--until`: those flags block on the worker's state. Do not
 use `herdr agent wait`, sleep or polling to await completion. After the prompt
@@ -117,10 +118,11 @@ end your turn. If submission is refused or fails, cancel its deadline, record
 the failure and escalate the actual blocker. Assignment changes and the
 worker report wake you through eyes.
 On a wake, inspect the recorded pane once with `herdr agent list` and
-`herdr agent read <pane>` to verify the first turn. A transition from idle to
+`herdr agent read <pane>` to verify the first turn. A transition from idle or done to
 working after submission or attributable first-turn output is evidence;
 acceptance alone or a previously working status is not.
-Cancel the deadline when confirmed. If the deadline fires without evidence,
+Cancel the deadline when confirmed. If evidence is absent before the deadline,
+keep it armed and end the turn. If the deadline fires without evidence,
 record the start as unconfirmed and escalate with a precise HITL case; do not
 assert that a slow agent failed. Never replace a missing executor with your
 own work or create another dispatch while its state is unknown.
