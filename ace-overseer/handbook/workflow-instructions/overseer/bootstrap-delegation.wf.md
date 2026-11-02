@@ -32,13 +32,17 @@ its task folder. Include the canonical target repository path, required
 configuration, observed failure, desired outcome, allowed changes, runtime
 mode, acceptance checks and report recipient. Assign diagnosis and reproduction
 as well as preparation to the worker. This is lab infrastructure work, not a project product task.
-Before preparing its worktree, commit the executable task specification and
-any supporting files referenced by it using the project task/commit tools.
+Put all commission and supporting files in the executable task's own tracked
+folder, never in the private `_overseer` tree. Before preparing its worktree,
+commit those files and the task specification using the task/commit tools.
+
 Resolve the task file through `ace-task show <ref> --path` and use its parent
-directory; then check `git status --short -- <task-directory>`; uncommitted or untracked supporting
-files will not appear in the new worktree. After preparation, verify every
-referenced commission file exists in the returned worktree before launch;
-if it does not, report a preparation failure and keep the worker unstarted.
+directory. Check `git status --short -- <task-directory>`: uncommitted or
+untracked supporting files will not appear in the new worktree.
+
+After preparation, verify every referenced commission file exists in the
+returned worktree before launch. If one is missing, report a preparation
+failure and keep the worker unstarted.
 Workers must not edit the private coordination tree. Resolve each task folder
 from `ace-task show <ref>` before writing commission, dispatch or receipt notes;
 never construct a folder from a guessed or expanded title slug.
