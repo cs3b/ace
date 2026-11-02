@@ -31,6 +31,11 @@ project overseer cannot start yet. Do not edit project configuration, install
 packages or run repair commands yourself. Missing workers are a concrete
 capability gap, not a reason to become the worker.
 
+Do not run `ace-lab verify`, `ace-lab install`, `ace-lab prepare`, or search
+package source to diagnose bootstrap readiness. Commission those checks and
+any repairs to the bootstrap worker. An unknown readiness result is enough
+reason to delegate, not a reason to investigate before creating the task.
+
 ## First turn after start
 
 `ace-overseer start` is the bootstrap entry point. It launches your Pi
