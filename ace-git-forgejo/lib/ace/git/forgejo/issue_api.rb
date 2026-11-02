@@ -95,7 +95,6 @@ module Ace
             unless batch.all? { |entry| entry.is_a?(Hash) && entry["id"].is_a?(Integer) && entry["id"].positive? }
               raise Ace::Git::ProviderMalformedOutputError, "Forgejo #{suffix} contains an invalid item identity"
             end
-            before = entries.length
             # Stop when a page adds no new items (unique ids): instances
             # may cap pages below the requested limit, so a short page alone
             # does not prove the end of the collection.
@@ -103,7 +102,7 @@ module Ace
             entries.concat(fresh)
             fresh.each { |item| seen << item["id"] }
             if fail_on_repeated_page && !batch.empty? && fresh.empty?
-              raise Ace::Git::ProviderMalformedOutputError, "Forgejo #{suffix} repeated a page; issue listing is incomplete"
+              raise Ace::Git::ProviderMalformedOutputError, "Forgejo #{suffix} repeated a page; completeness cannot be proven"
             end
             break if fresh.empty?
 

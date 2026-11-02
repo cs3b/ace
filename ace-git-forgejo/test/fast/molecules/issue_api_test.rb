@@ -61,7 +61,7 @@ class ForgejoIssueApiTest < AceGitForgejoTestCase
       "html_url" => "https://other.example.com/owner/repo/issues/3"}
     runner = ->(args:, **_rest) { {success: true, status: 200, stdout: (args[2].include?("page=1") ? [bad] : []).to_json} }
     provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
-    assert_raises(Ace::Git::ProviderMalformedOutputError) { provider.recent_issues(limit: 2) }
+    assert_raises(Ace::Git::ProviderIdentityMismatchError) { provider.recent_issues(limit: 2) }
     runner = ->(**_args) { {success: false, status: 403, stdout: ""} }
     provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
     assert_raises(Ace::Git::ProviderAuthenticationError) { provider.recent_issues(limit: 2) }
@@ -75,6 +75,21 @@ class ForgejoIssueApiTest < AceGitForgejoTestCase
     provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
     error = assert_raises(Ace::Git::ProviderMalformedOutputError) { provider.recent_issues(limit: 10) }
     assert_match(/repeated a page/, error.message)
+  end
+
+  def test_issue_listing_collects_multiple_distinct_pages
+    runner = lambda do |args:, **_rest|
+      page = args[2][/page=(\d+)/, 1].to_i
+      entries = if page <= 2
+        [{"id" => page, "number" => page, "title" => "Issue #{page}", "state" => "open",
+          "html_url" => "https://forge.example.com/owner/repo/issues/#{page}"}]
+      else
+        []
+      end
+      {success: true, status: 200, stdout: entries.to_json}
+    end
+    provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+    assert_equal [2, 1], provider.recent_issues(limit: 10).map(&:number)
   end
 
   def test_post_timeout_keeps_unknown_outcome
