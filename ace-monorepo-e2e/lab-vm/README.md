@@ -122,6 +122,16 @@ failure it prints the retained guest paths and account name so an operator can
 recover any uncertain token before removing them. This is a provider probe,
 not a full autonomous cycle or a power-loss test.
 
+`probe-forgejo-delayed-issue.py` takes the same arguments. Its local proxy
+holds one real Forgejo token request past the client's deadline, lets the
+retry observe a 404, then releases the original request. It verifies that the
+lease remains pending, no second token is requested, and service recovery
+revokes the late token and marks its lease revoked. The token belongs to the
+probe's own temporary account. An injected test runner exercises the service
+as root; this does not enable or prove guarded session issuance. The probe removes
+the temporary administrator only after confirmed cleanup and retains protected
+guest diagnostics on failure.
+
 `probe-issuer-socket.py` takes the same arguments and creates temporary socket,
 issuer and isolated session units. It checks that the installed request entry
 point is activated by a real Unix socket, authenticates the session, and
