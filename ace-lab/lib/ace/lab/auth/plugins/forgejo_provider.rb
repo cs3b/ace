@@ -56,8 +56,10 @@ module Ace
               )
             end
             body = JSON.parse(result)
-            secret = body["sha1"] or raise Providers::TransientError,
-              "forgejo did not return the token secret (check server API version)"
+            secret = body["sha1"]
+            unless secret.is_a?(String) && !secret.empty?
+              raise Providers::TransientError, "forgejo did not return the token secret (check server API version)"
+            end
             validate_granted_scopes(body, scopes)
             validate_granted_repositories(body, lease.fetch("repos"))
 

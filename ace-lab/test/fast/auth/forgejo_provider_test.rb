@@ -115,6 +115,16 @@ module Ace
           end
         end
 
+        def test_rejects_missing_or_empty_token
+          [nil, ""].each do |token|
+            prov = provider({"sha1" => token, "scopes" => ["write:repository"],
+              "repositories" => [{"full_name" => "cs3b/ace"}]})
+            assert_raises(Providers::TransientError) do
+              prov.issue(profile: profile, lease: {"id" => "lease-x", "repos" => %w[cs3b/ace]})
+            end
+          end
+        end
+
         def test_token_name_is_deterministic_from_the_lease_id
           assert_equal "ace-lab-lease-x",
             Plugins::ForgejoProvider.new.token_ref_for(lease_id: "lease-x"),
