@@ -8,6 +8,9 @@ purpose: Complete one lab-owned startup commission without the overseer doing th
 ---
 # Delegated project bootstrap
 
+If tool output truncates any instruction, read the packaged workflow file
+directly before proceeding. Never infer a missing deadline or command.
+
 ## Commission and ownership
 
 The overseer reads owner state and public CLI contracts to establish scope,
@@ -118,10 +121,10 @@ Submit only when the agent is idle or done; for any other state, including
 working, busy, blocked or unknown, reconcile the existing session and do not
 send a duplicate prompt.
 Then arm one eyes deadline for first-turn evidence:
+Set `at` to `now_unix_ms + 60000` (one minute); do not guess a longer timeout.
 call `ace_eyes` with `action=deadline`, `key=bootstrap-<assignment-id>`
 (using only letters, digits, underscore or hyphen), `revision` set to the
-assignment ID, and `at` set to the current Unix time in milliseconds plus
-60000. If the deadline cannot be armed, do not dispatch; record the blocked
+assignment ID, and `at` to that computed timestamp. If the deadline cannot be armed, do not dispatch; record the blocked
 observation and raise a precise HITL case. Submit with
 `herdr agent prompt <pane> <prompt>`,
 passing the prompt as one safely quoted argument and excluding secrets. Omit
