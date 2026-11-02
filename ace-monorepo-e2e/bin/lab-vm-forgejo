@@ -93,6 +93,12 @@ begin
     checked("git", "archive", "--format=tar", "--output=#{archive}", sha, chdir: LabVm::ROOT)
     checked("tar", "-xf", archive, "-C", repository)
     File.unlink(archive)
+    # The source backlog contains thousands of unrelated tasks. This private
+    # fixture starts from the seeded Forgejo issues, with an empty task store.
+    task_store = File.join(repository, ".ace-tasks")
+    raise "unsafe fixture task store" if File.symlink?(task_store)
+    FileUtils.remove_entry_secure(task_store) if File.directory?(task_store)
+    receipt["excluded_paths"] = [".ace-tasks"]
     # The source checkout targets the real forge. Replace that fixture input
     # before committing, so an agent cannot route its work to production.
     File.write(File.join(repository, ".ace/git/config.yml"), <<~YAML)
