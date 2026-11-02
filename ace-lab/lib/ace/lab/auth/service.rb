@@ -258,6 +258,15 @@ module Ace
               end
             end
 
+            # An explicitly selected installed runtime must survive both
+            # caller-supplied env and any env-provider values. An absent gem
+            # path remains absent instead of being replaced by project state.
+            if ENV["ACE_TOOLCHAIN"] == "installed"
+              %w[ACE_TOOLCHAIN GEM_HOME GEM_PATH PATH].each do |key|
+                ENV.key?(key) ? child_env[key] = ENV[key] : child_env.delete(key)
+              end
+            end
+
             provider = Providers.resolve(profile["provider"])
             begin
               exit_code = if provider.respond_to?(:with_exec_environment)

@@ -740,7 +740,8 @@ Contract highlights:
   headers travel in 0600 ephemeral files (`curl -H @file`), never in argv
   visible to `ps`.
 
-  During a Forgejo `auth exec`, the child receives a private temporary `fj`
+  During a Forgejo `auth exec` on Linux, the child receives a private temporary `fj`
   login and Git askpass bound to the issuer origin and role account. Ambient
   credential helpers are disabled for that child. The projection is removed
-  on exit or by lease cleanup after an interrupted executor.
+  on exit or by lease cleanup after an interrupted executor. Other platforms
+  refuse this projection rather than falling back to ambient credentials.

@@ -8,6 +8,7 @@ require "tempfile"
 require "tmpdir"
 require "fileutils"
 require "uri"
+require "rbconfig"
 
 module Ace
   module Lab
@@ -38,6 +39,9 @@ module Ace
           # Give this child only its leased token, with no ambient fj aliases
           # or logins, and remove the private directory when it exits.
           def with_exec_environment(profile:, credential:)
+            unless linux_xdg?
+              raise Providers::RefusedError, "forgejo session projection currently requires Linux XDG data directories"
+            end
             url = begin
               URI.parse(profile.fetch("issuer").fetch("url"))
             rescue URI::InvalidURIError, KeyError
@@ -144,6 +148,10 @@ module Ace
           end
 
           private
+
+          def linux_xdg?
+            RbConfig::CONFIG.fetch("host_os").start_with?("linux")
+          end
 
           def issuer_header(issuer)
             account = issuer["account"].to_s

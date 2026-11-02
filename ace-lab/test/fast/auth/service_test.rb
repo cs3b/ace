@@ -280,7 +280,8 @@ module Ace
           original = selected.to_h { |key, _| [key, ENV[key]] }
           selected.each { |key, value| ENV[key] = value }
           begin
-            svc.exec(lease_id: lease["id"], argv: %w[true])
+            svc.exec(lease_id: lease["id"], argv: %w[true],
+              env: {"ACE_TOOLCHAIN" => "auto", "GEM_HOME" => "/workspace/source", "GEM_PATH" => "/workspace/source"})
             _argv, env = @exec_seen
             selected.each { |key, value| assert_equal value, env[key], "#{key} must survive the auth boundary" }
           ensure

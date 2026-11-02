@@ -140,7 +140,9 @@ module Ace
             credential = File.join(dir, "lease-test-worker")
             File.write(credential, "LEASE-TOKEN")
             projection = nil
-            Plugins::ForgejoProvider.new.with_exec_environment(profile: profile, credential: credential) do |env|
+            provider = Plugins::ForgejoProvider.new
+            provider.stub(:linux_xdg?, true) do
+              provider.with_exec_environment(profile: profile, credential: credential) do |env|
               projection = env.fetch("XDG_DATA_HOME")
               path = File.join(projection, "forgejo-cli", "keys.json")
               data = JSON.parse(File.read(path))
@@ -158,6 +160,7 @@ module Ace
               assert_equal "LEASE-TOKEN", password
               _output, status = Open3.capture2(env, askpass, "Password for 'https://lab-role-dev@other.example.com': ")
               refute status.success?, "the credential must not be offered to a different forge"
+              end
             end
             refute File.exist?(projection)
           end
@@ -172,6 +175,15 @@ module Ace
             assert_equal :cleared, handoff.clear("lease-x")
             refute File.exist?(credential)
             refute File.exist?(projection)
+          end
+        end
+
+        def test_exec_refuses_platforms_where_fj_does_not_honor_linux_xdg
+          provider = Plugins::ForgejoProvider.new
+          provider.stub(:linux_xdg?, false) do
+            assert_raises(Providers::RefusedError) do
+              provider.with_exec_environment(profile: profile, credential: "/unused") { flunk "must not run" }
+            end
           end
         end
 
