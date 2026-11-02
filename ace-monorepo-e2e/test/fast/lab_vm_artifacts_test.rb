@@ -80,4 +80,30 @@ class LabVmArtifactsTest < AceMonorepoE2eTestCase
     refute result.success?
     assert_includes err, "invalid local gem build source"
   end
+
+  def test_missing_local_candidate_is_built_and_its_hash_is_verified
+    path = File.join(@fixture, "release-manifest.json")
+    release = JSON.parse(File.read(path))
+    release["gems"] << {"name" => "ace-lab", "version" => "0.14.2.pre.test",
+      "source" => "local", "source_commit" => "a" * 40, "sha256" => Digest::SHA256.hexdigest(@data)}
+    File.write(path, JSON.generate(release))
+    builder = File.join(@bin, "lab-vm-build-gem")
+    File.write(builder, <<~PY)
+      #!/usr/bin/env python3
+      import pathlib, sys
+      root = pathlib.Path(__file__).resolve().parents[2]
+      target = root / '.ace-local/lab-vm/artifacts' / (sys.argv[1] + '-' + sys.argv[3] + '.gem')
+      target.write_bytes(b'verified fixture bytes')
+    PY
+    File.chmod(0o700, builder)
+    out, err, result = run_fetcher
+    assert result.success?, err
+    assert_equal 1, JSON.parse(out).fetch("built")
+    File.unlink(File.join(@cache, "ace-lab-0.14.2.pre.test.gem"))
+    release["gems"][0]["sha256"] = "0" * 64
+    File.write(path, JSON.generate(release))
+    _out, err, result = run_fetcher
+    refute result.success?
+    assert_includes err, "local build SHA-256 mismatch"
+  end
 end
