@@ -45,7 +45,8 @@ and seeds a private repository and four issues from the committed ACE revision.
 It records the source and initial commits, VM identity, hashes and issue URLs
 under a private run directory. Forgejo's signing key and detached release
 signature are verified; the client archive is pinned by the SHA-256 of the
-official release download. No real GitHub repository or credential is used.
+official release download. No GitHub issue, pull request, or credential is
+used; the separately pinned public Herdr source is fetched for its native build.
 This new fixture path still requires live validation, including the delivery
 of distinct, short-lived worker and reviewer credentials.
 `bin/lab-vm-fixture prepare RUN_ID` is the working-VM input setup: it seeds
