@@ -104,9 +104,13 @@ role instructions, and send its first prompt. The prompt commissions only
 that task and pinned assignment, requires the worker to read its start brief,
 drive that assignment, and finish with `ace-coworker report`. These operational roles explicitly allow the commissioned canonical target
 outside the lab task worktree; ordinary product worker/reviewer roles do not.
-Use CLI help for
-Herdr's current arguments. Record the returned pane/agent identity and verify
-first-turn delivery. Never replace a missing executor with your own work.
+Submit the commission with `herdr agent prompt <agent> <prompt>` and no
+`--wait` or `--until`: those flags block on the worker's state. Do not use
+`herdr agent wait`, sleep or polling to await completion. After the prompt is
+accepted, record the returned pane/agent identity, acknowledge the revisions
+you have handled and end your turn; the worker's report and assignment changes
+will wake you through eyes. Verify first-turn delivery on a subsequent wake;
+never replace a missing executor with your own work.
 
 End the overseer's turn immediately after dispatch. The eyes timer observes
 assignment and HITL revisions without invoking the model on unchanged state.
