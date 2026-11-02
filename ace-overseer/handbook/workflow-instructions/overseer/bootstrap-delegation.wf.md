@@ -104,7 +104,8 @@ role instructions, and send its first prompt. The prompt commissions only
 that task and pinned assignment, requires the worker to read its start brief,
 drive that assignment, and finish with `ace-coworker report`. These operational roles explicitly allow the commissioned canonical target
 outside the lab task worktree; ordinary product worker/reviewer roles do not.
-Before submitting a commission, arm one eyes deadline for first-turn evidence:
+Before submitting a commission, record the pane and its current agent status,
+then arm one eyes deadline for first-turn evidence:
 call `ace_eyes` with `action=deadline`, `key=bootstrap-<assignment-id>`
 (using only letters, digits, underscore or hyphen), `revision` set to the
 assignment ID, and `at` set to the current Unix time in milliseconds plus 60000. Submit with `herdr agent prompt <pane> <prompt>`,
