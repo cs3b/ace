@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { createFakeHost } from "./fake-pi-host.mjs";
 import { startSession } from "./session-harness.mjs";
+import { observeHitl } from "../handbook/extensions/ace-wake/wake/eyes-runtime.js";
 const key="a".repeat(64), revision="b".repeat(64);
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 it("real config enables eyes coexisting with loops, survives reload, exposes exact ack tool and retires", async()=>{
@@ -137,4 +138,21 @@ it("an old in-flight observation cannot overwrite source health after rebind", a
     assert.deepEqual((await tool.execute("status",{action:"status"})).details.sources,freshSources,
       "late disposed-binding results cannot replace fresh source health");
   } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
+});
+
+it("terminates an observation command exceeding its configured timeout", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ace-eyes-timeout-"));
+  const previousPath = process.env.PATH;
+  try {
+    const executable = path.join(dir, "ace-overseer");
+    fs.writeFileSync(executable, "#!/bin/sh\nexec /bin/sleep 3\n", { mode: 0o700 });
+    process.env.PATH = `${dir}:${previousPath || ""}`;
+    await assert.rejects(
+      observeHitl(dir, { syncRoutes: [], timeoutMs: 100, recipient: "overseer", scope: "current", maxEvents: 500 }),
+      error => error.killed === true
+    );
+  } finally {
+    if (previousPath === undefined) delete process.env.PATH; else process.env.PATH = previousPath;
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });

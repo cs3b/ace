@@ -46,6 +46,19 @@ class LabVmNativeCacheTest < AceMonorepoE2eTestCase
     File.chmod(0o700, @dir) if @dir && File.directory?(@dir)
   end
 
+  def test_rejects_empty_and_oversize_native_artifacts
+    artifact = File.join(@dir, "herdr")
+    File.truncate(artifact, 0)
+    assert_raises(ArgumentError) { LabVmNativeCache.verify!(@dir, @manifest) }
+    File.truncate(artifact, 256 * 1024 * 1024 + 1)
+    assert_raises(ArgumentError) { LabVmNativeCache.verify!(@dir, @manifest) }
+  end
+
+  def test_reports_missing_cache_directory_as_unavailable
+    error = assert_raises(ArgumentError) { LabVmNativeCache.verify!(File.join(@dir, "missing"), @manifest) }
+    assert_match(/native artifact unavailable/, error.message)
+  end
+
   def test_rejects_invalid_or_incomplete_manifest
     assert_raises(ArgumentError) { LabVmNativeCache.verify!(@dir, @manifest.merge("artifact_sha256" => "bad")) }
     assert_raises(KeyError) { LabVmNativeCache.verify!(@dir, @manifest.reject { |key, _| key == "provenance_sha256" }) }
