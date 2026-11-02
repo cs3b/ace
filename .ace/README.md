@@ -38,7 +38,7 @@ Task and workflow state is never stored in `.ace/`. The owners are:
 | Information | Write location | Owner |
 |---|---|---|
 | Project task specs and progress | `.ace-tasks/` | `ace-task` |
-| Private overseer task list | `.ace-tasks/_overseer/` (gitignored) | overseer via `ace-task --in _overseer` |
+| Private overseer task list | `.ace-tasks/_overseer/` (gitignored) | overseer via `ace-task list --in _overseer` |
 | Assignment plan and step reports | `.ace-local/assign/` | `ace-assign` |
 | Coworker run configuration (L3) | `.ace-local/coworker/` | reserved in L3 |
 | HITL agent events | `.ace-local/hitl/` | `ace-hitl` |
