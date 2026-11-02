@@ -57,7 +57,7 @@ begin
       raise "working clone is not fresh: #{output}" unless code.zero?
       root = File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm")
       inputs = [File.join(LabVm.local_dir, "artifacts"), File.join(root, "pi"), File.join(root, "release-manifest.json"),
-        File.join(root, "provision-runtime.sh"), File.join(root, "build-herdr.sh")]
+        File.join(root, "provision-runtime.sh"), File.join(root, "build-herdr.sh"), File.join(root, "gem-graph.rb")]
       raise "fixture copy failed" unless system("scp", "-q", "-r", *ssh_options, *inputs, "lab-operator@#{address}:/home/lab-operator/ace-e2e-input/")
       code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", "install -d -m 0755 /var/lib/ace-e2e/input && cp -a /home/lab-operator/ace-e2e-input/. /var/lib/ace-e2e/input/ && chown -R root:root /var/lib/ace-e2e/input && chmod -R go-w /var/lib/ace-e2e/input")
       raise "guest input preparation failed: #{output}" unless code.zero?
