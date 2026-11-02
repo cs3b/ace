@@ -147,7 +147,8 @@ begin
         printf 'Fixture prepared; overseer has not been started.\n'
       SH
       # A real ARM64 install took over ten minutes due to dependency closure
-      # probes; permit retries without allowing an unbounded hung fixture.
+      # probes. On timeout the VM is stopped and preserved; retry requires a
+      # reset and a new fixture run, since guest execution may have continued.
       code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", guest_setup, timeout_s: 3600)
       puts output
       raise "fixture setup failed; working VM preserved" unless code.zero?

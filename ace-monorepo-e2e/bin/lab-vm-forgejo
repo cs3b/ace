@@ -97,8 +97,14 @@ begin
     # fixture starts from the seeded Forgejo issues, with an empty task store.
     task_store = File.join(repository, ".ace-tasks")
     raise "unsafe fixture task store" if File.symlink?(task_store)
-    FileUtils.remove_entry_secure(task_store) if File.directory?(task_store)
-    receipt["excluded_paths"] = [".ace-tasks"]
+    receipt["excluded_paths"] = []
+    if File.directory?(task_store)
+      FileUtils.remove_entry_secure(task_store)
+      receipt["excluded_paths"] << ".ace-tasks"
+    elsif File.exist?(task_store)
+      raise "unexpected fixture task store type"
+    end
+    raise "fixture task store was not excluded" if File.exist?(task_store) || File.symlink?(task_store)
     # The source checkout targets the real forge. Replace that fixture input
     # before committing, so an agent cannot route its work to production.
     File.write(File.join(repository, ".ace/git/config.yml"), <<~YAML)
