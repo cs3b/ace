@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Reuse identical read-only gem probes within a single verification pass to avoid repeated dependency traversal subprocesses.
+
 ### Fixed
 
 - Resolve role instructions with the installed ACE CLI and a clean child environment when `ACE_TOOLCHAIN=installed`.

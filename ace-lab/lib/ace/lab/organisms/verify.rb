@@ -577,7 +577,12 @@ module Ace
 
           gem_home = gemset["gem_home"]
           runtime_reason = gem_runtime_reason(gem_home)
-          provisioner = Molecules::GemsetProvisioner.new(runner: @runner)
+          # All probes below are read-only and overlap heavily across root
+          # dependency graphs. Reuse identical command results only within
+          # this verification pass; a later call always reads the runtime again.
+          probes = {}
+          read_once = ->(argv) { probes.fetch(argv) { probes[argv] = @runner.call(argv) } }
+          provisioner = Molecules::GemsetProvisioner.new(runner: read_once)
           gems.map do |gem|
             if runtime_reason
               next {"gem" => gem["name"], "version" => gem["version"], "gem_home" => gem_home,

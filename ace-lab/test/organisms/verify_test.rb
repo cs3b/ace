@@ -787,6 +787,39 @@ module Organisms
       end
     end
 
+    def test_gem_verification_reuses_shared_probes_only_within_a_pass
+      Dir.mktmpdir do |gem_home|
+        calls = Hash.new(0)
+        missing_shared = false
+        runner = lambda do |argv|
+          index = argv.index("gem")
+          command, name = argv[index + 1, 2]
+          calls[[command, name]] += 1
+          out = case command
+          when "list"
+            name == "shared" && missing_shared ? "" : "#{name} (1.0.0)\n"
+          when "dependency"
+            name == "shared" ? "Gem shared-1.0.0\n" : "Gem #{name}-1.0.0\n  shared (>= 0, runtime)\n"
+          else
+            raise "unexpected command #{argv.inspect}"
+          end
+          {"status" => "ok", "out" => out, "err" => ""}
+        end
+        verifier = Ace::Lab::Organisms::Verify.new(runner: runner)
+        manifest = {"gemset" => {"gem_home" => gem_home, "gems" => [
+          {"name" => "first", "version" => "1.0.0"}, {"name" => "second", "version" => "1.0.0"}
+        ]}}
+        first = verifier.send(:check_gems, manifest)
+        assert_equal ["pass", "pass"], first.map { |row| row["status"] }
+        assert_equal 1, calls[["list", "shared"]]
+        assert_equal 1, calls[["dependency", "shared"]]
+        missing_shared = true
+        second = verifier.send(:check_gems, manifest)
+        assert_equal ["fail", "fail"], second.map { |row| row["status"] }
+        assert_equal 2, calls[["list", "shared"]], "the next verification must probe again"
+      end
+    end
+
     def test_missing_gem_runtime_fails_every_declared_gem
       Dir.mktmpdir do |gemdir|
         gem_home = File.join(gemdir, "absent-runtime")
