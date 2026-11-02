@@ -1,5 +1,5 @@
 # Each run creates these issues in its isolated test repository. The
-# dependency token is replaced with the actual issue URL returned by GitHub.
+# dependency token is replaced with the actual issue URL returned by Forgejo.
 issues:
   - key: base
     title: Add a small counter primitive

@@ -48,10 +48,11 @@ begin
       work = LabVm.status.fetch("work")
       raise "working VM is not running" unless work && work["status"] == "started"
       uuid = work.fetch("uuid")
+      raise "fixture belongs to a different working VM" unless fixture.fetch("vm_uuid").casecmp?(uuid)
       code, head = guest_mo(uuid, "git", "-C", "/lab/ace", "rev-parse", "HEAD")
       raise "guest checkout does not match fixture" unless code.zero? && head.strip == fixture.fetch("initial_sha")
       code, remote = guest_mo(uuid, "git", "-C", "/lab/ace", "remote", "get-url", "origin")
-      raise "guest checkout has a different origin" unless code.zero? && remote.strip == "https://github.com/#{fixture.fetch('repository')}.git"
+      raise "guest checkout has a different origin" unless code.zero? && remote.strip == "http://127.0.0.1:3000/#{fixture.fetch('repository')}.git"
       digest = LabVm.runtime_configuration_fingerprint
       ready = "test -f /var/lib/ace-e2e/runtime-ready.sha256; test ! -L /var/lib/ace-e2e/runtime-ready.sha256; test \"$(cat /var/lib/ace-e2e/runtime-ready.sha256)\" = '#{digest}'"
       code, = LabVm.guest_exec(uuid, "/bin/sh", "-ec", ready)

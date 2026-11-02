@@ -1,0 +1,153 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Create one fresh Forgejo fixture in the disposable working VM.
+require "json"
+require "yaml"
+require "open3"
+require "fileutils"
+require "securerandom"
+require "tempfile"
+require "digest"
+load File.expand_path("lab-vm", __dir__)
+require_relative "../lab-vm/forgejo/fixture"
+
+def checked(*argv, chdir: nil)
+  out, err, result = Open3.capture3(*argv, **(chdir ? {chdir: chdir} : {}))
+  raise "#{argv.first} failed: #{err.lines.first.to_s.strip}" unless result.success?
+  out.strip
+end
+
+def save(path, value)
+  Tempfile.create(["forgejo-", ".json"], File.dirname(path)) do |file|
+    file.chmod(0o600)
+    file.write(JSON.pretty_generate(value) + "\n")
+    file.flush
+    file.fsync
+    File.rename(file.path, path)
+  end
+end
+
+begin
+  raise "usage: lab-vm-forgejo create" unless ARGV == ["create"]
+  LabVm.with_lifecycle_lock do
+    work = LabVm.status.fetch("work")
+    raise "working VM must be running" unless work && work["status"] == "started"
+    uuid = work.fetch("uuid")
+    digest = LabVm.runtime_configuration_fingerprint
+    code, = LabVm.guest_exec(uuid, "/bin/sh", "-ec", "test -f /var/lib/ace-e2e/runtime-ready.sha256; test ! -L /var/lib/ace-e2e/runtime-ready.sha256; test \"$(cat /var/lib/ace-e2e/runtime-ready.sha256)\" = '#{digest}'; test ! -e /var/lib/ace-e2e/forgejo-input; test ! -e /etc/forgejo/app.ini")
+    raise "fresh, verified runtime required" unless code.zero?
+    root = File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/forgejo")
+    profile = YAML.safe_load_file(File.join(root, "profile.yml"), permitted_classes: [], aliases: false)
+    issues = YAML.safe_load_file(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/fixtures/forgejo-issues.yml"), permitted_classes: [], aliases: false).fetch("issues")
+    LabVmForgejoFixture.validate_issues!(issues)
+    cache = File.join(LabVm.local_dir, "downloads")
+    FileUtils.mkdir_p(cache, mode: 0o700)
+    artifacts = [["forgejo-#{profile.fetch('version')}-linux-arm64", profile], ["forgejo-cli-#{profile.fetch('client').fetch('version')}-aarch64-linux.tar.gz", profile.fetch("client")]]
+    artifacts.each do |name, entry|
+      raise "invalid artifact name" unless name.match?(/\A[A-Za-z0-9._-]+\z/)
+      raise "invalid artifact URL" unless entry.fetch("url").start_with?("https://")
+      raise "invalid artifact digest" unless entry.fetch("sha256").match?(/\A[0-9a-f]{64}\z/)
+      path = File.join(cache, name)
+      raise "artifact is a symlink" if File.symlink?(path)
+      unless File.file?(path)
+        Tempfile.create(["download-", ".tmp"], cache) do |tmp|
+          checked("curl", "--fail", "--silent", "--show-error", "--location", "--proto", "=https", "--proto-redir", "=https", "--output", tmp.path, entry.fetch("url"))
+          raise "artifact checksum mismatch" unless Digest::SHA256.file(tmp.path).hexdigest == entry.fetch("sha256")
+          File.rename(tmp.path, path)
+        end
+      end
+      raise "artifact checksum mismatch: #{name}" unless Digest::SHA256.file(path).hexdigest == entry.fetch("sha256")
+    end
+    Dir.mktmpdir("forgejo-key-", LabVm.local_dir) do |keydir|
+      key = File.join(root, profile.fetch("key_file"))
+      signature = File.join(root, profile.fetch("signature_file"))
+      checked("gpg", "--homedir", keydir, "--batch", "--import", key)
+      listing = checked("gpg", "--homedir", keydir, "--batch", "--with-colons", "--fingerprint")
+      fingerprints = listing.lines.select { |line| line.start_with?("fpr:") }.map { |line| line.split(":")[9] }
+      raise "unexpected signing key" unless fingerprints.first == profile.fetch("key_fingerprint")
+      checked("gpg", "--homedir", keydir, "--batch", "--verify", signature, File.join(cache, artifacts[0][0]))
+    end
+    run_id = SecureRandom.hex(8)
+    parent = File.join(LabVm.local_dir, "runs")
+    FileUtils.mkdir_p(parent, mode: 0o700)
+    raise "unsafe run directory" if File.symlink?(parent) || (File.stat(parent).mode & 0o077) != 0
+    dir = File.join(parent, run_id)
+    Dir.mkdir(dir, 0o700)
+    path = File.join(dir, "fixture.json")
+    sha = checked("git", "rev-parse", "HEAD", chdir: LabVm::ROOT)
+    receipt = {"schema" => "ace-e2e-forgejo-fixture/v1", "run_id" => run_id, "vm_uuid" => uuid,
+      "repository" => "e2e-integrator/ace", "source_sha" => sha, "status" => "preparing",
+      "forgejo_sha256" => profile.fetch("sha256"), "fj_sha256" => profile.fetch("client").fetch("sha256")}
+    save(path, receipt)
+    repository = File.join(dir, "repository")
+    Dir.mkdir(repository, 0o700)
+    archive = File.join(dir, "source.tar")
+    checked("git", "archive", "--format=tar", "--output=#{archive}", sha, chdir: LabVm::ROOT)
+    checked("tar", "-xf", archive, "-C", repository)
+    File.unlink(archive)
+    # The source checkout targets the real forge. Replace that fixture input
+    # before committing, so an agent cannot route its work to production.
+    File.write(File.join(repository, ".ace/git/config.yml"), <<~YAML)
+      git:
+        servers:
+          - name: utm-forgejo
+            provider: forgejo
+            url: http://127.0.0.1:3000/e2e-integrator/ace
+            default: true
+    YAML
+    checked("git", "init", "-q", "-b", "main", repository)
+    checked("git", "config", "user.name", "ACE E2E Fixture", chdir: repository)
+    checked("git", "config", "user.email", "ace-e2e@example.invalid", chdir: repository)
+    checked("git", "-c", "core.hooksPath=/dev/null", "add", "-A", chdir: repository)
+    checked("git", "-c", "core.hooksPath=/dev/null", "commit", "-q", "-m", "Seed ACE E2E fixture from #{sha}", chdir: repository)
+    receipt["initial_sha"] = checked("git", "rev-parse", "HEAD", chdir: repository)
+    input = File.join(dir, "input")
+    Dir.mkdir(input, 0o700)
+    checked("git", "bundle", "create", File.join(input, "fixture.bundle"), "main", chdir: repository)
+    File.write(File.join(input, "initial-sha"), receipt.fetch("initial_sha") + "\n")
+    FileUtils.cp(File.join(cache, artifacts[0][0]), File.join(input, "forgejo"))
+    FileUtils.cp(File.join(cache, artifacts[1][0]), File.join(input, "fj.tar.gz"))
+    %w[install.sh seed.py].each { |name| FileUtils.cp(File.join(root, name), input) }
+    File.write(File.join(input, "issues.json"), JSON.generate(issues))
+    address = LabVm.utm_call("ip-address", uuid).lines.map(&:strip).find { |entry| entry.match?(/\A(?:\d{1,3}\.){3}\d{1,3}\z/) }
+    raise "VM has no IPv4 address" unless address
+    hosts = File.join(LabVm.local_dir, "known-hosts-#{uuid}")
+    raise "verified host key missing" unless File.file?(hosts) && !File.symlink?(hosts)
+    key = File.join(LabVm.local_dir, "bootstrap/operator_ed25519")
+    options = ["-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "UserKnownHostsFile=#{hosts}", "-i", key]
+    begin
+      raise "fixture transfer failed" unless system("scp", "-q", "-r", *options, input, "lab-operator@#{address}:/home/lab-operator/forgejo-input")
+      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", LabVm.staging_command("/home/lab-operator/forgejo-input", "/var/lib/ace-e2e/forgejo-input"))
+      raise "fixture staging failed: #{output}" unless code.zero?
+      Dir.children(input).each do |name|
+        expected = Digest::SHA256.file(File.join(input, name)).hexdigest
+        code, output = LabVm.guest_exec(uuid, "/usr/bin/sha256sum", "/var/lib/ace-e2e/forgejo-input/#{name}")
+        raise "staged input changed: #{name}" unless code.zero? && output.split.first == expected
+      end
+      code, output = LabVm.guest_exec(uuid, "/bin/sh", "/var/lib/ace-e2e/forgejo-input/install.sh", timeout_s: 240)
+      raise "Forgejo install failed: #{output}" unless code.zero?
+      receipt["status"] = "seeding"
+      save(path, receipt)
+      seed = 'OPERATOR_UID=$(id -u lab-operator) OPERATOR_GID=$(id -g lab-operator) python3 /var/lib/ace-e2e/forgejo-input/seed.py'
+      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", seed, timeout_s: 240)
+      raise "Forgejo seed failed: #{output}" unless code.zero?
+      result = JSON.parse(output.lines.find { |line| line.start_with?("{") }.to_s)
+      raise "unexpected repository" unless result.fetch("repository") == receipt.fetch("repository")
+      receipt["issues"] = result.fetch("issues")
+      receipt["status"] = "ready"
+      save(path, receipt)
+      puts JSON.pretty_generate(receipt.merge("receipt" => path))
+    rescue StandardError
+      receipt["status"] = "failed"
+      save(path, receipt)
+      LabVm.utm_call("stop", uuid, "--request")
+      LabVm.wait_stopped("work")
+      warn "Working VM stopped and preserved for diagnosis; fixture receipt: #{path}"
+      raise
+    end
+  end
+rescue StandardError => error
+  warn "lab-vm-forgejo: #{error.message}"
+  exit 1
+end

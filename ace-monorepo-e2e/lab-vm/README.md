@@ -31,18 +31,19 @@ lockfile pins its dependency graph and integrity hashes. `bin/lab-vm-runtime
 provision` starts a fresh work clone, verifies its SSH host key via the QEMU
 guest agent, copies these inputs and invokes the guest-side runtime installer
 and unprivileged native Herdr build. This provisioning path is still being
-validated. It does not configure Pi credentials, create a GitHub fixture or
+validated. It does not configure Pi credentials, create a Forgejo fixture or
 run an E2E scenario. Downloaded inputs or successful provisioning alone are not
 proof that ACE is operational.
 
-For an actual run, `bin/lab-vm-github-fixture create` creates a new private
-repository on the account authenticated by the host's `gh`, seeds it from the
-current committed ACE revision and opens the four fixture issues. It records
-the source and initial commits, issue URLs and any partial progress under a
-private run directory. It never reuses or deletes an existing repository; a
-failed partial run is retained for inspection. This uses the host credential
-only and does not provide the guest with GitHub authorization. A separate,
-short-lived credential limited to the new test repository is still required.
+For an actual run, `bin/lab-vm-forgejo create` installs the pinned ARM64
+Forgejo and `fj` client in the working VM, starts Forgejo on guest loopback,
+and seeds a private repository and four issues from the committed ACE revision.
+It records the source and initial commits, VM identity, hashes and issue URLs
+under a private run directory. Forgejo's signing key and detached release
+signature are verified; the client archive is pinned by the SHA-256 of the
+official release download. No real GitHub repository or credential is used.
+This new fixture path still requires live validation, including the delivery
+of distinct, short-lived worker and reviewer credentials.
 `bin/lab-vm-fixture prepare RUN_ID` is the working-VM input setup: it seeds
 `/lab` and `/lab/ace`, configures local observation input, and copies only the
 host's `zai` Pi credential into the working VM. It checks that the installed
@@ -64,7 +65,7 @@ workers. The returned prompt receipt does not establish successful delegation.
 
 The intended acceptance is a full autonomous cycle: a lab Overseer delegates
 the project bootstrap, then the project Overseer independently orders and
-delegates multiple issues in an isolated GitHub repository, obtains review,
+delegates multiple issues in the VM's isolated Forgejo repository, obtains review,
 merges their tested PRs in dependency order, and leaves the release queued. A
 second run after reset and the restart, idempotency, idle and failure checks
 are required before calling the environment accepted.

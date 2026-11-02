@@ -23,8 +23,8 @@ begin
     raise "invalid fixture receipt" if File.symlink?(receipt_path) || !File.file?(receipt_path)
     receipt = JSON.parse(File.read(receipt_path))
     repo = receipt.fetch("repository")
-    unless receipt["status"] == "ready" && receipt["run_id"] == run_id &&
-        repo.match?(/\A[A-Za-z0-9-]+\/ace-utm-e2e-#{run_id}\z/)
+    unless receipt["schema"] == "ace-e2e-forgejo-fixture/v1" && receipt["status"] == "ready" &&
+        receipt["run_id"] == run_id && repo == "e2e-integrator/ace"
       raise "fixture identity or readiness mismatch"
     end
     fixture_repo = File.join(run_dir, "repository")
@@ -39,6 +39,7 @@ begin
     work = LabVm.status.fetch("work")
     raise "working VM must be running" unless work && work["status"] == "started"
     uuid = work.fetch("uuid")
+    raise "fixture belongs to a different working VM" unless receipt.fetch("vm_uuid").casecmp?(uuid)
     addresses = LabVm.utm_call("ip-address", uuid).lines.map(&:strip)
     address = addresses.find { |entry| entry.match?(/\A(?:\d{1,3}\.){3}\d{1,3}\z/) }
     raise "working VM has no IPv4 address" unless address
@@ -108,7 +109,7 @@ begin
         runuser -u mo -- git -C /lab -c core.hooksPath=/dev/null commit -q -m 'Configure disposable lab fixture'
         runuser -u mo -- mkdir -p /lab/.ace-tasks/_overseer /lab/.ace-local/hitl
         runuser -u mo -- git clone -q -b main /tmp/ace-e2e-fixture.bundle /lab/ace
-        runuser -u mo -- git -C /lab/ace remote set-url origin https://github.com/#{repo}.git
+        runuser -u mo -- git -C /lab/ace remote set-url origin http://127.0.0.1:3000/#{repo}.git
         runuser -u mo -- git -C /lab/ace config user.name 'ACE E2E Worker'
         runuser -u mo -- git -C /lab/ace config user.email 'ace-e2e@example.invalid'
         test ! -e /lab/ace/.ace/overseer/config.yml
