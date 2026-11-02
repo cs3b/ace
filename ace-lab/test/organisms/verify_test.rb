@@ -1137,8 +1137,10 @@ class VerifyProbeTest < Minitest::Test
       toolchain = Ace::Support::Cli::Toolchain
       toolchain.stub(:installed?, true) do
         toolchain.stub(:executable, ->(name) { "/installed/bin/#{name}" }) do
-          Process.stub(:uid, 501) do
-            assert_equal "/installed/bin/ace-nav", verify.send(:nav_binary, dir)
+          [501, 0].each do |uid|
+            Process.stub(:uid, uid) do
+              assert_equal "/installed/bin/ace-nav", verify.send(:nav_binary, dir)
+            end
           end
         end
       end
@@ -1154,7 +1156,7 @@ class VerifyProbeTest < Minitest::Test
         status, reason = Ace::Lab::Organisms::Verify.new.send(:protocol_resolution,
           "wfi://assign/work", {"projects" => [{"path" => "/project"}]})
         assert_equal "fail", status
-        assert_match(/installed ACE toolchain is unavailable/, reason)
+        assert_match(/ACE toolchain error/, reason)
       end
     end
   end
@@ -1170,6 +1172,27 @@ class VerifyProbeTest < Minitest::Test
     result = Ace::Lab::Organisms::Verify.new.send(:run_nav, [RbConfig.ruby, "-e", script], Dir.pwd)
     assert_equal "ok", result["status"]
     assert_equal({"ACE_TOOLCHAIN" => "installed"}, JSON.parse(result["out"]))
+  ensure
+    %w[ACE_TOOLCHAIN BUNDLE_GEMFILE RUBYOPT RUBYLIB].each { |key| ENV.delete(key) }
+    previous&.each { |key, value| ENV[key] = value }
+  end
+
+  def test_auto_mode_nav_subprocess_inherits_project_environment
+    require "rbconfig"
+    previous = ENV.to_h.slice("ACE_TOOLCHAIN", "BUNDLE_GEMFILE", "RUBYOPT", "RUBYLIB")
+    ENV["ACE_TOOLCHAIN"] = "auto"
+    project_gemfile = File.expand_path("../../../Gemfile", __dir__)
+    ENV["BUNDLE_GEMFILE"] = project_gemfile
+    ENV["RUBYOPT"] = "-W0"
+    ENV["RUBYLIB"] = "/project/lib"
+    script = 'puts %w[ACE_TOOLCHAIN BUNDLE_GEMFILE RUBYOPT RUBYLIB].map { |key| "#{key}=#{ENV[key]}" }'
+    result = Ace::Lab::Organisms::Verify.new.send(:run_nav, [RbConfig.ruby, "-e", script], Dir.pwd)
+    assert_equal "ok", result["status"], result["err"]
+    observed = result["out"].lines.map { |line| line.strip.split("=", 2) }.to_h
+    assert_equal "auto", observed["ACE_TOOLCHAIN"]
+    assert_equal project_gemfile, observed["BUNDLE_GEMFILE"]
+    assert_includes observed.fetch("RUBYOPT").split, "-W0"
+    assert_includes observed.fetch("RUBYLIB").split(File::PATH_SEPARATOR), "/project/lib"
   ensure
     %w[ACE_TOOLCHAIN BUNDLE_GEMFILE RUBYOPT RUBYLIB].each { |key| ENV.delete(key) }
     previous&.each { |key, value| ENV[key] = value }

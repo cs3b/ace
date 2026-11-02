@@ -200,9 +200,8 @@ module Ace
         # verified readiness. Protocol instructions are resolved with
         # ace-nav from every declared project root (the execution
         # contexts the executor works in); a role that fails resolution
-        # is a failed check, an environment without the resolver
-        # reports unknown (offline verifier posture, like network
-        # remotes) and does not block.
+        # is a failed check. In auto mode a missing resolver reports unknown;
+        # installed mode requires the installed executable and fails closed.
         def check_roles(manifest)
           verifier = Molecules::RoleVerifier.new(
             account_lookup: @account_lookup, group_source: @group_source
@@ -254,7 +253,7 @@ module Ace
 
           [PASS, nil]
         rescue Ace::Support::Cli::Toolchain::Error => e
-          [FAIL, "installed ACE toolchain is unavailable: #{e.message}"]
+          [FAIL, "ACE toolchain error: #{e.message}"]
         end
 
         def resolution_error(result)
