@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Confirm first-turn activity without waiting for the overseer turn to finish.
+
 - Dispatch bootstrap workers without blocking Herdr wait flags and use an eyes deadline to surface unconfirmed first turns.
 - Correct private task commands, require complete bootstrap commission files in the worker worktree, delegate full installation verification, and reserve project-start checks for the coordinator after independent verification.
 

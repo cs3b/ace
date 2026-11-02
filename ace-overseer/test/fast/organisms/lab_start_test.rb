@@ -94,8 +94,8 @@ module Organisms
         FakePaneResult.new({"status" => "ready"})
       end
 
-      def agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
-        @prompts << {pane: pane, text: text, wait: wait, timeout_ms: timeout_ms}
+      def agent_prompt(pane:, text:, wait: false, timeout_ms: nil, until_states: nil)
+        @prompts << {pane: pane, text: text, wait: wait, timeout_ms: timeout_ms, until_states: until_states}
         FakePaneResult.new({"status" => "sent"})
       end
     end
@@ -425,8 +425,8 @@ module Organisms
     def test_lab_with_no_confirmed_first_turn_is_not_ready
       executor = FakeExecutor.new
       # every prompt delivery fails: live agents, no first turn
-      def executor.agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
-        @prompts << {pane: pane, text: text, wait: wait, timeout_ms: timeout_ms}
+      def executor.agent_prompt(pane:, text:, wait: false, timeout_ms: nil, until_states: nil)
+        @prompts << {pane: pane, text: text, wait: wait, timeout_ms: timeout_ms, until_states: until_states}
         raise Ace::Herdr::CommandError, "synthetic initial delivery failure"
       end
 
@@ -444,10 +444,10 @@ module Organisms
     # — only then is the lab ready.
     def test_restart_after_failed_delivery_repairs_initialization_then_is_ready
       executor = FakeExecutor.new
-      def executor.agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
+      def executor.agent_prompt(pane:, text:, wait: false, timeout_ms: nil, until_states: nil)
         raise Ace::Herdr::CommandError, "synthetic initial delivery failure" if @failed_delivery
 
-        @prompts << {pane: pane, text: text, wait: wait, timeout_ms: timeout_ms}
+        @prompts << {pane: pane, text: text, wait: wait, timeout_ms: timeout_ms, until_states: until_states}
         FakePaneResult.new({"status" => "sent"})
       end
       executor.instance_variable_set(:@failed_delivery, true)
@@ -472,7 +472,7 @@ module Organisms
     def test_empty_lab_with_unconfirmed_first_turn_is_not_ready
       File.write(File.join(@lab_root, ".ace", "lab", "config.yml"), "topology:\n  projects: []\n")
       executor = FakeExecutor.new
-      def executor.agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
+      def executor.agent_prompt(pane:, text:, wait: false, timeout_ms: nil, until_states: nil)
         raise Ace::Herdr::CommandError, "synthetic initial delivery failure"
       end
 

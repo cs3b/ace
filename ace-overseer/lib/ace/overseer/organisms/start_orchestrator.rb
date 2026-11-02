@@ -605,7 +605,7 @@ module Ace
         # claim. Never raised: the agent itself is live and idle.
         def first_prompt(pane)
           @executor.agent_prompt(pane: pane, text: FIRST_TURN_PROMPT,
-            wait: true, timeout_ms: FIRST_TURN_TIMEOUT_MS)
+            wait: true, until_states: %w[working blocked], timeout_ms: FIRST_TURN_TIMEOUT_MS)
           nil
         rescue Ace::Herdr::ExecutorError => e
           "the agent is started and idle, but its first turn could not be " \

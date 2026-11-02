@@ -81,8 +81,8 @@ module Organisms
         FakePaneResult.new({"status" => "ready"})
       end
 
-      def agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
-        @prompts << {pane: pane, text: text, wait: wait, timeout_ms: timeout_ms}
+      def agent_prompt(pane:, text:, wait: false, timeout_ms: nil, until_states: nil)
+        @prompts << {pane: pane, text: text, wait: wait, timeout_ms: timeout_ms, until_states: until_states}
         FakePaneResult.new({"status" => "sent"})
       end
     end
@@ -258,6 +258,7 @@ module Organisms
       repair = executor.prompts.find { |entry| entry[:pane] == "p7" }
       assert repair, "the reused session's initialization is confirmed"
       assert repair[:wait]
+      assert_equal %w[working blocked], repair[:until_states]
       assert_equal Ace::Overseer::Organisms::StartOrchestrator::FIRST_TURN_PROMPT, repair[:text]
     end
 
@@ -318,7 +319,7 @@ module Organisms
         @shared_prompts = []
       end
 
-      def agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
+      def agent_prompt(pane:, text:, wait: false, timeout_ms: nil, until_states: nil)
         @shared_prompts << {pane: pane, wait: wait}
         raise Ace::Herdr::CommandError, "prompt pipe closed"
       end
@@ -407,7 +408,7 @@ module Organisms
 
     def test_prompt_failure_after_a_started_agent_is_reported_distinctly
       executor = FakeExecutor.new(pane_current: {"result" => {"workspace_id" => "ws1"}})
-      def executor.agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
+      def executor.agent_prompt(pane:, text:, wait: false, timeout_ms: nil, until_states: nil)
         super
         raise Ace::Herdr::CommandError, "prompt pipe closed"
       end
