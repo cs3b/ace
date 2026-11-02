@@ -220,10 +220,10 @@
     },
     {
       "name": "ace-wake",
-      "version": "0.2.1.pre.utm1",
-      "sha256": "4180dd37eb572a803115452681ff848b5855f25e895b95b71b9e11ceb64233ed",
+      "version": "0.2.1.pre.utm2",
+      "sha256": "c27dd001143598502b32d9e285dd8c992175eb3144a52a03f5b38d0b817ea2e5",
       "source": "local",
-      "source_commit": "f9551d6de32a04c38293305b29bf49d320140e74"
+      "source_commit": "33ebe256f9414f4238d2c6308ab37a3c51e4c513"
     },
     {
       "name": "addressable",
