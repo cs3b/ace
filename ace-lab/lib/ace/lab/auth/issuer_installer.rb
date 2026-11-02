@@ -20,7 +20,8 @@ module Ace
         SYSTEMCTL = Ace::Runtime::Molecules::SystemdScopeManager::SYSTEMCTL
 
         def initialize(unit_dir: "/etc/systemd/system", owner_uid: 0, privileged: Process.euid.zero?,
-          path_verifier: nil, runtime_verifier: nil, activation_verifier: nil, inactive_verifier: nil, runner: nil)
+          path_verifier: nil, runtime_verifier: nil, activation_verifier: nil, inactive_verifier: nil,
+          readiness_verifier: nil, runner: nil)
           @unit_dir, @owner_uid, @privileged = unit_dir, owner_uid, privileged
           @path_verifier = path_verifier || lambda { |path, directory: false|
             Ace::Runtime::Molecules::ProtectedSocket.root_path!(path, directory: directory)
@@ -31,10 +32,14 @@ module Ace
           }
           @activation_verifier = activation_verifier || method(:verify_loaded_units!)
           @inactive_verifier = inactive_verifier || method(:verify_inactive_units!)
+          @readiness_verifier = readiness_verifier || lambda {
+            raise Error, "issuer installation blocked: shared-library and service-instance verification are incomplete"
+          }
         end
 
         def call(ruby:, gem_home:, gem_root:, dry_run: false)
           raise Error, "issuer installation requires root" unless @privileged
+          @readiness_verifier.call
           units = IssuerUnits.render(ruby: ruby, gem_home: gem_home, gem_root: gem_root)
           @path_verifier.call(@unit_dir, directory: true)
           @runtime_verifier.call(ruby: ruby, gem_home: gem_home, gem_root: gem_root)

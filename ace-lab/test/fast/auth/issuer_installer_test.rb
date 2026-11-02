@@ -15,6 +15,7 @@ module Ace
             runtime_verifier: ->(**) { true },
             activation_verifier: ->(**) { true },
             inactive_verifier: -> { true },
+            readiness_verifier: -> { true },
             runner: ->(argv) { @commands << argv; true })
           @runtime = {ruby: "/opt/ace/ruby/bin/ruby", gem_home: "/opt/ace/gems",
                       gem_root: "/opt/ace/gems/gems/ace-lab-0.14.2"}
@@ -56,7 +57,7 @@ module Ace
           end
           installer = IssuerInstaller.new(unit_dir: @dir, owner_uid: Process.uid, privileged: true,
             path_verifier: ->(_path, directory: false) { true }, runtime_verifier: ->(**) { true },
-            inactive_verifier: -> { true }, runner: runner)
+            inactive_verifier: -> { true }, readiness_verifier: -> { true }, runner: runner)
           assert_equal "installed", installer.call(**@runtime).fetch("status")
         end
 
@@ -105,7 +106,8 @@ module Ace
             "Id=#{name}\nActiveState=#{state}\n"
           end
           installer = IssuerInstaller.new(unit_dir: @dir, owner_uid: Process.uid, privileged: true,
-            path_verifier: ->(_path, directory: false) { true }, runtime_verifier: ->(**) { true }, runner: runner)
+            path_verifier: ->(_path, directory: false) { true }, runtime_verifier: ->(**) { true },
+            readiness_verifier: -> { true }, runner: runner)
           assert_raises(Error) { installer.call(**@runtime) }
           assert_empty Dir.children(@dir)
         end
@@ -119,8 +121,18 @@ module Ace
             end
           end
           installer = IssuerInstaller.new(unit_dir: @dir, owner_uid: Process.uid, privileged: true,
-            path_verifier: ->(_path, directory: false) { true }, runtime_verifier: ->(**) { true }, runner: runner)
+            path_verifier: ->(_path, directory: false) { true }, runtime_verifier: ->(**) { true },
+            readiness_verifier: -> { true }, runner: runner)
           assert_raises(Error) { installer.call(**@runtime) }
+          assert_empty Dir.children(@dir)
+        end
+
+        def test_incomplete_production_readiness_blocks_dry_run_and_install_without_writes
+          installer = IssuerInstaller.new(unit_dir: @dir, owner_uid: Process.uid, privileged: true)
+          [true, false].each do |dry_run|
+            error = assert_raises(Error) { installer.call(**@runtime, dry_run: dry_run) }
+            assert_match(/verification are incomplete/, error.message)
+          end
           assert_empty Dir.children(@dir)
         end
       end
