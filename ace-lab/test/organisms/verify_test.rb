@@ -812,6 +812,7 @@ module Organisms
         first = verifier.send(:check_gems, manifest)
         assert_equal ["pass", "pass"], first.map { |row| row["status"] }
         assert_equal 1, calls[["list", "shared"]]
+        assert_equal 1, calls[["list", "first"]], "presence and version checks must reuse the same probe"
         assert_equal 1, calls[["dependency", "shared"]]
         missing_shared = true
         second = verifier.send(:check_gems, manifest)
