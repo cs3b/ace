@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Deliver deadlines that expire while an observation is running in the same observation cycle.
+
 ### Changed
 
 - Give each observation command a 60-second default timeout, with an explicit bounded override up to 120 seconds. Existing sessions retain their saved timeout until eyes is restarted with the desired configuration.
