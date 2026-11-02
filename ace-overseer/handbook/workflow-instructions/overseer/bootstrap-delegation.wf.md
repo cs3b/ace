@@ -112,8 +112,8 @@ passing the prompt as one safely quoted argument and excluding secrets, without 
 use `herdr agent wait`, sleep or polling to await completion. After the prompt
 is accepted, record the pane/agent identity, acknowledge handled revisions and
 end your turn. Assignment changes and the worker report wake you through eyes.
-On a wake, inspect the recorded pane once with `herdr agent list` and read its
-output to verify the first turn; cancel the deadline when confirmed. If the
+On a wake, inspect the recorded pane once with `herdr agent list` and
+`herdr agent read <pane>` to verify the first turn; cancel the deadline when confirmed. If the
 deadline fires without first-turn evidence, record the blocked dispatch and
 escalate with a precise HITL case. Never replace a missing executor with your
 own work or create another dispatch while its state is unknown.
