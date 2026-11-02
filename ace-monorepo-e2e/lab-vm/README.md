@@ -42,7 +42,9 @@ proof that ACE is operational.
 For an actual run, `bin/lab-vm-forgejo create` installs the pinned ARM64
 Forgejo and `fj` client in the working VM, starts Forgejo on guest loopback,
 and seeds a private repository and four issues from the committed ACE revision.
-It records the source and initial commits, VM identity, hashes and issue URLs
+The fixture omits the source repository's historical `.ace-tasks` backlog so
+that the project Overseer receives only the disposable test commissions.
+It records the excluded path, source and initial commits, VM identity, hashes and issue URLs
 under a private run directory. Forgejo's signing key and detached release
 signature are verified; the client archive is pinned by the SHA-256 of the
 official release download. No GitHub issue, pull request, or credential is
