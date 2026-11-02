@@ -77,7 +77,7 @@ class LabVmArtifactsTest < AceMonorepoE2eTestCase
     out, err, result = run_fetcher
     assert result.success?, err
     assert_equal 5 + release.fetch("gems").size, JSON.parse(out).fetch("cached")
-    release["gems"][0]["source_commit"] = "not-a-commit"
+    release["gems"].find { |gem| gem["name"] == "ace-wake" }["source_commit"] = "not-a-commit"
     File.write(path, JSON.generate(release))
     _out, err, result = run_fetcher
     refute result.success?
