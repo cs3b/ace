@@ -266,9 +266,15 @@ module Ace
           end
           assert_empty seen
           prov.stub(:linux_xdg?, true) do
-            assert_raises(Providers::RefusedError) do
+            error = assert_raises(Providers::RefusedError) do
               prov.with_exec_environment(profile: config, credential: "/unused") { flunk }
             end
+            assert_match(/issuer is invalid/, error.message)
+          end
+          assert_raises(Providers::RefusedError) { prov.revoke(profile: config, token_ref: "ace-lab-lease-x") }
+          config["issuer"] = "not a mapping"
+          assert_raises(Providers::RefusedError) do
+            prov.issue(profile: config, lease: {"id" => "lease-x", "repos" => %w[cs3b/ace]})
           end
         end
 

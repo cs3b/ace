@@ -227,7 +227,7 @@ module Ace
           YAML
           svc = service(document: document)
 
-          error = assert_raises(Providers::UnsupportedError) do
+          error = assert_raises(Refusal) do
             svc.request(profile_name: "missing", role: "developer",
               task: "t", assignment: "a", repos: %w[ace])
           end
@@ -352,6 +352,17 @@ module Ace
           Providers.reset!
           error = assert_raises(Refusal) { svc.exec(lease_id: lease["id"], argv: %w[true]) }
           assert_match(/provider execution refused/, error.message)
+        end
+
+        def test_revoke_keeps_unknown_outcome_pending_when_provider_disappears
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          Providers.reset!
+          assert_match(/revoke-pending/, svc.revoke(lease_id: lease["id"]).to_s)
+          record = svc.store.load(lease["id"])
+          assert_equal "revoke-pending", record["state"]
+          refute svc.store.live?(record)
         end
 
         def test_exec_without_the_delivered_credential_degrades_to_a_refusal

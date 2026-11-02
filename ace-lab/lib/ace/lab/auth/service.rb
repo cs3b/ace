@@ -105,7 +105,11 @@ module Ace
           # The provider is resolved and capability-verified BEFORE any
           # record exists: a failed resolve or an expiry the provider
           # cannot back must not orphan a lease record.
-          issue = Providers.resolve(profile["provider"])
+          begin
+            issue = Providers.resolve(profile["provider"])
+          rescue Providers::UnsupportedError => e
+            raise Refusal.new("provider unavailable: #{e.message}")
+          end
           # A provider unable to back the profile's NATIVE expiry must
           # be visible BEFORE handoff, never hidden behind use_until.
           if profile["expiry_mode"] == "provider" &&
@@ -425,13 +429,13 @@ module Ace
         # authenticates the request, so the token VALUE is required
         # there; id-revoking providers ignore it.
         def cleanup(lease, profile, handoff)
-          provider = Providers.resolve(profile["provider"])
           credential = handoff.path(lease["id"])
           token = File.file?(credential) ? File.read(credential) : nil
           begin
+            provider = Providers.resolve(profile["provider"])
             outcome = provider.revoke(profile: profile, token_ref: lease["token_ref"],
               token: token)
-          rescue Providers::TransientError, Providers::OutcomeUnknownError, Providers::RefusedError => e
+          rescue Providers::TransientError, Providers::OutcomeUnknownError, Providers::RefusedError, Providers::UnsupportedError => e
             @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
             return :"revoke-pending (#{e.class})"
           end
