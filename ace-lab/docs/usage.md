@@ -662,10 +662,11 @@ auth:
       scopes: ["write:repository"]
       ttl_minutes: 30            # default 30; max 60 unless the host sets otherwise
       expiry_mode: host-revoke   # provider | host-revoke | process
-      issuer:                    # an ADMIN PAT: the token-authenticated admin API
+      issuer:                    # host-only administrator Basic credential
         url: https://forge.example.com
         account: lab-role-dev
-        token_file: /etc/lab/ace-lab/secrets/forgejo.admin.token
+        admin_username: forge-admin
+        password_file: /etc/lab/ace-lab/secrets/forgejo.admin.password
 ```
 
 ```bash
@@ -720,11 +721,12 @@ Contract highlights:
   LEASE --force` → forced-terminal with the unconfirmed outcome recorded),
   never silently marked revoked.
 - Plugins (explicit registry, like the ace-git providers): `forgejo` (one
-  scoped token per lease through the TOKEN-AUTHENTICATED ADMIN API
-  (`/api/v1/admin/users/{account}/tokens`; the user endpoint requires
-  BasicAuth, not a PAT) with owner/name RepoTargetOption repository targets —
+  scoped token per lease through `/api/v1/users/{account}/tokens`, using
+  administrator Basic authentication and a `Sudo` header. The host issuer
+  must protect the administrator password from delegated workers. It uses
+  owner/name RepoTargetOption repository targets —
   a repo without an owner is refused, never an all-repositories token — and
-  the response's granted scopes validated against the request; revoke deletes
+  the response must confirm exactly the requested scopes and repositories; revoke deletes
   that exact token name, 404 = already invalid), `github` (App JWT →
   installation token for chosen repos/permissions with the real `expires_at`;
   DELETE to revoke; 401 = already invalid), `env` (named values of configured

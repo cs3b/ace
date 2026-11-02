@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Use Forgejo's Basic-authenticated user token API with administrator sudo,
+  and require the response to confirm the requested scopes and repositories.
+  The previously documented administrator-token endpoint is unavailable in
+  Forgejo 15; issuer credentials remain restricted to the host issuer.
+
 ## [0.14.1] - 2026-10-31
 
 ### Fixed

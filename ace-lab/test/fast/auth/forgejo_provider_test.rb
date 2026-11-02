@@ -2,25 +2,18 @@
 
 require_relative "../../test_helper"
 require "ace/lab/auth"
+require "base64"
 
 module Ace
   module Lab
     module Auth
-      # Forgejo provider wire contract (PR #398 re-review R1): the
-      # issuer is an admin PAT, so both endpoints are the TOKEN-
-      # AUTHENTICATED admin variants (`/api/v1/admin/users/{account}/
-      # tokens`); repository scoping uses the server's
-      # RepoTargetOption shape (owner+name objects) and an
-      # unidentifiable repo is refused before any request; the
-      # creation response's granted scopes are validated; revoke by
-      # the deterministic token name settles 404 as already-invalid;
-      # the issuer secret travels in a 0600 ephemeral header file,
-      # never in argv. The fakes emulate the SERVER's documented API,
-      # not the client's payload.
+      # Forgejo 15 requires Basic admin credentials and sudo on the
+      # user-token endpoints. Both scopes and repository restrictions must
+      # be confirmed by the response; secrets never appear in argv.
       class ForgejoProviderTest < Minitest::Test
         Status = Struct.new(:success?, :exitstatus, keyword_init: true)
 
-        def provider(response_body = {"sha1" => "SECRET", "id" => 1})
+        def provider(response_body = {"sha1" => "SECRET", "id" => 1, "scopes" => ["write:repository"], "repositories" => [{"full_name" => "cs3b/ace"}]})
           @seen = []
           @headers = []
           runner = ->(argv) {
@@ -38,7 +31,7 @@ module Ace
           token_file = File.join(Dir.mktmpdir, "issuer.token")
           File.write(token_file, "ISSUER-SECRET\n")
           {"issuer" => {"url" => "https://forge.example.com",
-            "account" => "lab-role-dev", "token_file" => token_file},
+            "account" => "lab-role-dev", "admin_username" => "forge-admin", "password_file" => token_file},
            "scopes" => ["write:repository"]}
         end
 
@@ -47,19 +40,16 @@ module Ace
           headers.fetch(0)
         end
 
-        def test_issue_uses_the_token_authenticated_admin_endpoint_and_repo_targets
+        def test_issue_uses_basic_authenticated_sudo_user_endpoint_and_repo_targets
           prov = provider
           granted = prov.issue(profile: profile,
             lease: {"id" => "lease-x", "repos" => %w[cs3b/ace]})
 
           assert_equal "SECRET", granted["token"]
           argv = seen.fetch(0)
-          # the SERVER's documented shape: an admin PAT uses the admin
-          # tokens endpoint (`Authorization: token` on the user variant
-          # is not a supported credential there)
-          assert_equal "https://forge.example.com/api/v1/admin/users/lab-role-dev/tokens", argv[5]
+          assert_equal "https://forge.example.com/api/v1/users/lab-role-dev/tokens", argv[5]
           assert_equal "POST", argv[argv.index("-X") + 1]
-          assert_equal "Authorization: token ISSUER-SECRET", header_of
+          assert_equal "Authorization: Basic #{Base64.strict_encode64("forge-admin:ISSUER-SECRET")}\nSudo: lab-role-dev", header_of
           refute_includes argv, "ISSUER-SECRET", "the issuer secret never appears in argv (ps)"
           payload = JSON.parse(argv[argv.index("-d") + 1])
           assert_equal "ace-lab-lease-x", payload["name"]
@@ -99,10 +89,30 @@ module Ace
             error.message)
 
           prov = provider({"sha1" => "SECRET", "id" => 1,
-            "scopes" => ["write:repository"]})
+            "scopes" => ["write:repository"], "repositories" => [{"full_name" => "cs3b/ace"}]})
           granted = prov.issue(profile: profile,
             lease: {"id" => "lease-x", "repos" => %w[cs3b/ace]})
           assert_equal "SECRET", granted["token"]
+        end
+
+        def test_rejects_unconfirmed_or_overbroad_repository_scope
+          [nil, [], [{"full_name" => "cs3b/other"}]].each do |repositories|
+            prov = provider({"sha1" => "SECRET", "id" => 1, "scopes" => ["write:repository"], "repositories" => repositories})
+            error = assert_raises(Providers::TransientError) do
+              prov.issue(profile: profile, lease: {"id" => "lease-x", "repos" => %w[cs3b/ace]})
+            end
+            assert_match(/did not confirm.*repository restrictions/, error.message)
+          end
+        end
+
+        def test_rejects_unconfirmed_or_extra_scopes
+          [nil, ["write:repository", "write:issue"]].each do |scopes|
+            prov = provider({"sha1" => "SECRET", "id" => 1, "scopes" => scopes,
+              "repositories" => [{"full_name" => "cs3b/ace"}]})
+            assert_raises(Providers::TransientError) do
+              prov.issue(profile: profile, lease: {"id" => "lease-x", "repos" => %w[cs3b/ace]})
+            end
+          end
         end
 
         def test_token_name_is_deterministic_from_the_lease_id
@@ -111,7 +121,7 @@ module Ace
             "the remote identity exists before any response — the R5 recovery anchor"
         end
 
-        def test_revoke_deletes_the_exact_token_name_on_the_admin_endpoint
+        def test_revoke_deletes_the_exact_token_name_on_the_user_endpoint
           responses = [["", "", Status.new(success?: true, exitstatus: 0)]]
           captures = []
           capture = ->(argv) {
@@ -124,10 +134,10 @@ module Ace
           assert_equal :revoked,
             prov.revoke(profile: profile, token_ref: "ace-lab-lease-x")
           argv, header = captures.fetch(0)
-          assert_equal "https://forge.example.com/api/v1/admin/users/lab-role-dev/tokens/ace-lab-lease-x",
+          assert_equal "https://forge.example.com/api/v1/users/lab-role-dev/tokens/ace-lab-lease-x",
             argv[5]
           assert_equal "DELETE", argv[argv.index("-X") + 1]
-          assert_equal "Authorization: token ISSUER-SECRET", header
+          assert_equal "Authorization: Basic #{Base64.strict_encode64("forge-admin:ISSUER-SECRET")}\nSudo: lab-role-dev", header
         end
 
         def test_revoke_settles_a_404_unknown_token_as_already_invalid

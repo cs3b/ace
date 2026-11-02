@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
+require "base64"
 require "openssl"
 require "open3"
 require "tempfile"
@@ -9,39 +10,11 @@ module Ace
   module Lab
     module Auth
       module Plugins
-        # Forgejo provider (task 8xs.t.pu0.7): one SEPARATE scoped token
-        # per lease, issued on the configured role account through the
-        # TOKEN-AUTHENTICATED ADMIN API, limited to the profile's
-        # repositories and scopes; revocation deletes that EXACT token
-        # name — never a prefix wipe and never other tasks' tokens.
-        #
-        # Wire contract (PR #398 re-review R1): the issuer credential is
-        # an admin PAT, so both endpoints are the admin variants
-        # (`POST/DELETE /api/v1/admin/users/{account}/tokens`) — the
-        # user-scoped `/api/v1/users/.../tokens` requires BasicAuth or
-        # reverse-proxy auth and does not accept `Authorization: token`.
-        # Repository scoping uses the server's RepoTargetOption shape:
-        # objects with `owner` and `name`. A repo entry without an
-        # owner does not identify anything and is REFUSED before any
-        # request — never an all-repositories token. The creation
-        # response's granted scopes are validated against the request
-        # when the server reports them; a mismatch is a classified
-        # failure, never a trusted grant. Forgejo tokens carry no proven
-        # native TTL across versions, so the profile's expiry comes
-        # from the host's scheduled revoke (expiry_mode host-revoke).
-        #
-        # The token NAME is deterministic from the lease id
-        # (`ace-lab-<lease id>`): it is written to the lease record at
-        # CREATION, so an interrupted issue (lost response, dead
-        # process) can still be settled deterministically — the name is
-        # reconstructed and revoked; a 404 means it never existed
-        # remotely (:already_invalid, an idempotent result).
-        #
-        # Transport is an injectable seam (argv runner/capture shapes):
-        # tests pin the wire contract with fakes emulating the server;
-        # the default runs `curl` with the issuer token from the host's
-        # protected store. The issuer secret is read from its file
-        # reference and never appears in argv of the CHILD.
+        # Forgejo 15 requires Basic authentication with an administrator
+        # credential and Sudo header on the user-token endpoints.  The
+        # credential stays in a private, temporary curl header file.  A
+        # successful issue must prove the returned repository restrictions.
+        # Host-owned issuance and timed revocation are separate requirements.
         class ForgejoProvider
           def initialize(runner: nil, capture: nil)
             @runner = runner || method(:run_curl)
@@ -62,9 +35,7 @@ module Ace
             issuer = profile.fetch("issuer")
             url = issuer["url"] or raise Providers::RefusedError, "forgejo profile has no issuer url"
             account = issuer["account"] or raise Providers::RefusedError, "forgejo profile has no role account"
-            token_file = issuer["token_file"] or raise Providers::RefusedError,
-              "forgejo profile has no issuer token_file reference"
-            raise Providers::RefusedError, "issuer token file '#{token_file}' is not readable" unless File.readable?(token_file)
+            header_value = issuer_header(issuer)
 
             token_name = token_ref_for(lease_id: lease["id"])
             scopes = profile.fetch("scopes")
@@ -75,10 +46,10 @@ module Ace
               "scopes" => scopes,
               "repositories" => repositories
             }.compact)
-            result = with_secret_header("Authorization: token #{File.read(token_file).strip}") do |header|
+            result = with_secret_header(header_value) do |header|
               @runner.call(
                 ["curl", "-sS", "-f", "-X", "POST",
-                  "#{url}/api/v1/admin/users/#{account}/tokens",
+                  "#{url}/api/v1/users/#{account}/tokens",
                   "-H", "Content-Type: application/json",
                   *header,
                   "-d", payload]
@@ -88,6 +59,7 @@ module Ace
             secret = body["sha1"] or raise Providers::TransientError,
               "forgejo did not return the token secret (check server API version)"
             validate_granted_scopes(body, scopes)
+            validate_granted_repositories(body, lease.fetch("repos"))
 
             {"token" => secret, "token_ref" => token_name,
              "provider_expiry" => nil,
@@ -105,11 +77,10 @@ module Ace
             issuer = profile.fetch("issuer")
             url = issuer["url"] or raise Providers::RefusedError, "forgejo profile has no issuer url"
             account = issuer["account"] or raise Providers::RefusedError, "forgejo profile has no role account"
-            token_file = issuer["token_file"]
-            _out, err, status = with_secret_header("Authorization: token #{File.read(token_file).strip}") do |header|
+            _out, err, status = with_secret_header(issuer_header(issuer)) do |header|
               @capture.call(
                 ["curl", "-sS", "-f", "-X", "DELETE",
-                  "#{url}/api/v1/admin/users/#{account}/tokens/#{token_ref}",
+                  "#{url}/api/v1/users/#{account}/tokens/#{token_ref}",
                   *header]
               )
             end
@@ -121,6 +92,27 @@ module Ace
           end
 
           private
+
+          def issuer_header(issuer)
+            account = issuer["account"].to_s
+            username = issuer["admin_username"].to_s
+            path = issuer["password_file"].to_s
+            unless account.match?(/\A[a-zA-Z0-9_.-]+\z/) && username.match?(/\A[a-zA-Z0-9_.-]+\z/)
+              raise Providers::RefusedError, "forgejo issuer account and admin_username must be valid user names"
+            end
+            raise Providers::RefusedError, "forgejo issuer password file is not readable" unless File.file?(path) && File.readable?(path)
+            password = File.read(path).strip
+            raise Providers::RefusedError, "forgejo issuer password is empty" if password.empty?
+            "Authorization: Basic #{Base64.strict_encode64("#{username}:#{password}")}\nSudo: #{account}"
+          end
+
+          def validate_granted_repositories(body, requested)
+            repos = body["repositories"]
+            granted = repos.map { |repo| repo.is_a?(Hash) ? repo["full_name"].to_s : "" }.sort if repos.is_a?(Array)
+            return if granted && granted == requested.map(&:to_s).sort
+
+            raise Providers::TransientError, "forgejo did not confirm the requested repository restrictions"
+          end
 
           # RepoTargetOption: {"owner" =>, "name" =>} objects parsed
           # from `owner/name` entries. An entry without an owner does
@@ -145,18 +137,19 @@ module Ace
             end
           end
 
-          # The response's granted scopes (when the server reports
-          # them) must cover the request — the enforced scope is the
-          # server's answer, never the request's claim.
+          # The server's answer, not the request, establishes the grant.
           def validate_granted_scopes(body, requested)
             granted = body["scopes"]
-            return unless granted.is_a?(Array)
+            raise Providers::TransientError, "forgejo did not confirm granted scopes" unless granted.is_a?(Array)
 
             missing = requested.map(&:to_s) - granted.map(&:to_s)
             unless missing.empty?
               raise Providers::TransientError,
                 "forgejo granted scopes [#{granted.join(', ')}] do not cover the " \
                 "requested [#{missing.join(', ')}]; refusing the grant"
+            end
+            unless (granted.map(&:to_s) - requested.map(&:to_s)).empty?
+              raise Providers::TransientError, "forgejo granted unrequested scopes; refusing the grant"
             end
           end
 
