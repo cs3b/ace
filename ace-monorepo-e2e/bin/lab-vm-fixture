@@ -58,6 +58,10 @@ begin
       test "$(cat /var/lib/ace-e2e/runtime-ready.sha256)" = '#{digest}'
       test -d /lab
       test ! -L /lab
+      test -d /etc/lab/ace-lab
+      test ! -L /etc/lab/ace-lab
+      test ! -e /etc/lab/ace-lab/authorization.yml
+      test ! -L /etc/lab/ace-lab/authorization.yml
       for path in /home/mo /home/mo/.pi /home/mo/.pi/agent; do test ! -L "$path"; done
       for path in /lab/.git /lab/.ace /lab/.gitignore /lab/ace /home/mo/.pi/agent/auth.json /tmp/ace-e2e-fixture.bundle /home/lab-operator/lab /home/lab-operator/fixture.bundle /home/lab-operator/ace-e2e-auth.json; do
         test ! -e "$path"
@@ -95,6 +99,16 @@ begin
           test ! -L "$path"
         done
         test "$(stat -c '%U:%G' /lab)" = mo:mo
+        # Visibility of the single fixture project is deployment policy, not
+        # a Forgejo credential or sudo permission. The worker cannot edit it.
+        test -d /etc/lab/ace-lab
+        test ! -L /etc/lab/ace-lab
+        test ! -e /etc/lab/ace-lab/authorization.yml
+        test ! -L /etc/lab/ace-lab/authorization.yml
+        umask 022
+        printf 'principals:\n  mo:\n    projects: [ace]\n' > /etc/lab/ace-lab/authorization.yml
+        chmod 0644 /etc/lab/ace-lab/authorization.yml
+        test "$(stat -c '%U:%G' /etc/lab/ace-lab/authorization.yml)" = root:root
         cp -R /home/lab-operator/lab/. /lab/
         chown -R mo:mo /lab/.ace /lab/.gitignore
         test "$(stat -c '%U:%G' /lab)" = mo:mo
