@@ -23,6 +23,9 @@ module Ace
       #     {"token" => secret (never serialized), "token_ref" => provider id,
       #      "provider_expiry" => time-ish | nil, "via" => handoff descriptor}
       #     or raises RefusedError / TransientError / OutcomeUnknownError
+      #     RefusedError guarantees no credential was issued. If issuance
+      #     may have happened, the provider must raise OutcomeUnknownError
+      #     or TransientError so recovery never treats the outcome as closed.
       #   revoke(profile:, token_ref:, token:) -> :revoked | :already_invalid |
       #     raises TransientError / OutcomeUnknownError
       #     (`token` is the issued secret from the handoff — providers

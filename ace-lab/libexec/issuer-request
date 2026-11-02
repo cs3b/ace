@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "socket"
+require "ace/lab/auth/issuer_request"
+
+begin
+  socket = Socket.for_fd(0)
+  unless socket.getsockopt(Socket::SOL_SOCKET, Socket::SO_TYPE).int == Socket::SOCK_STREAM && socket.local_address.afamily == Socket::AF_UNIX
+    raise IOError, "Unix stream socket activation is required"
+  end
+  outcome = Ace::Lab::Auth::IssuerRequest.new.call(socket, invocation: ENV["INVOCATION_ID"])
+  exit(outcome == :refused ? 1 : 0)
+rescue SystemCallError, IOError
+  warn "ace-lab auth issuer request requires an activated stream socket"
+  exit 1
+end

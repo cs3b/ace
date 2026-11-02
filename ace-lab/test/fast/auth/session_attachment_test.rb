@@ -13,11 +13,15 @@ module Ace
 
         def setup
           @peer = File.open(File::NULL)
-          @identity = SessionPeer::Identity.new(unit: UNIT, invocation_id: INVOCATION, pidfd: @peer)
+          @main = File.open(File::NULL)
+          @identity = SessionPeer::Identity.new(unit: UNIT, invocation_id: INVOCATION, pidfd: @peer, main_pidfd: @main)
           @platform = Object.new
+          class << @platform
+            attr_accessor :dead_handle
+          end
           def @platform.capture(pid) = {"pid" => pid}
           def @platform.pin(_identity) = File.open(File::NULL)
-          def @platform.exited?(_handle) = false
+          def @platform.exited?(handle) = handle == dead_handle
           @manager = Object.new
           def @manager.unit_for_pidfd(handle:) = {"unit" => UNIT, "invocation_id" => INVOCATION}
           @command = Object.new
@@ -27,7 +31,10 @@ module Ace
           end
         end
 
-        def teardown = @peer.close
+        def teardown
+          @peer.close
+          @main.close
+        end
 
         def attachment
           SessionAttachment.new(identity: @identity, platform: @platform, manager: @manager, command: @command)
@@ -52,9 +59,15 @@ module Ace
           count = 0
           @manager.define_singleton_method(:unit_for_pidfd) do |handle:|
             count += 1
-            {"unit" => UNIT, "invocation_id" => (count == 1 ? INVOCATION : "b" * 32)}
+            {"unit" => UNIT, "invocation_id" => (count <= 2 ? INVOCATION : "b" * 32)}
           end
           Process.stub(:euid, 0) { assert_raises(Error) { attachment.call(1234) } }
+          refute_nil @command.argv
+        end
+
+        def test_session_verification_refuses_an_exited_main_process
+          @platform.dead_handle = @main
+          Process.stub(:euid, 0) { assert_raises(Error) { attachment.verify_session! } }
         end
       end
     end

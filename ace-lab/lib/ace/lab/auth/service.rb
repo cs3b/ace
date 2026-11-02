@@ -46,7 +46,8 @@ module Ace
             raise ArgumentError, "session execution does not accept caller-supplied identity or runner" if principal || runner
             unless session.is_a?(SessionPeer::Identity) && session.invocation_id.is_a?(String) &&
                 session.invocation_id.match?(/\A[0-9a-f]{32}\z/) && session.runtime_dir.is_a?(String) &&
-                session.runtime_dir.start_with?("/") && File.expand_path(session.runtime_dir) == session.runtime_dir
+                session.runtime_dir.start_with?("/") && File.expand_path(session.runtime_dir) == session.runtime_dir &&
+                session.main_pidfd.is_a?(IO) && !session.main_pidfd.closed?
               raise ArgumentError, "session execution requires a verified systemd invocation identity"
             end
             unless issuer_invocation.is_a?(String) && issuer_invocation.match?(/\A[0-9a-f]{32}\z/)
@@ -58,8 +59,10 @@ module Ace
             end
 
             attachment = SessionAttachment.new(identity: session)
+            @session_attachment = attachment
             @session_runner = SessionRunner.new(uid: session.uid, cwd: session.cwd, attach: attachment)
             account = Etc.getpwuid(Integer(session.uid))
+            raise ArgumentError, "session account group differs" unless account.gid == session.gid
             @session_uid = account.uid
             @session_id = session.invocation_id
             @session_role = session.role
@@ -129,6 +132,7 @@ module Ace
             # even a provider-expiring credential file could outlive its uid.
             raise Refusal.new("session access requires revocation supervision and session-bound cleanup before issuance")
           end
+          @session_attachment&.verify_session!
 
           ttl = ttl_minutes || profile["ttl_minutes"]
           unless ttl.is_a?(Integer) && ttl.positive?
@@ -169,7 +173,8 @@ module Ace
           # A privileged session must have a safe handoff destination before
           # a remote token exists. Delivery can still fail later (e.g. disk
           # full), in which case the existing revoke-pending recovery applies.
-          handoff = CredentialHandoff.new(@credentials_dir, recipient: principal, owner_uid: @session_uid)
+          handoff = CredentialHandoff.new(@credentials_dir, recipient: principal, owner_uid: @session_uid,
+            create_root: @session_uid.nil?)
           handoff.prepare! if @session_uid
 
           # One request flow at a time per correlation: find_live +
@@ -185,7 +190,8 @@ module Ace
               # lease with a different granted scope or principal is a
               # mismatched retry — refusing it never silently reuses a
               # wider grant for a narrower ask.
-              unless existing["repos"] == repos && existing["principal"] == principal && session_matches?(existing)
+              same_issuer = !@session_uid || existing["issuer_invocation"] == @issuer_invocation
+              unless existing["repos"] == repos && existing["principal"] == principal && session_matches?(existing) && same_issuer
                 raise Refusal.new("a live lease for task '#{task}' assignment '#{assignment}' " \
                   "profile '#{profile_name}' role '#{role}' already exists with scope " \
                   "[#{existing["repos"].join(", ")}] for principal '#{existing["principal"]}'; " \
@@ -221,7 +227,10 @@ module Ace
             begin
               granted = issue.issue(profile: profile, lease: lease)
             rescue Providers::RefusedError => e
-              @store.update(lease["id"]) { |record| record["state"] = "revoked" }
+              @store.update(lease["id"]) do |record|
+                record["state"] = "revoked"
+                record["cleanup"] = {"result" => "not-issued", "at" => Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")}
+              end
               raise Refusal.new("provider refused: #{e.message}")
             rescue Providers::TransientError, Providers::OutcomeUnknownError => e
               @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
@@ -241,7 +250,9 @@ module Ace
             # reconcile to finish — an interrupted handoff must not be
             # reusable by a retry.
             begin
+              @session_attachment&.verify_session!
               handoff.deliver(lease["id"], granted["token"])
+              @session_attachment&.verify_session!
             rescue StandardError => e
               @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
               raise Error.new("credential handoff failed: #{e.message}; " \
@@ -403,6 +414,29 @@ module Ace
 
         # --- reconcile -----------------------------------------------------
 
+        # Invoked before accepting new issuer connections after host startup.
+        # The exclusive lifecycle lock excludes live issuers; no separate
+        # recovery registry is needed because the canonical lease records
+        # already carry their issuer invocation IDs.
+        def recover_issuers
+          unless Process.uid.zero? && Process.euid.zero? && @session_uid.nil? && @principal.call == "root"
+            raise Refusal.new("issuer recovery requires the root operator")
+          end
+          @store.with_issuer_lifecycle_lock(exclusive: true) do
+            records = @store.all
+            problems = records.any? { |record| record["corrupt"] }
+            invocations = records.filter_map { |record| record["issuer_invocation"] unless record["corrupt"] }.uniq
+            results = invocations.flat_map do |invocation|
+              revoke_issuer(invocation: invocation)
+            rescue Error, SystemCallError
+              problems = true
+              []
+            end
+            raise Error, "startup issuer recovery has unresolved leases" if problems
+            results
+          end
+        end
+
         # Root-owned issuer cleanup can be called for the exact systemd
         # invocation after its worker has exited or its service stopped.
         # Corrupt records cannot be attributed safely and therefore block a
@@ -423,12 +457,12 @@ module Ace
                 unless current["id"] == record["id"] && current["issuer_invocation"] == invocation
                   raise Error, "issuer lease identity changed during recovery"
                 end
-                outcome = revoke(lease_id: record.fetch("id"))
+                revoke(lease_id: record.fetch("id"))
                 after = @store.load(record.fetch("id"))
-                unless after["state"] == "revoked" && after.dig("cleanup", "result") != "forced-terminal"
+                unless after["state"] == "revoked" && %w[revoked already_invalid cleared not-issued].include?(after.dig("cleanup", "result"))
                   raise Error, "issuer lease revocation is unconfirmed"
                 end
-                outcome
+                after.dig("cleanup", "result")
               end
               {"lease" => record.fetch("id"), "cleanup" => outcome.to_s}
             rescue StandardError

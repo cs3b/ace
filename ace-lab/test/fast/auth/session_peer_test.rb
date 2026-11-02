@@ -14,17 +14,20 @@ module Ace
         Account = Struct.new(:name, :uid, :gid)
 
         class FakePlatform
-          attr_accessor :exited, :groups
+          attr_accessor :exited, :groups, :main_uid, :main_exited
           def supported! = true
           def peer(_socket) = {"pid" => 123, "uid" => 62_000, "gid" => 62_000, "groups" => groups || [62_000]}
+          def capture(pid) = {"pid" => pid, "uid" => main_uid || 62_000, "gid" => 62_000, "groups" => groups || [62_000]}
+          def pin(_identity) = (@main_handle = File.open(File::NULL))
           def live!(_peer) = true
-          def exited?(_handle) = !!exited
+          def exited?(handle) = !!exited || (handle == @main_handle && !!main_exited)
         end
 
         class FakeManager
-          attr_accessor :properties, :invocation
+          attr_accessor :properties, :invocation, :main_pid
           def initialize
             @invocation = INVOCATION
+            @main_pid = "123"
             @properties = {"User" => "ace-worker", "DynamicUser" => true,
                            "NoNewPrivileges" => true, "CapabilityBoundingSet" => 0,
                            "KillMode" => "control-group", "Delegate" => true,
@@ -33,7 +36,8 @@ module Ace
           end
           def unit_for_pidfd(handle:) = {"unit" => UNIT, "invocation_id" => invocation}
           def inspect_units = {"service" => {"ActiveState" => "active", "ControlGroup" => GROUP,
-                                             "Slice" => SessionPeer::SLICE, "InvocationID" => INVOCATION}}
+                                             "Slice" => SessionPeer::SLICE, "InvocationID" => INVOCATION,
+                                             "MainPID" => main_pid}}
           def typed_properties(**) = properties
         end
 
@@ -72,8 +76,10 @@ module Ace
           assert_equal INVOCATION, identity.invocation_id
           assert_equal File.realpath(@root), identity.cwd
           refute identity.pidfd.closed?
+          refute identity.main_pidfd.closed?
           identity.close
           assert identity.pidfd.closed?
+          assert identity.main_pidfd.closed?
         end
 
         def test_refuses_a_reused_unit_or_unsafe_runtime_policy
@@ -97,6 +103,17 @@ module Ace
 
         def test_refuses_supplementary_groups_outside_the_session
           @platform.groups = [62_000, 0]
+          assert_raises(Error) { @peer.authenticate(FakeSocket.new) }
+        end
+
+        def test_refuses_main_process_owned_by_another_identity
+          @platform.main_uid = 62_001
+          assert_raises(Error) { @peer.authenticate(FakeSocket.new) }
+        end
+
+        def test_distinct_exited_main_process_is_rejected_even_if_peer_is_alive
+          @manager.main_pid = "124"
+          @platform.main_exited = true
           assert_raises(Error) { @peer.authenticate(FakeSocket.new) }
         end
 

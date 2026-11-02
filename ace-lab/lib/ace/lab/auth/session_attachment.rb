@@ -14,7 +14,8 @@ module Ace
           manager: nil, command: Ace::Runtime::Molecules::SystemdScopeManager::Command.new)
           raise ArgumentError, "session attachment requires a root issuer" unless Process.euid.zero?
           unless identity.is_a?(SessionPeer::Identity) && SessionPeer::UNIT.match?(identity.unit) &&
-              identity.pidfd.is_a?(IO) && !identity.pidfd.closed?
+              identity.pidfd.is_a?(IO) && !identity.pidfd.closed? &&
+              identity.main_pidfd.is_a?(IO) && !identity.main_pidfd.closed?
             raise ArgumentError, "session attachment requires an authenticated identity"
           end
           @identity, @platform, @command = identity, platform, command
@@ -26,16 +27,23 @@ module Ace
           raise ArgumentError, "child pid is invalid" unless pid.is_a?(Integer) && pid.positive?
           child = @platform.pin(@platform.capture(pid))
           expected = {"unit" => @identity.unit, "invocation_id" => @identity.invocation_id}
-          verify!(@identity.pidfd, expected)
+          verify_session!
           @command.call([Ace::Runtime::Molecules::SystemdScopeManager::BUSCTL, "--system", "--no-pager",
             "--auto-start=no", "--allow-interactive-authorization=no", "call", "org.freedesktop.systemd1",
             "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "AttachProcessesToUnit",
             "ssau", @identity.unit, "", "1", pid.to_s], timeout: 5)
           verify!(child, expected)
-          verify!(@identity.pidfd, expected)
+          verify_session!
           true
         ensure
           child&.close unless child&.closed?
+        end
+
+        def verify_session!
+          expected = {"unit" => @identity.unit, "invocation_id" => @identity.invocation_id}
+          verify!(@identity.pidfd, expected)
+          verify!(@identity.main_pidfd, expected)
+          true
         end
 
         private

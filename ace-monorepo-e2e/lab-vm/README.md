@@ -91,6 +91,34 @@ merges their tested PRs in dependency order, and leaves the release queued. A
 second run after reset and the restart, idempotency, idle and failure checks
 are required before calling the environment accepted.
 
+`probe-issuer-cleanup.py` is a narrower diagnostic for an already installed
+candidate in a disposable Linux working VM. Run it as root in the guest,
+passing its Ruby executable, candidate gem home, shared dependency gem path,
+and exact candidate version. It creates its own temporary systemd unit and
+synthetic provider, kills the unit's main process, and checks the installed
+cleanup entry point, lease record and handoff removal. For example:
+
+```sh
+python3 probe-issuer-cleanup.py --ruby /opt/ace/toolchains/ruby-VERSION/bin/ruby \
+  --gem-home /opt/ace/probe-lab-VERSION --shared-gems /opt/ace/runtime/gems \
+  --version GEM_VERSION
+```
+
+The probe removes its temporary unit and, on success, its files. On failure it
+prints the retained guest paths for diagnosis. It does not contact Forgejo or
+prove the real issuer's installation, host reboot recovery or the autonomous
+Overseer acceptance scenario.
+
+`probe-forgejo-revoke.py` takes the same arguments and runs as root inside a
+provisioned working VM with `ace-e2e-forgejo.service` active. It creates a
+temporary Forgejo administrator, issues a token limited to the local fixture
+repository, verifies access before and denial after issuer recovery, and
+checks handoff removal. The generated password stays in a root-only guest
+file. On success the probe removes its temporary administrator and files; on
+failure it prints the retained guest paths and account name so an operator can
+recover any uncertain token before removing them. This is a provider probe,
+not a full autonomous cycle or a power-loss test.
+
 ### Restoring a compressed diagnostic export
 
 Some older diagnostic exports may be kept as `UUID.utm.zip` with a private

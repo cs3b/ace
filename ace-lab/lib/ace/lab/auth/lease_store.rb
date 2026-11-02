@@ -6,6 +6,7 @@ require "fileutils"
 require "digest"
 require "time"
 require_relative "session_peer"
+require_relative "credential_handoff"
 
 module Ace
   module Lab
@@ -165,6 +166,33 @@ module Ace
 
             yield
           end
+        end
+
+        # Issuers hold the shared side for their lifetime. Startup recovery
+        # takes the exclusive side before scanning the same canonical store,
+        # so it cannot mistake a live issuer for an interrupted one.
+        def with_issuer_lifecycle_lock(exclusive:)
+          raise ArgumentError, "issuer lock mode must be explicit" unless [true, false].include?(exclusive)
+
+          if Process.euid.zero?
+            CredentialHandoff.new(@dir, recipient: "root").validate_root_directory!(create: true, searchable: false)
+          else
+            FileUtils.mkdir_p(@dir)
+          end
+          flags = File::CREAT | File::RDWR | File::NOFOLLOW
+          path = File.join(@dir, "issuer-lifecycle.lock")
+          File.open(path, flags, 0o600) do |lock|
+            stat = lock.stat
+            named = File.lstat(path)
+            unless stat.file? && stat.uid == Process.euid && stat.nlink == 1 && (stat.mode & 0o077).zero? &&
+                !named.symlink? && [stat.dev, stat.ino] == [named.dev, named.ino]
+              raise Error, "issuer lifecycle lock is not safely owned"
+            end
+            lock.flock(exclusive ? File::LOCK_EX : File::LOCK_SH)
+            yield
+          end
+        rescue Errno::ELOOP
+          raise Error, "issuer lifecycle lock must not be a symlink"
         end
 
         # Usable NOW: only an ISSUED record inside its deadlines. A

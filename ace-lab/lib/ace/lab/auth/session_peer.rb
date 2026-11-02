@@ -22,9 +22,10 @@ module Ace
                       "CapabilityBoundingSet" => "t", "KillMode" => "s", "Delegate" => "b",
                       "RuntimeDirectory" => "as", "RuntimeDirectoryPreserve" => "s"}.freeze
 
-        Identity = Struct.new(:uid, :gid, :role, :invocation_id, :unit, :cwd, :runtime_dir, :pidfd, keyword_init: true) do
+        Identity = Struct.new(:uid, :gid, :role, :invocation_id, :unit, :cwd, :runtime_dir, :pidfd, :main_pidfd, keyword_init: true) do
           def close
             pidfd.close unless pidfd.closed?
+            main_pidfd.close unless main_pidfd.closed?
           end
         end
 
@@ -66,6 +67,19 @@ module Ace
               manager_identity.fetch("unit") == unit && manager_identity.fetch("invocation_id") == observed["InvocationID"]
             raise Error, "session unit or invocation changed"
           end
+          main_pid = observed["MainPID"]
+          unless main_pid.is_a?(String) && main_pid.match?(/\A[1-9][0-9]*\z/)
+            raise Error, "session main process is unavailable"
+          end
+          main = @platform.capture(Integer(main_pid, 10))
+          unless main["uid"] == peer["uid"] && main["gid"] == peer["gid"] &&
+              main.fetch("groups").all? { |group| group == peer["gid"] }
+            raise Error, "session main process identity differs"
+          end
+          main_handle = @platform.pin(main)
+          unless manager.unit_for_pidfd(handle: main_handle) == manager_identity
+            raise Error, "session main process invocation differs"
+          end
           properties = manager.typed_properties(unit: unit, interface: "Service", signatures: PROPERTIES)
           begin
             account = @account_lookup.call(peer.fetch("uid"))
@@ -88,15 +102,17 @@ module Ace
           cwd = File.realpath(File.join(@proc_root, peer.fetch("pid").to_s, "cwd"))
           @platform.live!(peer)
           raise Error, "session peer has exited" if @platform.exited?(handle)
-          unless manager.unit_for_pidfd(handle: handle) == manager_identity
+          unless manager.unit_for_pidfd(handle: handle) == manager_identity &&
+              !@platform.exited?(main_handle) && manager.unit_for_pidfd(handle: main_handle) == manager_identity
             raise Error, "session unit or invocation changed"
           end
 
           Identity.new(uid: peer.fetch("uid"), gid: peer.fetch("gid"), role: match[1],
             invocation_id: manager_identity.fetch("invocation_id"), unit: unit,
-            cwd: cwd, runtime_dir: runtime_dir, pidfd: handle).freeze
+            cwd: cwd, runtime_dir: runtime_dir, pidfd: handle, main_pidfd: main_handle).freeze
         rescue Exception
           handle&.close unless handle&.closed?
+          main_handle&.close unless main_handle&.closed?
           raise
         end
 
