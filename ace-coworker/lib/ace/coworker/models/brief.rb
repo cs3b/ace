@@ -27,6 +27,7 @@ module Ace
             "task" => config.task,
             "task_path" => task_path,
             "assignment" => config.assignment,
+            "config_path" => config.source_path,
             "assignment_state" => assignment_snapshot&.state,
             "assignment_progress" => assignment_snapshot&.progress,
             "overseer" => config.overseer,

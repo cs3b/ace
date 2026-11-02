@@ -52,10 +52,13 @@ a missing coworker — you report the gap and escalate.
 ## Standing observation
 
 After start, arm `/eyes` with the project's eyes configuration (interval 15s is
-the default reconcile cadence). `ace-overseer observe` — what eyes polls —
-projects the six local source classes from their owners: project tasks,
+the default reconcile cadence). If the configuration is missing or invalid,
+delegate its preparation or raise a precise HITL blocker; do not create or
+edit it yourself. `ace-overseer observe` — what eyes polls —
+projects local source classes from their owners: project tasks,
 private `_overseer` tasks, worktrees, coworker availability (existing run
-identifiers, never pane names), assignment progress and HITL events. A real
+identifiers, never pane names), assignment progress, configured project
+session states and HITL events. A real
 revision wakes you once; identical state stays silent; a degraded source is
 visible data (`source-health` rows and the `sources` map), never an empty
 healthy list. After a restart, reconcile pending revisions first — a report

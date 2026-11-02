@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Include the selected configuration path in the executor's report command.
+- Prepare and independently verify commissioned project eyes configuration before the project Overseer starts.
 - Require direct ACE checks and their actual exit status in bootstrap worker and verifier evidence.
 
 ## [0.8.0] - 2026-10-31

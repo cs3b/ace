@@ -17,6 +17,9 @@ Record the known failure and desired outcome in the commission; discovering
 the root cause is part of the assigned work, never a prerequisite for dispatch.
 Use existing readiness state, or a startup dry run only when that state is
 otherwise unknown. Do not turn that check into a technical investigation.
+Run every `ace-*` command directly, without a pipe, redirection or output
+post-processing. Record its actual exit status; if it prints a path, read the
+file. A pipeline's exit status cannot establish that an ACE operation passed.
 Once the symptom is known, proceed to task creation/reconciliation, observation
 and worker dispatch, then end the turn.
 
@@ -38,6 +41,11 @@ configuration and readiness to start. Do not require a running project
 Overseer, a first turn, or active project eyes in either worker assignment:
 those are the coordinator's confirm-start checks after verification. Workers
 must not start the project Overseer themselves. This prevents a circular gate.
+The commission must include the target project's eyes configuration path and
+the actual configured HITL recipient: the worker prepares the configuration
+and the independent verifier checks it before project start. Missing or
+ambiguous recipient information is a blocker, never a guessed address. The
+project Overseer arms the prepared configuration; it does not create or edit it.
 The project's private task directory is `<project>/.ace-tasks/_overseer`;
 never require or create a top-level `<project>/_overseer` directory.
 
@@ -163,6 +171,11 @@ overseer perform this commission's project-start coordination operation `ace-ove
 turn and active eyes from actual session evidence. A ready process alone is
 not initialized observation. Close the confirmation step and managing task
 only with these proofs; the worker report alone cannot close the family.
+If first-prompt delivery is unconfirmed, preserve the existing session and do
+not submit the prompt again. Inspect its actual activity and escalate an
+unresolved delivery through HITL. The project-session observation can wake you
+on a configured project's Herdr state change; that state alone does not prove
+the project has armed eyes.
 
 On error, keep the step open and route repair to the worker. Missing authority
 or an actual Captain decision becomes a precise HITL question; end the turn

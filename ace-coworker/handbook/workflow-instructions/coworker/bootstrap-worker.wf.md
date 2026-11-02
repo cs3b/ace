@@ -54,3 +54,7 @@ Verify the requested configuration and installed dependency readiness. Record
 before/after state and exact checks without secrets. Do not start another
 project overseer yourself: after independent verification the lab coordinator
 owns reconcile/start. Leave unrelated work and live services untouched.
+Prepare the commissioned project eyes configuration using its explicit path
+and actual configured HITL recipient. Check the observation command and
+source health without starting the project agent; missing recipient, authority
+or degraded observation is a blocking report, not a guessed configuration.

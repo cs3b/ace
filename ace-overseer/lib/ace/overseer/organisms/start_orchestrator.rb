@@ -111,11 +111,9 @@ module Ace
 
             state = agent_state(owner["id"])
             if state
-              # a live agent is a PROCESS, not necessarily a completed
-              # start — the missing first-turn initialization is
-              # repaired through the existing session (see
-              # repair_reused_initialization)
-              warning = repair_reused_initialization(owner["id"], state)
+              # A live process does not prove that its first prompt was
+              # delivered. Never repeat an uncertain submission on reuse.
+              warning = reused_session_warning(state)
               return report.merge("status" => "reused", "pane" => owner["id"],
                 "workspace" => owner["workspace_id"] || owner["workspace"],
                 "prompt_failed" => !warning.nil?,
@@ -351,7 +349,7 @@ module Ace
             end
             state = agent_state(owner["id"])
             if state
-              warning = repair_reused_initialization(owner["id"], state)
+              warning = reused_session_warning(state)
               return {"status" => "reused", "pane" => owner["id"], "replaced_pane" => nil,
                       "prompt_failed" => !warning.nil?, "message" => warning}
             end
@@ -602,32 +600,28 @@ module Ace
         # herdr observed working/blocked activity, so the turn actually
         # began — a stall, timeout or pre-send failure is an uncertain
         # outcome, returned as a visible warning instead of a readiness
-        # claim. Never raised: the agent itself is live and idle.
+        # claim. The process exists, but may already have begun its turn.
         def first_prompt(pane)
           @executor.agent_prompt(pane: pane, text: FIRST_TURN_PROMPT,
             wait: true, until_states: %w[working blocked], timeout_ms: FIRST_TURN_TIMEOUT_MS)
           nil
         rescue Ace::Herdr::ExecutorError => e
-          "the agent is started and idle, but its first turn could not be " \
-            "confirmed delivered (#{e.message}); re-run start to repair the " \
-              "missing initialization"
+          "the agent is started, but its first turn could not be " \
+            "confirmed delivered (#{e.message}); inspect the existing session " \
+              "and resolve the uncertain delivery before taking further action"
         end
 
         # A REUSED live agent proves a process, not a completed start.
-        # Classification through the existing herdr session state (no
-        # parallel store): working/blocked = mid-conversation, the first
-        # turn is already underway — never interrupted; idle/done =
-        # ready for input — the first-turn prompt is (re-)delivered
-        # through the existing session with the activity gate, which
-        # repairs a missing initialization without restarting anything
-        # (a healthy agent simply reconciles once and settles); any
-        # other state is visibly unconfirmed, never a readiness claim.
-        def repair_reused_initialization(pane, state)
+        # Working/blocked is live activity. An idle or done process does not
+        # distinguish a never-submitted prompt from one which already ran.
+        # Report uncertainty and preserve the session rather than resend.
+        def reused_session_warning(state)
           case state
           when "working", "blocked"
             nil
           when "idle", "done"
-            first_prompt(pane)
+            "the reused agent is #{state}; its first turn could not be " \
+              "verified from process state alone — inspect the session before relying on it"
           else
             "the reused agent state is '#{state}'; its first turn could not " \
               "be verified — inspect the session before relying on it"

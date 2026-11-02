@@ -3,7 +3,7 @@
 require_relative "../../test_helper"
 
 module Molecules
-  # Task 8xs.t.pu0.3: the standing local observation projects the six
+  # Task 8xs.t.pu0.3: the standing local observation projects
   # source classes from their owners with stable keys/revisions, and a
   # failing source degrades only itself.
   class LocalSourcesTest < Minitest::Test
@@ -45,10 +45,13 @@ module Molecules
     end
 
     def sources(tasks: {}, worktrees: [], worktree_error: nil, probe: nil)
+      no_project_sessions = Object.new
+      def no_project_sessions.configured? = false
       Ace::Overseer::Molecules::LocalSources.new(
         task_manager: FakeTaskManager.new(tasks),
         worktree_manager: FakeWorktreeManager.new(worktrees, error: worktree_error),
-        probe_factory: ->(_path) { probe || FakeProbe.new({config: nil, assignments: []}) }
+        probe_factory: ->(_path) { probe || FakeProbe.new({config: nil, assignments: []}) },
+        project_sessions: no_project_sessions
       )
     end
 
@@ -109,6 +112,35 @@ module Molecules
       assert_equal "ok", result["sources"]["overseer_tasks"]["status"]
       marker = result["events"].find { |row| row["type"] == "source-health" }
       refute_nil marker, "the degraded source is visible data, not an empty healthy list"
+    end
+
+    def test_project_session_failure_is_visible_without_hiding_local_tasks
+      sessions = Object.new
+      def sessions.configured? = true
+      def sessions.call = raise(Ace::Overseer::Error, "herdr unavailable")
+      task = FakeTask.new(id: "8xs.t.pu0", status: "pending", title: "work", dependencies: [], subtasks: [])
+      result = Ace::Overseer::Molecules::LocalSources.new(
+        task_manager: FakeTaskManager.new({"next" => [task]}),
+        worktree_manager: FakeWorktreeManager.new([]), project_sessions: sessions
+      ).call
+      assert_equal "degraded", result.fetch("sources").fetch("project_sessions").fetch("status")
+      assert result.fetch("events").any? { |row| row["key"] == "source:project_sessions" }
+      assert result.fetch("events").any? { |row| row["key"] == "task:8xs.t.pu0" }
+    end
+
+    def test_unavailable_project_session_degrades_source_but_keeps_healthy_rows
+      sessions = Object.new
+      def sessions.configured? = true
+      def sessions.call
+        [{"key" => "bad", "revision" => "bad-revision", "type" => "project-session", "state" => "unavailable"},
+         {"key" => "good", "type" => "project-session", "state" => "working"}]
+      end
+      result = Ace::Overseer::Molecules::LocalSources.new(
+        task_manager: FakeTaskManager.new({}), worktree_manager: FakeWorktreeManager.new([]),
+        project_sessions: sessions
+      ).call
+      assert_equal "degraded", result.fetch("sources").fetch("project_sessions").fetch("status")
+      assert_equal %w[bad good source:project_sessions], result.fetch("events").map { |row| row.fetch("key") }
     end
 
     def test_repeated_identical_failure_keeps_the_same_revision

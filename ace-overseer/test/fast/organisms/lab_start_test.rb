@@ -261,7 +261,7 @@ module Organisms
 
       # Simulate the started panes now being live agents.
       def executor.agent_get(_pane)
-        FakePaneResult.new({"result" => {"agent" => {"agent_status" => "idle"}}})
+        FakePaneResult.new({"result" => {"agent" => {"agent_status" => "working"}}})
       end
       second = orchestrator(executor).call
 
@@ -284,7 +284,7 @@ module Organisms
       executor.add_pane({"id" => "p-alpha-live", "title" => "overseer-alpha",
         "cwd" => alpha, "workspace_id" => "ws-manual"})
       def executor.agent_get(_pane)
-        FakePaneResult.new({"result" => {"agent" => {"agent_status" => "idle"}}})
+        FakePaneResult.new({"result" => {"agent" => {"agent_status" => "working"}}})
       end
 
       report = orchestrator(executor).call
@@ -439,10 +439,8 @@ module Organisms
       assert(report["projects"].all? { |project| project["prompt_failed"] })
     end
 
-    # Review R7, probe 2: a repeated start after a failed delivery
-    # repairs the missing initialization through the existing session
-    # — only then is the lab ready.
-    def test_restart_after_failed_delivery_repairs_initialization_then_is_ready
+    # A failed activity gate does not prove the prompt was not sent.
+    def test_restart_after_uncertain_delivery_stays_partial_without_resending
       executor = FakeExecutor.new
       def executor.agent_prompt(pane:, text:, wait: false, timeout_ms: nil, until_states: nil)
         raise Ace::Herdr::CommandError, "synthetic initial delivery failure" if @failed_delivery
@@ -461,12 +459,11 @@ module Organisms
       end
       second = orchestrator(executor).call
 
-      assert_equal true, second["ready"], second.inspect
-      assert_equal false, second["prompt_failed"]
-      assert(second["projects"].all? { |project| !project["prompt_failed"] })
-      lab_prompts = executor.prompts.count { |entry| entry[:pane] == "p-overseer-lab" }
-      assert_operator lab_prompts, :>=, 1, "the lab session's first turn is re-delivered"
-      assert_equal 3, executor.tabs.size, "repair reuses the sessions, no restart"
+      assert_equal false, second["ready"], second.inspect
+      assert_equal true, second["prompt_failed"]
+      assert(second["projects"].all? { |project| project["prompt_failed"] })
+      assert_empty executor.prompts, "uncertain prompts are not sent again"
+      assert_equal 3, executor.tabs.size, "the sessions are reused, not restarted"
     end
 
     def test_empty_lab_with_unconfirmed_first_turn_is_not_ready

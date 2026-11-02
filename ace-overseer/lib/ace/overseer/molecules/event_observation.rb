@@ -8,9 +8,10 @@ module Ace
       # Read-only standing observation (task 8xs.t.pu0.3). HITL owns
       # semantic revisions; the existing private task tree owns report
       # adoption and continuation, never this view. The projection arms
-      # the started overseer with the six local source classes — HITL
+      # the started overseer with local source classes — HITL
       # events plus LocalSources (project tasks, _overseer tasks,
-      # worktrees, coworker availability, assignment progress) — every
+      # worktrees, coworker availability, assignment progress and project
+      # sessions) — every
       # row read from its state owner, with per-source health so a
       # failing source degrades only itself and healthy silence projects
       # identical revisions (no model turns).

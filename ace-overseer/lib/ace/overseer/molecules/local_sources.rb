@@ -7,9 +7,9 @@ module Ace
   module Overseer
     module Molecules
       # Standing local-state observation (task 8xs.t.pu0.3): projects the
-      # six local source classes the started overseer watches — project
+      # local source classes the started overseer watches — project
       # tasks, private _overseer tasks, worktrees, coworker availability,
-      # assignment progress and HITL events — each read from its STATE
+      # assignment progress, project sessions and HITL events — each read from its STATE
       # OWNER (ace-task, ace-git-worktree, ace-coworker probe, ace-assign
       # inventory, ace-hitl). This molecule owns no second state: every
       # row is a {key, revision, type} projection whose revision changes
@@ -21,12 +21,13 @@ module Ace
       # (an identical repeated failure never re-wakes; a new failure mode
       # wakes once), while the healthy sources keep projecting.
       class LocalSources
-        def initialize(task_manager: nil, worktree_manager: nil, probe_factory: nil)
+        def initialize(task_manager: nil, worktree_manager: nil, probe_factory: nil, project_sessions: nil)
           @tasks = task_manager || Ace::Task::Organisms::TaskManager.new
           @worktrees = worktree_manager || Ace::Git::Worktree::Organisms::WorktreeManager.new
           @probe_factory = probe_factory || ->(path) {
             Ace::Coworker::Molecules::WorktreeExecutorProbe.new(project_root: path)
           }
+          @project_sessions = project_sessions || ProjectSessions.new
         end
 
         # @return [Hash] {"events" => Array<{key, revision, type, ...}>,
@@ -39,6 +40,17 @@ module Ace
           collect(sources, events, "overseer_tasks") { overseer_task_events }
           collect(sources, events, "worktrees") { worktree_events }
           collect(sources, events, "coworkers") { coworker_events }
+          if @project_sessions.configured?
+            collect(sources, events, "project_sessions") { @project_sessions.call }
+            failed_sessions = events.select { |event| event["type"] == "project-session" && event["state"] == "unavailable" }
+            unless failed_sessions.empty?
+              sources["project_sessions"] = {"status" => "degraded", "error" => "one or more configured project sessions are unavailable"}
+              failures = failed_sessions.map { |event| [event.fetch("key"), event.fetch("revision")] }.sort
+              events << {"key" => "source:project_sessions", "revision" => revision(failures),
+                         "type" => "source-health", "status" => "degraded",
+                         "error" => "one or more configured project sessions are unavailable"}
+            end
+          end
 
           {"events" => events, "sources" => sources}
         end

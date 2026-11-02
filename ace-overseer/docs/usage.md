@@ -87,11 +87,11 @@ Behavior:
   Delivery is confirmed through herdr's activity gate (`agent prompt
   --wait`): success means observed working activity, so the turn began. A
   delivery failure after a started agent never reports the start as failed:
-  the report stays `started` with `prompt_failed: true` and a repairable
-  warning. On a later start, a live reused agent ready for input gets the
-  first-turn prompt re-delivered through the same gate (repairing a missing
-  initialization without restarting anything); a working/blocked agent is
-  never interrupted, and an unclassifiable state stays visibly unconfirmed.
+  the report stays `started` with `prompt_failed: true` and an uncertain
+  delivery warning. A later start never re-sends the prompt solely because a
+  reused agent is idle or done: either state can follow a delivered prompt.
+  Such reuse remains unconfirmed until the existing session is inspected;
+  a working/blocked agent is never interrupted.
 - The report carries `status` (`started|reused|blocked|dry_run`), `scope`,
   `root`, `label`, `workspace`, `pane`, `agent`, `profile`, `instructions`
   (`source` + resolved `path`) and a `message`. Exit 0 only for a ready
@@ -158,12 +158,10 @@ explicitly through `start --scope lab`:
   (an unhealthy project — or a session whose first turn failed or stays
   unconfirmed — is reported with its concrete reason while healthy projects
   run — never false success), `blocked` (unreadable topology / conflicting
-  roles). A repeated start repairs only what is missing: healthy sessions
-  are reused, manual panes are never closed, nothing healthy is restarted,
-  and a reused session that is ready for input gets its first-turn prompt
-  re-delivered through herdr's activity gate (`agent prompt --wait`) to
-  confirm or repair initialization; a working/blocked agent is never
-  interrupted, and an unclassifiable one stays visibly unconfirmed.
+  roles). Repeated start reuses live sessions and never closes manual panes.
+  An idle or done reused session remains unconfirmed without trustworthy
+  first-turn evidence, even if it was previously healthy. No first prompt is
+  re-sent automatically; inspect the session to resolve uncertainty.
 - `--dry-run` lists the plan (space + per-project would_start) and creates
   nothing. The report carries per-project results (`projects`), the count,
   and the lab-level readiness; exit 0 for ready, non-zero for partial and
@@ -174,7 +172,7 @@ explicitly through `start --scope lab`:
 ## `ace-overseer observe`
 
 Read-only standing observation the started overseer's eyes poll (task
-8xs.t.pu0.3). The projection merges the six local source classes, each read
+8xs.t.pu0.3). The projection merges local source classes, each read
 from its state owner — never a second task/assignment state:
 
 - HITL events (semantic revisions; reports/questions toward this owner),
@@ -182,7 +180,10 @@ from its state owner — never a second task/assignment state:
 - worktrees (`ace-git-worktree`),
 - coworker availability and assignment progress (`ace-coworker` probe over the
   `ace-assign` inventory; live/stale judged by existing run identifiers —
-  commissioned assignment ids — never pane names).
+  commissioned assignment ids — never pane names),
+- configured project Overseer session states from `ace-lab` project locations
+  and Herdr. Session activity is a wake signal, not proof that project eyes
+  are armed; inspect the session for that evidence.
 
 Every row carries a stable `key` and a `revision` that changes only when the
 owner's data changes: identical state projects identical revisions (healthy

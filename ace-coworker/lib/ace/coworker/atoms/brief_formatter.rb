@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "shellwords"
+
 module Ace
   module Coworker
     module Atoms
@@ -19,11 +21,11 @@ module Ace
           lines << "  instructions src:  #{h['instructions_source']}"
           lines << "  start prompt:      #{h['start_prompt']}"
           lines << "  task:              #{h['task']} (#{h['task_path']})"
-          lines << "  assignment:        drive with --assignment #{h['assignment']}"
+          lines << "  assignment:        drive with --assignment #{Shellwords.escape(h.fetch('assignment'))}"
           lines << "  assignment state:  #{h['assignment_state']} (#{h['assignment_progress']})"
           lines << "  overseer:          #{h['overseer']} (channel: #{h['reporting_channel']})"
           lines << "  on failure:        #{h['on_failure']}"
-          lines << "  report with:      ace-coworker report --assignment #{h['assignment']}"
+          lines << "  report with:      ace-coworker report --config #{Shellwords.escape(h.fetch('config_path'))} --assignment #{Shellwords.escape(h.fetch('assignment'))}"
           lines << "  project root:      #{h['project_root']}"
           lines.join("\n")
         end

@@ -9,10 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Observe configured project Overseer session state changes through the existing lab topology and Herdr.
 - Observe configured Forgejo issue collections through semantic revisions, including closures and visible source failures.
 
 ### Fixed
 
+- Do not resend an uncertain first-turn prompt when reusing an idle session; report the missing evidence instead.
+- Delegate project eyes configuration to the bootstrap worker instead of creating it in the Overseer session.
 - Surface invalid remote PR observation entries as degraded source events without masking valid sources.
 
 - Escalate missing forge access through session-scoped auth instead of searching for or configuring persistent credentials.

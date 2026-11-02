@@ -49,6 +49,8 @@ the actual target files and installed runtime independently. Verify requested
 configuration, allowed-change boundaries, executable resolution and dependency
 readiness with the task's explicit checks; compare actual results with the
 worker's claims. Do not repair the target or accept your own preparation.
+Independently check the commissioned eyes configuration and its configured
+HITL recipient, plus observation source health without starting an agent.
 Report discrepancies as failure for the coordinator to return to the worker.
 
 Do not start the project overseer: the coordinator owns the final reconcile,
