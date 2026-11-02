@@ -29,10 +29,10 @@
     },
     {
       "name": "ace-coworker",
-      "version": "0.8.1.pre.utm2",
-      "sha256": "f688b92bcbc1989356a2669030adadb21f67007aed57d2dc0ccf3656d4538f42",
+      "version": "0.8.1.pre.utm3",
+      "sha256": "8cff9b706ef624b9793d2c0e0e5b628bba7efdd32f378f8bad19019eac24495c",
       "source": "local",
-      "source_commit": "e05c3d0c4b9bcb9ffe5f5101b3a532ebc54a07d1"
+      "source_commit": "32eceff0ee9a2f79f8d78a66a1a54a935822d06b"
     },
     {
       "name": "ace-git",
@@ -80,10 +80,10 @@
     },
     {
       "name": "ace-herdr",
-      "version": "0.9.1.pre.utm4",
-      "sha256": "adceb55583da6f893e0bd8ac8fe2f6b2dec377153e7c461a2aff462ee8021d5e",
+      "version": "0.10.1.pre.utm1",
+      "sha256": "5df4b96d1bb3086c791deb7fff8eb46aa2c6dbb68a80920622183ce2d1010498",
       "source": "local",
-      "source_commit": "e05c3d0c4b9bcb9ffe5f5101b3a532ebc54a07d1"
+      "source_commit": "32eceff0ee9a2f79f8d78a66a1a54a935822d06b"
     },
     {
       "name": "ace-hitl",
@@ -105,10 +105,10 @@
     },
     {
       "name": "ace-lab",
-      "version": "0.14.2.pre.utm17",
-      "sha256": "97f90c4cca5c4482182c1126f3823750d65faa18f4f0c1d2f20f0ef2a50f6dea",
+      "version": "0.14.2.pre.utm18",
+      "sha256": "2f588a66ac4329ffa877ae41bb278bb847f080c7938d2d0495b1227def342133",
       "source": "local",
-      "source_commit": "3384bb2b27ddef711ba6fee7c1d136c4fe6782f7"
+      "source_commit": "32eceff0ee9a2f79f8d78a66a1a54a935822d06b"
     },
     {
       "name": "ace-llm",
@@ -124,10 +124,10 @@
     },
     {
       "name": "ace-overseer",
-      "version": "0.28.2.pre.utm13",
-      "sha256": "cc868a68989b19ac58c4cbe26d40d4defe64ffd3496f495227cdd2b63e1f529e",
+      "version": "0.28.2.pre.utm14",
+      "sha256": "f1d7b269cb74f7858313c95d2f305f1cd320da88f42703b85be411c8be6cf2f6",
       "source": "local",
-      "source_commit": "e05c3d0c4b9bcb9ffe5f5101b3a532ebc54a07d1"
+      "source_commit": "32eceff0ee9a2f79f8d78a66a1a54a935822d06b"
     },
     {
       "name": "ace-review",
@@ -221,10 +221,10 @@
     },
     {
       "name": "ace-wake",
-      "version": "0.2.1.pre.utm3",
-      "sha256": "e5c3f1950c5fcf9716300bd69bf874a28a4ab85dcaf7fede56da7f610c1c99e1",
+      "version": "0.2.1.pre.utm4",
+      "sha256": "c775d1072e98d4324cd3a2b7dcdb2b700b13e470d50218010efdabf96568f993",
       "source": "local",
-      "source_commit": "d5c1c3db34aa156b943db2df044fea8a0ec21a54"
+      "source_commit": "32eceff0ee9a2f79f8d78a66a1a54a935822d06b"
     },
     {
       "name": "addressable",
