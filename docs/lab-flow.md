@@ -111,7 +111,7 @@ does not contain the named task, the executor reports the missing task.
 4. **Create the assignment** — `ace-assign create --task <ref> --preset work-on-task` (writes `.ace-local/assign/`).
 5. **Drive it** — `/as-assign-drive` in the agent session; the steps execute and report under `.ace-local/assign/`.
 6. **Verify** — run package tests and review; results are recorded in the task folder or assignment reports.
-7. **Escalate blockers** — `ace-hitl create`, `ace-hitl list`, `ace-hitl update`, `ace-hitl wait` (writes `.ace-local/hitl/`; the overseer interprets the report/question and updates its own task in `.ace-tasks/_overseer/`).
+7. **Escalate blockers** — `ace-hitl create`, `ace-hitl list`, `ace-hitl update` (writes `.ace-local/hitl/`; the overseer interprets the report/question and updates its own task in `.ace-tasks/_overseer/`). For an answer, arm the appropriate observation and end the model turn; reconcile the exact case after a wake instead of blocking the turn with `ace-hitl wait` or polling.
 8. **Ship** — commit with `ace-git-commit`, then open a PR with `ace-git pr create` (a private `_overseer` task is never committed because the folder is gitignored).
 9. **Close** — mark the project task done with `ace-task update <ref> --set status=done` (archive when the family is terminal).
 
