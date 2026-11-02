@@ -20,6 +20,7 @@ module Ace
       PROGRAM_NAME = "ace-overseer"
 
       REGISTERED_COMMANDS = [
+        ["start", "Start the lab or project overseer"],
         ["work-on", "Start local task work"],
         ["handoff", "Hand the task worktree to the next role"],
         ["process-reports", "Process ace-hitl reports and continue the queue"],
@@ -31,6 +32,7 @@ module Ace
       ].freeze
 
       HELP_EXAMPLES = [
+        "ace-overseer start                    # Start in the current directory",
         "ace-overseer work-on 148              # Launch task in worktree",
         "ace-overseer handoff --task 148       # Hand the worktree to the next role",
         "ace-overseer process-reports          # Interpret reports, continue the queue",

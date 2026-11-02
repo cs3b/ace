@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
+require "shellwords"
 
 module Ace
   module Overseer
@@ -9,8 +10,8 @@ module Ace
         # `ace-overseer start [--dry-run] [--format table|json]`
         # (task 8xs.t.pu0.1): starts or reuses the project overseer
         # session from the directory's explicit start configuration.
-        # Exit 0 only for started/reused (dry-run reports the plan with
-        # exit 0 but creates nothing); a blocked start is a CLI error.
+        # Ready starts and dry runs exit 0; blocked or partial starts
+        # are CLI errors. A dry run creates no session.
         class Start < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
 
@@ -60,6 +61,8 @@ module Ace
             else
               raise Ace::Support::Cli::Error, report["message"] || "start blocked"
             end
+          rescue Interrupt
+            raise Ace::Support::Cli::Error.new("start interrupted; inspect existing sessions before retrying", exit_code: 130)
           rescue Ace::Support::Cli::Error
             raise
           rescue => e
@@ -83,9 +86,16 @@ module Ace
             end
             puts "  workspace:     #{report["workspace"] || "-"}"
             puts "  pane:          #{report["pane"] || "-"}"
-            puts "  agent:         #{report["agent"]}"
+            puts "  agent:         #{report["agent"] || "-"}"
+            puts "  command:       #{Shellwords.join(report["command"])}" if report["command"]
             puts "  replaced pane: #{report["replaced_pane"] || "-"}" if report["replaced_pane"]
             puts "  #{report["message"]}" if report["message"]
+            Array(report["projects"]).each do |project|
+              status = project["status"] || "unknown"
+              status += " (first turn unconfirmed)" if project["prompt_failed"]
+              puts "  project #{project["id"]}: #{status} (#{project["path"] || "-"}, pane: #{project["pane"] || "-"})"
+              puts "    #{project["message"]}" if project["message"]
+            end
           end
         end
       end

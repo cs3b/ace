@@ -2,6 +2,7 @@
 
 require_relative "../../test_helper"
 require "ace/overseer/cli/commands/start"
+require "shellwords"
 
 module Commands
   # Task 8xs.t.pu0.1: `ace-overseer start` CLI semantics — exit-0 only
@@ -17,6 +18,10 @@ module Commands
       end
 
       def call(dry_run: false)
+        @report
+      end
+
+      def reconcile(dry_run: false)
         @report
       end
     end
@@ -118,9 +123,46 @@ module Commands
       assert_equal "no start section", error.message
     end
 
+    def test_reconcile_table_includes_each_project_failure_and_its_pane
+      report = {"status" => "partial", "message" => "0/1 project overseers ready",
+                "projects" => [{"id" => "ace", "path" => "/lab/ace", "status" => "started",
+                                "pane" => "w2:p2", "prompt_failed" => true,
+                                "message" => "first turn unconfirmed; inspect the existing session"}]}
+      out, = capture_io do
+        error = assert_raises(Ace::Support::Cli::Error) do
+          Ace::Overseer::CLI::Commands::Start.new(orchestrator: FakeOrchestrator.new(report)).call(reconcile: true)
+        end
+        assert_equal "0/1 project overseers ready", error.message
+      end
+      assert_includes out, "ace"
+      assert_includes out, "/lab/ace"
+      assert_includes out, "w2:p2"
+      assert_includes out, "first turn unconfirmed; inspect the existing session"
+    end
+
     def test_dry_run_report_exits_clean
       out = run_command({"status" => "dry_run", "message" => "plan only"})
       assert_equal "dry_run", JSON.parse(out)["status"]
+    end
+
+    def test_dry_run_table_shows_foreground_command_as_reproducible_argv
+      report = {"status" => "dry_run", "command" => ["pi", "--model", "model with spaces", "first turn"]}
+      out, = capture_io do
+        Ace::Overseer::CLI::Commands::Start.new(orchestrator: FakeOrchestrator.new(report)).call(dry_run: true)
+      end
+      line = out.lines.find { |item| item.include?("command:") }
+      assert line
+      assert_equal report["command"], Shellwords.split(line.split("command:", 2).last.strip)
+    end
+
+    def test_interrupt_warns_about_uncertain_start_and_exits_130
+      orchestrator = Object.new
+      orchestrator.define_singleton_method(:bootstrap) { |**| raise Interrupt }
+      error = assert_raises(Ace::Support::Cli::Error) do
+        Ace::Overseer::CLI::Commands::Start.new(orchestrator: orchestrator).call
+      end
+      assert_equal 130, error.exit_code
+      assert_match(/inspect.*session/i, error.message)
     end
   end
 end
