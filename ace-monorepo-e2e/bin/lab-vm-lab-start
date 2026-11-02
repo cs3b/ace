@@ -95,7 +95,9 @@ begin
       setup = "set -eu; test ! -L /home/mo/.ace; test ! -e /home/mo/.ace/hitl/config.yml; test ! -L /home/mo/.ace/hitl/config.yml; test ! -L /home/mo/.ace/hitl; mkdir -p /home/mo/.ace/hitl; printf '%s' '#{encoded}' | base64 -d > /home/mo/.ace/hitl/config.yml; chmod 0600 /home/mo/.ace/hitl/config.yml"
       code, = guest_mo(uuid, "/bin/sh", "-c", setup)
       raise "local HITL route setup failed" unless code.zero?
-      guest_json(uuid, "herdr", "pane", "run", pane_id, "ace-overseer start")
+      # Herdr pane run uses its exit status and emits no JSON on success.
+      code, = guest_mo(uuid, "herdr", "pane", "run", pane_id, "ace-overseer start")
+      raise "lab coordinator launch failed" unless code.zero?
       receipt["status"] = "awaiting_agent"
       save_start_receipt(output_path, receipt)
 
