@@ -54,7 +54,9 @@ finally:
 
 expected = Path('/var/lib/ace-e2e/forgejo-input/initial-sha').read_text().strip()
 reference = api('GET', f'/repos/{OWNER}/{REPO}/git/refs/heads/main', owner)
-if not isinstance(reference, list) or len(reference) != 1 or reference[0].get('ref') != 'refs/heads/main' or reference[0].get('object', {}).get('sha') != expected:
+if (not isinstance(reference, list) or len(reference) != 1 or
+        not isinstance(reference[0], dict) or reference[0].get('ref') != 'refs/heads/main' or
+        not isinstance(reference[0].get('object'), dict) or reference[0]['object'].get('sha') != expected):
     raise RuntimeError('local forge main does not match the seeded commit')
 issues = json.loads(Path('/var/lib/ace-e2e/forgejo-input/issues.json').read_text())
 created = {}

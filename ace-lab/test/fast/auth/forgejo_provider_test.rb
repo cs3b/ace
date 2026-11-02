@@ -283,6 +283,22 @@ module Ace
           assert_empty seen
         end
 
+        def test_accepts_plain_http_for_loopback_issuers
+          %w[http://127.0.0.1:3000 http://localhost http://LOCALHOST http://[::1]:3000].each do |url|
+            config = profile
+            config["issuer"]["url"] = url
+            grant = provider.issue(profile: config, lease: {"id" => "lease-x", "repos" => %w[cs3b/ace]})
+            assert_equal "SECRET", grant["token"]
+          end
+        end
+
+        def test_revoke_rejects_plain_http_to_non_loopback_before_request
+          config = profile
+          config["issuer"]["url"] = "http://forge.example.com"
+          prov = Plugins::ForgejoProvider.new(capture: ->(_argv) { flunk "network request must not happen" })
+          assert_raises(Providers::RefusedError) { prov.revoke(profile: config, token_ref: "ace-lab-lease-x") }
+        end
+
         def test_token_name_is_deterministic_from_the_lease_id
           assert_equal "ace-lab-lease-x",
             Plugins::ForgejoProvider.new.token_ref_for(lease_id: "lease-x"),
