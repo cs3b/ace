@@ -232,6 +232,13 @@ module Molecules
       end
     end
 
+    def test_installed_prerelease_satisfying_a_dependency_is_usable
+      provisioner = Ace::Lab::Molecules::GemsetProvisioner.new
+      dependency = {"name" => "ace-herdr", "requirement" => "~> 0.9"}
+      versions = %w[0.8.9 0.9.1.pre.utm1 1.0.0]
+      assert_equal ["0.9.1.pre.utm1"], provisioner.send(:satisfying_versions, dependency, versions)
+    end
+
     def test_declared_version_present_only_as_the_default_gem_satisfies_existence
       runner = FakeRunner.new([
         raw_listing("abbrev", ["default: 0.1.2"]),   # presence probe

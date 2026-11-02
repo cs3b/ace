@@ -334,8 +334,13 @@ module Ace
 
         def satisfying_versions(dep, versions)
           requirement = dep["requirement"].split(",").map(&:strip)
+          constraint = Gem::Requirement.new(*requirement)
           versions.select do |version|
-            Gem::Dependency.new(dep["name"], *requirement).match?(dep["name"], version)
+            # RubyGems can activate an explicitly installed prerelease even
+            # when the depending gem uses a normal version requirement.
+            # Dependency#match? filters prereleases intended for discovery;
+            # closure checks must describe what this installed runtime can use.
+            constraint.satisfied_by?(Gem::Version.new(version))
           end
         end
 

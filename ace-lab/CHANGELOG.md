@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Recognize explicitly installed prerelease gems when verifying a runtime
+  dependency closure, matching RubyGems activation behavior.
 - Use Forgejo's Basic-authenticated user token API with administrator sudo,
   and require the response to confirm the requested scopes and repositories.
   The previously documented administrator-token endpoint is unavailable in
