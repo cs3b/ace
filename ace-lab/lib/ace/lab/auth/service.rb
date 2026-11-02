@@ -423,7 +423,12 @@ module Ace
                 unless current["id"] == record["id"] && current["issuer_invocation"] == invocation
                   raise Error, "issuer lease identity changed during recovery"
                 end
-                revoke(lease_id: record.fetch("id"))
+                outcome = revoke(lease_id: record.fetch("id"))
+                after = @store.load(record.fetch("id"))
+                unless after["state"] == "revoked" && after.dig("cleanup", "result") != "forced-terminal"
+                  raise Error, "issuer lease revocation is unconfirmed"
+                end
+                outcome
               end
               {"lease" => record.fetch("id"), "cleanup" => outcome.to_s}
             rescue StandardError

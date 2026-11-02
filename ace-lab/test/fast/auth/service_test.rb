@@ -174,10 +174,49 @@ module Ace
           @fake.instance_variable_set(:@failure, Providers::TransientError.new("offline"))
           operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
           Process.stub(:uid, 0) { Process.stub(:euid, 0) do
-            result = operator.revoke_issuer(invocation: "a" * 32)
-            assert_match(/revoke-pending/, result.first.fetch("cleanup"))
+            assert_raises(Error) { operator.revoke_issuer(invocation: "a" * 32) }
           end }
           assert_equal "revoke-pending", worker.store.load(lease["id"])["state"]
+        end
+
+        def test_issuer_recovery_continues_after_an_unconfirmed_revocation
+          worker = service
+          leases = %w[first second].map do |name|
+            record = worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
+              task: name, assignment: name, repos: ["ace"], use_until: (Time.now.utc + 60).iso8601,
+              provider_expiry: nil, token_ref: name, session_uid: 1234, session_id: "c" * 32,
+              session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: "a" * 32)
+            worker.store.update(record["id"]) { |item| item["state"] = "issued" }
+            record
+          end
+          failing = Object.new
+          failing.define_singleton_method(:revoke) do |profile:, token_ref:, token:|
+            raise Providers::TransientError, "offline" if token_ref == "first"
+            :revoked
+          end
+          Providers.register("fake", failing)
+          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
+          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
+            assert_raises(Error) { operator.revoke_issuer(invocation: "a" * 32) }
+          end }
+          assert_equal "revoke-pending", worker.store.load(leases.first["id"])["state"]
+          assert_equal "revoked", worker.store.load(leases.last["id"])["state"]
+        end
+
+        def test_issuer_recovery_does_not_claim_a_forced_terminal_is_revoked
+          worker = service
+          record = worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
+            task: "task", assignment: "assignment", repos: ["ace"], use_until: (Time.now.utc + 60).iso8601,
+            provider_expiry: nil, token_ref: "token", session_uid: 1234, session_id: "c" * 32,
+            session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: "a" * 32)
+          worker.store.update(record["id"]) do |item|
+            item["state"] = "revoked"
+            item["cleanup"] = {"result" => "forced-terminal"}
+          end
+          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
+          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
+            assert_raises(Error) { operator.revoke_issuer(invocation: "a" * 32) }
+          end }
         end
 
         def test_issuer_recovery_refuses_unreadable_lease_inventory
