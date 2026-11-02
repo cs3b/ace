@@ -64,7 +64,9 @@ begin
       end
       raise "artifact checksum mismatch: #{name}" unless Digest::SHA256.file(path).hexdigest == entry.fetch("sha256")
     end
-    Dir.mktmpdir("forgejo-key-", LabVm.local_dir) do |keydir|
+    # GnuPG uses a Unix socket under GNUPGHOME; a worktree path can
+    # exceed the platform socket limit even though key import succeeds.
+    Dir.mktmpdir("ace-fj-gpg-", "/tmp") do |keydir|
       key = File.join(root, profile.fetch("key_file"))
       signature = File.join(root, profile.fetch("signature_file"))
       checked("gpg", "--homedir", keydir, "--batch", "--import", key)
