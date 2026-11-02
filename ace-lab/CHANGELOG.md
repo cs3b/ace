@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Resolve role instructions with the installed ACE CLI and a clean child environment when `ACE_TOOLCHAIN=installed`.
 - Recognize explicitly installed prerelease gems when verifying a runtime
   dependency closure, matching RubyGems activation behavior.
 - Use Forgejo's Basic-authenticated user token API with administrator sudo,

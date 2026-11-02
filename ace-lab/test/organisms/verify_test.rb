@@ -1126,6 +1126,55 @@ class VerifyProbeTest < Minitest::Test
     assert_equal :fail, organism.send(:availability_probe, "definitely-not-a-lab-tool-xyz", []).first
   end
 
+  def test_installed_mode_resolves_nav_from_the_installed_toolchain
+    require "ace/support/cli/toolchain"
+    verify = Ace::Lab::Organisms::Verify.new
+    Dir.mktmpdir do |dir|
+      FileUtils.mkdir_p(File.join(dir, "bin"))
+      binstub = File.join(dir, "bin", "ace-nav")
+      FileUtils.touch(binstub)
+      File.chmod(0o755, binstub)
+      toolchain = Ace::Support::Cli::Toolchain
+      toolchain.stub(:installed?, true) do
+        toolchain.stub(:executable, ->(name) { "/installed/bin/#{name}" }) do
+          Process.stub(:uid, 501) do
+            assert_equal "/installed/bin/ace-nav", verify.send(:nav_binary, dir)
+          end
+        end
+      end
+    end
+  end
+
+  def test_missing_installed_nav_is_a_readiness_failure
+    require "ace/support/cli/toolchain"
+    toolchain = Ace::Support::Cli::Toolchain
+    missing = ->(_name) { raise toolchain::Error, "installed ace-nav unavailable" }
+    toolchain.stub(:installed?, true) do
+      toolchain.stub(:executable, missing) do
+        status, reason = Ace::Lab::Organisms::Verify.new.send(:protocol_resolution,
+          "wfi://assign/work", {"projects" => [{"path" => "/project"}]})
+        assert_equal "fail", status
+        assert_match(/installed ACE toolchain is unavailable/, reason)
+      end
+    end
+  end
+
+  def test_installed_nav_subprocess_does_not_inherit_checkout_ruby_injection
+    require "rbconfig"
+    previous = ENV.to_h.slice("ACE_TOOLCHAIN", "BUNDLE_GEMFILE", "RUBYOPT", "RUBYLIB")
+    ENV["ACE_TOOLCHAIN"] = "installed"
+    ENV["BUNDLE_GEMFILE"] = "/project/Gemfile"
+    ENV["RUBYOPT"] = "-r/project/injected.rb"
+    ENV["RUBYLIB"] = "/project/lib"
+    script = 'require "json"; puts JSON.generate(ENV.to_h.slice("ACE_TOOLCHAIN", "BUNDLE_GEMFILE", "RUBYOPT", "RUBYLIB"))'
+    result = Ace::Lab::Organisms::Verify.new.send(:run_nav, [RbConfig.ruby, "-e", script], Dir.pwd)
+    assert_equal "ok", result["status"]
+    assert_equal({"ACE_TOOLCHAIN" => "installed"}, JSON.parse(result["out"]))
+  ensure
+    %w[ACE_TOOLCHAIN BUNDLE_GEMFILE RUBYOPT RUBYLIB].each { |key| ENV.delete(key) }
+    previous&.each { |key, value| ENV[key] = value }
+  end
+
   def test_root_installer_never_executes_the_project_binstub
     argv_seen = []
     nav_runner = ->(argv, _cwd) { argv_seen << argv; {"status" => "ok", "out" => "resolved", "err" => ""} }

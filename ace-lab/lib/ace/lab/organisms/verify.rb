@@ -9,6 +9,7 @@ require_relative "../molecules/extension_provisioner"
 require_relative "../molecules/hitl_routes"
 require_relative "../molecules/caller_authorizer"
 require_relative "../atoms/topology_schema"
+require "ace/support/cli/toolchain"
 require "open3"
 require "yaml"
 require "json"
@@ -252,6 +253,8 @@ module Ace
             "'#{instructions}'; not probed by the read-only verifier"] if unresolved_resolver
 
           [PASS, nil]
+        rescue Ace::Support::Cli::Toolchain::Error => e
+          [FAIL, "installed ACE toolchain is unavailable: #{e.message}"]
         end
 
         def resolution_error(result)
@@ -259,20 +262,18 @@ module Ace
           detail ? detail : "ace-nav exited with status #{result['status']}"
         end
 
-        # Same binary choice the executor's resolver makes
-        # (Ace::Coworker::Molecules::InstructionResolver): the
-        # project's binstub when present, otherwise the PATH lookup.
-        # A privileged installer never executes repository-controlled
-        # binstubs (same trust posture as the LAB-1 symlink refusals):
-        # under root only the PATH-installed resolver is used.
+        # Match the executor's resolver: installed mode always resolves the
+        # installed launcher, and root never executes repository binstubs.
         def nav_binary(project_root)
+          return Ace::Support::Cli::Toolchain.executable("ace-nav") if Ace::Support::Cli::Toolchain.installed?
+
           binstub = File.join(project_root, "bin", "ace-nav")
           use_binstub = !Process.uid.zero? && File.executable?(binstub)
           use_binstub ? binstub : "ace-nav"
         end
 
         def run_nav(argv, cwd)
-          out, err, status = Open3.capture3(*argv, chdir: cwd)
+          out, err, status = Open3.capture3(Ace::Support::Cli::Toolchain.child_environment, *argv, chdir: cwd)
           {"status" => status.success? ? "ok" : (status.exitstatus || "signal #{status.termsig}"),
            "out" => out, "err" => err}
         rescue Errno::ENOENT
