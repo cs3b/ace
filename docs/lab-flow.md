@@ -3,7 +3,8 @@ doc-type: bundle
 title: Lab State Owners and Local Flow
 purpose: Canonical state ownership map and executable local flow for the ACE lab
 ace-docs:
-  last-updated: '2026-10-17'
+  last-updated: '2026-11-02'
+  last-checked: '2026-11-02'
 ---
 
 # Lab State Owners and Local Flow
@@ -35,6 +36,7 @@ changes; published runtime and system configuration stay root-owned.
 |---|---|---|
 | Project task specs and their progress | `.ace-tasks/` (tracked) | `ace-task`; one project task per folder |
 | Private overseer task list | `.ace-tasks/_overseer/` (untracked via `.gitignore`) | the overseer that owns it, via `ace-task list --in _overseer` |
+| Project overseer observation configuration | `<project>/.ace-local/overseer/eyes.json` | the commissioned bootstrap worker prepares it; an independent verifier checks it and the project overseer reads and arms it |
 | Assignment execution plan and step reports | `.ace-local/assign/` | `ace-assign`; steps are not copied into another queue or config |
 | Coworker run configuration (L3) | `.ace-local/coworker/` | reserved in L3: role, instruction source, start prompt, task, assignment reference, overseer address, reporting and error rules |
 | Per-role executor start configs (L4.3) | `.ace-local/coworker/prepare/<role>.yml` in the task worktree | `ace-coworker` (the planner, via `ace-coworker prepare`); one leg config per planned sequence role, written through the `commission` primitive so `start --config` accepts it; `commission` stays the single writer of the default `config.yml` target |
