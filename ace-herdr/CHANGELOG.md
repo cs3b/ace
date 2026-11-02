@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Allow callers to specify the native states that end a prompt wait.
+
 - Allow cold native source builds up to two hours before timeout, including
   ARM64 builds of Ghostty's native dependencies.
 

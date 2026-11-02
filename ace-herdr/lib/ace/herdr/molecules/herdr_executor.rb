@@ -66,12 +66,14 @@ module Ace
         # rejects blocked agents pre-send with agent_blocked. With
         # wait: herdr's activity gate applies — a prompt sent from a
         # non-working state must produce observed working/blocked
-        # activity, so success confirms the turn actually began
-        # (agent_prompt_stalled / timeout otherwise; timeout_ms bounds
-        # the wait).
-        def agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
+        # activity before waiting for the requested state. With no explicit
+        # states the native default waits for idle, done or blocked.
+        def agent_prompt(pane:, text:, wait: false, timeout_ms: nil, until_states: nil)
+          raise ArgumentError, "until_states requires wait" if until_states && !wait
+
           cmd = [@binary, "agent", "prompt", pane, text]
           cmd += ["--wait"] if wait
+          Array(until_states).each { |state| cmd += ["--until", state] }
           cmd += ["--timeout", timeout_ms.to_s] if timeout_ms
           run!(cmd)
         end

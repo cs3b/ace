@@ -115,6 +115,15 @@ module Ace
           )
         end
 
+        def test_prompt_can_wait_only_for_first_activity
+          executor = StubbedExecutor.new
+          executor.agent_prompt(pane: "p5", text: "begin", wait: true,
+            until_states: %w[working blocked], timeout_ms: 120_000)
+          assert_equal ["herdr", "agent", "prompt", "p5", "begin", "--wait",
+            "--until", "working", "--until", "blocked", "--timeout", "120000"], executor.commands.first
+          assert_raises(ArgumentError) { executor.agent_prompt(pane: "p5", text: "begin", until_states: ["working"]) }
+        end
+
         def test_bounded_wake_terminates_stalled_subprocess
           Dir.mktmpdir do |dir|
             script = File.join(dir, "stalled-herdr")
