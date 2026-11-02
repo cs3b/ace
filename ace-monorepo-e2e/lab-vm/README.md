@@ -76,3 +76,20 @@ delegates multiple issues in the VM's isolated Forgejo repository, obtains revie
 merges their tested PRs in dependency order, and leaves the release queued. A
 second run after reset and the restart, idempotency, idle and failure checks
 are required before calling the environment accepted.
+
+### Restoring a compressed diagnostic export
+
+Some older diagnostic exports may be kept as `UUID.utm.zip` with a private
+`UUID.utm.zip.json` sidecar to save disk space. They are local evidence, not
+UTM-registered machines. Compare the archive's SHA-256 with `archive_sha256`
+in its sidecar before restoring it, then extract it into the evidence directory:
+
+```sh
+shasum -a 256 .ace-local/lab-vm/evidence/UUID.utm.zip
+ditto -x -k .ace-local/lab-vm/evidence/UUID.utm.zip .ace-local/lab-vm/evidence
+```
+
+Before removing an uncompressed exported package, the archived copy was
+extracted and its complete file fingerprint was compared with the original;
+the verified package fingerprint is recorded in the sidecar. Archives may
+contain test credentials and must remain private.
