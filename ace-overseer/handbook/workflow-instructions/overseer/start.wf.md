@@ -21,7 +21,7 @@ a missing coworker — you report the gap and escalate.
 
 ## First turn after start
 
-1. Read your private task list: `ace-task --in _overseer list` (your
+1. Read your private task list: `ace-task list --in _overseer` (your
    coordination tasks live there; you own them).
 2. Read project truth from the state owners — never a second cache:
    `ace-task list`, `ace-overseer status`, `ace-git-worktree list`,

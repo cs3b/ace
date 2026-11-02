@@ -10,7 +10,7 @@ ace-docs:
 # Getting Started with ace-overseer
 
 > **State owner:** `.ace-tasks/_overseer/` (private, gitignored task folder
-> reached via `ace-task --in _overseer`) and `.ace-wt/` (one worktree per
+> reached via `ace-task list --in _overseer`) and `.ace-wt/` (one worktree per
 > project task). Assignment plans stay in `.ace-local/assign/`. See
 > [docs/lab-flow.md](../../docs/lab-flow.md).
 

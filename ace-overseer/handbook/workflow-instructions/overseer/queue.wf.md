@@ -1,6 +1,6 @@
 ---
 name: overseer-queue
-description: Run the private overseer queue in .ace-tasks/_overseer with ace-task --in _overseer - record work as managing tasks with lifecycle subtasks, gate starts on integrated results, keep one active executor per worktree, and process ace-hitl reports
+description: Run the private overseer queue in .ace-tasks/_overseer with ace-task list --in _overseer - record work as managing tasks with lifecycle subtasks, gate starts on integrated results, keep one active executor per worktree, and process ace-hitl reports
 allowed-tools: Bash, Read
 doc-type: workflow
 title: Overseer Queue Workflow
@@ -15,7 +15,7 @@ ace-docs:
 ## Goal
 
 Coordinate delegated work exclusively through the overseer's private task tree
-in `.ace-tasks/_overseer/` (gitignored, managed via `ace-task --in _overseer`),
+in `.ace-tasks/_overseer/` (gitignored, managed via `ace-task list --in _overseer`),
 existing subtasks/dependencies, and `ace-hitl` reports tied to a concrete step.
 The tree decides order, dependencies, and assignments. There is no second queue
 engine: no daemon, no journal, no state cache, no lease registry, and no
