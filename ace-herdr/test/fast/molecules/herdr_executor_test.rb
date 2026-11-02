@@ -122,6 +122,8 @@ module Ace
           assert_equal ["herdr", "agent", "prompt", "p5", "begin", "--wait",
             "--until", "working", "--until", "blocked", "--timeout", "120000"], executor.commands.first
           assert_raises(ArgumentError) { executor.agent_prompt(pane: "p5", text: "begin", until_states: ["working"]) }
+          executor.agent_prompt(pane: "p5", text: "begin", wait: true, until_states: [])
+          assert_equal ["herdr", "agent", "prompt", "p5", "begin", "--wait"], executor.commands.last
         end
 
         def test_bounded_wake_terminates_stalled_subprocess
