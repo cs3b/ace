@@ -72,10 +72,10 @@
     },
     {
       "name": "ace-handbook-integration-pi",
-      "version": "0.8.1.pre.utm1",
-      "sha256": "2853966d7ccdb4a1487988323c1fc75a3b74c31849a1d10dacef1f3f0ae8287c",
+      "version": "0.8.1.pre.utm2",
+      "sha256": "9b02317aadc7d4c4eda80a178de8254ef440ec1a1520fc2a64c66509ee5f60f2",
       "source": "local",
-      "source_commit": "4c4f735f2db76e13f1de512ddca511da3f6eece5"
+      "source_commit": "3e4bac12933cc9ee7c2721c9bc907463823ff7e1"
     },
     {
       "name": "ace-herdr",
@@ -123,10 +123,10 @@
     },
     {
       "name": "ace-overseer",
-      "version": "0.28.2.pre.utm2",
-      "sha256": "103a514a8ffa3d437e79ab99107bd68256aa3bec2003e7de0c6529b97b82a712",
+      "version": "0.28.2.pre.utm3",
+      "sha256": "c0e173e813174d2ff1e24390408898fa15ec188a8490dbbac60c4ddd10bd9b98",
       "source": "local",
-      "source_commit": "8e2d4822543ddb23068860ed08d835cc87920786"
+      "source_commit": "3e4bac12933cc9ee7c2721c9bc907463823ff7e1"
     },
     {
       "name": "ace-review",
