@@ -235,7 +235,7 @@ module Ace
             rescue Providers::TransientError, Providers::OutcomeUnknownError => e
               @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
               raise Error.new("issuance failed with unknown outcome: #{e.message}; " \
-                "reconcile resolves the pending record")
+                "reconcile retries cleanup; the outcome may remain unresolved")
             end
 
             @store.update(lease["id"]) do |record|
@@ -256,7 +256,7 @@ module Ace
             rescue StandardError => e
               @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
               raise Error.new("credential handoff failed: #{e.message}; " \
-                "reconcile resolves the pending record")
+                "reconcile retries cleanup; the outcome may remain unresolved")
             end
             # ISSUED means a COMPLETE, usable grant: credential
             # delivered, deadlines recorded, cleanup due. Until this

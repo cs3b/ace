@@ -96,6 +96,7 @@ module Ace
           task: "t", assignment: "a", repos: %w[ace])
       end
       assert_match(/unknown outcome/, error.message)
+      assert_match(/may remain unresolved/, error.message)
 
       # The retry settles the unresolved predecessor FIRST (the fake
       # provider's revoke succeeds, so settlement is confirmed) and
