@@ -73,6 +73,7 @@ class NativeSourceBuilderTest < Minitest::Test
         result("0.16.0\n")
       else
         assert_equal File.join(@tools, "cargo"), argv.first
+        assert_equal 7200, timeout_s, "cold native builds require a realistic bounded deadline"
         assert_equal %w[build --release --locked --target x86_64-unknown-linux-musl], argv.drop(1)
         assert_equal "after\n", File.read(File.join(chdir, "marker"))
         assert_equal File.join(@tools, "zig"), environment.fetch("ZIG")

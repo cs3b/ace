@@ -11,6 +11,9 @@ module Ace
       # Explicit source build, outside the installed protected deployment.
       # No server contact, product execution, global tool selection or publication.
       class NativeSourceBuilder
+        # A cold ARM64 build includes Ghostty's Zig/C++ dependencies and may
+        # exceed 30 minutes even while all compiler processes remain active.
+        BUILD_TIMEOUT_SECONDS = 7200
         def initialize(selection: Molecules::NativeSource.new, runner: nil)
           @selection = selection
           @runner = runner || lambda do |argv, environment:, chdir:, timeout_s:|
@@ -60,7 +63,7 @@ module Ace
             "RUSTUP_TOOLCHAIN" => selected.fetch("rust_version"), "ZIG" => tools.fetch("zig"),
             "CARGO_TARGET_#{target.upcase.tr("-", "_")}_LINKER" => tools.fetch("linker"))
           run([tools.fetch("cargo"), "build", "--release", "--locked", "--target", target],
-            chdir: checkout, environment: compile_environment, timeout_s: 1800)
+            chdir: checkout, environment: compile_environment, timeout_s: BUILD_TIMEOUT_SECONDS)
           verify_source_files(checkout)
           unless tool_digests(tools) == tool_digests
             raise Molecules::NativeSource::Error, "native build tools changed during compilation"
