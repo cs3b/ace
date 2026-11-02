@@ -103,7 +103,7 @@ class LabVmArtifactsTest < AceMonorepoE2eTestCase
     assert result.success?, err
     assert_equal 1, JSON.parse(out).fetch("built")
     File.unlink(File.join(@cache, "ace-lab-0.14.2.pre.test.gem"))
-    release["gems"][0]["sha256"] = "0" * 64
+    release["gems"].find { |gem| gem["name"] == "ace-lab" }["sha256"] = "0" * 64
     File.write(path, JSON.generate(release))
     _out, err, result = run_fetcher
     refute result.success?
