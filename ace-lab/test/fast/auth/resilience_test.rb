@@ -150,7 +150,7 @@ module Ace
       pending = svc.store.all.fetch(0)
       assert_equal "revoke-pending", pending["state"]
       refute svc.store.live?(pending)
-      refute File.exist?(File.join(@dir, "credentials", pending["id"]))
+      assert_empty Dir.glob(File.join(@dir, "credentials", "*")), "no credential is delivered for an unconfirmed scope"
 
       revoked = []
       unavailable = ->(**_args) { raise Providers::TransientError, "network down" }
