@@ -25,6 +25,10 @@ module Ace
           request(:get, "issues/#{number}")
         end
 
+        def open_issues
+          paginate("issues?state=open", fail_on_repeated_page: true)
+        end
+
         def comments(number)
           paginate("issues/#{number}/comments")
         end
@@ -78,14 +82,18 @@ module Ace
 
         private
 
-        def paginate(suffix)
+        def paginate(suffix, fail_on_repeated_page: false)
           page = 1
           entries = []
           seen = []
           loop do
-            batch = request(:get, "#{suffix}?page=#{page}&limit=50")
+            separator = suffix.include?("?") ? "&" : "?"
+            batch = request(:get, "#{suffix}#{separator}page=#{page}&limit=50")
             unless batch.is_a?(Array)
               raise Ace::Git::ProviderMalformedOutputError, "Forgejo #{suffix} did not return a list"
+            end
+            unless batch.all? { |entry| entry.is_a?(Hash) && entry["id"].is_a?(Integer) && entry["id"].positive? }
+              raise Ace::Git::ProviderMalformedOutputError, "Forgejo #{suffix} contains an invalid item identity"
             end
             before = entries.length
             # Stop when a page adds no new items (unique ids): instances
@@ -94,6 +102,9 @@ module Ace
             fresh = batch.reject { |item| seen.include?(item["id"]) }
             entries.concat(fresh)
             fresh.each { |item| seen << item["id"] }
+            if fail_on_repeated_page && !batch.empty? && fresh.empty?
+              raise Ace::Git::ProviderMalformedOutputError, "Forgejo #{suffix} repeated a page; issue listing is incomplete"
+            end
             break if fresh.empty?
 
             page += 1

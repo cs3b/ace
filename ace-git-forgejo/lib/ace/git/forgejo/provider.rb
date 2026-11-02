@@ -119,6 +119,31 @@ module Ace
             .first(limit)
         end
 
+        # Open issue intake uses the selected Forgejo repository, and never
+        # substitutes pull requests or an unavailable listing for an empty one.
+        def recent_issues(limit:)
+          limit = Integer(limit)
+          return [] if limit <= 0
+
+          issue_api.open_issues.filter_map do |entry|
+            unless entry.is_a?(Hash)
+              raise Ace::Git::ProviderMalformedOutputError, "Forgejo issue listing contains a non-object"
+            end
+            next if entry["pull_request"]
+
+            number = entry["number"]
+            unless number.is_a?(Integer) && number.positive? && entry["title"].is_a?(String) &&
+                !entry["title"].strip.empty? && entry["state"] == "open" && entry["html_url"] == issue_url(number)
+              raise Ace::Git::ProviderMalformedOutputError, "Forgejo issue listing contains an invalid or foreign issue"
+            end
+            unless entry["user"].nil? || entry["user"].is_a?(Hash)
+              raise Ace::Git::ProviderMalformedOutputError, "Forgejo issue listing contains an invalid author"
+            end
+            Ace::Git::ProviderIssue.new(server_name: server.name, number: number, title: entry["title"],
+              state: :open, author: entry.dig("user", "login"), url: entry["html_url"], labels: nil)
+          end.sort_by { |issue| -issue.number }.first(limit)
+        end
+
         # @return [ProviderIssue] normalized issue evidence
         def issue(number:)
           view = fj(:issue_view, request_number!(number))
