@@ -25,6 +25,22 @@ printf '%s  %s\n' "$expected_selection" "$selection" | sha256sum -c -
 
 test ! -e "$HOME/herdr-source"
 test ! -e "$HOME/herdr-build"
+expected_artifact=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["herdr"]["artifact_sha256"])' "$manifest")
+expected_provenance=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["herdr"]["provenance_sha256"])' "$manifest")
+cache="$input/artifacts/herdr-native"
+if [ -e "$cache" ] || [ -L "$cache" ]; then
+  test -d "$cache" && test ! -L "$cache"
+  test -f "$cache/herdr" && test ! -L "$cache/herdr"
+  test -f "$cache/provenance.json" && test ! -L "$cache/provenance.json"
+  printf '%s  %s\n' "$expected_artifact" "$cache/herdr" | sha256sum -c -
+  printf '%s  %s\n' "$expected_provenance" "$cache/provenance.json" | sha256sum -c -
+  mkdir "$HOME/herdr-build"
+  install -m 0755 "$cache/herdr" "$HOME/herdr-build/herdr"
+  install -m 0644 "$cache/provenance.json" "$HOME/herdr-build/provenance.json"
+  ace-herdr native-source verify --artifact "$HOME/herdr-build"
+  printf '%s\n' 'Verified pinned native Herdr artifact reused.'
+  exit 0
+fi
 "$input/artifacts/rustup-init" -y --profile minimal --default-toolchain "$rust_version" --no-modify-path
 rustup target add --toolchain "$rust_version" "$target"
 git init "$HOME/herdr-source"
@@ -33,3 +49,5 @@ git -C "$HOME/herdr-source" fetch --depth=1 origin "$baseline"
 git -C "$HOME/herdr-source" checkout --detach "$baseline"
 ace-herdr native-source build --source "$HOME/herdr-source" --output "$HOME/herdr-build" --target "$target"
 ace-herdr native-source verify --artifact "$HOME/herdr-build"
+printf '%s  %s\n' "$expected_artifact" "$HOME/herdr-build/herdr" | sha256sum -c -
+printf '%s  %s\n' "$expected_provenance" "$HOME/herdr-build/provenance.json" | sha256sum -c -

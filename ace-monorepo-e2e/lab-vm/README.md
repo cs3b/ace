@@ -34,8 +34,12 @@ gem repository is populated only from manifest entries, not every cached gem.
 `bin/lab-vm-runtime
 provision` starts a fresh work clone, verifies its SSH host key via the QEMU
 guest agent, copies these inputs and invokes the guest-side runtime installer
-and unprivileged native Herdr build. This provisioning path is still being
-validated. It does not configure Pi credentials, create a Forgejo fixture or
+and unprivileged native Herdr build. The pinned ARM64 Herdr binary and its
+provenance can be reused from a private local artifact cache; both hashes and
+`ace-herdr native-source verify` are checked before use. If the cache is
+absent, the same source build is performed and must match the pinned hashes
+before being cached. A corrupted or partially present cache blocks provisioning.
+This provisioning path is still being validated. It does not configure Pi credentials, create a Forgejo fixture or
 run an E2E scenario. Downloaded inputs or successful provisioning alone are not
 proof that ACE is operational.
 
@@ -93,5 +97,4 @@ ruby -e 'load "ace-monorepo-e2e/bin/lab-vm"; puts LabVm.package_fingerprint(ARGV
 Before removing an uncompressed exported package, the archived copy was
 extracted and its complete file fingerprint was compared with the original;
 compare the printed fingerprint with `package_fingerprint` in the sidecar.
-Archives may
-contain test credentials and must remain private.
+Archives may contain test credentials and must remain private.

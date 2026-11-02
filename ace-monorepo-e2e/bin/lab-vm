@@ -30,6 +30,7 @@ module LabVm
     ace-monorepo-e2e/lab-vm/release-manifest.json
     ace-monorepo-e2e/lab-vm/provision-runtime.sh
     ace-monorepo-e2e/lab-vm/build-herdr.sh
+    ace-monorepo-e2e/lab-vm/native-cache.rb
     ace-monorepo-e2e/lab-vm/gem-graph.rb
     ace-monorepo-e2e/lab-vm/pi/package.json
     ace-monorepo-e2e/lab-vm/pi/package-lock.json

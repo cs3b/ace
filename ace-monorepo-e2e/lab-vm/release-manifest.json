@@ -104,10 +104,10 @@
     },
     {
       "name": "ace-lab",
-      "version": "0.14.2.pre.utm13",
-      "sha256": "9585ae30c689d605d5132dd898b4c4a4071a562119b9008aa664d0fa05462c95",
+      "version": "0.14.2.pre.utm15",
+      "sha256": "1bfd92b77ebcfbc13b3788180e0db9c31ab1ab0325050e32c2b316a69806e49a",
       "source": "local",
-      "source_commit": "c5d0cc43f9841e7337a79c90f1eb042e1208fb30"
+      "source_commit": "3781166a9bf81bf022269a84f0de96497f2fa705"
     },
     {
       "name": "ace-llm",
@@ -123,10 +123,10 @@
     },
     {
       "name": "ace-overseer",
-      "version": "0.28.2.pre.utm3",
-      "sha256": "c0e173e813174d2ff1e24390408898fa15ec188a8490dbbac60c4ddd10bd9b98",
+      "version": "0.28.2.pre.utm8",
+      "sha256": "4c14a4d5e11e820450028d42fceb8fb1c9b7246805fb568dda9a80af12050f05",
       "source": "local",
-      "source_commit": "3e4bac12933cc9ee7c2721c9bc907463823ff7e1"
+      "source_commit": "615abdbe02c68386169c9362c14dacc9b2900668"
     },
     {
       "name": "ace-review",
@@ -357,7 +357,9 @@
     "rust_version": "1.96.1",
     "target": "aarch64-unknown-linux-musl",
     "selection_sha256": "fcb02b4b85d48585c873b7a1cbf84c46cea1a26ed02e0562b18717a8785a470e",
-    "baseline_commit": "7b116c05bfda646af39d2524c54e70c751f57ee8"
+    "baseline_commit": "7b116c05bfda646af39d2524c54e70c751f57ee8",
+    "artifact_sha256": "df1b806aa1e4bde126577fbafc6d3f25d098574637d89ab39b68c57896e3334c",
+    "provenance_sha256": "f0f3dfddd91b4d4fb5a8e51db9c165b30b393b68d6e07628fe4421d47af8dada"
   },
   "pi": {
     "package": "@earendil-works/pi-coding-agent",

@@ -6,7 +6,7 @@ require "set"
 
 module LabVmGemGraph
   ROOTS = %w[ace-git-commit ace-handbook-integration-pi ace-test ace-test-runner
-    ace-lab ace-overseer ace-wake ace-herdr json prism rubygems-generate_index builder].freeze
+    ace-wake rubygems-generate_index].freeze
 
   def self.validate!(manifest, artifact_dir, roots: ROOTS)
     entries = manifest.fetch("gems")

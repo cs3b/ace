@@ -5,6 +5,26 @@
 require "ipaddr"
 require "fileutils"
 load File.expand_path("lab-vm", __dir__)
+require_relative "../lab-vm/native-cache"
+
+def cache_native_artifact!(address, ssh_options, manifest)
+  cache = File.join(LabVm.local_dir, "artifacts", "herdr-native")
+  expected = manifest.fetch("herdr")
+  if File.exist?(cache) || File.symlink?(cache)
+    LabVmNativeCache.verify!(cache, expected)
+    return
+  end
+  Dir.mktmpdir("herdr-cache-", LabVm.local_dir) do |staging|
+    source = "lab-operator@#{address}:/home/lab-operator/herdr-build"
+    raise "native artifact transfer failed" unless system("scp", "-q", "-r", *ssh_options, source, staging)
+    candidate = File.join(staging, "herdr-build")
+    raise "unsafe transferred native directory" if File.symlink?(candidate) || !File.directory?(candidate)
+    File.chmod(0o700, candidate)
+    LabVmNativeCache.verify!(candidate, expected)
+    raise "native cache appeared during transfer" if File.exist?(cache) || File.symlink?(cache)
+    File.rename(candidate, cache)
+  end
+end
 
 begin
   raise "usage: lab-vm-runtime provision" unless ARGV == ["provision"]
@@ -54,6 +74,12 @@ begin
       key_path = File.join(LabVm.local_dir, "bootstrap/operator_ed25519")
       ssh_options = ["-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "UserKnownHostsFile=#{known_hosts}", "-i", key_path]
       raise "artifact verification failed" unless system(File.join(__dir__, "lab-vm-artifacts"))
+      native_manifest = JSON.parse(File.read(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/release-manifest.json")))
+      native_cache = File.join(LabVm.local_dir, "artifacts", "herdr-native")
+      %w[artifact_sha256 provenance_sha256].each do |field|
+        raise "invalid native artifact digest" unless native_manifest.fetch("herdr").fetch(field).match?(/\A[0-9a-f]{64}\z/)
+      end
+      LabVmNativeCache.verify!(native_cache, native_manifest.fetch("herdr")) if File.exist?(native_cache) || File.symlink?(native_cache)
       raise "runtime inputs changed during preparation" unless LabVm.runtime_configuration_fingerprint == runtime_fingerprint
       code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", "test ! -e /var/lib/ace-e2e/input && test ! -L /var/lib/ace-e2e/input && test ! -e /home/lab-operator/ace-e2e-input && test ! -L /home/lab-operator/ace-e2e-input && install -d -o lab-operator -g lab-operator -m 0700 /home/lab-operator/ace-e2e-input")
       raise "working clone is not fresh: #{output}" unless code.zero?
@@ -78,6 +104,7 @@ begin
       code, output = LabVm.guest_exec(uuid, "/usr/sbin/runuser", "-u", "lab-operator", "--", "/bin/sh", "/var/lib/ace-e2e/input/build-herdr.sh", timeout_s: 10800)
       puts output
       raise "Herdr build failed; working VM preserved" unless code.zero?
+      cache_native_artifact!(address, ssh_options, native_manifest)
       install = <<~SH
         set -eu
         install -d -m 0755 /opt/ace/runtime/share/herdr /opt/ace/runtime/bin
