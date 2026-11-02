@@ -108,9 +108,9 @@ begin
         raise "invalid Herdr agent inventory" unless agents.is_a?(Array)
         matches = agents.select { |agent| agent["pane_id"] == pane_id && agent["agent"] == "pi" }
         raise "ambiguous coordinator identity" if matches.length > 1
-        # Native Herdr reports a completed turn as idle or done; it does
-        # not expose an interactive_ready field in agent list.
-        break if matches.length == 1 && %w[idle done].include?(matches.first["agent_status"])
+        # A detected Pi can accept a prompt while working, idle or done.
+        # Native Herdr does not expose interactive_ready for pane-run Pi.
+        break if matches.length == 1 && %w[working idle done].include?(matches.first["agent_status"])
         raise "lab coordinator did not become ready" if LabVm.uptime >= deadline
         sleep 1
       end
