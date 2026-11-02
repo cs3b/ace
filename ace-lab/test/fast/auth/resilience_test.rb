@@ -480,7 +480,7 @@ module Ace
       assert(svc.store.all.any? { |record| record["corrupt"] && record["id"] == lease["id"] },
         "the corrupt record stays visible in the inventory")
       entry = svc.reconcile.find { |item| item["lease"] == lease["id"] }
-      assert_match(/corrupt \(unparseable lease record/, entry["reconciled"])
+      assert_match(/corrupt \(unreadable lease record/, entry["reconciled"])
       assert_match(/remote token may still be live/, entry["reconciled"])
     end
   end

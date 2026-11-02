@@ -94,7 +94,7 @@ module Ace
 
           Identity.new(uid: peer.fetch("uid"), gid: peer.fetch("gid"), role: match[1],
             invocation_id: manager_identity.fetch("invocation_id"), unit: unit,
-            cwd: cwd, runtime_dir: runtime_dir, pidfd: handle)
+            cwd: cwd, runtime_dir: runtime_dir, pidfd: handle).freeze
         rescue Exception
           handle&.close unless handle&.closed?
           raise

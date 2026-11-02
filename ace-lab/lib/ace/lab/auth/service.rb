@@ -4,6 +4,7 @@ require "etc"
 require "json"
 require "open3"
 require_relative "session_runner"
+require_relative "session_attachment"
 
 module Ace
   module Lab
@@ -34,26 +35,40 @@ module Ace
 
         # @param authorization_path [String] trusted document location
         # @param runner [Proc] argv runner for the exec'd child
-        # @param session_uid [Integer, nil] authenticated peer uid supplied by
-        #   a trusted system entry point, never a client-provided identity
-        # @param session_cwd [String, nil] peer's verified working directory
-        # @param session_id [String, nil] trusted systemd invocation identity
-        def initialize(authorization_path: nil, runner: nil, principal: nil, session_uid: nil, session_cwd: nil, session_id: nil)
+        # @param session [SessionPeer::Identity, nil] authenticated peer
+        #   supplied by a trusted system entry point, never client fields
+        # @param issuer_invocation [String, nil] trusted systemd issuer invocation
+        def initialize(authorization_path: nil, runner: nil, principal: nil, session: nil, issuer_invocation: nil)
           @authorization_path = authorization_path || Ace::Lab.authorization_path
           @injected_runner = !runner.nil?
-          if session_uid
+          if session
             raise ArgumentError, "session execution requires a root issuer" unless Process.euid.zero?
             raise ArgumentError, "session execution does not accept caller-supplied identity or runner" if principal || runner
-            unless session_id.is_a?(String) && session_id.match?(/\A[0-9a-f]{32}\z/)
+            unless session.is_a?(SessionPeer::Identity) && session.invocation_id.is_a?(String) &&
+                session.invocation_id.match?(/\A[0-9a-f]{32}\z/) && session.runtime_dir.is_a?(String) &&
+                session.runtime_dir.start_with?("/") && File.expand_path(session.runtime_dir) == session.runtime_dir
               raise ArgumentError, "session execution requires a verified systemd invocation identity"
             end
+            unless issuer_invocation.is_a?(String) && issuer_invocation.match?(/\A[0-9a-f]{32}\z/)
+              raise ArgumentError, "session execution requires an issuer invocation identity"
+            end
+            unit_match = SessionPeer::UNIT.match(session.unit.to_s)
+            unless unit_match && unit_match[1] == session.role && session.runtime_dir == "/run/ace-auth-#{unit_match[2]}"
+              raise ArgumentError, "session role differs from its verified unit"
+            end
 
-            @session_runner = SessionRunner.new(uid: session_uid, cwd: session_cwd)
-            account = Etc.getpwuid(Integer(session_uid))
+            attachment = SessionAttachment.new(identity: session)
+            @session_runner = SessionRunner.new(uid: session.uid, cwd: session.cwd, attach: attachment)
+            account = Etc.getpwuid(Integer(session.uid))
             @session_uid = account.uid
-            @session_id = session_id
+            @session_id = session.invocation_id
+            @session_role = session.role
+            @session_unit = session.unit
+            @issuer_invocation = issuer_invocation
+            @session_runtime_dir = session.runtime_dir
             @principal = -> { account.name }
           else
+            raise ArgumentError, "issuer invocation requires a session" if issuer_invocation
             @principal = principal || -> { Etc.getpwuid(Process.uid).name }
           end
           # The default runner spawns the child through `env -i` so the
@@ -77,7 +92,7 @@ module Ace
           }
           @config = load_config
           @store = LeaseStore.new(@config["leases_dir"] || DEFAULT_LEASES_DIR)
-          @credentials_dir = @config["credentials_dir"] || DEFAULT_CREDENTIALS_DIR
+          @credentials_dir = @session_runtime_dir || @config["credentials_dir"] || DEFAULT_CREDENTIALS_DIR
         end
 
         # --- request -------------------------------------------------------
@@ -103,8 +118,9 @@ module Ace
             raise Refusal.new("role '#{role}' is not allowed by profile '#{profile_name}'")
           end
           principal = @principal.call
-          unless profile["principals"].empty? || profile["principals"].include?(principal)
-            raise Refusal.new("principal '#{principal}' is not allowed by profile '#{profile_name}'; " \
+          subject = @session_uid ? "session:#{@session_role}" : principal
+          unless profile["principals"].empty? || profile["principals"].include?(subject)
+            raise Refusal.new("principal '#{subject}' is not allowed by profile '#{profile_name}'; " \
               "escalate to the host owner")
           end
           if @session_uid
@@ -199,7 +215,8 @@ module Ace
               task: task, assignment: assignment, repos: repos,
               use_until: Time.at(Time.now.utc + ttl * 60).strftime("%Y-%m-%dT%H:%M:%SZ"),
               provider_expiry: nil,
-              token_ref: token_ref, session_uid: @session_uid, session_id: @session_id)
+              token_ref: token_ref, session_uid: @session_uid, session_id: @session_id,
+              session_unit: @session_unit, issuer_invocation: @issuer_invocation)
 
             begin
               granted = issue.issue(profile: profile, lease: lease)
@@ -275,7 +292,7 @@ module Ace
 
           @store.with_exec_lock(lease_id) do
             profile = profile_for(lease["profile"])
-            handoff = CredentialHandoff.new(@credentials_dir, recipient: lease["principal"])
+            handoff = handoff_for(lease)
             credential = handoff.path(lease_id)
             # A live lease without its delivered credential is not
             # executable — degrade with a clear reason instead of an
@@ -351,7 +368,7 @@ module Ace
           if force && !operator
             raise Refusal.new("forced terminal revocation requires the root operator")
           end
-          handoff = CredentialHandoff.new(@credentials_dir, recipient: lease["principal"])
+          handoff = handoff_for(lease)
 
           # An already-revoked lease never re-dials the provider: the
           # idempotent result stands and only the handoff is re-cleared.
@@ -386,6 +403,38 @@ module Ace
 
         # --- reconcile -----------------------------------------------------
 
+        # Root-owned issuer cleanup can be called for the exact systemd
+        # invocation after its worker has exited or its service stopped.
+        # Corrupt records cannot be attributed safely and therefore block a
+        # clean result instead of disappearing from the recovery inventory.
+        def revoke_issuer(invocation:)
+          unless Process.uid.zero? && Process.euid.zero? && @session_uid.nil? && @principal.call == "root"
+            raise Refusal.new("issuer recovery requires the root operator")
+          end
+          unless invocation.is_a?(String) && invocation.match?(/\A[0-9a-f]{32}\z/)
+            raise Refusal.new("issuer recovery requires an exact invocation identity")
+          end
+          records = @store.all
+          problems = records.select { |record| record["corrupt"] }.map { |record| record["id"].to_s }
+          results = records.select { |record| !record["corrupt"] && record["issuer_invocation"] == invocation }.filter_map do |record|
+            begin
+              outcome = @store.with_exec_lock(record.fetch("id")) do
+                current = @store.load(record.fetch("id"))
+                unless current["id"] == record["id"] && current["issuer_invocation"] == invocation
+                  raise Error, "issuer lease identity changed during recovery"
+                end
+                revoke(lease_id: record.fetch("id"))
+              end
+              {"lease" => record.fetch("id"), "cleanup" => outcome.to_s}
+            rescue StandardError
+              problems << record["id"].to_s
+              nil
+            end
+          end
+          raise Error, "issuer recovery could not inspect or clean leases: #{problems.join(', ')}" unless problems.empty?
+          results
+        end
+
         # Resolves interrupted issue/revoke cycles and expired
         # assignments in the SAME store: preparing (dead mid-issue),
         # revoke-pending and past-deadline leases are
@@ -396,14 +445,14 @@ module Ace
         def reconcile
           results = []
           @store.all.each do |lease|
-            handoff = CredentialHandoff.new(@credentials_dir, recipient: lease["principal"])
+            handoff = handoff_for(lease) unless lease["corrupt"]
             outcome =
               if lease["corrupt"]
                 # An unparseable record is a visible recovery problem —
                 # the remote token may still be live; it must never
                 # silently vanish from the inventory.
                 record = File.basename(lease["_path"].to_s)
-                :"corrupt (unparseable lease record #{record}; manual recovery required — the remote token may still be live)"
+                :"corrupt (unreadable lease record #{record}; manual recovery required — the remote token may still be live)"
               elsif lease["state"] == "revoked"
                 handoff.clear(lease["id"])
                 :already_revoked
@@ -483,6 +532,18 @@ module Ace
         # installation-token endpoint revokes the token that
         # authenticates the request, so the token VALUE is required
         # there; id-revoking providers ignore it.
+        def handoff_for(lease)
+          unit = lease["session_unit"]
+          unless unit
+            return CredentialHandoff.new(@credentials_dir, recipient: lease["principal"])
+          end
+          match = SessionPeer::UNIT.match(unit)
+          raise Error, "invalid session unit in lease" unless match
+          handoff = CredentialHandoff.new("/run/ace-auth-#{match[2]}", recipient: lease["principal"])
+          handoff.validate_root_directory!
+          handoff
+        end
+
         def cleanup(lease, profile, handoff)
           credential = handoff.path(lease["id"])
           token = File.file?(credential) ? File.read(credential) : nil

@@ -5,6 +5,7 @@ require "json"
 require "fileutils"
 require "digest"
 require "time"
+require_relative "session_peer"
 
 module Ace
   module Lab
@@ -45,7 +46,7 @@ module Ace
         #   remote side (the response may never have arrived).
         # @return [Hash] the created (PREPARING) lease record
         def create(profile:, role:, principal:, task:, assignment:, repos:,
-          use_until:, provider_expiry:, token_ref: nil, id: nil, session_uid: nil, session_id: nil)
+          use_until:, provider_expiry:, token_ref: nil, id: nil, session_uid: nil, session_id: nil, session_unit: nil, issuer_invocation: nil)
           lease = {"id" => id || "lease-#{SecureRandom.hex(8)}",
                    "profile" => profile, "role" => role, "principal" => principal,
                    "task" => task, "assignment" => assignment, "repos" => repos.sort,
@@ -55,7 +56,9 @@ module Ace
           if session_uid
             lease["session_uid"] = session_uid
             lease["session_id"] = session_id
+            lease["session_unit"] = session_unit
           end
+          lease["issuer_invocation"] = issuer_invocation if issuer_invocation
           write(lease)
           lease
         end
@@ -83,7 +86,7 @@ module Ace
           path = lease_path(id)
           raise Error, "unknown lease '#{id}'" unless File.file?(path)
 
-          JSON.parse(File.read(path))
+          parse_record(path)
         rescue JSON::ParserError
           raise Error, "lease record '#{id}' is unreadable"
         end
@@ -96,10 +99,8 @@ module Ace
           return [] unless Dir.exist?(@dir)
 
           Dir.glob(File.join(@dir, "*.json")).sort.filter_map do |path|
-            JSON.parse(File.read(path))
-          rescue Errno::EACCES
-            nil
-          rescue JSON::ParserError
+            parse_record(path)
+          rescue Errno::EACCES, JSON::ParserError
             {"id" => File.basename(path, ".json"), "state" => nil,
              "corrupt" => true, "_path" => path}
           end
@@ -114,7 +115,7 @@ module Ace
           path = lease_path(id)
           with_write_lock(id) do
             lease = begin
-              JSON.parse(File.read(path))
+              parse_record(path)
             rescue JSON::ParserError, Errno::ENOENT => e
               # A corrupt/missing record is a named store failure, never a
               # raw parser error escaping through the update seam.
@@ -181,6 +182,20 @@ module Ace
         end
 
         private
+
+        def parse_record(path)
+          record = JSON.parse(File.read(path))
+          unless record.is_a?(Hash) && record["id"] == File.basename(path, ".json")
+            raise JSON::ParserError, "lease record identity differs"
+          end
+          if %w[session_uid session_id session_unit issuer_invocation].any? { |field| record.key?(field) }
+            valid = record["session_uid"].is_a?(Integer) && record["session_uid"].positive? &&
+              %w[session_id issuer_invocation].all? { |field| record[field].is_a?(String) && record[field].match?(/\A[0-9a-f]{32}\z/) } &&
+              record["session_unit"].is_a?(String) && SessionPeer::UNIT.match?(record["session_unit"])
+            raise JSON::ParserError, "lease session identity is incomplete" unless valid
+          end
+          record
+        end
 
         def atomic_write(path, lease)
           FileUtils.mkdir_p(@dir)

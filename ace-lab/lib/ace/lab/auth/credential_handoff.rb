@@ -33,7 +33,14 @@ module Ace
         end
 
         def prepare!
-          @owner ? prepare_owned_directory! : FileUtils.mkdir_p(@credentials_dir)
+          @owner ? validate_root_directory!(create: true) : FileUtils.mkdir_p(@credentials_dir)
+        end
+
+        # Used by host recovery before reading a session credential. A
+        # stopped session may already have removed the directory; never
+        # recreate it during cleanup.
+        def validate_root_directory!(create: false)
+          prepare_owned_directory!(create: create)
         end
 
         # @return [String] the credential file path (the reference)
@@ -74,7 +81,7 @@ module Ace
         # A privileged issuer may only deliver under a root-controlled,
         # non-symlink path. Search permission lets the recipient reach its
         # own 0400 file without granting directory listing or write access.
-        def prepare_owned_directory!
+        def prepare_owned_directory!(create:)
           raise Error, "session credential delivery requires root" unless Process.euid.zero?
 
           directory = Pathname.new(@credentials_dir)
@@ -87,6 +94,7 @@ module Ace
             begin
               stat = File.lstat(current)
             rescue Errno::ENOENT
+              return false unless create
               created = false
               begin
                 Dir.mkdir(current, 0o711)
@@ -104,6 +112,7 @@ module Ace
               raise Error, "session credential path is not searchable by the recipient: #{current}"
             end
           end
+          true
         end
       end
     end
