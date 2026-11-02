@@ -70,6 +70,7 @@ Type=simple
 User=forgejo
 Group=forgejo
 WorkingDirectory=/var/lib/forgejo
+Environment=FORGEJO_WORK_DIR=/var/lib/forgejo
 ExecStart=/usr/local/bin/forgejo web --config /etc/forgejo/app.ini --work-path /var/lib/forgejo
 Restart=on-failure
 NoNewPrivileges=true
