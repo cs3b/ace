@@ -58,7 +58,11 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
         if (generation === bindingGeneration) observedSources = result.sources;
         return result;
       },
-      canDeliver: () => !arming && !compacting && (ctx.isIdle() || running),
+      // Do not queue a follow-up while the current turn can still handle and
+      // acknowledge the same revision. Polling retains it until the agent is
+      // idle; already handled changes then require no extra model turn. Unlike
+      // eyes revisions, loop/watch messages cannot be acknowledged this way.
+      canDeliver: () => !arming && !compacting && !running && ctx.isIdle() && !ctx.hasPendingMessages(),
       deliveryStatus: () => {
         if (attempt?.accepted) return "accepted";
         // sendUserMessage is a void wrapper. Busy/queued is uncertain, not

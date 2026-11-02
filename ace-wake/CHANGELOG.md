@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Defer eyes notifications until the agent is idle so revisions handled during a turn do not leave stale queued wakes.
 - Deliver deadlines that expire while an observation is running in the same observation cycle.
 
 ### Changed

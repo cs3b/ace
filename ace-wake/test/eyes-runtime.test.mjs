@@ -81,6 +81,50 @@ it("agent arms eyes through its tool, acknowledges baseline and stays silent unt
   } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
 });
 
+it("does not queue a stale wake for work handled during an active turn", async()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-busy-"));
+  const host=createFakeHost(), tools=new Map();
+  host.pi.registerTool=(tool)=>tools.set(tool.name,tool);
+  let rows=[];
+  const session=await startSession(host,{eyes:{
+    now:host.clock.now,schedule:host.setIntervalFn,cancel:host.clearIntervalFn,
+    observe:async()=>({schema:"ace.hitl.observation/v1",events:rows})
+  }});
+  try {
+    const file=path.join(dir,"eyes.json");fs.writeFileSync(file,"{}");
+    const tool=tools.get("ace_eyes");
+    await tool.execute("start",{action:"start",configPath:file},null,null,host.commandContext);
+    host.setIdle(false);await session.agentStart();
+    rows=[{key,revision,id:"task1"}];host.clock.advance(30000);await flush();
+    assert.equal(host.sends.length,0,"active turns must not accumulate stale follow-ups");
+    await tool.execute("ack",{action:"ack",key,revision});
+    host.setIdle(true);await session.settle();host.clock.advance(30000);await flush();
+    assert.equal(host.sends.length,0,"handled changes do not start another turn");
+    rows=[{key,revision:"c".repeat(64),id:"task1"}];host.clock.advance(30000);await flush();
+    assert.equal(host.sends.length,1,"a later unhandled change still wakes the idle agent");
+  } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
+});
+
+it("waits for other pending host messages before delivering an eyes wake", async()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-queue-"));
+  const host=createFakeHost(), tools=new Map();
+  host.pi.registerTool=(tool)=>tools.set(tool.name,tool);
+  let rows=[];
+  const session=await startSession(host,{eyes:{
+    now:host.clock.now,schedule:host.setIntervalFn,cancel:host.clearIntervalFn,
+    observe:async()=>({schema:"ace.hitl.observation/v1",events:rows})
+  }});
+  try {
+    const file=path.join(dir,"eyes.json");fs.writeFileSync(file,"{}");
+    await tools.get("ace_eyes").execute("start",{action:"start",configPath:file},null,null,host.commandContext);
+    host.setPendingMessages(true);rows=[{key,revision,id:"task1"}];
+    host.clock.advance(30000);await flush();
+    assert.equal(host.sends.length,0,"another queued message must run first");
+    host.setPendingMessages(false);host.clock.advance(30000);await flush();
+    assert.equal(host.sends.length,1,"the still-unhandled revision is delivered after queue drain");
+  } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
+});
+
 it("rebinding clears source health until the new observation completes", async()=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-rebind-"));
   const host=createFakeHost(), tools=new Map();

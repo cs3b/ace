@@ -263,7 +263,7 @@ describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
     }finally{release();cleanup();}
   });
 
-  it("retains one uncertain busy follow-up until the actual host consumes it", async () => {
+  it("defers an eyes wake while the actual host is busy, then delivers it once", async () => {
     const { registerEyes } = await import(pathToFileURL(path.join(path.dirname(EXT_PATH), "wake/eyes-runtime.js")).href);
     let tick,rows=[],release,entered=false;
     const gate=new Promise(resolve=>{release=resolve;});
@@ -280,9 +280,11 @@ describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
       rows=[{key:"a".repeat(64),revision:"b".repeat(64),id:"event1"}];
       for(let i=0;i<4;i++){tick();await flush();}
       let state=session.sessionManager.getBranch().filter(e=>e.customType==="ace-wake-eyes").at(-1).data;
-      assert.equal(state.window.wakes,1,"queued follow-up must never be retried while host busy");
+      assert.equal(state.window.wakes,0,"busy turns do not accumulate queued eyes follow-ups");
       release();await running;await waitFor(()=>session.isIdle);
       for(let i=0;i<3;i++){tick();await flush();}
+      state=session.sessionManager.getBranch().filter(e=>e.customType==="ace-wake-eyes").at(-1).data;
+      assert.equal(state.window.wakes,1,"an unhandled revision wakes after the turn finishes");
       assert.equal(userTextsOf(session).filter(text=>text.includes("[ace-eyes]")).length,1);
     }finally{release();cleanup();}
   });

@@ -26,6 +26,15 @@ lives at `handbook/extensions/ace-wake/` (single copy) and ships in the
   into each manifest-declared extension directory (`gemset.extensions`),
   reporting the loaded version and any restart need.
 
+## Standing observation
+
+`/eyes` keeps observing source revisions while an agent is working. It does
+not enqueue a follow-up during that turn: the agent can acknowledge a revision
+it handles itself. Once the agent is idle and its other pending messages have
+cleared, the next observation delivers any still-unhandled revisions. This can
+delay notification by one observation interval, but avoids turns for changes
+already handled during the active turn.
+
 ## Mount-aware poll fallback
 
 `/lab/state/hitl-address/ace` (the HITL transport folder) is a FUSE/virtiofs
