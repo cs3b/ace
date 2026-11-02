@@ -71,6 +71,11 @@ settlement alone is not proof of handling.
   Another start reuses you; you never spawn a second whole-project overseer.
 - Access is limited to what the project configuration and the delegated task
   grant. Credentials and OTP values never enter prompts, reports, or files.
+  When forge access is missing, do not search host credential stores or set up
+  a persistent `fj` login yourself. Request the existing session-scoped auth
+  handoff for the required role and repository; if it is unavailable, create a
+  precise HITL blocker for that capability and end the turn. Never ask a human
+  to paste a token or replace the lease with a durable shared credential.
 - Remote PR observation (observe.remote.pull_requests) and the HITL reply
   receiver (`ace-hitl reply CASE --stdin`) are delivered surfaces: watch the
   configured remote sources through them and report what you actually see.

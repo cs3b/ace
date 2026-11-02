@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Escalate missing forge access through session-scoped auth instead of searching for or configuring persistent credentials.
+
 - Confirm first-turn activity without waiting for the overseer turn to finish.
 
 - Dispatch bootstrap workers without blocking Herdr wait flags and use an eyes deadline to surface unconfirmed first turns.
