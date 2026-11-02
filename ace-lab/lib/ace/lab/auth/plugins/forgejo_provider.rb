@@ -43,15 +43,7 @@ module Ace
             unless linux_xdg?
               raise Providers::RefusedError, "forgejo session projection currently requires Linux XDG data directories"
             end
-            url = begin
-              URI.parse(profile.fetch("issuer").fetch("url"))
-            rescue URI::InvalidURIError, KeyError
-              raise Providers::RefusedError, "forgejo issuer url is invalid"
-            end
-            unless %w[http https].include?(url.scheme) && url.host && url.userinfo.nil? &&
-                ["", "/"].include?(url.path.to_s) && url.query.nil? && url.fragment.nil?
-              raise Providers::RefusedError, "forgejo issuer url must be a bare HTTP(S) origin"
-            end
+            url = issuer_origin!(profile.fetch("issuer"))
             host = url.hostname
             authority = host.include?(":") ? "[#{host}]" : host
             authority += ":#{url.port}" if url.port != url.default_port
@@ -94,7 +86,7 @@ module Ace
 
           def issue(profile:, lease:)
             issuer = profile.fetch("issuer")
-            url = issuer["url"] or raise Providers::RefusedError, "forgejo profile has no issuer url"
+            url = issuer_origin!(issuer).to_s.chomp("/")
             account = issuer["account"] or raise Providers::RefusedError, "forgejo profile has no role account"
             header_value = issuer_header(issuer)
 
@@ -118,6 +110,7 @@ module Ace
               )
             end
             body = JSON.parse(result)
+            raise Providers::TransientError, "forgejo returned an invalid token response" unless body.is_a?(Hash)
             secret = body["sha1"]
             unless secret.is_a?(String) && !secret.empty?
               raise Providers::TransientError, "forgejo did not return the token secret (check server API version)"
@@ -139,7 +132,7 @@ module Ace
           # deterministic recovery of an interrupted issue.
           def revoke(profile:, token_ref:, token: nil)
             issuer = profile.fetch("issuer")
-            url = issuer["url"] or raise Providers::RefusedError, "forgejo profile has no issuer url"
+            url = issuer_origin!(issuer).to_s.chomp("/")
             account = issuer["account"] or raise Providers::RefusedError, "forgejo profile has no role account"
             _out, err, status = with_secret_header(issuer_header(issuer)) do |header|
               @capture.call(
@@ -159,6 +152,17 @@ module Ace
 
           def linux_xdg?
             RbConfig::CONFIG.fetch("host_os").start_with?("linux")
+          end
+
+          def issuer_origin!(issuer)
+            url = URI.parse(issuer.fetch("url"))
+            unless %w[http https].include?(url.scheme) && url.host && url.userinfo.nil? &&
+                ["", "/"].include?(url.path.to_s) && url.query.nil? && url.fragment.nil?
+              raise Providers::RefusedError, "forgejo issuer url must be a bare HTTP(S) origin"
+            end
+            url
+          rescue URI::InvalidURIError, KeyError, TypeError
+            raise Providers::RefusedError, "forgejo issuer url is invalid"
           end
 
           def issuer_header(issuer)

@@ -239,6 +239,24 @@ module Ace
           end
         end
 
+        def test_rejects_non_object_response_as_an_unknown_outcome
+          prov = provider("[]")
+          error = assert_raises(Providers::TransientError) do
+            prov.issue(profile: profile, lease: {"id" => "lease-x", "repos" => %w[cs3b/ace]})
+          end
+          assert_match(/invalid token response/, error.message)
+        end
+
+        def test_rejects_non_origin_issuer_url_before_request
+          config = profile
+          config["issuer"]["url"] = "https://forge.example.com/untrusted"
+          prov = provider
+          assert_raises(Providers::RefusedError) do
+            prov.issue(profile: config, lease: {"id" => "lease-x", "repos" => %w[cs3b/ace]})
+          end
+          assert_empty seen
+        end
+
         def test_token_name_is_deterministic_from_the_lease_id
           assert_equal "ace-lab-lease-x",
             Plugins::ForgejoProvider.new.token_ref_for(lease_id: "lease-x"),
