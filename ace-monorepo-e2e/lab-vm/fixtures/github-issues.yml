@@ -1,0 +1,32 @@
+# Each run creates these issues in its isolated test repository. The
+# dependency token is replaced with the actual issue URL returned by GitHub.
+issues:
+  - key: base
+    title: Add a small counter primitive
+    body: |
+      Add a small Ruby counter primitive under ace-monorepo-e2e/lab-fixture.
+      It must start at zero, accept integer increments and expose the value.
+      Include executable tests for the initial value and multiple increments.
+      Use the repository's normal task, test, review and PR workflow.
+  - key: cli
+    title: Add a counter command-line interface
+    depends_on: [base]
+    body: |
+      After {{issue:base}} has been integrated, add a command-line interface
+      to the counter. It must accept a sequence of integer increments and
+      print the resulting value. Include executable tests for valid input and
+      an invalid increment. This task depends on {{issue:base}}.
+  - key: docs
+    title: Document the counter fixture
+    body: |
+      Add concise documentation describing the purpose and expected usage of
+      the counter fixture under ace-monorepo-e2e/lab-fixture. The documentation
+      must explain that this is a disposable E2E fixture, not a product API.
+  - key: release
+    title: Release the integrated counter fixture
+    kind: release
+    depends_on: [base, cli, docs]
+    body: |
+      Record this release as pending until {{issue:base}}, {{issue:cli}},
+      and {{issue:docs}} have been integrated. Do not publish a release or
+      package during this scenario.

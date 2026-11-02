@@ -1,0 +1,125 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Provision the disposable work clone. No credentials are copied here.
+require "ipaddr"
+require "fileutils"
+load File.expand_path("lab-vm", __dir__)
+
+begin
+  raise "usage: lab-vm-runtime provision" unless ARGV == ["provision"]
+  LabVm.with_lifecycle_lock do
+    begin
+      state = LabVm.read_state
+      work = LabVm.status.fetch("work")
+      raise "create a fresh working clone first" unless work && state.dig("work", "phase") == "created"
+      uuid = work.fetch("uuid")
+      if work["status"] == "stopped"
+        LabVm.utm_call("start", uuid)
+      elsif work["status"] != "started"
+        raise "working VM is not startable: #{work['status']}"
+      end
+
+      deadline = LabVm.uptime + 300
+      address = nil
+      loop do
+        begin
+          addresses = LabVm.utm_call("ip-address", uuid).lines.map(&:strip)
+          address = addresses.find do |line|
+            ip = IPAddr.new(line)
+            ip.ipv4? && !ip.loopback?
+          rescue IPAddr::InvalidAddressError
+            false
+          end
+          code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", "cloud-init status; test -f /etc/ssh/ssh_host_ed25519_key.pub")
+          break if address && code.zero? && output.include?("status: done")
+        rescue RuntimeError
+          # A newly booted VM has no guest agent or address until cloud-init runs.
+        end
+        raise "working VM did not become ready; preserved for diagnosis" if LabVm.uptime >= deadline
+        sleep 2
+      end
+
+      code, output = LabVm.guest_exec(uuid, "/bin/cat", "/etc/ssh/ssh_host_ed25519_key.pub")
+      raise "cannot read guest SSH host key" unless code.zero?
+      key = output.lines.first.to_s.split
+      raise "invalid guest SSH host key" unless key[0] == "ssh-ed25519" && key[1]&.match?(/\A[A-Za-z0-9+\/=]+\z/)
+      known_hosts = File.join(LabVm.local_dir, "known-hosts-#{uuid}")
+      raise "known-hosts file is a symlink" if File.symlink?(known_hosts)
+      File.open(known_hosts, File::WRONLY | File::CREAT | File::TRUNC | File::NOFOLLOW, 0o600) do |file|
+        file.chmod(0o600)
+        file.puts "#{address} #{key[0]} #{key[1]}"
+      end
+      key_path = File.join(LabVm.local_dir, "bootstrap/operator_ed25519")
+      ssh_options = ["-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "UserKnownHostsFile=#{known_hosts}", "-i", key_path]
+      raise "artifact verification failed" unless system(File.join(__dir__, "lab-vm-artifacts"))
+      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", "test ! -e /var/lib/ace-e2e/input && install -d -o lab-operator -g lab-operator -m 0700 /home/lab-operator/ace-e2e-input")
+      raise "working clone is not fresh: #{output}" unless code.zero?
+      root = File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm")
+      inputs = [File.join(LabVm.local_dir, "artifacts"), File.join(root, "pi"), File.join(root, "release-manifest.json"),
+        File.join(root, "provision-runtime.sh"), File.join(root, "build-herdr.sh")]
+      raise "fixture copy failed" unless system("scp", "-q", "-r", *ssh_options, *inputs, "lab-operator@#{address}:/home/lab-operator/ace-e2e-input/")
+      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", "install -d -m 0755 /var/lib/ace-e2e/input && cp -a /home/lab-operator/ace-e2e-input/. /var/lib/ace-e2e/input/ && chown -R root:root /var/lib/ace-e2e/input && chmod -R go-w /var/lib/ace-e2e/input")
+      raise "guest input preparation failed: #{output}" unless code.zero?
+
+      code, output = LabVm.guest_exec(uuid, "/bin/sh", "/var/lib/ace-e2e/input/provision-runtime.sh", timeout_s: 7200)
+      puts output
+      raise "runtime provisioning failed; working VM preserved" unless code.zero?
+      code, output = LabVm.guest_exec(uuid, "/usr/sbin/runuser", "-u", "lab-operator", "--", "/bin/sh", "/var/lib/ace-e2e/input/build-herdr.sh", timeout_s: 5400)
+      puts output
+      raise "Herdr build failed; working VM preserved" unless code.zero?
+      install = <<~SH
+        set -eu
+        install -d -m 0755 /opt/ace/runtime/share/herdr /opt/ace/runtime/bin
+        install -o root -g root -m 0755 /home/lab-operator/herdr-build/herdr /opt/ace/runtime/share/herdr/herdr
+        install -o root -g root -m 0644 /home/lab-operator/herdr-build/provenance.json /opt/ace/runtime/share/herdr/provenance.json
+        ruby_version=$(python3 -c 'import json; print(json.load(open("/var/lib/ace-e2e/input/release-manifest.json"))["ruby"])')
+        export ACE_TOOLCHAIN=installed GEM_HOME=/opt/ace/runtime/gems GEM_PATH=/opt/ace/runtime/gems
+        export PATH="/opt/ace/runtime/gems/bin:/opt/ace/toolchains/ruby-$ruby_version/bin:/usr/bin:/bin"
+        ace-herdr native-source verify --artifact /opt/ace/runtime/share/herdr
+        ln -s ../share/herdr/herdr /opt/ace/runtime/bin/herdr
+      SH
+      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", install)
+      puts output
+      raise "Herdr installation verification failed; working VM preserved" unless code.zero?
+      probe = <<~SH
+        set -eu
+        . /etc/profile.d/ace-e2e.sh
+        test "$ACE_TOOLCHAIN" = installed
+        test "$(id -un)" = mo
+        for tool in ruby gem ace-overseer ace-coworker ace-task ace-assign ace-hitl ace-lab herdr pi; do
+          path=$(command -v "$tool")
+          case "$path" in /opt/ace/*) ;; *) exit 1 ;; esac
+          printf '%s=%s\n' "$tool" "$path"
+        done
+        printf 'ACE_TOOLCHAIN=%s\nGEM_HOME=%s\n' "$ACE_TOOLCHAIN" "$GEM_HOME"
+        ace-overseer --version
+        herdr --version
+        pi --version
+      SH
+      code, output = LabVm.guest_exec(uuid, "/usr/sbin/runuser", "-u", "mo", "--", "/bin/sh", "-c", probe)
+      puts output
+      raise "installed runtime is unavailable to mo; working VM preserved" unless code.zero?
+      digest = Digest::SHA256.file(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/release-manifest.json")).hexdigest
+      marker = "test \"$(sha256sum /var/lib/ace-e2e/input/release-manifest.json | cut -d' ' -f1)\" = '#{digest}' && test ! -e /var/lib/ace-e2e/runtime-ready.sha256 && test ! -L /var/lib/ace-e2e/runtime-ready.sha256 && printf '%s\\n' '#{digest}' > /var/lib/ace-e2e/runtime-ready.sha256 && chmod 0644 /var/lib/ace-e2e/runtime-ready.sha256"
+      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", marker)
+      raise "runtime receipt could not be recorded: #{output}" unless code.zero?
+      puts "Runtime and verified Herdr installed; scenario readiness still requires verification."
+    rescue StandardError
+      begin
+        current = LabVm.status["work"]
+        if defined?(uuid) && uuid && current && current["uuid"].casecmp?(uuid) && current["status"] == "started"
+          LabVm.utm_call("stop", uuid, "--request")
+          LabVm.wait_stopped("work")
+          warn "Working VM stopped and preserved for diagnosis."
+        end
+      rescue StandardError => stop_error
+        warn "Could not confirm working VM shutdown: #{stop_error.message}"
+      end
+      raise
+    end
+  end
+rescue StandardError => e
+  warn "lab-vm-runtime: #{e.message}"
+  exit 1
+end

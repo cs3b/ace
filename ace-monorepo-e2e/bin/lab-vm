@@ -1,0 +1,631 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Inspect this worktree's registered disposable UTM fixture.
+require "yaml"
+require "json"
+require "digest"
+require "open3"
+require "pathname"
+require "tempfile"
+require "find"
+require "securerandom"
+require "fileutils"
+require "tmpdir"
+require "uri"
+
+module LabVm
+  ROOT = File.expand_path("../..", __dir__)
+  PROFILE = File.join(ROOT, "ace-monorepo-e2e/lab-vm/profile.yml")
+  STATE = File.join(ROOT, ".ace-local/lab-vm/state.json")
+  UTMCTL = "/Applications/UTM.app/Contents/MacOS/utmctl"
+  UTM_ROOT = File.expand_path("~/Library/Containers/com.utmapp.UTM/Data/Documents")
+  UUID = /\A[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}\z/
+
+  # Validate the UUID against both UTM inventory and the on-disk package.
+  # Neither a matching display name nor a user-writable state file is enough.
+  def self.verify_package!(role, record, root: UTM_ROOT)
+    name, uuid = record.values_at("name", "uuid")
+    unless name.is_a?(String) && name.match?(/\Aace-e2e-#{Regexp.escape(role)}-[A-Za-z0-9-]+\z/) &&
+        uuid.is_a?(String) && uuid.match?(UUID)
+      raise "invalid #{role} VM identity"
+    end
+    root = File.realpath(root)
+    package = File.join(root, "#{name}.utm")
+    raise "VM package is a symlink" if File.symlink?(package)
+    raise "VM package is missing" unless File.directory?(package)
+    raise "VM package escapes UTM root" unless File.dirname(File.realpath(package)) == root
+    config = File.join(package, "config.plist")
+    raise "VM configuration is not a regular file" unless File.file?(config) && !File.symlink?(config)
+    out, err, result = Open3.capture3("/usr/bin/plutil", "-extract", "Information.UUID", "raw", "-o", "-", config)
+    raise "cannot read VM identity: #{err.strip}" unless result.success?
+    raise "VM package UUID disagrees with saved identity" unless out.strip.casecmp?(uuid)
+    package
+  end
+
+  def self.local_dir
+    root = File.realpath(ROOT)
+    parent = File.join(root, ".ace-local")
+    raise "local state parent is a symlink" if File.symlink?(parent)
+    Dir.mkdir(parent, 0o700) unless File.exist?(parent)
+    raise "local state parent is not a directory" unless File.directory?(parent)
+    dir = File.join(parent, "lab-vm")
+    raise "local VM state directory is a symlink" if File.symlink?(dir)
+    Dir.mkdir(dir, 0o700) unless File.exist?(dir)
+    info = File.stat(dir)
+    raise "local VM state directory must be private and owned by the current user" unless
+      info.directory? && info.uid == Process.uid && (info.mode & 0o077).zero?
+    dir
+  end
+
+  def self.with_lifecycle_lock
+    path = File.join(local_dir, "lifecycle.lock")
+    raise "lifecycle lock is a symlink" if File.symlink?(path)
+    File.open(path, File::RDWR | File::CREAT | File::NOFOLLOW, 0o600) do |lock|
+      raise "another VM lifecycle command is running" unless lock.flock(File::LOCK_EX | File::LOCK_NB)
+      yield
+    ensure
+      lock.flock(File::LOCK_UN)
+    end
+  end
+
+  def self.read_state
+    raise "VM state is a symlink" if File.symlink?(STATE)
+    return {} unless File.exist?(STATE)
+    raise "VM state is not a regular file" unless File.file?(STATE)
+    data = JSON.parse(File.read(STATE))
+    raise "invalid VM state" unless data.is_a?(Hash)
+    data
+  end
+
+  def self.profile
+    YAML.safe_load_file(PROFILE, permitted_classes: [], aliases: false)
+  end
+
+  def self.base_configuration_fingerprint
+    release = JSON.parse(File.read(File.join(ROOT, "ace-monorepo-e2e/lab-vm/release-manifest.json")))
+    Digest::SHA256.hexdigest(JSON.generate({"profile" => profile, "apt_snapshot" => release.fetch("apt_snapshot"), "cloud_config_schema" => 3}))
+  end
+
+  def self.parse_inventory(output)
+    lines = output.lines
+    unless lines.shift.to_s.match?(/\AUUID\s+Status\s+Name\s*\z/)
+      raise "unexpected UTM inventory response"
+    end
+    lines.reject { |line| line.strip.empty? }.map do |line|
+      match = line.match(/\A([0-9A-Fa-f-]{36})\s+(\S+)\s+(.+?)\s*\z/)
+      raise "invalid UTM inventory entry" unless match && match[1].match?(UUID)
+      {"uuid" => match[1], "status" => match[2], "name" => match[3]}
+    end
+  end
+
+  def self.status
+    out, err, result = Open3.capture3(UTMCTL, "list")
+    raise "UTM inventory failed: #{err.strip}" unless result.success?
+
+    saved = read_state
+    registered = parse_inventory(out)
+    owned = %w[base work].to_h do |role|
+      record = saved[role]
+      next [role, nil] unless record
+      unless record.is_a?(Hash) && record["uuid"].to_s.match?(UUID) &&
+          record["name"].to_s.match?(/\Aace-e2e-#{role}-[A-Za-z0-9-]+\z/)
+        raise "invalid #{role} VM identity"
+      end
+      actual = registered.find { |item| item["uuid"].casecmp?(record["uuid"]) }
+      raise "#{role} VM identity disagrees with UTM" if actual && actual["name"] != record["name"]
+      verify_package!(role, record) if actual
+      [role, actual || {"uuid" => record["uuid"], "status" => "missing", "name" => record["name"]}]
+    end
+    {"profile" => PROFILE, "state" => STATE, "base" => owned["base"], "work" => owned["work"],
+      "base_configuration_match" => saved["base"] ? saved.dig("base", "configuration_fingerprint") == base_configuration_fingerprint : nil}
+  end
+
+  def self.package_fingerprint(package)
+    root = File.realpath(package)
+    files = []
+    Find.find(root) do |path|
+      next if path == root
+      stat = File.lstat(path)
+      raise "symlink in VM package: #{path}" if stat.symlink?
+      raise "unexpected VM package entry: #{path}" unless stat.file? || stat.directory?
+      next if stat.directory?
+      relative = path.delete_prefix(root + "/")
+      files << [relative, stat.size, Digest::SHA256.file(path).hexdigest]
+    end
+    Digest::SHA256.hexdigest(JSON.generate(files.sort))
+  end
+
+  def self.evidence_dir
+    root = File.realpath(ROOT)
+    dir = root
+    %w[.ace-local lab-vm evidence].each do |part|
+      dir = File.join(dir, part)
+      raise "symlink in evidence path: #{dir}" if File.symlink?(dir)
+      Dir.mkdir(dir, 0o700) unless File.exist?(dir)
+      raise "evidence path is not a directory: #{dir}" unless File.directory?(dir)
+    end
+    raise "evidence directory must be private" unless File.stat(dir).uid == Process.uid && (File.stat(dir).mode & 0o077).zero?
+    dir
+  end
+
+  def self.utm_call(*args)
+    out, err, result = Open3.capture3(UTMCTL, *args)
+    raise "UTM failed: #{err.strip} #{out.strip}" unless result.success? &&
+      !out.include?("Error from event") && !err.include?("Error from event")
+    out
+  end
+
+  # macOS CLOCK_MONOTONIC advances while the host sleeps, although the VM
+  # cannot make progress. Uptime excludes sleep and makes deadlines meaningful.
+  def self.uptime
+    Process.clock_gettime(Process::CLOCK_UPTIME_RAW)
+  end
+
+  def self.wait_stopped(role)
+    deadline = uptime + 45
+    loop do
+      current = status.fetch(role)
+      return current if current && current["status"] == "stopped"
+      raise "#{role} shutdown not confirmed" if uptime >= deadline
+      sleep 1
+    end
+  end
+
+  def self.export_vm(role, record)
+    uuid = record.fetch("uuid")
+    source = verify_package!(role, record)
+    dest = File.join(evidence_dir, "#{uuid}.utm")
+    raise "evidence destination is a symlink" if File.symlink?(dest)
+    unless File.exist?(dest)
+      script = <<~APPLESCRIPT
+        on run argv
+          set vmId to item 1 of argv
+          set outputPath to POSIX file (item 2 of argv)
+          tell application "UTM" to export virtual machine id vmId to outputPath
+        end run
+      APPLESCRIPT
+      out, err, result = Open3.capture3("osascript", "-e", script, "--", uuid, dest)
+      raise "UTM export failed: #{err.strip} #{out.strip}" unless result.success?
+    end
+    raise "export did not produce a VM package" unless File.directory?(dest)
+    raise "exported VM differs from original; refusing deletion" unless package_fingerprint(source) == package_fingerprint(dest)
+    dest
+  end
+
+  def self.remove_work(state, current)
+    if (work = current["work"])
+      record = state.fetch("work")
+      if work["status"] == "missing"
+        evidence = File.join(evidence_dir, "#{record.fetch('uuid')}.utm")
+        unless record["phase"] == "exported" && File.directory?(evidence) && !File.symlink?(evidence) &&
+            record["evidence_fingerprint"] == package_fingerprint(evidence)
+          raise "work VM is missing without a verified export; preserve state and investigate"
+        end
+      else
+        verify_package!("work", record)
+        if work["status"] != "stopped"
+          utm_call("stop", work.fetch("uuid"), "--request")
+          wait_stopped("work")
+        end
+        evidence = export_vm("work", record)
+        record["phase"] = "exported"
+        record["evidence_fingerprint"] = package_fingerprint(evidence)
+        save_state(state) # The verified export is durable before deletion.
+        raise "work VM changed state during export" unless status.dig("work", "status") == "stopped"
+        utm_call("delete", work.fetch("uuid"))
+        if parse_inventory(utm_call("list")).any? { |item| item["uuid"].casecmp?(work.fetch("uuid")) }
+          raise "work VM deletion was not confirmed"
+        end
+      end
+      state.delete("work")
+      save_state(state)
+    end
+  end
+
+  def self.reset
+    check_free_space!
+    state = read_state
+    current = status
+    base = current.fetch("base")
+    raise "base VM is not ready and stopped" unless base && base["status"] == "stopped" && state.dig("base", "phase") == "ready"
+    raise "base VM configuration changed; rebuild it before reset" unless state.dig("base", "configuration_fingerprint") == base_configuration_fingerprint
+    base_path = verify_package!("base", state.fetch("base"))
+    digest = package_fingerprint(base_path)
+    expected = state.dig("base", "fingerprint")
+    raise "base VM has changed; rebuild it before reset" unless expected && digest == expected
+    remove_work(state, current)
+
+    name = state["pending_work_name"] || "ace-e2e-work-#{SecureRandom.hex(8)}"
+    raise "invalid pending work name" unless name.match?(/\Aace-e2e-work-[a-f0-9]{16}\z/)
+    state["pending_work_name"] = name
+    save_state(state)
+    registered = parse_inventory(utm_call("list"))
+    matches = registered.select { |row| row["name"] == name }
+    raise "ambiguous pending VM name" if matches.size > 1
+    if matches.empty?
+      utm_call("clone", base.fetch("uuid"), "--name", name)
+      matches = parse_inventory(utm_call("list")).select { |row| row["name"] == name }
+    end
+    raise "clone creation was not confirmed" unless matches.size == 1
+    record = {"uuid" => matches.first.fetch("uuid"), "name" => name, "phase" => "created"}
+    verify_package!("work", record)
+    state["work"] = record
+    state.delete("pending_work_name")
+    save_state(state)
+    {"base" => base, "work" => matches.first, "created" => true}
+  end
+
+  def self.destroy
+    state = read_state
+    raise "pending VM creation must be reconciled before destruction" if state["pending_base_name"] || state["pending_work_name"]
+    current = status
+    remove_work(state, current)
+    if (base = current["base"])
+      record = state.fetch("base")
+      if base["status"] == "missing"
+        evidence = File.join(evidence_dir, "#{record.fetch('uuid')}.utm")
+        unless record["phase"] == "exported" && File.directory?(evidence) && !File.symlink?(evidence) &&
+            record["evidence_fingerprint"] == package_fingerprint(evidence)
+          raise "base VM is missing without a verified export; preserve state and investigate"
+        end
+      else
+        verify_package!("base", record)
+        if base["status"] != "stopped"
+          utm_call("stop", base.fetch("uuid"), "--request")
+          wait_stopped("base")
+        end
+        evidence = export_vm("base", record)
+        record["phase"] = "exported"
+        record["evidence_fingerprint"] = package_fingerprint(evidence)
+        save_state(state)
+        raise "base VM changed state during export" unless status.dig("base", "status") == "stopped"
+        utm_call("delete", base.fetch("uuid"))
+        if parse_inventory(utm_call("list")).any? { |item| item["uuid"].casecmp?(base.fetch("uuid")) }
+          raise "base VM deletion was not confirmed"
+        end
+      end
+      state.delete("base")
+      save_state(state)
+    end
+    {"destroyed" => true, "evidence_dir" => evidence_dir}
+  end
+
+  # utmctl exec can return before a guest process has produced its output.
+  # Wait for the QEMU guest agent's explicit exit result through UTM's API.
+  def self.capture_with_timeout(timeout_s, *argv)
+    Open3.popen3(*argv) do |stdin, stdout, stderr, process|
+      stdin.close
+      out_reader = Thread.new { stdout.read }
+      err_reader = Thread.new { stderr.read }
+      deadline = uptime + timeout_s
+      finished = false
+      while uptime < deadline
+        if process.join([deadline - uptime, 1].min.clamp(0, 1))
+          finished = true
+          break
+        end
+      end
+      unless finished
+        begin
+          Process.kill("TERM", process.pid)
+          unless process.join(5)
+            Process.kill("KILL", process.pid)
+            process.join
+          end
+        rescue Errno::ESRCH
+          process.join
+        end
+        out_reader.join
+        err_reader.join
+        raise "guest command did not finish within #{timeout_s} seconds"
+      end
+      [out_reader.value, err_reader.value, process.value]
+    end
+  end
+
+  def self.guest_exec(uuid, program, *args, timeout_s: 90)
+    raise "invalid VM UUID" unless uuid.match?(UUID)
+    script = <<~APPLESCRIPT
+      on run argv
+        set vmId to item 1 of argv
+        set programPath to item 2 of argv
+        set commandArgs to items 3 thru -1 of argv
+        tell application "UTM"
+          set proc to execute of virtual machine id vmId at programPath with arguments commandArgs with output capturing
+          repeat
+            set res to get result of proc
+            if exited of res then exit repeat
+            delay 0.2
+          end repeat
+          return (exit code of res as text) & linefeed & (output text of res) & (error text of res)
+        end tell
+      end run
+    APPLESCRIPT
+    out, err, result = capture_with_timeout(timeout_s, "osascript", "-e", script, "--", uuid, program, *args)
+    raise "guest execution failed: #{err.strip}" unless result.success?
+    code, output = out.split("\n", 2)
+    raise "invalid guest execution result" unless code&.match?(/\A\d+\z/)
+    [code.to_i, output.to_s]
+  end
+
+  def self.save_state(data)
+    dir = local_dir
+    raise "VM state is a symlink" if File.symlink?(STATE)
+    Tempfile.create(["state-", ".json"], dir) do |file|
+      file.chmod(0o600)
+      file.write(JSON.pretty_generate(data) + "\n")
+      file.flush
+      file.fsync
+      File.rename(file.path, STATE)
+    end
+  end
+
+  def self.checked_command(*args)
+    out, err, result = Open3.capture3(*args)
+    raise "#{args.first} failed: #{err.strip}" unless result.success?
+    out
+  end
+
+  def self.cloud_image
+    system = profile.fetch("system")
+    url = URI.parse(system.fetch("cloud_image_url"))
+    expected = system.fetch("cloud_image_sha256")
+    raise "invalid cloud image source" unless url.is_a?(URI::HTTPS) && url.host == "cloud.debian.org" &&
+      expected.match?(/\A[0-9a-f]{64}\z/)
+    downloads = File.join(local_dir, "downloads")
+    raise "download directory is a symlink" if File.symlink?(downloads)
+    Dir.mkdir(downloads, 0o700) unless File.exist?(downloads)
+    raise "download path is not a directory" unless File.directory?(downloads)
+    filename = File.basename(url.path)
+    raise "invalid image filename" unless filename.match?(/\A[A-Za-z0-9._-]+\.qcow2\z/)
+    image = File.join(downloads, filename)
+    raise "cloud image is a symlink" if File.symlink?(image)
+    unless File.exist?(image)
+      Tempfile.create(["image-", ".part"], downloads) do |file|
+        file.close
+        checked_command("curl", "--fail", "--location", "--proto", "=https", "--proto-redir", "=https",
+          "--silent", "--show-error", "--output", file.path, url.to_s)
+        raise "downloaded cloud image checksum mismatch" unless Digest::SHA256.file(file.path).hexdigest == expected
+        File.rename(file.path, image)
+      end
+    end
+    raise "cloud image is not a regular file" unless File.file?(image)
+    raise "cloud image checksum mismatch" unless Digest::SHA256.file(image).hexdigest == expected
+    image
+  rescue URI::InvalidURIError
+    raise "invalid cloud image source"
+  end
+
+  def self.operator_public_key
+    dir = File.join(local_dir, "bootstrap")
+    raise "bootstrap directory is a symlink" if File.symlink?(dir)
+    Dir.mkdir(dir, 0o700) unless File.exist?(dir)
+    info = File.stat(dir)
+    raise "bootstrap directory must be private" unless info.directory? && info.uid == Process.uid && (info.mode & 0o077).zero?
+    key = File.join(dir, "operator_ed25519")
+    pub = "#{key}.pub"
+    raise "operator key is a symlink" if File.symlink?(key) || File.symlink?(pub)
+    if !File.exist?(key) && !File.exist?(pub)
+      checked_command("ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", key)
+    end
+    raise "operator key pair is incomplete or unsafe" unless File.file?(key) && File.file?(pub) &&
+      File.stat(key).uid == Process.uid && (File.stat(key).mode & 0o077).zero?
+    public_key = File.read(pub).strip
+    raise "invalid operator public key" unless public_key.match?(/\Assh-ed25519 [A-Za-z0-9+\/=]+(?: [^\r\n]*)?\z/)
+    public_key
+  end
+
+  def self.check_free_space!
+    line = checked_command("df", "-Pk", local_dir).lines.last.to_s.split
+    available = Integer(line.fetch(3)) * 1024
+    required = Integer(profile.fetch("utm").fetch("minimum_free_gib")) * 1024**3
+    raise "insufficient free space: need #{required} bytes" if available < required
+  rescue IndexError, ArgumentError
+    raise "cannot determine free disk space"
+  end
+
+  def self.cloud_config(public_key)
+    release = JSON.parse(File.read(File.join(ROOT, "ace-monorepo-e2e/lab-vm/release-manifest.json")))
+    snapshot = release.fetch("apt_snapshot").fetch("timestamp")
+    raise "invalid Debian snapshot timestamp" unless snapshot.match?(/\A\d{8}T\d{6}Z\z/)
+    {"users" => [{"name" => "lab-operator", "shell" => "/bin/bash", "lock_passwd" => true,
+      "ssh_authorized_keys" => [public_key]}, {"name" => "mo", "shell" => "/bin/bash", "lock_passwd" => true}],
+      "ssh_pwauth" => false, "package_update" => true, "packages" => %w[qemu-guest-agent openssh-server],
+      "apt" => {"preserve_sources_list" => false, "generate_mirrorlists" => false, "sources_list" => <<~SOURCES},
+        Types: deb
+        URIs: https://snapshot.debian.org/archive/debian/#{snapshot}/
+        Suites: trixie
+        Components: main
+        Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+        Check-Valid-Until: no
+
+        Types: deb
+        URIs: https://snapshot.debian.org/archive/debian-security/#{snapshot}/
+        Suites: trixie-security
+        Components: main
+        Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+        Check-Valid-Until: no
+      SOURCES
+      "runcmd" => [["systemctl", "enable", "--now", "qemu-guest-agent"]]}
+  end
+
+  def self.create_base
+    check_free_space!
+    state = read_state
+    raise "a work VM must be preserved before creating a base" if state["work"]
+    name = state["pending_base_name"] || "ace-e2e-base-#{SecureRandom.hex(8)}"
+    raise "invalid pending base name" unless name.match?(/\Aace-e2e-base-[a-f0-9]{16}\z/)
+    config_fingerprint = base_configuration_fingerprint
+    if state["pending_base_name"] && state["pending_base_configuration"] != config_fingerprint
+      raise "pending base configuration changed; preserve and inspect it"
+    end
+    state["pending_base_name"] = name
+    state["pending_base_configuration"] = config_fingerprint
+    save_state(state)
+    rows = parse_inventory(utm_call("list")).select { |row| row["name"] == name }
+    raise "ambiguous pending base name" if rows.size > 1
+    if rows.empty?
+      image = cloud_image
+      public_key = operator_public_key
+      settings = profile.fetch("utm")
+      Dir.mktmpdir("base-build-", local_dir) do |dir|
+        disk = File.join(dir, "base.qcow2")
+        FileUtils.cp(image, disk)
+        checked_command("qemu-img", "resize", "-f", "qcow2", disk, "#{Integer(settings.fetch('disk_gib'))}G")
+        seed_dir = File.join(dir, "seed")
+        Dir.mkdir(seed_dir, 0o700)
+        File.write(File.join(seed_dir, "meta-data"), "instance-id: ace-e2e-base-v1\nlocal-hostname: ace-e2e-base\n")
+        config = cloud_config(public_key)
+        File.write(File.join(seed_dir, "user-data"), "#cloud-config\n" + YAML.dump(config))
+        seed = File.join(dir, "seed.iso")
+        checked_command("hdiutil", "makehybrid", "-quiet", "-o", seed, seed_dir, "-iso", "-joliet", "-default-volume-name", "cidata")
+        script = <<~APPLESCRIPT
+          on run argv
+            set vmName to item 1 of argv
+            set diskFile to POSIX file (item 2 of argv)
+            set seedFile to POSIX file (item 3 of argv)
+            set memorySize to (item 4 of argv) as integer
+            set cpuCount to (item 5 of argv) as integer
+            tell application "UTM"
+              set vm to make new virtual machine with properties {backend:qemu, configuration:{name:vmName, architecture:"aarch64", memory:memorySize, cpu cores:cpuCount, hypervisor:true, uefi:true, drives:{{source:diskFile, interface:VirtIO}, {source:seedFile, interface:VirtIO}}, qemu additional arguments:{{argument string:"-smbios"}, {argument string:"type=1,serial=ds=nocloud"}}}}
+              return id of vm
+            end tell
+          end run
+        APPLESCRIPT
+        checked_command("osascript", "-e", script, "--", name, disk, seed,
+          Integer(settings.fetch("memory_mib")).to_s, Integer(settings.fetch("cpu_count")).to_s)
+      end
+      rows = parse_inventory(utm_call("list")).select { |row| row["name"] == name }
+    end
+    raise "base creation was not confirmed" unless rows.size == 1
+    record = {"uuid" => rows.first.fetch("uuid"), "name" => name, "phase" => "provisioning", "configuration_fingerprint" => config_fingerprint}
+    verify_package!("base", record)
+    state["base"] = record
+    state.delete("pending_base_name")
+    state.delete("pending_base_configuration")
+    save_state(state)
+    record
+  end
+
+  def self.wait_guest_ready(uuid)
+    deadline = uptime + 300
+    loop do
+      begin
+        code, output = guest_exec(uuid, "/usr/bin/cloud-init", "status")
+        return if code.zero? && output.strip == "status: done"
+        raise "cloud-init reported an error: #{output.strip}" if output.include?("status: error")
+      rescue RuntimeError => e
+        raise if e.message.start_with?("cloud-init reported")
+      end
+      raise "guest did not become ready within 300 seconds; VM preserved" if uptime >= deadline
+      sleep 2
+    end
+  end
+
+  def self.prepare_base
+    state = read_state
+    create_base unless state["base"]
+    raise "base VM configuration changed; rebuild it" unless read_state.dig("base", "configuration_fingerprint") == base_configuration_fingerprint
+    current = status.fetch("base")
+    if current && current["status"] == "stopped" && read_state.dig("base", "phase") != "ready"
+      utm_call("start", current.fetch("uuid"))
+    end
+    current = status.fetch("base")
+    wait_guest_ready(current.fetch("uuid")) if current && current["status"] == "started"
+    prepare_existing_base
+  end
+
+  def self.prepare_existing_base
+    current = status.fetch("base")
+    raise "base VM is not registered" unless current && current["status"] != "missing"
+    saved = read_state
+    if saved.fetch("base")["phase"] == "ready" && current["status"] == "stopped"
+      expected = saved.fetch("base")["fingerprint"]
+      actual = package_fingerprint(verify_package!("base", saved.fetch("base")))
+      raise "base VM fingerprint is missing or changed" unless expected && expected == actual
+      return {"base" => current, "ready" => true}
+    end
+    raise "base VM must be running for readiness checks" unless current["status"] == "started"
+    uuid = current.fetch("uuid")
+    code, result = guest_exec(uuid, "/usr/bin/cloud-init", "status")
+    raise "cloud-init has not completed: #{result.strip}" unless code.zero? && result.strip == "status: done"
+    code, result = guest_exec(uuid, "/bin/cat", "/etc/apt/sources.list.d/debian.sources")
+    expected_sources = cloud_config("unused").fetch("apt").fetch("sources_list")
+    raise "base VM is not using the pinned Debian sources" unless code.zero? && result.strip == expected_sources.strip
+    code, result = guest_exec(uuid, "/bin/sh", "-c", "if test -f /etc/apt/sources.list; then grep -E '^[[:space:]]*deb(-src)?[[:space:]]' /etc/apt/sources.list || :; fi; find /etc/apt/sources.list.d -maxdepth 1 -type f \\( -name '*.list' -o -name '*.sources' \\) ! -name debian.sources -print")
+    raise "base VM has additional apt sources" unless code.zero? && result.strip.empty?
+    code, result = guest_exec(uuid, "/usr/bin/uname", "-m")
+    raise "guest is not arm64" unless code.zero? && result.strip == "aarch64"
+    code, result = guest_exec(uuid, "/usr/bin/id", "mo")
+    raise "mo account is missing or has supplementary groups" unless code.zero? &&
+      result.match?(/\Auid=\d+\(mo\) gid=\d+\(mo\) groups=\d+\(mo\)\s*\z/)
+    code, result = guest_exec(uuid, "/usr/bin/sudo", "-n", "-l", "-U", "mo")
+    raise "cannot verify mo privilege boundary" unless code.zero? && result.include?("User mo is not allowed to run sudo")
+    code, result = guest_exec(uuid, "/bin/sh", "-c", "command -v ace-overseer || printf 'ACE_ABSENT\n'")
+    raise "base VM contains ACE" unless code.zero? && result.strip == "ACE_ABSENT"
+    code, result = guest_exec(uuid, "/bin/sh", "-c", "command -v herdr || printf 'HERDR_ABSENT\n'")
+    raise "base VM contains Herdr" unless code.zero? && result.strip == "HERDR_ABSENT"
+    code, result = guest_exec(uuid, "/bin/sh", "-c",
+      "cloud-init clean --logs --machine-id && rm -f /etc/ssh/ssh_host_* /var/lib/systemd/random-seed && sync && printf 'BASE_CLEAN\n'")
+    raise "base cleanup was not confirmed" unless code.zero? && result.strip == "BASE_CLEAN"
+    out, err, result = Open3.capture3(UTMCTL, "stop", uuid, "--request")
+    raise "base shutdown request failed: #{err.strip} #{out.strip}" unless result.success? && !out.include?("Error from event")
+    deadline = uptime + 45
+    loop do
+      break if status.fetch("base").fetch("status") == "stopped"
+      raise "base shutdown not confirmed" if uptime >= deadline
+      sleep 1
+    end
+    saved.fetch("base")["phase"] = "ready"
+    saved.fetch("base")["fingerprint"] = package_fingerprint(verify_package!("base", saved.fetch("base")))
+    save_state(saved)
+    {"base" => status.fetch("base"), "ready" => true}
+  end
+
+  def self.run(argv)
+    command = argv.shift
+    rebuild = command == "prepare" && argv == ["--rebuild-base"]
+    unless %w[status prepare reset destroy].include?(command) && (argv.empty? || rebuild)
+      warn "Usage: lab-vm status | prepare [--rebuild-base] | reset | destroy"
+      return 2
+    end
+    output = if command == "status"
+      status
+    else
+      with_lifecycle_lock do
+        case command
+        when "prepare"
+          if rebuild
+            check_free_space!
+            destroy
+          end
+          begin
+            prepare_base
+          rescue StandardError
+            begin
+              current = status["base"]
+              if current && current["status"] == "started"
+                utm_call("stop", current.fetch("uuid"), "--request")
+                wait_stopped("base")
+                warn "Base VM stopped and preserved for diagnosis."
+              end
+            rescue StandardError => stop_error
+              warn "Could not confirm base VM shutdown: #{stop_error.message}"
+            end
+            raise
+          end
+        when "reset" then reset
+        when "destroy" then destroy
+        end
+      end
+    end
+    puts JSON.pretty_generate(output)
+    0
+  rescue SystemCallError, ArgumentError, JSON::ParserError, Psych::Exception, RuntimeError => e
+    warn "lab-vm: #{e.message}"
+    1
+  end
+end
+
+exit LabVm.run(ARGV) if $PROGRAM_NAME == __FILE__

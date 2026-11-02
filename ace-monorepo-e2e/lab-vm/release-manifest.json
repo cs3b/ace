@@ -1,0 +1,373 @@
+{
+  "schema": "ace-e2e-release/v1",
+  "ruby": "3.4.8",
+  "ace_toolchain": "installed",
+  "gems": [
+    {
+      "name": "ace-assign",
+      "version": "0.73.1",
+      "sha256": "f6996040b65fc3d7d20bfd65cecf9ced772328e3c96c8d1ff16a702bce8a68b2",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-b36ts",
+      "version": "0.14.11",
+      "sha256": "d58dabc3649e3b1f5c194b46c237d94a67ff3b2c263bc6abcf1d89f1cf7ff01d",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-bundle",
+      "version": "0.45.1",
+      "sha256": "19fe3b16cb1f5be5d4ca65e31eaedb8da8038b7cc037c9cc867464f760794adc",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-compressor",
+      "version": "0.25.5",
+      "sha256": "d9fbeb5e1240f30af51de4a50c7ea9b63b3d9a2eb57496a1556cf236cd58d3c2",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-coworker",
+      "version": "0.8.0",
+      "sha256": "10383defa144184bb027520b592d53d22fe9432de195350a98d08823e353a3bd",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-git",
+      "version": "0.32.0",
+      "sha256": "ca13da72b59d924d9d1c62fcd2d06a79c3e89c4325857ea173dfa007203dd3cb",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-git-commit",
+      "version": "0.26.7",
+      "sha256": "e54ead81282a725790b437ef8945bedd9d0e14b62e5b89db6184324fccc354d5",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-git-forgejo",
+      "version": "0.8.0",
+      "sha256": "a3cb2bb7fb8f2ad6603a1bdcba2be7c2ea05f393ade9425ed74d8048ce9400e2",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-git-github",
+      "version": "0.5.0",
+      "sha256": "cef4023d76121e291bbcedf8fc4af40bd508c25b6e6e425856bdd9f38ac02832",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-git-worktree",
+      "version": "0.27.3",
+      "sha256": "0f559a905800fe57219276c5a74b83285b9069bad47c9a4744a30ed194ab51c3",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-handbook",
+      "version": "0.37.0",
+      "sha256": "95115cd085d2a11135310522a4184caed5066a24f2bb7c56b7d6c96eba4ce47e",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-handbook-integration-pi",
+      "version": "0.8.0",
+      "sha256": "e5028dc023eef7e2a488c32e324ddf7ca3a0fc2232bfd574481884e4cbcf0e66",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-herdr",
+      "version": "0.9.0",
+      "sha256": "c4badf26f19542895a474c9c62bdb81aa6014d0018a3935f0124687a70ad769e",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-hitl",
+      "version": "0.25.0",
+      "sha256": "88800cf8f00189f4f49301bed7cc606e498162ceb3de42679e7281bcc11ba27c",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-hitl-contract",
+      "version": "0.3.0",
+      "sha256": "72bff61df4b19609514fe7282fbd44c7c41133de17c847b97e4157eeb560101a",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-hitl-hermes",
+      "version": "0.9.6",
+      "sha256": "6a52a851d066a65434eba7c2d18957b2cb141f74248e4a99758e96dabdff2e5b",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-lab",
+      "version": "0.14.1",
+      "sha256": "4fe436ed7bcecbf5da87f5c77cc596a8460744b8bd2fe364452c10277bef6c38",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-llm",
+      "version": "0.42.0",
+      "sha256": "a8f0e6c9d3d74ce0cda2786332389d2441d4a62f12fd3bee802df8a18b8c5ac9",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-llm-providers-cli",
+      "version": "0.36.2",
+      "sha256": "3fe03423b02897377c85327044448397c8836779c185d7eb89084188bb687078",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-overseer",
+      "version": "0.28.1",
+      "sha256": "d40887bc45e2373a5818b303c4e41ad00c11f8cecfe41d7bbb88f40b8497f300",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-review",
+      "version": "0.62.2",
+      "sha256": "e8a63a5b77dbce25f4f7d1e9eaa1687577b671c83a7113097ab8b8cbf8ce426c",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-runtime",
+      "version": "0.4.1",
+      "sha256": "90287f72123319492c6f7a4bbeb711e5227a509c505734bcec9513a99745472a",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-support-cli",
+      "version": "0.6.11",
+      "sha256": "f13104f57af97474f1482bf0b8c31148d99412b08439b90b777b7168268b0627",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-support-config",
+      "version": "0.18.3",
+      "sha256": "fa2928638a7df3b2496e0f4d8225983aa5c05acb036ee0deeae3329f72a5f260",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-support-core",
+      "version": "0.32.0",
+      "sha256": "a0d94a2002eaab7802938a59846c18c051f595d1dedc30cc9e1c85df8a335fdf",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-support-fs",
+      "version": "0.3.4",
+      "sha256": "1ced2c30a97c5d43bf5f918d8ec119aa9a92948c16c067195e361dc5b9dd1e27",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-support-items",
+      "version": "0.15.16",
+      "sha256": "0ee763ea066f135375c3d9de7be92ccd81bfedc6fbdd86332dbf0608845bd951",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-support-markdown",
+      "version": "0.3.6",
+      "sha256": "bede838b115cb81ded2dff5f5efd105997da919d23a03b71f353f449e262c748",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-support-models",
+      "version": "0.12.4",
+      "sha256": "14e9ba7e89c9ef5cd97184159015dc4ee61de86cff75c60e6998b0686854be06",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-support-nav",
+      "version": "0.28.8",
+      "sha256": "91e5b6f6774c417c417001c2fdc68bf7f2017266ef24c0a3f6516db4b9e81879",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-support-test-helpers",
+      "version": "0.14.7",
+      "sha256": "748a4e5b0910f49a53c11b06367ea7a050694f5e6a12364c8d121aad99665441",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-task",
+      "version": "0.41.0",
+      "sha256": "d75785ce5cf15027b96788aa9261d068ee722573d006ab9642848f407d73a66e",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-test",
+      "version": "0.7.4",
+      "sha256": "193d5585ac9142e374a13c778e807dcb2d038d4cefe0184d776dd07f1ba7f0a5",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-test-runner",
+      "version": "0.28.1",
+      "sha256": "d74e48ec84e222c2b7c32510c1559d7a27870af3baf1f3d3447d9abd66629126",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-tmux",
+      "version": "0.19.0",
+      "sha256": "53309f9c3ebfdb94cbcf46441afc025a9c9465612721a7cc4663d98d67e5ca44",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ace-wake",
+      "version": "0.2.0",
+      "sha256": "6e417a0693fdf5b55920c2a1e929a074a024d1d4d840052ca92e195c061da7db",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "addressable",
+      "version": "2.9.1",
+      "sha256": "f1212365945455c84e8d031eea40fc6bedf0c663a78d95b3ab93591040bc5c35",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ansi",
+      "version": "1.6.0",
+      "sha256": "ac9ea0c0ea8d32fb4e271348e609963ac78882f34b73836c2a02b3622e666658",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "base64",
+      "version": "0.3.0",
+      "sha256": "27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "builder",
+      "version": "3.3.0",
+      "sha256": "497918d2f9dca528fdca4b88d84e4ef4387256d984b8154e9d5d3fe5a9c8835f",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "faraday",
+      "version": "2.15.1",
+      "sha256": "8708154deda739c5e86cc42b74960e23e8491fce0eba9e11639a6a34b1ac288f",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "faraday-net_http",
+      "version": "3.5.0",
+      "sha256": "2e7094c34e38754ee048cc3df47376f8657005d9375f8473bce1c3b526a22e36",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "faraday-retry",
+      "version": "2.4.0",
+      "sha256": "7b79c48fb7e56526faf247b12d94a680071ff40c9fda7cf1ec1549439ad11ebe",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "json",
+      "version": "2.21.2",
+      "sha256": "1f1d3b7cf2b3ba1a69beca0bb6db13d5438b80bff3cd54cdaaa620b9b07c1c6a",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "kramdown",
+      "version": "2.5.2",
+      "sha256": "1ba542204c66b6f9111ff00dcc26075b95b220b07f2905d8261740c82f7f02fa",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "kramdown-parser-gfm",
+      "version": "1.1.0",
+      "sha256": "fb39745516427d2988543bf01fc4cf0ab1149476382393e0e9c48592f6581729",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "minitest",
+      "version": "5.27.0",
+      "sha256": "2d3b17f8a36fe7801c1adcffdbc38233b938eb0b4966e97a6739055a45fa77d5",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "minitest-reporters",
+      "version": "1.8.0",
+      "sha256": "8ce5280fb73ad3178ae525454df169b6f28c1b38b1d088ea91815d3a370ba384",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "prism",
+      "version": "1.9.0",
+      "sha256": "7b530c6a9f92c24300014919c9dcbc055bf4cdf51ec30aed099b06cd6674ef85",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "public_suffix",
+      "version": "7.0.5",
+      "sha256": "1a8bb08f1bbea19228d3bed6e5ed908d1cb4f7c2726d18bd9cadf60bc676f623",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "rexml",
+      "version": "3.4.4",
+      "sha256": "19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "ruby-progressbar",
+      "version": "1.13.0",
+      "sha256": "80fc9c47a9b640d6834e0dc7b3c94c9df37f08cb072b7761e4a71e22cff29b33",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "rubygems-generate_index",
+      "version": "1.2.0",
+      "sha256": "cb33b935545a38dba4ac1f20d391090d2bb017d0956537a8bbadc1fff23f0aab",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "websocket-driver",
+      "version": "0.8.2",
+      "sha256": "97c556b019bf3410b4961002ac501621e9322d3f8a7bc02161a09301cc4c4146",
+      "source": "https://rubygems.org"
+    },
+    {
+      "name": "websocket-extensions",
+      "version": "0.1.5",
+      "sha256": "1c6ba63092cda343eb53fc657110c71c754c56484aad42578495227d717a8241",
+      "source": "https://rubygems.org"
+    }
+  ],
+  "ruby_source": {
+    "url": "https://cache.ruby-lang.org/pub/ruby/3.4/ruby-3.4.8.tar.gz",
+    "sha256": "53c4ddad41fbb6189f1f5ee0db57a51d54bd1f87f8755b3d68604156a35b045b"
+  },
+  "node": {
+    "version": "22.23.4",
+    "url": "https://nodejs.org/dist/v22.23.4/node-v22.23.4-linux-arm64.tar.xz",
+    "sha256": "6287aa46b6c375d816e63ae66d024fbbfd70404825aabdfdf898a970871d2f4b"
+  },
+  "zig": {
+    "version": "0.16.0",
+    "url": "https://ziglang.org/download/0.16.0/zig-aarch64-linux-0.16.0.tar.xz",
+    "sha256": "ea4b09bfb22ec6f6c6ceac57ab63efb6b46e17ab08d21f69f3a48b38e1534f17"
+  },
+  "herdr": {
+    "rust_version": "1.96.1",
+    "target": "aarch64-unknown-linux-musl",
+    "selection_sha256": "fcb02b4b85d48585c873b7a1cbf84c46cea1a26ed02e0562b18717a8785a470e",
+    "baseline_commit": "7b116c05bfda646af39d2524c54e70c751f57ee8"
+  },
+  "pi": {
+    "package": "@earendil-works/pi-coding-agent",
+    "version": "0.86.1",
+    "lockfile": "pi/package-lock.json"
+  },
+  "rustup": {
+    "url": "https://static.rust-lang.org/rustup/dist/aarch64-unknown-linux-gnu/rustup-init",
+    "sha256": "a9c168dbea81a84671c6b7a5c1795cb0eb699020110d107ddfca427bd797e697",
+    "channel_manifest_url": "https://static.rust-lang.org/dist/channel-rust-1.96.1.toml",
+    "channel_manifest_sha256": "87eb76c53073e72b766083bed5530820694253b832a762d8385bda5759f03975"
+  },
+  "apt_snapshot": {
+    "timestamp": "20261026T000000Z",
+    "debian_release_sha256": "ed56aac47e7911e65ee63aae8d67e29f20e023f840e49f8ed037043a33de138a",
+    "security_release_sha256": "ce53511e97619b025f993f71f238693b5da20108c2efb83bced6684facdf762f"
+  }
+}

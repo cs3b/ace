@@ -1,0 +1,6 @@
+schema_version: 1
+topology:
+  projects:
+    - id: ace
+      label: ACE E2E fixture
+      path: /lab/ace

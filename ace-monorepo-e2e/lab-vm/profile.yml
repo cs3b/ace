@@ -1,0 +1,24 @@
+# Versioned inputs for the disposable UTM E2E fixture.
+# VM disks, credentials and run evidence must not be stored here.
+system:
+  distribution: debian
+  version: "13.7.0"
+  architecture: arm64
+  installer_url: https://cdimage.debian.org/debian-cd/13.7.0/arm64/iso-cd/debian-13.7.0-arm64-netinst.iso
+  installer_sha256: 6e93fa1759bd9d4b0fc11e938987de6967ee7de5297dac1be27c3a75cc17024b
+  cloud_image_url: https://cloud.debian.org/images/cloud/trixie/20261026-2643/debian-13-genericcloud-arm64-20261026-2643.qcow2
+  cloud_image_sha256: 39fefc05e50b2d02f416f78b79c400e3af6b81215fa8d15c671f48398f7f335c
+  cloud_image_sha512: 71aa5d5dbcb3d9ecfe96bc3f6dd41b6805a0a41c852204a32747d230b64b95912297fb453b11a6031fd54d84a0a0a430e137d07e6986dc9ebc9d41483be003c4
+utm:
+  backend: qemu
+  acceleration: hardware
+  cpu_count: 4
+  memory_mib: 8192
+  disk_gib: 24
+  network: shared
+  minimum_free_gib: 25
+lab:
+  project_root: /lab/ace
+  project_owner: mo
+  toolchain: installed
+  transport: local
