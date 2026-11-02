@@ -62,6 +62,9 @@ of distinct, short-lived worker and reviewer credentials.
 `/lab` and `/lab/ace`, configures local observation input, and copies only the
 host's `zai` Pi credential into the working VM. It checks that the installed
 runtime and native Herdr are already present and does not start the overseer.
+Before starting agents, the fixture installs the pinned Herdr binary's own Pi
+integration into the root-owned Pi extensions directory and checks its status
+as `mo`; this supplies Herdr with Pi lifecycle and session identity reports.
 This setup path has not yet passed a complete VM run.
 
 The seeded ACE revision has no project Overseer start configuration and also

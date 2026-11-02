@@ -41,7 +41,8 @@ configuration and readiness to start. Do not require a running project
 Overseer, a first turn, or active project eyes in either worker assignment:
 those are the coordinator's confirm-start checks after verification. Workers
 must not start the project Overseer themselves. This prevents a circular gate.
-The commission must include the target project's eyes configuration path and
+The commission must include the target project's eyes configuration path
+`<project>/.ace-local/overseer/eyes.json` and
 the actual configured HITL recipient: the worker prepares the configuration
 and the independent verifier checks it before project start. Missing or
 ambiguous recipient information is a blocker, never a guessed address. The

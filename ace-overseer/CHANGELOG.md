@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Do not resend an uncertain first-turn prompt when reusing an idle session; report the missing evidence instead.
 - Delegate project eyes configuration to the bootstrap worker instead of creating it in the Overseer session.
+- Use one explicit project eyes configuration path for preparation and startup.
 - Surface invalid remote PR observation entries as degraded source events without masking valid sources.
 
 - Escalate missing forge access through session-scoped auth instead of searching for or configuring persistent credentials.
