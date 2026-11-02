@@ -74,8 +74,13 @@ report that capability gap. Do not claim that mentioning `/eyes` armed it.
 
 ## Prepare and actually launch a worker
 
+Read the actual HITL configuration and use the exact configured recipient key
+for the overseer. The task specification, `--to`, and returned start configs
+must agree; do not invent an address or append a machine suffix. If no valid
+recipient is configured, report a blocking gap before dispatch.
+
 Use `ace-coworker prepare --task <executable-task> --roles bootstrap-worker,bootstrap-verifier
---to <configured-overseer-address> --format json`. Read its returned worktree,
+--to <configured-overseer-recipient> --format json`. Read its returned worktree,
 assignment IDs and start-config paths; record these on the matching private
 steps before launch through the task API, not only in prose:
 
