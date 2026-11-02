@@ -2,6 +2,8 @@
 # frozen_string_literal: true
 
 # Rebuild a test-only operational artifact from an immutable source commit.
+# Manifest hashes were recorded with Ruby 3.4.8 and RubyGems 3.6.9; a
+# different packaging toolchain must reproduce those bytes or be refused.
 require "fileutils"
 require "tmpdir"
 require "open3"
@@ -18,7 +20,8 @@ end
 begin
   raise "usage: lab-vm-build-gem PACKAGE FULL_COMMIT VERSION" unless ARGV.length == 3
   package, commit, version = ARGV
-  namespace = {"ace-lab" => "lab", "ace-herdr" => "herdr"}.fetch(package) { raise "unsupported local gem" }
+  namespace = {"ace-lab" => "lab", "ace-herdr" => "herdr", "ace-git-forgejo" => "git/forgejo"}
+    .fetch(package) { raise "unsupported local gem" }
   raise "full commit SHA required" unless commit.match?(/\A[0-9a-f]{40}\z/)
   raise "invalid test version" unless version.match?(/\A[0-9]+(?:\.[a-zA-Z0-9]+)+\z/)
   actual = checked("git", "rev-parse", "#{commit}^{commit}", chdir: LabVm::ROOT)

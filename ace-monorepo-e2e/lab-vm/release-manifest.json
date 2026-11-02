@@ -47,9 +47,10 @@
     },
     {
       "name": "ace-git-forgejo",
-      "version": "0.8.0",
-      "sha256": "a3cb2bb7fb8f2ad6603a1bdcba2be7c2ea05f393ade9425ed74d8048ce9400e2",
-      "source": "https://rubygems.org"
+      "version": "0.8.1.pre.utm2",
+      "sha256": "5d08a51156cfb49ba70ec4dd2a61013d6940ae1cd9093c1ae2de130ce6604af3",
+      "source": "local",
+      "source_commit": "211b6068167562050ee037df3cf119975e957556"
     },
     {
       "name": "ace-git-github",
@@ -102,10 +103,10 @@
     },
     {
       "name": "ace-lab",
-      "version": "0.14.2.pre.utm7",
-      "sha256": "a365c9e3c4cebfac95d62873c6ce04ad5638f9da7118c3f2100f67c80e6cb210",
+      "version": "0.14.2.pre.utm13",
+      "sha256": "9585ae30c689d605d5132dd898b4c4a4071a562119b9008aa664d0fa05462c95",
       "source": "local",
-      "source_commit": "156503d58c87c7196bda61bc16b332be50932a25"
+      "source_commit": "c5d0cc43f9841e7337a79c90f1eb042e1208fb30"
     },
     {
       "name": "ace-llm",

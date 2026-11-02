@@ -112,11 +112,21 @@ EOF
 gem install --local --no-document "./builder-$builder_version.gem"
 gem install --local --no-document "./rubygems-generate_index-$index_version.gem"
 gem generate_index --directory /var/lib/ace-e2e/gem-repository
+# Explicitly install the pinned prerelease adapter before ace-lab resolves it.
+forgejo_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-git-forgejo"))' "$input/release-manifest.json")
+gem install --local --no-document "./ace-git-forgejo-$forgejo_version.gem"
 gem install --local --no-document "./ace-lab-$lab_version.gem"
-# Explicitly activate the pinned prerelease builder before other roots resolve
+# Explicitly install the pinned prerelease ace-herdr before other roots resolve
 # dependencies; RubyGems does not otherwise select prereleases implicitly.
 herdr_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-herdr"))' "$input/release-manifest.json")
 gem install --local --no-document "./ace-herdr-$herdr_version.gem"
+ruby - "$forgejo_version" "$lab_version" "$herdr_version" <<'RUBY'
+%w[ace-git-forgejo ace-lab ace-herdr].zip(ARGV).each do |name, version|
+  gem name, "= #{version}"
+  abort "pinned #{name} did not activate" unless Gem.loaded_specs.fetch(name).version.to_s == version
+end
+puts "verified pinned local candidate activation"
+RUBY
 
 # The installer is the state owner for the operational gem set. Its source is
 # the verified local repository, so transitive fetches cannot escape the pin.
