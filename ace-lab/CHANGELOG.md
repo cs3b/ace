@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keep grants with invalid or missing provider-managed expiry pending for
+  revocation instead of exposing an unusable or unbounded live lease.
 - Report a missing live credential handoff and require revocation before
   issuing a replacement instead of repeatedly returning an unusable lease.
 - Keep each leased command and its descendants in a root-controlled cgroup;

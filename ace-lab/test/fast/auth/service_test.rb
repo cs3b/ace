@@ -84,6 +84,14 @@ module Ace
           assert_match(/principal must be callable/, error.message)
         end
 
+        def test_rejects_session_without_a_numeric_uid_before_initialization
+          identity = session_identity.dup
+          identity.uid = nil
+          Process.stub(:euid, 0) do
+            assert_raises(ArgumentError) { Service.new(session: identity, issuer_invocation: "a" * 32) }
+          end
+        end
+
         def test_invalid_environment_names_are_rejected_at_profile_load
           ["BAD=NAME", "BAD\0NAME"].each do |name|
             doc = {"auth" => {"profiles" => {"test" => {"provider" => "env", "env_names" => [name]}}}}
@@ -1465,6 +1473,57 @@ module Ace
           assert_equal :revoked, svc.revoke(lease_id: lease.fetch("id"))
           replacement = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
           refute_equal lease.fetch("id"), replacement.fetch("id")
+        end
+
+        def test_invalid_provider_expiry_is_pending_and_can_be_reconciled
+          issue = @fake.method(:issue)
+          @fake.define_singleton_method(:issue) do |**kwargs|
+            issue.call(**kwargs).merge("provider_expiry" => "not-a-time")
+          end
+          svc = service
+          error = assert_raises(Error) do
+            svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          end
+          assert_match(/invalid or expired expiry/, error.message)
+          record = svc.store.all.fetch(0)
+          assert_equal "revoke-pending", record.fetch("state")
+          assert_nil record["provider_expiry"]
+          assert_equal "revoked", svc.reconcile.fetch(0).fetch("reconciled")
+        end
+
+        def test_provider_managed_expiry_cannot_be_missing
+          @fake.instance_variable_set(:@capabilities, {"expiry_mode" => "provider"})
+          document = YAML.safe_load(@document)
+          document.fetch("auth").fetch("profiles").fetch("developer")["expiry_mode"] = "provider"
+          svc = service(document: document.to_yaml)
+          assert_raises(Error) do
+            svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          end
+          record = svc.store.all.fetch(0)
+          assert_equal "revoke-pending", record.fetch("state")
+          assert_equal "revoked", svc.reconcile.fetch(0).fetch("reconciled")
+        end
+
+        def test_provider_managed_expiry_requires_a_declared_capability
+          @fake.instance_variable_set(:@capabilities, {})
+          document = YAML.safe_load(@document)
+          document.fetch("auth").fetch("profiles").fetch("developer")["expiry_mode"] = "provider"
+          svc = service(document: document.to_yaml)
+          assert_raises(Refusal) do
+            svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          end
+          assert_empty svc.store.all
+          assert_empty @fake.issued
+        end
+
+        def test_provider_expiry_is_normalized_to_an_absolute_time
+          issue = @fake.method(:issue)
+          @fake.define_singleton_method(:issue) do |**kwargs|
+            issue.call(**kwargs).merge("provider_expiry" => (Time.now.utc + 3600).getlocal("+02:00").strftime("%Y-%m-%d %H:%M:%S %z"))
+          end
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          assert_match(/\A\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ\z/, lease.fetch("provider_expiry"))
         end
 
         def test_settlement_selects_handoff_from_the_previous_lease

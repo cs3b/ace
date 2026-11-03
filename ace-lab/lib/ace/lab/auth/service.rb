@@ -48,7 +48,8 @@ module Ace
           if session
             raise ArgumentError, "session execution requires a root issuer" unless Process.euid.zero?
             raise ArgumentError, "session execution does not accept caller-supplied identity or runner" if principal || runner
-            unless session.is_a?(SessionPeer::Identity) && session.invocation_id.is_a?(String) &&
+            unless session.is_a?(SessionPeer::Identity) && session.uid.is_a?(Integer) && session.uid.positive? &&
+                session.gid.is_a?(Integer) && session.gid.positive? && session.invocation_id.is_a?(String) &&
                 session.invocation_id.match?(/\A[0-9a-f]{32}\z/) && session.runtime_dir.is_a?(String) &&
                 session.runtime_dir.start_with?("/") && File.expand_path(session.runtime_dir) == session.runtime_dir &&
                 session.main_pidfd.is_a?(IO) && !session.main_pidfd.closed? &&
@@ -168,8 +169,9 @@ module Ace
           end
           # A provider unable to back the profile's NATIVE expiry must
           # be visible BEFORE handoff, never hidden behind use_until.
+          capabilities = issue.capabilities if profile["expiry_mode"] == "provider"
           if profile["expiry_mode"] == "provider" &&
-            issue.capabilities.fetch("expiry_mode") != "provider"
+            (!capabilities.is_a?(Hash) || capabilities["expiry_mode"] != "provider")
             raise Refusal.new("provider '#{profile["provider"]}' cannot guarantee the " \
               "profile's native expiry")
           end
@@ -248,9 +250,21 @@ module Ace
                 "reconcile retries cleanup; the outcome may remain unresolved")
             end
 
+            expiry = granted["provider_expiry"]&.to_s
+            expiry_valid = begin
+              if expiry
+                parsed_expiry = Time.parse(expiry)
+                expiry = parsed_expiry.utc.iso8601
+                parsed_expiry > Time.now.utc
+              else
+                profile["expiry_mode"] != "provider"
+              end
+            rescue ArgumentError, TypeError
+              false
+            end
             @store.update(lease["id"]) do |record|
               record["token_ref"] = granted["token_ref"] || record["token_ref"]
-              record["provider_expiry"] = granted["provider_expiry"]&.to_s
+              record["provider_expiry"] = expiry_valid ? expiry : nil
               record["via"] = granted["via"]
             end
             # The secret goes ONLY to the ephemeral handoff; the returned
@@ -267,6 +281,10 @@ module Ace
               @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
               raise Error.new("credential handoff failed: #{e.message}; " \
                 "reconcile retries cleanup; the outcome may remain unresolved")
+            end
+            unless expiry_valid
+              @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
+              raise Error, "provider returned a missing, invalid or expired expiry; reconcile must revoke the grant"
             end
             # ISSUED means a COMPLETE, usable grant: credential
             # delivered, deadlines recorded, cleanup due. Until this
