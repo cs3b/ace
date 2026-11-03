@@ -6,6 +6,7 @@ require "etc"
 require "ace/runtime"
 require "ace/runtime/molecules/protected_linux"
 require "ace/runtime/molecules/systemd_scope_manager"
+require_relative "error"
 require_relative "session_namespace"
 
 module Ace

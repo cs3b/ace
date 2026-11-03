@@ -13,6 +13,11 @@ module Ace
       class SessionAttachment
         CGROUP_ROOT = "/sys/fs/cgroup"
         CGROUP2_MAGIC = 0x6367_7270
+        Prepared = Struct.new(:procs, :kill, keyword_init: true) do
+          def close
+            [procs, kill].compact.each { |io| io.close unless io.closed? }
+          end
+        end
 
         def initialize(identity:, platform: Ace::Runtime::Molecules::ProtectedLinux.new,
           manager: nil, cgroup_opener: nil,
@@ -36,12 +41,17 @@ module Ace
           verify_session!
           group = verified_group!
           descriptor = @cgroup_opener.call(group)
-          raise Error, "session cgroup is unavailable" unless descriptor.is_a?(IO) && !descriptor.closed?
+          unless descriptor.is_a?(Prepared) && [descriptor.procs, descriptor.kill].all? { |io| io.is_a?(IO) && !io.closed? }
+            raise Error, "session cgroup is unavailable"
+          end
           verify_session!
           raise Error, "session cgroup changed" unless verified_group! == group
           descriptor
+        rescue Ace::Runtime::Error, SystemCallError, IOError => e
+          descriptor&.close
+          raise Error, "session cgroup is unavailable (#{e.class})"
         rescue Exception
-          descriptor&.close unless descriptor&.closed?
+          descriptor&.close
           raise
         end
 
@@ -88,7 +98,17 @@ module Ace
         end
 
         def open_cgroup(group)
-          path = File.join(CGROUP_ROOT, group.delete_prefix("/"), "cgroup.procs")
+          directory = File.join(CGROUP_ROOT, group.delete_prefix("/"))
+          procs = open_control_file(File.join(directory, "cgroup.procs"))
+          kill = open_control_file(File.join(directory, "cgroup.kill"))
+          Prepared.new(procs: procs, kill: kill)
+        rescue Exception
+          procs&.close unless procs&.closed?
+          kill&.close unless kill&.closed?
+          raise
+        end
+
+        def open_control_file(path)
           raise Error, "session cgroup path is not canonical" unless File.realpath(path) == path
           descriptor = File.open(path, File::WRONLY | File::NOFOLLOW)
           descriptor.close_on_exec = true

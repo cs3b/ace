@@ -35,10 +35,10 @@ module Ace
         end
 
         def teardown
-          [@peer, @main, @namespace, @opened].compact.each { |io| io.close unless io.closed? }
+          [@peer, @main, @namespace, @opened, @kill].compact.each { |io| io.close unless io.closed? }
         end
 
-        def attachment(opener: ->(_group) { @opened = File.open(File::NULL, "w") })
+        def attachment(opener: ->(_group) { @opened = File.open(File::NULL, "w"); @kill = File.open(File::NULL, "w"); SessionAttachment::Prepared.new(procs: @opened, kill: @kill) })
           SessionAttachment.new(identity: @identity, platform: @platform, manager: @manager,
             cgroup_opener: opener, namespace_matcher: ->(_namespace, _pid) { @namespace_matches })
         end
@@ -47,7 +47,8 @@ module Ace
           Process.stub(:euid, 0) do
             owner = attachment
             descriptor = owner.prepare
-            assert_same @opened, descriptor
+            assert_same @opened, descriptor.procs
+            assert_same @kill, descriptor.kill
             assert owner.verify_child!(1234)
           end
         end
@@ -65,14 +66,20 @@ module Ace
         end
 
         def test_closes_descriptor_if_invocation_changes_during_open
-          opener = ->(_group) { @opened = File.open(File::NULL, "w"); @manager.invocation = "b" * 32; @opened }
+          opener = ->(_group) { @opened = File.open(File::NULL, "w"); @kill = File.open(File::NULL, "w"); @manager.invocation = "b" * 32; SessionAttachment::Prepared.new(procs: @opened, kill: @kill) }
           Process.stub(:euid, 0) { assert_raises(Error) { attachment(opener: opener).prepare } }
           assert @opened.closed?
+          assert @kill.closed?
         end
 
         def test_refuses_a_child_with_a_different_parent
           @platform.parent_pid = Process.pid + 1
           Process.stub(:euid, 0) { assert_raises(Error) { attachment.verify_child!(1234) } }
+        end
+
+        def test_reports_a_vanished_cgroup_as_a_typed_error
+          opener = ->(_group) { raise Errno::ENOENT }
+          Process.stub(:euid, 0) { assert_raises(Error) { attachment(opener: opener).prepare } }
         end
 
         def test_session_verification_refuses_an_exited_main_process

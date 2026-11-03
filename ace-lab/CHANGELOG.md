@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Serialize issuance with revoke and reconciliation for the same lease
+  correlation; report individual recovery failures without masking other leases.
+- Accept confirmed already-invalid credentials as successful cleanup and
+  refuse caller-supplied credential overrides in execution environments.
+- Terminate the pinned session cgroup if pidfd cancellation fails, and report
+  unavailable session cgroups as typed errors.
 - Preserve a session's verified private mount namespace when executing its
   delegated command, and refuse namespace replacement or foreign ownership.
 - Keep identical repository-scoped credential requests idempotent regardless

@@ -8,7 +8,10 @@ module Ace
     module Auth
       class SessionRunnerTest < Minitest::Test
         class FakeAttachment
-          def prepare = File.open(File::NULL, "w")
+          Prepared = Struct.new(:procs, :kill) do
+            def close = [procs, kill].each { |io| io.close unless io.closed? }
+          end
+          def prepare = Prepared.new(File.open(File::NULL, "w"), File.open(File::NULL, "w"))
           def verify_child!(_pid) = false
         end
 
@@ -93,12 +96,40 @@ module Ace
           end
         end
 
+        def test_returns_the_real_command_exit_status
+          skip "requires a Linux root test process" unless RUBY_PLATFORM.include?("linux") && Process.euid.zero?
+
+          account = Etc.getpwnam("nobody")
+          Dir.mktmpdir do |dir|
+            File.chmod(0o777, dir)
+            attachment = FakeAttachment.new
+            def attachment.verify_child!(_pid) = true
+            namespace = File.open(File::NULL)
+            runner = SessionRunner.new(uid: account.uid, cwd: dir, attach: attachment,
+              namespace: namespace, namespace_joiner: ->(_namespace) {})
+            assert_equal 0, runner.call(["/bin/sh", "-c", "exit 0"], {})
+            assert_equal 7, runner.call(["/bin/sh", "-c", "exit 7"], {})
+          ensure
+            namespace&.close
+          end
+        end
+
         def test_refuses_execution_without_a_pinned_mount_namespace
           skip "requires a non-root account" if Process.uid.zero?
           Process.stub(:euid, 0) do
             runner = SessionRunner.new(uid: Process.uid, cwd: Dir.pwd, attach: FakeAttachment.new)
             error = assert_raises(ArgumentError) { runner.call(["true"], {}) }
             assert_match(/mount namespace/, error.message)
+          end
+        end
+
+        def test_rejects_invalid_arguments_before_forking
+          skip "requires a non-root account" if Process.uid.zero?
+          Process.stub(:euid, 0) do
+            runner = SessionRunner.new(uid: Process.uid, cwd: Dir.pwd)
+            assert_raises(ArgumentError) { runner.call(["valid", "bad\0argument"], {}) }
+            assert_raises(ArgumentError) { runner.call(["valid"], {"BAD=KEY" => "value"}) }
+            assert_raises(ArgumentError) { runner.call(["valid"], nil) }
           end
         end
       end

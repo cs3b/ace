@@ -28,7 +28,15 @@ module Ace
         end
 
         def call(argv, env)
-          raise ArgumentError, "a session command is required" unless argv.is_a?(Array) && !argv.empty?
+          unless argv.is_a?(Array) && !argv.empty? && argv.all? { |arg| arg.is_a?(String) && !arg.include?("\0") }
+            raise ArgumentError, "a valid session command is required"
+          end
+          unless env.is_a?(Hash) && env.all? { |key, value|
+            key.is_a?(String) && !key.empty? && !key.include?("\0") && !key.include?("=") &&
+              value.is_a?(String) && !value.include?("\0")
+          }
+            raise ArgumentError, "a valid session environment is required"
+          end
           # Do not launch from the issuer's cgroup. Until the system entry
           # point can attach this child to an authenticated session lifetime,
           # it could outlive that session and inherit a recycled dynamic UID.
@@ -47,6 +55,7 @@ module Ace
               begin
                 ready_writer.close
                 prepared_reader.close
+                cgroup.kill.close
                 Process.setpgid(0, 0)
                 @namespace_joiner.call(@namespace)
                 @namespace.close
@@ -59,9 +68,9 @@ module Ace
                 Process::GID.change_privilege(@account.gid)
                 Process::UID.change_privilege(@account.uid)
                 Dir.chdir(@cwd)
-                cgroup.sync = true
-                raise ArgumentError, "session self-attachment failed" unless cgroup.write("0\n") == 2
-                cgroup.close
+                cgroup.procs.sync = true
+                raise ArgumentError, "session self-attachment failed" unless cgroup.procs.write("0\n") == 2
+                cgroup.procs.close
                 prepared_writer.write("1")
                 prepared_writer.close
                 exit! 127 unless ready_reader.read(1) == "1"
@@ -74,9 +83,10 @@ module Ace
             end
           rescue Exception
             [ready_reader, ready_writer, prepared_reader, prepared_writer].compact.each { |io| io.close unless io.closed? }
+            cgroup.close
             raise
           ensure
-            cgroup.close unless cgroup.closed?
+            cgroup.procs.close unless cgroup.procs.closed?
           end
           ready_reader.close
           prepared_writer.close
@@ -97,13 +107,21 @@ module Ace
             ready_writer.close
             _, status = Process.wait2(pid)
             status.exitstatus || 128 + status.termsig.to_i
-          rescue Exception # ensure a cancelled issuer does not leave its child running
+          rescue Exception # cancel through the pinned child identity
             ready_writer.close unless ready_writer.closed?
             prepared_reader.close unless prepared_reader.closed?
             begin
               signal_child!(handle, Signal.list.fetch("KILL"), group: group_signal_supported) if handle
-            rescue Errno::ESRCH
-              nil
+            rescue StandardError => error
+              # If signaling the pinned process fails, terminate the entire
+              # pinned session cgroup; never leave an executing child behind
+              # while its issuer proceeds with credential cleanup.
+              # After release, ESRCH may mean the group leader exited while
+              # descendants survived, so it also needs session-wide cleanup.
+              unless error.is_a?(Errno::ESRCH) && !group_signal_supported
+                cgroup.kill.sync = true
+                raise ArgumentError, "session cgroup cancellation failed" unless cgroup.kill.write("1\n") == 2
+              end
             end
             begin
               Process.waitpid(pid)
@@ -117,6 +135,7 @@ module Ace
             prepared_reader.close unless prepared_reader.closed?
             prepared_writer.close unless prepared_writer.closed?
             handle.close if handle && !handle.closed?
+            cgroup.close
           end
         end
 

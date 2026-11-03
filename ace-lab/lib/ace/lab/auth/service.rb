@@ -6,15 +6,13 @@ require "json"
 require "open3"
 require "securerandom"
 require "yaml"
+require_relative "error"
 require_relative "session_runner"
 require_relative "session_attachment"
 
 module Ace
   module Lab
     module Auth
-      # Explicit error base for the auth surface (the CLI rescues it).
-      class Error < ::Ace::Lab::Error; end
-
       # The auth service core (task 8xs.t.pu0.7): request / status /
       # exec / revoke / reconcile over the trusted host configuration
       # and the plugin registry. It owns the lease lifecycle and the
@@ -110,8 +108,8 @@ module Ace
         # scope/principal must match; a mismatched retry (e.g. a
         # narrower repo list) is refused, never silently answered with
         # the wider existing grant. The granted scope is the
-        # INTERSECTION of the host profile, the request and the task's
-        # repo — a request may narrow, never widen; editing the task or
+        # INTERSECTION of the host profile and the requested repos — a
+        # request may narrow, never widen; editing the task or
         # project config grants nothing.
         def request(profile_name:, role:, task:, assignment:, repos: [],
           ttl_minutes: nil)
@@ -150,7 +148,7 @@ module Ace
 
           # The granted scope is computed BEFORE the live-lease lookup
           # so a retry is judged against what THIS request asked for.
-          requested = Array(repos).map(&:to_s).sort
+          requested = Array(repos).map(&:to_s).uniq.sort
           repos = (profile["repos"].empty? ? requested : profile["repos"] & requested).sort
           if repos.empty?
             raise Refusal.new("the granted repository scope would be empty (profile " \
@@ -297,6 +295,9 @@ module Ace
         # error; the report carries both outcomes. One exec at a time
         # per lease.
         def exec(lease_id:, argv:, env: {})
+          unless env.is_a?(Hash) && (env.keys - CHILD_ENV_ALLOWLIST).empty?
+            raise Refusal.new("execution environment contains variables outside the allowlist")
+          end
           lease = @store.load(lease_id)
           unless lease["principal"] == @principal.call && session_matches?(lease)
             raise Refusal.new("lease '#{lease_id}' belongs to a different principal")
@@ -349,13 +350,15 @@ module Ace
               end
             rescue Providers::RefusedError, Providers::UnsupportedError => e
               raise Refusal.new("provider execution refused: #{e.message}")
+            rescue SystemCallError, IOError, ArgumentError => e
+              raise Error, "execution could not start (#{e.class})"
             ensure
               # A failed spawn, provider error or interrupted caller must not
               # leave an issued credential live merely because no exit code
               # was returned. Reconciliation retains unresolved revocations.
               cleanup = cleanup(lease, profile, handoff)
             end
-            if exit_code.zero? && cleanup != :revoked && cleanup != :cleared
+            if exit_code.zero? && !%i[revoked already_invalid cleared not-issued].include?(cleanup)
               raise Error.new("process succeeded (exit 0) but cleanup failed: #{cleanup}")
             end
 
@@ -375,6 +378,14 @@ module Ace
         # the record as forced-terminal with the unconfirmed outcome
         # recorded — never a claimed revocation.
         def revoke(lease_id:, force: false)
+          lease = @store.load(lease_id)
+          @store.with_correlation_lock(task: lease.fetch("task"), assignment: lease.fetch("assignment"),
+            profile: lease.fetch("profile"), role: lease.fetch("role")) do
+            revoke_locked(lease_id: lease_id, force: force)
+          end
+        end
+
+        def revoke_locked(lease_id:, force:)
           lease = @store.load(lease_id)
           principal = @principal.call
           operator = @session_uid.nil? && Process.uid.zero? && principal == "root"
@@ -418,6 +429,7 @@ module Ace
 
           cleanup(lease, profile, handoff)
         end
+        private :revoke_locked
 
         # --- reconcile -----------------------------------------------------
 
@@ -491,42 +503,55 @@ module Ace
         def reconcile
           results = []
           @store.all.each do |lease|
-            handoff = handoff_for(lease) unless lease["corrupt"]
-            outcome =
+            begin
               if lease["corrupt"]
-                # An unparseable record is a visible recovery problem —
-                # the remote token may still be live; it must never
-                # silently vanish from the inventory.
                 record = File.basename(lease["_path"].to_s)
-                :"corrupt (unreadable lease record #{record}; manual recovery required — the remote token may still be live)"
-              elsif lease["state"] == "revoked"
-                handoff.clear(lease["id"])
-                :already_revoked
+                results << {"lease" => lease["id"], "state" => lease["state"], "reconciled" =>
+                  "corrupt (unreadable lease record #{record}; manual recovery required — the remote token may still be live)"}
               else
-                begin
-                  profile = profile_for(lease["profile"])
-                rescue Refusal
-                  # A removed profile cannot resolve its provider: keep
-                  # the lease a visible revoke-pending open item (the
-                  # operator closes it with `revoke --force` when the
-                  # credential is gone) instead of crashing reconcile.
-                  @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
-                  :"revoke-pending (profile '#{lease["profile"]}' removed)"
-                else
-                  if lease["state"] == "preparing" || lease["state"] == "revoke-pending" ||
-                    !@store.live?(lease)
-                    cleanup(lease, profile, handoff)
-                  else
-                    :live
-                  end
+                @store.with_correlation_lock(task: lease.fetch("task"), assignment: lease.fetch("assignment"),
+                  profile: lease.fetch("profile"), role: lease.fetch("role")) do
+                  lease = @store.load(lease.fetch("id"))
+                  results << reconcile_locked(lease)
                 end
               end
-            results << {"lease" => lease["id"], "state" => lease["state"], "reconciled" => outcome.to_s}
+            rescue Error, SystemCallError, IOError, KeyError => e
+              results << {"lease" => lease["id"], "state" => lease["state"],
+                "reconciled" => "reconcile-failed (#{e.class}; manual recovery required)"}
+            end
           end
           results
         end
 
         private
+
+        def reconcile_locked(lease)
+          handoff = handoff_for(lease)
+          outcome = if lease["state"] == "revoked"
+            handoff.clear(lease["id"])
+            if lease.dig("cleanup", "result") == "forced-terminal"
+              :forced_terminal
+            elsif confirmed_revocation?(lease)
+              :already_revoked
+            else
+              raise Error, "terminal cleanup outcome is unconfirmed"
+            end
+          else
+            begin
+              profile = profile_for(lease["profile"])
+            rescue Refusal
+              @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
+              :"revoke-pending (profile '#{lease["profile"]}' removed)"
+            else
+              if lease["state"] == "preparing" || lease["state"] == "revoke-pending" || !@store.live?(lease)
+                cleanup(lease, profile, handoff)
+              else
+                :live
+              end
+            end
+          end
+          {"lease" => lease["id"], "state" => lease["state"], "reconciled" => outcome.to_s}
+        end
 
         # R5: a previous issue with an UNRESOLVED remote outcome (lost
         # response after possible issuance, or a hard death while
