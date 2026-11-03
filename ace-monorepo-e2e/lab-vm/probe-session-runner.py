@@ -26,6 +26,8 @@ parser.add_argument('--test-kill-fallback', action='store_true',
 parser.add_argument('--signal-error', choices=('EPERM', 'ESRCH'), default='EPERM')
 parser.add_argument('--check-detached-descendant', action='store_true',
                     help='diagnose whether a detached child survives a successful command')
+parser.add_argument('--test-writable-cgroup', action='store_true',
+                    help='require refusal when the session cgroup control is writable by others')
 args = parser.parse_args()
 if args.test_kill_fallback and args.check_detached_descendant:
     parser.error('choose only one session termination probe')
@@ -65,6 +67,7 @@ gem "ace-lab", "= #{ARGV.fetch(0)}"
 expected_gem = File.realpath(File.join(ENV.fetch("GEM_HOME"), "gems", "ace-lab-#{ARGV.fetch(0)}"))
 raise "unexpected installed candidate" unless File.realpath(Gem.loaded_specs.fetch("ace-lab").full_gem_path) == expected_gem
 require "ace/lab/auth/session_runner"
+require "ace/lab/auth/session_attachment"
 include Ace::Lab::Auth
 begin
   SessionNamespace.capture(Process.pid)
@@ -81,10 +84,7 @@ attach = Object.new
 attach.define_singleton_method(:prepare) do
   group = IO.popen(["/usr/bin/systemctl", "show", "--property=ControlGroup", "--value", unit], &:read).strip
   raise "unexpected cgroup" unless $?.success? && File.basename(group) == unit && group.start_with?("/")
-  dir = File.join("/sys/fs/cgroup", group.delete_prefix("/"))
-  pair = Struct.new(:procs, :kill) { def close = [procs, kill].each { |io| io.close unless io.closed? } }
-  pair.new(File.open(File.join(dir, "cgroup.procs"), File::WRONLY | File::NOFOLLOW),
-    File.open(File.join(dir, "cgroup.kill"), File::WRONLY | File::NOFOLLOW))
+  Ace::Lab::Auth::SessionAttachment.allocate.send(:open_cgroup, group)
 end
 attach.define_singleton_method(:verify_child!) do |child|
   next false unless SessionNamespace.matches?(namespace, child)
@@ -93,7 +93,7 @@ attach.define_singleton_method(:verify_child!) do |child|
   cgroups = File.readlines("/proc/#{child}/cgroup").grep(/\A0::/)
   status.fetch("Uid").split.map(&:to_i).all? { |value| value == Integer(uid) } && groups.empty? &&
     status.fetch("NoNewPrivs").strip == "1" && status.fetch("CapEff").to_i(16).zero? &&
-    cgroups.size == 1 && File.basename(cgroups.first.delete_prefix("0::").strip) == unit
+    cgroups.size == 1 && cgroups.first.delete_prefix("0::").strip.match?(%r{/#{Regexp.escape(unit)}/ace-exec-[0-9a-f]+\z})
 end
 runner = SessionRunner.new(uid: Integer(uid), cwd: project, namespace: namespace, attach: attach)
 status = runner.call(["/usr/bin/touch", File.join(project, "session-runner-created")], {"PATH" => "/usr/bin:/bin"})
@@ -109,16 +109,14 @@ fallback_program = r'''
 gem "ace-lab", "= #{ARGV.fetch(0)}"
 require "ace/lab/auth/session_runner"
 require "ace/lab/auth/session_namespace"
+require "ace/lab/auth/session_attachment"
 unit, pid, uid, project = ARGV.values_at(1, 2, 3, 4)
 namespace = Ace::Lab::Auth::SessionNamespace.capture(Integer(pid))
 attach = Object.new
 attach.define_singleton_method(:prepare) do
   group = IO.popen(["/usr/bin/systemctl", "show", "--property=ControlGroup", "--value", unit], &:read).strip
   raise "unexpected cgroup" unless $?.success? && File.basename(group) == unit && group.start_with?("/")
-  dir = File.join("/sys/fs/cgroup", group.delete_prefix("/"))
-  pair = Struct.new(:procs, :kill) { def close = [procs, kill].each { |io| io.close unless io.closed? } }
-  pair.new(File.open(File.join(dir, "cgroup.procs"), File::WRONLY | File::NOFOLLOW),
-    File.open(File.join(dir, "cgroup.kill"), File::WRONLY | File::NOFOLLOW))
+  Ace::Lab::Auth::SessionAttachment.allocate.send(:open_cgroup, group)
 end
 attach.define_singleton_method(:verify_child!) { |child| Ace::Lab::Auth::SessionNamespace.matches?(namespace, child) }
 runner = Ace::Lab::Auth::SessionRunner.new(uid: Integer(uid), cwd: project, namespace: namespace, attach: attach)
@@ -141,8 +139,8 @@ begin
   rescue Interrupt
     raise "session command did not start" unless File.file?(marker)
   end
-  raise "session survived cgroup kill" if system("/usr/bin/systemctl", "is-active", "--quiet", unit)
-  puts "failed pidfd signal terminated the pinned session cgroup"
+  raise "session main did not survive command cleanup" unless system("/usr/bin/systemctl", "is-active", "--quiet", unit)
+  puts "failed pidfd signal terminated the command cgroup; session remained active"
 ensure
   interrupter.kill
   interrupter.join
@@ -153,16 +151,14 @@ detached_program = r'''
 gem "ace-lab", "= #{ARGV.fetch(0)}"
 require "ace/lab/auth/session_runner"
 require "ace/lab/auth/session_namespace"
+require "ace/lab/auth/session_attachment"
 unit, pid, uid, project = ARGV.values_at(1, 2, 3, 4)
 namespace = Ace::Lab::Auth::SessionNamespace.capture(Integer(pid))
 attach = Object.new
 attach.define_singleton_method(:prepare) do
   group = IO.popen(["/usr/bin/systemctl", "show", "--property=ControlGroup", "--value", unit], &:read).strip
   raise "unexpected cgroup" unless $?.success? && File.basename(group) == unit && group.start_with?("/")
-  dir = File.join("/sys/fs/cgroup", group.delete_prefix("/"))
-  pair = Struct.new(:procs, :kill) { def close = [procs, kill].each { |io| io.close unless io.closed? } }
-  pair.new(File.open(File.join(dir, "cgroup.procs"), File::WRONLY | File::NOFOLLOW),
-    File.open(File.join(dir, "cgroup.kill"), File::WRONLY | File::NOFOLLOW))
+  Ace::Lab::Auth::SessionAttachment.allocate.send(:open_cgroup, group)
 end
 attach.define_singleton_method(:verify_child!) { |child| Ace::Lab::Auth::SessionNamespace.matches?(namespace, child) }
 runner = Ace::Lab::Auth::SessionRunner.new(uid: Integer(uid), cwd: project, namespace: namespace, attach: attach)
@@ -170,9 +166,10 @@ marker = File.join(project, "detached-child-pid")
 status = runner.call(["/bin/sh", "-c", '/usr/bin/setsid /bin/sleep 60 & echo $! > "$1"', "runner", marker], {})
 raise "command failed" unless status.zero?
 child = Integer(File.read(marker))
-path = File.readlines("/proc/#{child}/cgroup").find { |line| line.start_with?("0::") }
-raise "detached child is not live in the session" unless path && path.strip.end_with?("/" + unit)
-puts "confirmed_issue: detached child remains after successful runner exit"
+stat = File.read("/proc/#{child}/stat") rescue nil
+raise "detached child survived successful runner exit" if stat && !stat.match?(/\) Z /)
+raise "session main did not survive command cleanup" unless system("/usr/bin/systemctl", "is-active", "--quiet", unit)
+puts "detached child terminated after command exit; session remained active"
 namespace.close
 '''
 foreign_namespace_program = r'''
@@ -185,6 +182,17 @@ rescue ArgumentError => e
   raise unless e.message.include?("private system namespace")
 end
 puts "foreign-user-owned mount namespace refused"
+'''
+writable_group_program = r'''
+gem "ace-lab", "= #{ARGV.fetch(0)}"
+require "ace/lab/auth/session_attachment"
+begin
+  Ace::Lab::Auth::SessionAttachment.allocate.send(:open_cgroup, ARGV.fetch(1))
+  abort "writable cgroup was accepted"
+rescue Ace::Lab::Auth::Error => error
+  raise unless error.message.include?("not root-controlled")
+end
+puts "writable session cgroup refused"
 '''
 
 try:
@@ -209,11 +217,22 @@ try:
     attempted = True
     run(['/usr/bin/systemd-run', '--quiet', '--unit=' + unit, '--property=Type=exec',
          '--property=DynamicUser=yes', '--property=PrivateMounts=yes', '--property=NoNewPrivileges=yes',
-         '--property=Delegate=yes', '--property=ProtectSystem=strict', '--property=ReadWritePaths=' + root,
+         '--property=Delegate=no', '--property=ProtectSystem=strict', '--property=ReadWritePaths=' + root,
          '/bin/sleep', '60'])
     pid = int(output(['/usr/bin/systemctl', 'show', '--property=MainPID', '--value', unit]))
     if pid <= 0:
         raise RuntimeError('systemd did not expose a main process')
+    if args.test_writable_cgroup:
+        group = output(['/usr/bin/systemctl', 'show', '--property=ControlGroup', '--value', unit])
+        if not group.startswith('/') or os.path.basename(group) != unit:
+            raise RuntimeError('unexpected unit cgroup')
+        control = '/sys/fs/cgroup' + group + '/cgroup.procs'
+        original_mode = stat.S_IMODE(os.stat(control).st_mode)
+        try:
+            os.chmod(control, original_mode | 0o002)
+            run([args.ruby, '-e', writable_group_program, args.version, group], env=env)
+        finally:
+            os.chmod(control, original_mode)
     status = {}
     with open(f'/proc/{pid}/status', encoding='utf-8') as file:
         for line in file:
@@ -242,6 +261,10 @@ try:
              args.signal_error], env=env)
     if args.check_detached_descendant:
         run([args.ruby, '-e', detached_program, args.version, unit, str(pid), str(uid), project], env=env)
+    group = output(['/usr/bin/systemctl', 'show', '--property=ControlGroup', '--value', unit])
+    group_path = '/sys/fs/cgroup' + group
+    if not group or any(name.startswith('ace-exec-') for name in os.listdir(group_path)):
+        raise RuntimeError('command cgroup remained after completion')
     run(['/usr/bin/systemctl', 'stop', unit])
     attempted = False
     passed = True

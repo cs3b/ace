@@ -171,11 +171,12 @@ a separate user namespace. It removes the unit and temporary project on success 
 preserves the project for diagnosis on failure. The test seam does not prove
 `SessionPeer`, issuer supervision, token issuance or an ACE agent launch.
 With `--test-kill-fallback`, it also forces pidfd signaling to fail after a
-command starts and checks that the pinned session cgroup terminates. This
-mode intentionally stops only the disposable unit created by the probe.
-`--check-detached-descendant` is a diagnostic for the currently known issue:
-it confirms that a detached child survives a successful runner exit, then
-stops the probe's own unit. A positive diagnostic does not mean acceptance.
+command starts and checks that its command cgroup terminates while the
+session stays active; select `EPERM` or `ESRCH` with `--signal-error`.
+`--check-detached-descendant` checks that a detached child has exited before
+the runner returns. `--test-writable-cgroup` requires refusal of an unsafe
+session cgroup. These checks use a test attachment and do not by themselves
+establish issuer or autonomous-cycle acceptance.
 
 `probe-cgroup-containment.py` runs as root in a disposable working VM. It
 starts its own non-delegated DynamicUser unit and puts a privilege-dropped
@@ -184,6 +185,13 @@ cannot move itself to the parent, starts a detached descendant, kills the
 child cgroup and confirms that the descendant exits while the unit's main
 process remains alive. It removes its temporary cgroup and unit. This checks
 OS primitives only; it does not prove ACE's session runner uses them.
+
+`probe-execution-crash.py` takes the installed-candidate arguments and runs
+as root on the disposable VM. It uses a synthetic provider, kills an issuer
+with `SIGKILL` after its lease records a running command, and checks that a
+fresh service refuses reuse and reports unresolved execution. It removes its
+private synthetic files on success and preserves them on failure. This does
+not exercise a real agent, provider or systemd issuer supervision.
 
 `probe-authenticated-runner.py` takes the same arguments. It creates a local
 socket and a temporary dynamic-UID systemd session, then invokes the installed
