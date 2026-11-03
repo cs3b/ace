@@ -210,6 +210,8 @@ A second disposable-repository probe created a Git worktree under `.ace-wt` and 
 
 The versioned `ace-monorepo-e2e/lab-vm/probe-project-idmap.sh` repeated that Git/worktree probe successfully on the retained VM, including refusal of direct write access to the unmapped view; `ace-monorepo-e2e fast` passed 98 tests. The script creates its own temporary mount namespace and repository and makes no change to the active lab project.
 
+From committed source `aa96ead6ccd9722621a1d910ff20b8bdb6687849`, local candidates `ace-overseer 0.28.2.pre.utm30` and `ace-wake 0.2.1.pre.utm30` were independently built twice with matching SHA-256 values `6cf19c5146b37bea0614a3ad4fd2df59676eb499b667b8888c053f76e8377b4e` and `74329c91a04e328f5d2441202236583fd57ac7aa8f28f2255894245d59a7b59d`, respectively. The guest verified both hashes and installed them under the separate `/opt/ace/probe-eyes-utm30`; the active manifest and runtime were not changed. As `mo` with `ACE_TOOLCHAIN=installed`, the installed Ruby reader and installed JavaScript extension agreed on the Linux birth identity and UID of the same live Node process. This does not exercise a live Herdr pane, session evidence end-to-end, an isolated session or either requested acceptance scenario.
+
 ## E2E authoring decision (pending implementation)
 
 | Candidate | Decision now | Why E2E and public surface | Relevant unit coverage reviewed |
