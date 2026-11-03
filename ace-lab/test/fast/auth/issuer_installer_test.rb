@@ -99,6 +99,19 @@ module Ace
           assert_match(/differs/, error.message)
         end
 
+        def test_shared_library_check_verifies_actual_mapping_and_rejects_replaced_inode
+          library = File.join(@dir, "library.so")
+          File.write(library, "fixture")
+          maps = File.join(@dir, "maps")
+          inode = File.stat(library).ino
+          File.write(maps, "1000-2000 r-xp 0000 00:00 #{inode} #{library}\n")
+          assert @installer.send(:verify_shared_libraries!, maps_path: maps)
+          File.write(maps, "1000-2000 r-xp 0000 00:00 #{inode + 1} #{library}\n")
+          assert_raises(Error) { @installer.send(:verify_shared_libraries!, maps_path: maps) }
+          File.write(maps, "1000-2000 r-xp 0000 00:00 #{inode} #{library} (deleted)\n")
+          assert_raises(Error) { @installer.send(:verify_shared_libraries!, maps_path: maps) }
+        end
+
         def test_active_recovery_blocks_before_writing_or_enabling
           runner = lambda do |argv|
             name = argv.last

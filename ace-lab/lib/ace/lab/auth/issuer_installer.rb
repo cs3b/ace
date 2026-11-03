@@ -110,6 +110,34 @@ module Ace
           end
           @path_verifier.call(prefix, directory: true)
           verify_owned_tree!(prefix)
+          verify_shared_libraries!
+        end
+
+        # Verify the actual executable mappings of this interpreter, including
+        # the ELF loader and native extensions already loaded by auth. Checking
+        # only Ruby's installation prefix misses its system shared libraries.
+        def verify_shared_libraries!(maps_path: "/proc/self/maps")
+          mappings = File.readlines(maps_path).filter_map do |line|
+            fields = line.split(nil, 6)
+            raise Error, "issuer process mapping is malformed" unless fields.size >= 5
+            next unless fields[1].include?("x")
+            path = fields[5]&.strip
+            next if path.nil? || path.start_with?("[")
+            unless path.start_with?("/") && !path.end_with?(" (deleted)")
+              raise Error, "issuer executable mapping is unavailable"
+            end
+            resolved = File.realpath(path)
+            @path_verifier.call(resolved, directory: false)
+            stat = File.stat(resolved)
+            unless stat.file? && stat.ino == Integer(fields[4], 10)
+              raise Error, "issuer executable mapping changed"
+            end
+            resolved
+          end
+          raise Error, "issuer executable mappings are unavailable" if mappings.empty?
+          true
+        rescue SystemCallError, ArgumentError
+          raise Error, "issuer shared libraries could not be verified"
         end
 
         def verify_owned_tree!(root)
