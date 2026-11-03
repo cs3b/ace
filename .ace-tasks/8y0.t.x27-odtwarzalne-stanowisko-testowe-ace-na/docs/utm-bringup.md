@@ -264,6 +264,8 @@ Diagnostic utm50 (SHA-256 `9e1d72444b785322f4d5c639edb69942c3102ff35d3363911d4d0
 
 Diagnostic utm51 was built twice from commit `aa4580104` with only the diagnostic version changed; both packages and the guest copy had SHA-256 `13adef0e80a5b6c96ccf953b5313ea541c70459df7acc60de63f2d078fc99989`. The expiry and issuer-crash probes again revoked real local Forgejo tokens and removed their temporary administrators; isolated command expiry and exact-cgroup recovery passed. The token leases were test-prepared, and these checks do not enable or exercise the public issuer flow.
 
+Diagnostic utm52 was built twice from commit `5dad42154` with only the diagnostic version changed; both packages and the guest copy had SHA-256 `ad1bd4e7f0c258bcbc3a91b416e37f119e6bf10ed81bcbc07d960d7a2184333d`. Its real local Forgejo expiry and issuer-crash probes both passed and removed their temporary administrators; exact command-cgroup recovery also passed. The test prepared the leases, so public issuance, agent launch and end-to-end acceptance remain unproven.
+
 ## E2E authoring decision (pending implementation)
 
 | Candidate | Decision now | Why E2E and public surface | Relevant unit coverage reviewed |
