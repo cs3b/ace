@@ -5,6 +5,23 @@ import { promisify } from "node:util";
 import { Eyes, EYES_ENTRY } from "./eyes.js";
 
 const execute = promisify(execFile);
+export const EYES_BINDING = "ace-wake-eyes-binding";
+
+// The existing Pi session owns eyes state. Attach the process birth identity
+// to that state so an old enabled snapshot cannot prove a restarted observer
+// is live. Other platforms remain unverified until they have an equivalent.
+export function eyesProcessIdentity() {
+  if (process.platform !== "linux") return null;
+  try {
+    const stat = fs.readFileSync(`/proc/${process.pid}/stat`, "utf8");
+    const end = stat.lastIndexOf(") ");
+    if (end < 0) return null;
+    const ticks = stat.slice(end + 2).trim().split(/\s+/)[19];
+    const boot = fs.readFileSync("/proc/sys/kernel/random/boot_id", "utf8").trim();
+    if (!/^[1-9][0-9]*$/.test(ticks) || !/^[0-9a-f-]{36}$/.test(boot)) return null;
+    return { pid: process.pid, startedAt: `linux:${boot}:${ticks}` };
+  } catch { return null; }
+}
 
 /** Existing native sync owns canonical import; HITL owns event projection.
  * No Ruby parsing, private text, shell command strings or model work here. */
@@ -20,12 +37,16 @@ export async function observeHitl(cwd, config) {
     if (!Array.isArray(result.errors) || result.errors.length) throw new Error("Native synchronization incomplete");
   }
   const { stdout } = await execute("ace-overseer", ["observe", "--owner", config.recipient, "--scope", config.scope, "--limit", String(config.maxEvents)], options);
-  return JSON.parse(stdout);
+  const result = JSON.parse(stdout);
+  if (!result?.sources || typeof result.sources !== "object" || Array.isArray(result.sources) ||
+      Object.keys(result.sources).length === 0) throw new Error("Observation source health is missing");
+  return result;
 }
 
 export function registerEyes(pi, { observe = observeHitl, now = Date.now,
-  schedule = (fn, ms) => setInterval(fn, ms), cancel = clearInterval } = {}) {
-  let eyes, timer, attempt, observedSources, bindingGeneration = 0, compacting = false, running = false, arming = false;
+  schedule = (fn, ms) => setInterval(fn, ms), cancel = clearInterval, processIdentity = eyesProcessIdentity } = {}) {
+  let eyes, timer, attempt, observedSources, observedAt, bindingGeneration = 0, compacting = false, running = false, arming = false;
+  const clearEvidence = () => { observedSources = undefined; observedAt = undefined; };
   const stopTimer = () => { if (timer !== undefined) cancel(timer); timer = undefined; };
   function arm() {
     stopTimer();
@@ -36,7 +57,7 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
   }
   const bind = (ctx) => {
     const generation = ++bindingGeneration;
-    stopTimer(); eyes?.dispose(); attempt = undefined; observedSources = undefined; compacting = false; running = false;
+    stopTimer(); eyes?.dispose(); attempt = undefined; clearEvidence(); compacting = false; running = false;
     const entries = ctx.sessionManager.getBranch();
     const snapshot = [...entries].reverse().find((e) => e.type === "custom" && e.customType === EYES_ENTRY)?.data;
     const ownerCwd = path.resolve(ctx.cwd);
@@ -45,18 +66,27 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
       ctx.ui?.setStatus?.("ace-eyes", "eyes blocked: session belongs to another project cwd");
       throw new Error("Eyes project owner mismatch; preserve this actor and use its original project session");
     }
+    const identity = processIdentity();
+    pi.appendEntry(EYES_BINDING, { ownerCwd, process: identity });
     eyes = new Eyes({ snapshot, now,
-      save: (data) => pi.appendEntry(EYES_ENTRY, { ...data, ownerCwd }),
+      save: (data) => {
+        const entries = observedSources && typeof observedSources === "object" && !Array.isArray(observedSources) ? Object.entries(observedSources) : [];
+        const valid = entries.length > 0 && entries.length <= 64 && entries.every(([name, source]) =>
+          /^[a-zA-Z0-9_.:-]{1,128}$/.test(name) && source && ["ok", "degraded"].includes(source.status));
+        const sources = valid ? Object.fromEntries(entries.map(([name, source]) => [name, source.status]).sort()) : {};
+        pi.appendEntry(EYES_ENTRY, { ...data, ownerCwd, observerEvidence: {
+          process: identity, observedAt: observedAt ?? null, sources
+        } });
+      },
       status: (state) => {
         ctx.ui?.setStatus?.("ace-eyes", `eyes ${state.retired ? "retired" : state.breaker?.reason || (state.enabled ? "observing" : "off")} pending:${state.pending}`);
         if (state.breaker || state.retired) stopTimer();
       },
-      observe: async (config) => {
-        const result = await observe(ctx.cwd, config);
-        // A disposed binding can still finish its asynchronous owner read.
-        // Its source health is never evidence for the current session binding.
-        if (generation === bindingGeneration) observedSources = result.sources;
-        return result;
+      observe: (config) => observe(ctx.cwd, config),
+      // A result is evidence only after Eyes validated it and confirmed that
+      // the observer generation is still current.
+      onObserved: (result) => {
+        if (generation === bindingGeneration) { observedSources = result.sources; observedAt = now(); }
       },
       // Do not queue a follow-up while the current turn can still handle and
       // acknowledge the same revision. Polling retains it until the agent is
@@ -89,7 +119,7 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
   pi.on("session_start", async (_event, ctx) => bind(ctx));
   pi.on("session_tree", async (_event, ctx) => bind(ctx));
   pi.on("agent_start", async () => { running = true; });
-  pi.on("agent_settled", async () => { running = false; });
+  pi.on("agent_settled", async () => { running = false; eyes?.persist(); });
   pi.on("message_start", async (event) => {
     if (event.message?.role !== "user" || !attempt) return;
     const text = typeof event.message.content === "string" ? event.message.content :
@@ -99,7 +129,10 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
   pi.on("session_before_compact", async (event) => { if (event.reason === "manual") compacting = true; });
   pi.on("session_compact", async () => { compacting = false; eyes?.persist(); });
   pi.on("session_compact_failed", async () => { compacting = false; });
-  pi.on("session_shutdown", async () => { stopTimer(); eyes?.dispose(); });
+  pi.on("session_shutdown", async () => {
+    bindingGeneration++; stopTimer(); clearEvidence();
+    eyes?.persist(); eyes?.dispose(); eyes = undefined;
+  });
   pi.on("message_end", async (event) => {
     const message = event.message;
     if (message?.role === "assistant" && message.stopReason === "error") eyes?.quota(message.errorMessage);
@@ -121,11 +154,13 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
           throw new Error("Eyes start requires configPath and the current session context");
         }
         const config = JSON.parse(fs.readFileSync(path.resolve(ctx.cwd, args.configPath), "utf8"));
-        eyes.start(config); arm();
+        const current = eyes, generation = bindingGeneration;
+        clearEvidence(); current.start(config); arm();
         // Observe now, but do not enqueue a redundant model turn inside the
         // caller's turn. Pending revisions are returned to the caller below.
         arming = true;
-        try { await eyes.tick(); } finally { arming = false; }
+        try { await current.tick(); } finally { if (current === eyes && generation === bindingGeneration) arming = false; }
+        if (current !== eyes || generation !== bindingGeneration) throw new Error("Eyes session changed during start");
       }
       else if (args.action === "ack") eyes.ack(args.key, args.revision);
       else if (args.action === "deadline") eyes.deadline(args.key, args.at, args.revision);
@@ -147,7 +182,10 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
           case "start": {
             if (!a || b) throw new Error("Use eyes start CONFIG_JSON");
             const config = JSON.parse(fs.readFileSync(path.resolve(ctx.cwd, a), "utf8"));
-            eyes.start(config); arm(); await eyes.tick(); break;
+            const current = eyes, generation = bindingGeneration;
+            clearEvidence(); current.start(config); arm(); await current.tick();
+            if (current !== eyes || generation !== bindingGeneration) throw new Error("Eyes session changed during start");
+            break;
           }
           case "status": ctx.ui?.notify?.(JSON.stringify({ ...eyes.summary(), pending: eyes.s.pending, deadlines: eyes.s.deadlines }), "info"); break;
           case "ack": eyes.ack(a, b); await eyes.tick(); break;
@@ -157,7 +195,13 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
           case "cancel": eyes.cancelDeadline(a); break;
           case "resume":
             if (a !== "quota-verified" || b) throw new Error("Explicit owner verification required: eyes resume quota-verified");
-            await eyes.resume(); arm(); break;
+            {
+              const current = eyes, generation = bindingGeneration;
+              clearEvidence(); await current.resume();
+              if (current !== eyes || generation !== bindingGeneration) throw new Error("Eyes session changed during resume");
+              arm();
+            }
+            break;
           case "retire": eyes.retire(); stopTimer(); break;
           default: throw new Error("Unknown eyes command; use start, status, ack, deadline, cancel, resume or retire");
         }

@@ -56,6 +56,9 @@ module Ace
               render_table(report)
             end
 
+            if report["prompt_failed"] == true
+              raise Ace::Support::Cli::Error, report["message"] || "first turn or readiness is unconfirmed"
+            end
             case report["status"]
             when "started", "reused", "ready", "dry_run" then nil
             else

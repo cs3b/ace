@@ -144,7 +144,7 @@ module Ace
           unless report.is_a?(Hash) && report["scope"] == "project" && report["status"].is_a?(String)
             raise Ace::Overseer::Error, "project start returned no project-scope report"
           end
-          if !status.success? && %w[started reused ready].include?(report["status"])
+          if !status.success? && %w[started reused ready].include?(report["status"]) && report["prompt_failed"] != true
             raise Ace::Overseer::Error, "project start exited #{status.exitstatus} despite a ready report"
           end
           report

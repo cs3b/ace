@@ -123,6 +123,20 @@ module Commands
       assert_equal "no start section", error.message
     end
 
+    def test_unconfirmed_project_start_returns_an_error_and_keeps_the_report
+      %w[started reused].each do |status|
+        out, = capture_io do
+          error = assert_raises(Ace::Support::Cli::Error) do
+            Ace::Overseer::CLI::Commands::Start.new(orchestrator: FakeOrchestrator.new(
+              {"status" => status, "prompt_failed" => true, "message" => "agent blocked"}
+            )).call(scope: "project", format: "json")
+          end
+          assert_equal "agent blocked", error.message
+        end
+        assert_equal true, JSON.parse(out).fetch("prompt_failed")
+      end
+    end
+
     def test_reconcile_table_includes_each_project_failure_and_its_pane
       report = {"status" => "partial", "message" => "0/1 project overseers ready",
                 "projects" => [{"id" => "ace", "path" => "/lab/ace", "status" => "started",

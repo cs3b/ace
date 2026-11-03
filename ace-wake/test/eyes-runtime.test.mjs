@@ -8,6 +8,25 @@ import { startSession } from "./session-harness.mjs";
 import { observeHitl } from "../handbook/extensions/ace-wake/wake/eyes-runtime.js";
 const key="a".repeat(64), revision="b".repeat(64);
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
+it("does not record source health from an invalid observation", async()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-invalid-"));
+  const host=createFakeHost(), tools=new Map();
+  host.pi.registerTool=(tool)=>tools.set(tool.name,tool);
+  const session=await startSession(host,{eyes:{
+    now:host.clock.now,schedule:host.setIntervalFn,cancel:host.clearIntervalFn,
+    processIdentity:()=>({pid:42,startedAt:"linux:01234567-89ab-cdef-0123-456789abcdef:10"}),
+    observe:async()=>({schema:"invalid",events:[],sources:{tasks:{status:"ok"}}})
+  }});
+  try {
+    const file=path.join(dir,"eyes.json");fs.writeFileSync(file,"{}");
+    await tools.get("ace_eyes").execute("start",{action:"start",configPath:file},null,null,host.commandContext);
+    await session.settle();
+    const data=host.sessionEntries.filter(e=>e.customType==="ace-wake-eyes").at(-1).data;
+    assert.equal(data.errors,1);
+    assert.deepEqual(data.observerEvidence.sources,{});
+    assert.equal(data.observerEvidence.observedAt,null);
+  } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
+});
 it("real config enables eyes coexisting with loops, survives reload, exposes exact ack tool and retires", async()=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-"));
   try {
@@ -154,6 +173,117 @@ it("rebinding clears source health until the new observation completes", async()
   } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
 });
 
+it("binds persisted observer health to this process and clears it on rebinding", async()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-evidence-"));
+  const host=createFakeHost(), tools=new Map();
+  host.pi.registerTool=(tool)=>tools.set(tool.name,tool);
+  const identity={pid:123,startedAt:"linux:01234567-89ab-cdef-0123-456789abcdef:12345"};
+  let calls=0, finish;
+  const session=await startSession(host,{eyes:{
+    now:host.clock.now,schedule:host.setIntervalFn,cancel:host.clearIntervalFn,
+    processIdentity:()=>identity,
+    observe:async()=>{
+      calls++;
+      if(calls===1)return {schema:"ace.hitl.observation/v1",events:[],sources:{tasks:{status:"ok"}}};
+      return new Promise(resolve=>{finish=resolve;});
+    }
+  }});
+  try {
+    const file=path.join(dir,"eyes.json");fs.writeFileSync(file,"{}");
+    await tools.get("ace_eyes").execute("start",{action:"start",configPath:file},null,null,host.commandContext);
+    let evidence=host.sessionEntries.filter(e=>e.customType==="ace-wake-eyes").at(-1).data.observerEvidence;
+    assert.deepEqual(evidence,{process:identity,observedAt:0,sources:{tasks:"ok"}});
+    await session.emit("session_tree",{});
+    evidence=host.sessionEntries.filter(e=>e.customType==="ace-wake-eyes").at(-1).data.observerEvidence;
+    assert.deepEqual(evidence,{process:identity,observedAt:null,sources:{}});
+    finish({schema:"ace.hitl.observation/v1",events:[],sources:{tasks:{status:"degraded"}}});
+    await flush();
+    evidence=host.sessionEntries.filter(e=>e.customType==="ace-wake-eyes").at(-1).data.observerEvidence;
+    assert.deepEqual(evidence.sources,{tasks:"degraded"});
+    assert.equal(host.sends.length,0,"health evidence does not wake the model");
+    await session.shutdown();
+    evidence=host.sessionEntries.filter(e=>e.customType==="ace-wake-eyes").at(-1).data.observerEvidence;
+    assert.equal(evidence.observedAt,null,"a stopped observer cannot leave fresh evidence");
+  } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
+});
+
+it("does not reuse an in-flight observation after changing the eyes configuration", async()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-reconfigure-"));
+  const host=createFakeHost(), tools=new Map();host.pi.registerTool=(tool)=>tools.set(tool.name,tool);
+  let calls=0, finish;
+  const session=await startSession(host,{eyes:{now:host.clock.now,schedule:host.setIntervalFn,cancel:host.clearIntervalFn,
+    processIdentity:()=>({pid:123,startedAt:"linux:01234567-89ab-cdef-0123-456789abcdef:12345"}),
+    observe:async()=>{
+      calls++;
+      if(calls===2)return new Promise(resolve=>{finish=resolve;});
+      return {schema:"ace.hitl.observation/v1",events:[],sources:{tasks:{status:"ok"}}};
+    }
+  }});
+  try {
+    const first=path.join(dir,"first.json"), second=path.join(dir,"second.json");
+    fs.writeFileSync(first,"{}");fs.writeFileSync(second,JSON.stringify({scope:"all"}));
+    const tool=tools.get("ace_eyes");
+    await tool.execute("start",{action:"start",configPath:first},null,null,host.commandContext);
+    host.clock.advance(30000);await flush();
+    await tool.execute("start",{action:"start",configPath:second},null,null,host.commandContext);
+    let evidence=host.sessionEntries.filter(e=>e.customType==="ace-wake-eyes").at(-1).data.observerEvidence;
+    assert.deepEqual(evidence.sources,{tasks:"ok"},"start observes the replacement config immediately");
+    finish({schema:"ace.hitl.observation/v1",events:[],sources:{tasks:{status:"degraded"}}});await flush();
+    evidence=host.sessionEntries.filter(e=>e.customType==="ace-wake-eyes").at(-1).data.observerEvidence;
+    assert.deepEqual(evidence.sources,{tasks:"ok"},"old-config results cannot replace new evidence");
+  } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
+});
+
+for(const transition of ["session_tree","session_shutdown"]) {
+  it(`a pending resume cannot persist or rearm after ${transition}`, async()=>{
+    const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-resume-race-"));
+    const host=createFakeHost(), tools=new Map();host.pi.registerTool=(tool)=>tools.set(tool.name,tool);
+    let calls=0, finish;
+    const session=await startSession(host,{eyes:{now:host.clock.now,schedule:host.setIntervalFn,cancel:host.clearIntervalFn,
+      observe:async()=>{
+        calls++;
+        if(calls===2)return new Promise(resolve=>{finish=resolve;});
+        return {schema:"ace.hitl.observation/v1",events:[],sources:{tasks:{status:"ok"}}};
+      }
+    }});
+    try {
+      const file=path.join(dir,"eyes.json");fs.writeFileSync(file,"{}");
+      await tools.get("ace_eyes").execute("start",{action:"start",configPath:file},null,null,host.commandContext);
+      await session.emit("message_end",{message:{role:"assistant",stopReason:"error",errorMessage:"quota exceeded"}});
+      const resume=host.runCommand("eyes","resume quota-verified");await flush();
+      await session.emit(transition,{});
+      const entries=host.sessionEntries.length;
+      finish({schema:"ace.hitl.observation/v1",events:[],sources:{tasks:{status:"ok"}}});
+      await resume;await flush();
+      assert.equal(host.sessionEntries.length,entries,"disposed observer must not persist after its binding changes");
+      assert.equal(host.intervals.size,0,"disposed observer must not rearm");
+    } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
+  });
+}
+
+it("a rejected old observation cannot persist after rebinding", async()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-reject-race-"));
+  const host=createFakeHost(), tools=new Map();host.pi.registerTool=(tool)=>tools.set(tool.name,tool);
+  let calls=0, rejectOld;
+  const session=await startSession(host,{eyes:{now:host.clock.now,schedule:host.setIntervalFn,cancel:host.clearIntervalFn,
+    observe:async()=>{
+      calls++;
+      if(calls===2)return new Promise((_resolve,reject)=>{rejectOld=reject;});
+      return {schema:"ace.hitl.observation/v1",events:[],sources:{tasks:{status:"ok"}}};
+    }
+  }});
+  try {
+    const file=path.join(dir,"eyes.json");fs.writeFileSync(file,"{}");
+    await tools.get("ace_eyes").execute("start",{action:"start",configPath:file},null,null,host.commandContext);
+    host.clock.advance(30000);await flush();
+    await session.emit("session_tree",{});await flush();
+    const entries=host.sessionEntries.length;
+    rejectOld(new Error("old observation failed"));await flush();
+    assert.equal(host.sessionEntries.length,entries,"disposed observer must not append a stale error");
+    assert.equal((await tools.get("ace_eyes").execute("status",{action:"status"})).details.errors,0);
+  } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
+});
+
 it("an old in-flight observation cannot overwrite source health after rebind", async()=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-rebind-race-"));
   const host=createFakeHost(), tools=new Map();
@@ -198,5 +328,19 @@ it("terminates an observation command exceeding its configured timeout", async (
   } finally {
     if (previousPath === undefined) delete process.env.PATH; else process.env.PATH = previousPath;
     fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+it("rejects native observations without source health", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ace-eyes-no-sources-"));
+  const previousPath = process.env.PATH;
+  try {
+    fs.writeFileSync(path.join(dir, "ace-overseer"), "#!/bin/sh\nprintf '%s\\n' '{\"schema\":\"ace.hitl.observation/v1\",\"events\":[]}'\n", {mode: 0o700});
+    process.env.PATH = `${dir}:${previousPath || ""}`;
+    await assert.rejects(observeHitl(dir, {syncRoutes: [], timeoutMs: 1000, recipient: "overseer", scope: "current", maxEvents: 500}),
+      /source health is missing/);
+  } finally {
+    if (previousPath === undefined) delete process.env.PATH; else process.env.PATH = previousPath;
+    fs.rmSync(dir, {recursive: true, force: true});
   }
 });

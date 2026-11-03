@@ -2,6 +2,7 @@
 
 require "digest"
 require "json"
+require_relative "../atoms/observation_sources"
 
 module Ace
   module Overseer
@@ -36,15 +37,15 @@ module Ace
           sources = {}
           events = []
 
-          collect(sources, events, "project_tasks") { project_task_events }
-          collect(sources, events, "overseer_tasks") { overseer_task_events }
-          collect(sources, events, "worktrees") { worktree_events }
-          collect(sources, events, "coworkers") { coworker_events }
+          collect(sources, events, Atoms::ObservationSources::PROJECT_TASKS) { project_task_events }
+          collect(sources, events, Atoms::ObservationSources::OVERSEER_TASKS) { overseer_task_events }
+          collect(sources, events, Atoms::ObservationSources::WORKTREES) { worktree_events }
+          collect(sources, events, Atoms::ObservationSources::COWORKERS) { coworker_events }
           if @project_sessions.configured?
-            collect(sources, events, "project_sessions") { @project_sessions.call }
+            collect(sources, events, Atoms::ObservationSources::PROJECT_SESSIONS) { @project_sessions.call }
             failed_sessions = events.select { |event| event["type"] == "project-session" && event["state"] == "unavailable" }
             unless failed_sessions.empty?
-              sources["project_sessions"] = {"status" => "degraded", "error" => "one or more configured project sessions are unavailable"}
+              sources[Atoms::ObservationSources::PROJECT_SESSIONS] = {"status" => "degraded", "error" => "one or more configured project sessions are unavailable"}
               failures = failed_sessions.map { |event| [event.fetch("key"), event.fetch("revision")] }.sort
               events << {"key" => "source:project_sessions", "revision" => revision(failures),
                          "type" => "source-health", "status" => "degraded",

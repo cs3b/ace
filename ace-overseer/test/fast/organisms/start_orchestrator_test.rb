@@ -83,7 +83,8 @@ module Organisms
 
       def agent_prompt(pane:, text:, wait: false, timeout_ms: nil, until_states: nil)
         @prompts << {pane: pane, text: text, wait: wait, timeout_ms: timeout_ms, until_states: until_states}
-        FakePaneResult.new({"status" => "sent"})
+        activity = @state == "blocked" ? "blocked" : "working"
+        FakePaneResult.new({"result" => {"type" => "agent_prompted", "agent" => {"agent_status" => activity}}})
       end
     end
 
@@ -107,9 +108,11 @@ module Organisms
       FileUtils.remove_entry(@dir) if @dir
     end
 
-    def orchestrator(executor, cwd: @root, config: @config, workspace: nil)
+    def orchestrator(executor, cwd: @root, config: @config, workspace: nil, evidence: false)
+      eyes = Object.new
+      eyes.define_singleton_method(:ready?) { |**| evidence }
       Ace::Overseer::Organisms::StartOrchestrator.new(
-        config: config, executor: executor, nav_runner: @nav_runner, workspace: workspace, cwd: cwd
+        config: config, executor: executor, nav_runner: @nav_runner, workspace: workspace, cwd: cwd, eyes_evidence: eyes
       )
     end
 
@@ -132,6 +135,12 @@ module Organisms
       assert_equal "pi", start[:kind]
       assert_equal ["--model", "zai/glm-5.3-flash", "--thinking", "high",
         "--append-system-prompt", File.join(@root, "guide.md")], start[:args]
+    end
+
+    def test_foreground_start_reports_missing_working_directory
+      report = orchestrator(FakeExecutor.new, cwd: File.join(@root, "missing")).bootstrap(dry_run: true)
+      assert_equal "blocked", report["status"]
+      assert_match(/working directory/, report["message"])
     end
 
     def test_first_start_sends_the_first_prompt_after_the_agent_is_started
@@ -247,7 +256,7 @@ module Organisms
       assert_equal "reused", report["status"]
       assert_equal "p7", report["pane"]
       assert_equal true, report["prompt_failed"]
-      assert_match(/could not be verified/, report["message"])
+      assert_match(/not yet verified/, report["message"])
       assert_empty executor.tabs, "reuse must not create a second session"
       assert_empty executor.agent_started
       assert_empty executor.prompts, "idle cannot prove a prior prompt was not delivered"
@@ -261,9 +270,73 @@ module Organisms
       report = orchestrator(executor).call
 
       assert_equal "reused", report["status"]
-      assert_equal false, report["prompt_failed"],
-        "a mid-conversation agent's first turn is already underway"
+      assert_equal true, report["prompt_failed"],
+        "working alone does not identify the original prompt or confirm observation"
+      assert_match(/not yet verified/, report["message"])
       assert_empty executor.prompts, "a working agent is never prompted"
+    end
+
+    def test_a_blocked_reused_agent_is_not_ready_or_prompted_again
+      panes = [{"id" => "p7", "title" => "overseer-project", "cwd" => @root}]
+      executor = FakeExecutor.new(panes: panes, state: "blocked",
+        pane_current: {"result" => {"workspace_id" => "ws1"}})
+      report = orchestrator(executor).call
+      assert_equal "reused", report["status"]
+      assert_equal true, report["prompt_failed"]
+      assert_match(/blocked/, report["message"])
+      assert_empty executor.prompts
+    end
+
+    def test_initial_prompt_that_leaves_an_agent_blocked_is_not_ready
+      executor = FakeExecutor.new(state: "blocked", pane_current: {"result" => {"workspace_id" => "ws1"}})
+      report = orchestrator(executor).call
+      assert_equal "started", report["status"]
+      assert_equal true, report["prompt_failed"]
+      assert_match(/blocked/, report["message"])
+      assert_equal 1, executor.prompts.size
+    end
+
+    def test_blocked_prompt_result_is_not_erased_by_a_later_working_state
+      executor = FakeExecutor.new(state: "working", pane_current: {"result" => {"workspace_id" => "ws1"}})
+      def executor.agent_prompt(**args)
+        @prompts << args
+        FakePaneResult.new({"result" => {"type" => "agent_prompted", "agent" => {"agent_status" => "blocked"}}})
+      end
+      report = orchestrator(executor).call
+      assert_equal true, report["prompt_failed"]
+      assert_match(/blocked/, report["message"])
+      assert_equal 1, executor.prompts.size
+    end
+
+    def test_malformed_prompt_acknowledgement_is_not_ready
+      executor = FakeExecutor.new(state: "working", pane_current: {"result" => {"workspace_id" => "ws1"}})
+      def executor.agent_prompt(**args)
+        @prompts << args
+        FakePaneResult.new({"result" => {"type" => "agent_prompted", "agent" => "invalid"}})
+      end
+      report = orchestrator(executor).call
+      assert_equal true, report["prompt_failed"]
+      assert_match(/did not confirm/, report["message"])
+      assert_equal 1, executor.prompts.size
+    end
+
+    def test_initial_prompt_does_not_hide_an_agent_that_disappears
+      executor = FakeExecutor.new(alive: false, pane_current: {"result" => {"workspace_id" => "ws1"}})
+      report = orchestrator(executor).call
+      assert_equal "started", report["status"]
+      assert_equal true, report["prompt_failed"]
+      assert_match(/unavailable/, report["message"])
+      assert_equal 1, executor.prompts.size
+    end
+
+    def test_malformed_probe_after_a_prompt_preserves_the_started_session
+      executor = FakeExecutor.new(pane_current: {"result" => {"workspace_id" => "ws1"}})
+      def executor.agent_get(_pane) = FakePaneResult.new(nil)
+      report = orchestrator(executor).call
+      assert_equal "started", report["status"]
+      assert_equal true, report["prompt_failed"]
+      assert_match(/malformed agent response/, report["message"])
+      assert_equal 1, executor.prompts.size
     end
 
     def test_a_done_reused_agent_is_not_prompted_again
@@ -286,6 +359,17 @@ module Organisms
       assert_equal true, report["prompt_failed"]
       assert_match(/could not\s+be verified/, report["message"])
       assert_empty executor.prompts, "an unknown-state agent is never prompted"
+    end
+
+    def test_malformed_agent_probe_never_replaces_or_prompts_the_existing_owner
+      panes = [{"id" => "p7", "title" => "overseer-project", "cwd" => @root}]
+      executor = FakeExecutor.new(panes: panes, pane_current: {"result" => {"workspace_id" => "ws1"}})
+      def executor.agent_get(_pane) = FakePaneResult.new(nil)
+      report = orchestrator(executor).call
+      assert_equal "blocked", report["status"]
+      assert_match(/malformed agent response/, report["message"])
+      assert_empty executor.tabs
+      assert_empty executor.prompts
     end
 
     def test_restart_after_an_uncertain_first_prompt_never_repeats_it
@@ -349,8 +433,10 @@ module Organisms
 
       Ace::Support::Cli::Toolchain.stub :executable, installed_launcher do
         executor = FakeExecutor.new(pane_current: {"result" => {"workspace_id" => "ws1"}})
+        evidence = Object.new
+        def evidence.ready?(**) = true
         report = Ace::Overseer::Organisms::StartOrchestrator.new(
-          config: @config, executor: executor, nav_runner: nav_runner, cwd: @root
+          config: @config, executor: executor, nav_runner: nav_runner, cwd: @root, eyes_evidence: evidence
         ).call
 
         assert_equal "started", report["status"], report.inspect

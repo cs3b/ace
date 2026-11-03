@@ -192,6 +192,30 @@ function lastWakeMessage(session) {
 }
 
 describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
+  it("persists current observer evidence after the first completed model turn", async () => {
+    const { registerEyes } = await import(pathToFileURL(path.join(path.dirname(EXT_PATH), "wake/eyes-runtime.js")).href);
+    const identity = {pid: 42, startedAt: "linux:01234567-89ab-cdef-0123-456789abcdef:10"};
+    const {session,cwd,cleanup}=await startWakeSession({loadProjected:false,
+      script:[{kind:"tool",toolName:"ace_eyes",arguments:{action:"start",configPath:"eyes.json"}},
+        {kind:"text",text:"ready"}],
+      extraFactories:[pi=>registerEyes(pi,{
+        processIdentity:()=>identity,
+        observe:async()=>({schema:"ace.hitl.observation/v1",events:[],sources:{tasks:{status:"ok"}}}),
+        schedule:()=>1,cancel:()=>{}
+      })]});
+    try {
+      fs.writeFileSync(path.join(cwd,"eyes.json"),"{}");
+      await session.prompt("first turn");
+      const branch=session.sessionManager.getBranch();
+      const binding=branch.findIndex(e=>e.customType==="ace-wake-eyes-binding" && e.data?.process?.startedAt===identity.startedAt);
+      const prompt=branch.findIndex(e=>e.message?.role==="user" && e.message.content?.some?.(p=>p.text==="first turn"));
+      const complete=branch.findIndex(e=>e.message?.role==="assistant" && e.message.stopReason==="stop");
+      const eye=branch.findLastIndex(e=>e.customType==="ace-wake-eyes" && e.data?.observerEvidence?.sources?.tasks==="ok");
+      assert.ok(binding>=0 && prompt>=0 && complete>prompt && eye>complete && eye>binding,
+        `unexpected session order: binding=${binding}, prompt=${prompt}, complete=${complete}, eyes=${eye}`);
+    } finally {cleanup();}
+  });
+
   it("recovers the exact async compaction rejection without stranding or duplicate delivery", async () => {
     const { registerEyes } = await import(pathToFileURL(path.join(path.dirname(EXT_PATH), "wake/eyes-runtime.js")).href);
     let tick, rows=[];

@@ -28,6 +28,7 @@ module Organisms
         @tabs = []
         @prompts = []
         @extra_panes = []
+        @agents = {}
       end
 
       def workspace_list
@@ -78,8 +79,11 @@ module Organisms
         FakePaneResult.new({"result" => {"root_pane" => {"pane_id" => "p-#{label}"}}})
       end
 
-      def agent_get(_pane)
-        raise Ace::Herdr::AgentNotFoundError, "no agent"
+      def agent_get(pane)
+        state = @agents[pane]
+        raise Ace::Herdr::AgentNotFoundError, "no agent" unless state
+
+        FakePaneResult.new({"result" => {"agent" => {"agent_status" => state}}})
       end
 
       def pane_run(_pane, _command)
@@ -91,12 +95,13 @@ module Organisms
       end
 
       def agent_start(name:, kind:, pane:, timeout_ms:, args: [])
+        @agents[pane] = "working"
         FakePaneResult.new({"status" => "ready"})
       end
 
       def agent_prompt(pane:, text:, wait: false, timeout_ms: nil, until_states: nil)
         @prompts << {pane: pane, text: text, wait: wait, timeout_ms: timeout_ms, until_states: until_states}
-        FakePaneResult.new({"status" => "sent"})
+        FakePaneResult.new({"result" => {"type" => "agent_prompted", "agent" => {"agent_status" => "working"}}})
       end
     end
 
@@ -160,14 +165,16 @@ module Organisms
       [path]
     end
 
-    def orchestrator(executor, cwd: @lab_root)
+    def orchestrator(executor, cwd: @lab_root, evidence: true)
       config = Ace::Overseer.config_at(cwd)
+      eyes = Object.new
+      eyes.define_singleton_method(:ready?) { |**| evidence }
       runner = ->(root:, workspace:, env:) {
         Ace::Overseer::Organisms::StartOrchestrator.new(config: Ace::Overseer.config_at(root),
-          executor: executor, cwd: root, workspace: workspace, scope: "project", env: {}).call
+          executor: executor, cwd: root, workspace: workspace, scope: "project", env: {}, eyes_evidence: eyes).call
       }
       Ace::Overseer::Organisms::StartOrchestrator.new(config: config, executor: executor,
-        cwd: cwd, project_runner: runner)
+        cwd: cwd, project_runner: runner, eyes_evidence: eyes)
     end
 
     def test_projects_without_start_yaml_use_the_project_bootstrap
@@ -179,6 +186,15 @@ module Organisms
       assert_equal "ready", report["status"], report.inspect
       assert_equal %w[overseer alpha beta], executor.workspaces_created
       assert(report["projects"].all? { |project| project["scope"] == "project" })
+    end
+
+    def test_inaccessible_lab_root_is_a_blocked_lab_report
+      config = Ace::Overseer.config_at(@lab_root)
+      report = Ace::Overseer::Organisms::StartOrchestrator.new(config: config,
+        executor: FakeExecutor.new, cwd: File.join(@lab_root, "missing")).call
+      assert_equal "blocked", report["status"]
+      assert_equal "lab", report["scope"]
+      assert_equal false, report["ready"]
     end
 
     def test_explicit_reconcile_manages_only_children_without_a_lab_agent_probe_or_boot
@@ -263,9 +279,11 @@ module Organisms
       def executor.agent_get(_pane)
         FakePaneResult.new({"result" => {"agent" => {"agent_status" => "working"}}})
       end
-      second = orchestrator(executor).call
+      second = orchestrator(executor, evidence: false).call
 
-      assert_equal "ready", second["status"]
+      assert_equal "partial", second["status"], "working reuse does not prove startup or observation"
+      assert_equal true, second["prompt_failed"]
+      assert(second["projects"].all? { |project| project["prompt_failed"] })
       assert(second["projects"].all? { |project| project["status"] == "reused" })
       assert_equal %w[overseer alpha beta], executor.workspaces_created,
         "every space is found by title, none recreated"
@@ -287,11 +305,12 @@ module Organisms
         FakePaneResult.new({"result" => {"agent" => {"agent_status" => "working"}}})
       end
 
-      report = orchestrator(executor).call
+      report = orchestrator(executor, evidence: false).call
 
-      assert_equal "ready", report["status"]
+      assert_equal "partial", report["status"], "a reused working project lacks startup evidence"
       by_id = report["projects"].to_h { |project| [project["id"], project] }
       assert_equal "reused", by_id["alpha"]["status"]
+      assert_equal true, by_id["alpha"]["prompt_failed"]
       assert_equal "p-alpha-live", by_id["alpha"]["pane"]
       assert_equal "ws-manual", by_id["alpha"]["workspace"],
         "the live session's actual space is reported"
@@ -457,7 +476,7 @@ module Organisms
       def executor.agent_get(_pane)
         FakePaneResult.new({"result" => {"agent" => {"agent_status" => "idle"}}})
       end
-      second = orchestrator(executor).call
+      second = orchestrator(executor, evidence: false).call
 
       assert_equal false, second["ready"], second.inspect
       assert_equal true, second["prompt_failed"]
@@ -478,6 +497,21 @@ module Organisms
       assert_equal true, report["prompt_failed"]
       assert_equal false, report["ready"]
       assert_equal "partial", report["status"]
+    end
+
+    def test_empty_lab_with_blocked_coordinator_is_not_ready
+      File.write(File.join(@lab_root, ".ace", "lab", "config.yml"), "topology:\n  projects: []\n")
+      executor = FakeExecutor.new
+      def executor.agent_get(_pane)
+        FakePaneResult.new({"result" => {"agent" => {"agent_status" => "blocked"}}})
+      end
+
+      report = orchestrator(executor).call
+      assert_equal "partial", report["status"]
+      assert_equal false, report["ready"]
+      assert_match(/blocked/, report["message"])
+      refute_match(/overseer is idle/, report["message"])
+      assert_equal 1, executor.prompts.length
     end
 
     def test_lab_owner_pane_in_a_foreign_cwd_is_a_conflict

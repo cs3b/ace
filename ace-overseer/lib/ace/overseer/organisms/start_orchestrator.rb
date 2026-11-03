@@ -1,11 +1,15 @@
 # frozen_string_literal: true
 
 require_relative "../atoms/start_contract"
+require_relative "../atoms/observation_sources"
 require_relative "../molecules/project_root_resolver"
 require_relative "../molecules/project_bundle"
+require_relative "../molecules/eyes_session_evidence"
 require "ace/herdr"
+require "ace/lab"
 require "ace/support/cli/toolchain"
 require "json"
+require "open3"
 
 module Ace
   module Overseer
@@ -65,7 +69,8 @@ module Ace
         #   lazily, only when a session actually boots.
         # @param cwd [String] invocation directory
         def initialize(config: nil, executor: nil, root_resolver: nil, nav_runner: nil,
-          workspace: nil, workspace_factory: nil, cwd: Dir.pwd, env: ENV, scope: nil, project_runner: nil)
+          workspace: nil, workspace_factory: nil, cwd: Dir.pwd, env: ENV, scope: nil, project_runner: nil,
+          eyes_evidence: nil)
           @config = config || Ace::Overseer.config
           @executor = executor || Ace::Herdr::Molecules::HerdrExecutor.new
           @control_surface = Ace::Herdr::Organisms::ControlSurface.new(executor: @executor)
@@ -77,6 +82,7 @@ module Ace
           @env = env
           @scope = scope
           @project_runner = project_runner || Molecules::ProjectBundle.new
+          @eyes_evidence = eyes_evidence || Molecules::EyesSessionEvidence.new
         end
 
         # @param dry_run [Boolean] report the plan without creating a
@@ -113,7 +119,7 @@ module Ace
             if state
               # A live process does not prove that its first prompt was
               # delivered. Never repeat an uncertain submission on reuse.
-              warning = reused_session_warning(state)
+              warning = reused_session_warning(state, pane: owner["id"], root: root)
               return report.merge("status" => "reused", "pane" => owner["id"],
                 "workspace" => owner["workspace_id"] || owner["workspace"],
                 "prompt_failed" => !warning.nil?,
@@ -132,7 +138,7 @@ module Ace
           report["workspace"] = workspace
 
           pane = boot_session(workspace, label, root, plan, instructions_path)
-          prompt_warning = first_prompt(pane)
+          prompt_warning = first_prompt(pane, root)
           report.merge("status" => "started", "pane" => pane,
             "prompt_failed" => !prompt_warning.nil?,
             "message" => prompt_warning ||
@@ -171,6 +177,8 @@ module Ace
             "root" => root, "profile" => plan["profile_name"],
             "instructions" => {"source" => source, "path" => guide},
             "command" => command, "message" => "launch the coordinator in the current terminal"}
+        rescue SystemCallError => e
+          blocked("foreground start cannot access its working directory: #{e.class}")
         end
 
         # Explicit tool available to the running Lab agent. This operation
@@ -191,7 +199,7 @@ module Ace
         # id/path) — never from the sanitized public projection and
         # never derived from an id/label/repo name. The lab space hosts
         # ONLY the lab overseer session; EACH project boots in its OWN
-        # herdr space (created/reused by the project's session label),
+        # herdr space (created/reused by its topology id),
         # so project sessions are isolated from each other and from the
         # lab overseer. Each project starts through the SAME operation
         # as a standalone start (its own cascade, its own session
@@ -266,7 +274,7 @@ module Ace
           # An empty configured list is a valid idle lab: the lab
           # overseer itself still runs (and must be initialized).
           if projects.empty?
-            message = reconcile ? "no project children configured" : "no projects configured; the lab overseer is idle"
+            message = reconcile ? "no project children configured" : "no projects configured"
             message += "; #{session["message"]}" if session["message"]
             return base.merge("status" => lab_ready ? "ready" : "partial",
               "ready" => lab_ready, "project_count" => 0, "message" => message)
@@ -280,9 +288,10 @@ module Ace
           base.merge("status" => ready ? "ready" : "partial", "ready" => ready,
             "projects" => results, "project_count" => results.size,
             "message" => summary)
-        rescue Ace::Overseer::Error, Ace::Herdr::ExecutorError => e
+        rescue Ace::Overseer::Error, Ace::Herdr::ExecutorError, SystemCallError => e
           # A lab-level failure keeps the lab context (scope/root/label)
           # so callers can tell it from a per-project blocked result.
+          base ||= blocked(nil).merge("scope" => "lab", "projects" => [], "project_count" => 0, "ready" => false)
           base.merge("status" => "blocked", "message" => "lab start failed: #{e.message}")
         end
 
@@ -349,7 +358,7 @@ module Ace
             end
             state = agent_state(owner["id"])
             if state
-              warning = reused_session_warning(state)
+              warning = reused_session_warning(state, pane: owner["id"], root: lab_root)
               return {"status" => "reused", "pane" => owner["id"], "replaced_pane" => nil,
                       "prompt_failed" => !warning.nil?, "message" => warning}
             end
@@ -358,7 +367,7 @@ module Ace
           end
 
           pane = boot_session(workspace, label, lab_root, plan, instructions_path)
-          prompt_warning = first_prompt(pane)
+          prompt_warning = first_prompt(pane, lab_root)
           {"status" => "started", "pane" => pane, "replaced_pane" => replaced,
            "prompt_failed" => !prompt_warning.nil?, "message" => prompt_warning}
         rescue Ace::Overseer::Error => e
@@ -547,12 +556,12 @@ module Ace
         # confirmation comes from first_prompt's activity gate.
         def agent_state(pane)
           json = @executor.agent_get(pane).parsed_json
-          return nil unless json.is_a?(Hash)
+          raise Ace::Overseer::Error, "herdr returned a malformed agent response; preserve the existing session" unless json.is_a?(Hash)
 
           agent = json["agent"]
           agent = json["result"]["agent"] if agent.nil? && json["result"].is_a?(Hash)
           agent = json["result"] if agent.nil? && json["result"].is_a?(Hash)
-          return "" unless agent.is_a?(Hash)
+          raise Ace::Overseer::Error, "herdr returned no agent identity; preserve the existing session" unless agent.is_a?(Hash)
 
           agent["agent_status"].to_s
         rescue Ace::Herdr::AgentNotFoundError
@@ -596,36 +605,59 @@ module Ace
         # `agent start` success only means the interactive agent is
         # ready for input; the first prompt begins the session's first
         # turn (state read, /eyes arming). Delivery is CONFIRMED through
-        # herdr's activity gate (`agent prompt --wait`): success means
-        # herdr observed working/blocked activity, so the turn actually
-        # began — a stall, timeout or pre-send failure is an uncertain
+        # herdr's activity gate (`agent prompt --wait`) observes activity;
+        # it does not prove that this exact prompt was consumed or that eyes
+        # are armed. A stall, timeout or pre-send failure is an uncertain
         # outcome, returned as a visible warning instead of a readiness
         # claim. The process exists, but may already have begun its turn.
-        def first_prompt(pane)
-          @executor.agent_prompt(pane: pane, text: FIRST_TURN_PROMPT,
+        def first_prompt(pane, root)
+          response = @executor.agent_prompt(pane: pane, text: FIRST_TURN_PROMPT,
             wait: true, until_states: %w[working blocked], timeout_ms: FIRST_TURN_TIMEOUT_MS)
-          nil
-        rescue Ace::Herdr::ExecutorError => e
+          observed = response.parsed_json
+          result = observed.is_a?(Hash) ? observed["result"] : nil
+          agent = result.is_a?(Hash) && result["type"] == "agent_prompted" ? result["agent"] : nil
+          activity = agent.is_a?(Hash) ? agent["agent_status"] : nil
+          unless activity == "working"
+            detail = activity == "blocked" ? " (blocked)" : ""
+            return "the first prompt did not confirm working activity#{detail}; " \
+              "inspect the existing session before taking further action"
+          end
+          state = agent_state(pane)
+          unless %w[working idle done].include?(state)
+            description = state.nil? ? "unavailable" : (state.empty? ? "unknown" : state)
+            return "the agent is #{description}; its first turn or readiness " \
+              "cannot be confirmed — inspect the existing session before taking further action"
+          end
+          observation_warning(pane, root)
+        rescue Ace::Herdr::ExecutorError, Ace::Overseer::Error => e
           "the agent is started, but its first turn could not be " \
             "confirmed delivered (#{e.message}); inspect the existing session " \
               "and resolve the uncertain delivery before taking further action"
         end
 
         # A REUSED live agent proves a process, not a completed start.
-        # Working/blocked is live activity. An idle or done process does not
-        # distinguish a never-submitted prompt from one which already ran.
+        # No process state distinguishes the original prompt from later
+        # activity, or proves that the standing observer is armed.
         # Report uncertainty and preserve the session rather than resend.
-        def reused_session_warning(state)
+        def reused_session_warning(state, pane:, root:)
           case state
-          when "working", "blocked"
-            nil
-          when "idle", "done"
-            "the reused agent is #{state}; its first turn could not be " \
-              "verified from process state alone — inspect the session before relying on it"
+          when "working", "idle", "done"
+            observation_warning(pane, root)
+          when "blocked"
+            "the reused agent is blocked and cannot be considered ready — inspect its pending decision or error"
           else
             "the reused agent state is '#{state}'; its first turn could not " \
               "be verified — inspect the session before relying on it"
           end
+        end
+
+        def observation_warning(pane, root)
+          required = Atoms::ObservationSources::REQUIRED.dup
+          required << Atoms::ObservationSources::PROJECT_SESSIONS if File.file?(File.join(root, ".ace/lab/config.yml"))
+          return nil if @eyes_evidence.ready?(pane: pane, root: root, prompt: FIRST_TURN_PROMPT, required_sources: required)
+
+          "first turn and live eyes observation are not yet verified; required sources: #{required.join(", ")}; " \
+            "preserve the session and recheck after its state changes"
         end
 
         def dig_pane(json)

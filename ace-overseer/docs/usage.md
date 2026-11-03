@@ -84,14 +84,16 @@ Behavior:
   `herdr agent start` success only means the interactive agent is ready for
   input, the start submits a first-turn prompt right after the agent starts —
   the session actually begins its first turn (state read, `/eyes` arming).
-  Delivery is confirmed through herdr's activity gate (`agent prompt
-  --wait`): success means observed working activity, so the turn began. A
-  delivery failure after a started agent never reports the start as failed:
+  Herdr's activity gate (`agent prompt --wait`) only confirms working
+  activity. Readiness also requires the completed first turn and fresh,
+  healthy eyes evidence tied to the current live Pi process and session. A
+  delivery failure after a started agent does not remove that agent:
   the report stays `started` with `prompt_failed: true` and an uncertain
   delivery warning. A later start never re-sends the prompt solely because a
   reused agent is idle or done: either state can follow a delivered prompt.
-  Such reuse remains unconfirmed until the existing session is inspected;
-  a working/blocked agent is never interrupted.
+  A healthy reused session can become ready once its current observation is
+  verified; a blocked agent is never interrupted. Process identity evidence
+  currently supports Linux only; other systems remain unconfirmed.
 - The report carries `status` (`started|reused|blocked|dry_run`), `scope`,
   `root`, `label`, `workspace`, `pane`, `agent`, `profile`, `instructions`
   (`source` + resolved `path`) and a `message`. Exit 0 only for a ready
@@ -153,15 +155,14 @@ explicitly through `start --scope lab`:
   nesting): the lab context owns the per-project spaces by creating and
   reusing them from this one start flow.
 - Statuses: `ready` (all projects started/reused AND every first turn
-  confirmed delivered — the lab overseer's included; an empty configured
+  completed with live, healthy eyes — the lab overseer's included; an empty configured
   list is a valid idle lab once its own session is initialized), `partial`
   (an unhealthy project — or a session whose first turn failed or stays
   unconfirmed — is reported with its concrete reason while healthy projects
   run — never false success), `blocked` (unreadable topology / conflicting
   roles). Repeated start reuses live sessions and never closes manual panes.
-  An idle or done reused session remains unconfirmed without trustworthy
-  first-turn evidence, even if it was previously healthy. No first prompt is
-  re-sent automatically; inspect the session to resolve uncertainty.
+  A reused session remains unconfirmed without trustworthy first-turn and
+  current-process observation evidence. No first prompt is re-sent automatically.
 - `--dry-run` lists the plan (space + per-project would_start) and creates
   nothing. The report carries per-project results (`projects`), the count,
   and the lab-level readiness; exit 0 for ready, non-zero for partial and

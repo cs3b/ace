@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require "ace/hitl/molecules/event_observation"
 require "digest"
+require_relative "../atoms/observation_sources"
 
 module Ace
   module Overseer
@@ -41,9 +42,9 @@ module Ace
           if projection.nil?
             # A degraded HITL source degrades only itself: the local
             # sources keep projecting and the failure is visible data.
-            events = local.fetch("events") + remote.fetch("events") + [health_marker("hitl", hitl_error)]
+            events = local.fetch("events") + remote.fetch("events") + [health_marker(Atoms::ObservationSources::HITL, hitl_error)]
             sources = local.fetch("sources").merge(remote.fetch("sources")).merge(
-              "hitl" => {"status" => "degraded", "error" => "#{hitl_error.class}: #{hitl_error.message}"}
+              Atoms::ObservationSources::HITL => {"status" => "degraded", "error" => "#{hitl_error.class}: #{hitl_error.message}"}
             )
             ensure_budget!(events.length, limit)
             return {"schema" => "ace.hitl.observation/v1",
@@ -67,7 +68,7 @@ module Ace
               .sort_by { |row| row["key"] },
             "settled" => settled,
             "sources" => local.fetch("sources").merge(remote.fetch("sources"))
-              .merge("hitl" => {"status" => "ok"}))
+              .merge(Atoms::ObservationSources::HITL => {"status" => "ok"}))
         end
 
         private
