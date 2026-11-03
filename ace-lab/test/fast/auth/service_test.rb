@@ -79,6 +79,11 @@ module Ace
           @mount_namespace = File.open(File::NULL)
         end
 
+        def test_rejects_noncallable_principal_at_construction
+          error = assert_raises(ArgumentError) { Service.new(principal: "worker") }
+          assert_match(/principal must be callable/, error.message)
+        end
+
         def teardown
           @peer_handle.close unless @peer_handle.closed?
           @main_handle.close unless @main_handle.closed?

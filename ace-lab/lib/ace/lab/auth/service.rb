@@ -37,10 +37,12 @@ module Ace
 
         # @param authorization_path [String] trusted document location
         # @param runner [Proc] argv runner for the exec'd child
+        # @param principal [Proc, nil] trusted callable returning the account name
         # @param session [SessionPeer::Identity, nil] authenticated peer
         #   supplied by a trusted system entry point, never client fields
         # @param issuer_invocation [String, nil] trusted systemd issuer invocation
         def initialize(authorization_path: nil, runner: nil, principal: nil, session: nil, issuer_invocation: nil)
+          raise ArgumentError, "principal must be callable" unless principal.nil? || principal.respond_to?(:call)
           @authorization_path = authorization_path || Ace::Lab.authorization_path
           @injected_runner = !runner.nil?
           if session
