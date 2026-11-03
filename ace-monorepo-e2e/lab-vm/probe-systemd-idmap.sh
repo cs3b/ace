@@ -61,22 +61,20 @@ fi
 /usr/bin/nsenter --target "$pid" --mount -- /bin/mount --bind \
   -o "X-mount.idmap=u:$owner_uid:$session_uid:1 g:$owner_gid:$session_gid:1" \
   "$probe_dir/project" "$probe_dir/project"
+runuser -u mo -- mkfifo "$probe_dir/project/gate" "$probe_dir/project/ready" "$probe_dir/project/done"
 /usr/bin/nsenter --target "$pid" --mount -- /usr/bin/setpriv --no-new-privs \
   --reuid="$session_uid" --regid="$session_gid" --clear-groups \
-  env HOME="$probe_dir" GIT_CONFIG_NOSYSTEM=1 git -C "$probe_dir/project" \
-  worktree add -qb test "$probe_dir/project/.ace-wt/test"
-/usr/bin/nsenter --target "$pid" --mount -- /usr/bin/setpriv --no-new-privs \
-  --reuid="$session_uid" --regid="$session_gid" --clear-groups \
-  env HOME="$probe_dir" GIT_CONFIG_NOSYSTEM=1 sh -c '
+  env HOME="$probe_dir" GIT_CONFIG_NOSYSTEM=1 /bin/bash -c '
+    set -e
+    exec 4<> "$1/ready"; printf "ready\n" >&4
+    exec 3<> "$1/gate"; IFS= read -r -t 15 signal <&3; [ "$signal" = go ]
+    git -C "$1" worktree add -qb test "$1/.ace-wt/test"
     echo change >> "$1/.ace-wt/test/README"
     git -C "$1/.ace-wt/test" add README
     git -C "$1/.ace-wt/test" commit -qm change
-  ' sh "$probe_dir/project"
-[ "$(stat -c '%u:%g' "$probe_dir/project/.ace-wt/test/README")" = "$owner_uid:$owner_gid" ]
-runuser -u mo -- mkfifo "$probe_dir/project/gate" "$probe_dir/project/ready"
-/usr/bin/nsenter --target "$pid" --mount -- /usr/bin/setpriv --no-new-privs \
-  --reuid="$session_uid" --regid="$session_gid" --clear-groups \
-  /bin/bash -c 'exec 4<> "$1/ready"; printf "ready\n" >&4; exec 3<> "$1/gate"; IFS= read -r -t 15 signal <&3; [ "$signal" = go ]; exec /bin/sleep 60' bash "$probe_dir/project" &
+    exec 5<> "$1/done"; printf "done\n" >&5
+    exec /bin/sleep 60
+  ' bash "$probe_dir/project" &
 child=$!
 /usr/bin/timeout 5 /bin/sh -c 'IFS= read -r signal < "$1"; [ "$signal" = ready ]' sh "$probe_dir/project/ready"
 [ "$(awk '/^Uid:/ {print $3}' "/proc/$child/status")" = "$session_uid" ]
@@ -86,6 +84,8 @@ child=$!
   AttachProcessesToUnit ssau "$unit" '' 1 "$child" >/dev/null
 grep -F "/$unit" "/proc/$child/cgroup" >/dev/null
 /usr/bin/timeout 5 /bin/sh -c 'printf "go\n" > "$1"' sh "$probe_dir/project/gate"
+/usr/bin/timeout 10 /bin/sh -c 'IFS= read -r signal < "$1"; [ "$signal" = done ]' sh "$probe_dir/project/done"
+[ "$(stat -c '%u:%g' "$probe_dir/project/.ace-wt/test/README")" = "$owner_uid:$owner_gid" ]
 /usr/bin/systemctl stop "$unit"
 attempted=0
 child_status=0
@@ -96,4 +96,4 @@ case "$child_status" in
   *) echo "attached child exited unexpectedly: $child_status" >&2; exit 1 ;;
 esac
 [ -z "$(runuser -u mo -- env HOME="$probe_dir" GIT_CONFIG_NOSYSTEM=1 git -C "$probe_dir/project/.ace-wt/test" status --porcelain)" ]
-printf 'dynamic systemd UID mapped project and stopped attached child: pass\n'
+printf 'attached dynamic systemd UID committed in mapped project and stopped with unit: pass\n'
