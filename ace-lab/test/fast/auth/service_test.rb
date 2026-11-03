@@ -84,6 +84,13 @@ module Ace
           assert_match(/principal must be callable/, error.message)
         end
 
+        def test_invalid_environment_names_are_rejected_at_profile_load
+          ["BAD=NAME", "BAD\0NAME"].each do |name|
+            doc = {"auth" => {"profiles" => {"test" => {"provider" => "env", "env_names" => [name]}}}}
+            assert_raises(Ace::Lab::InvalidConfigurationError) { ProfileSchema.normalize(doc) }
+          end
+        end
+
         def teardown
           @peer_handle.close unless @peer_handle.closed?
           @main_handle.close unless @main_handle.closed?
