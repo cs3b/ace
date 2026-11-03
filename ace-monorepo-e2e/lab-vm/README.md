@@ -147,6 +147,19 @@ read the branch. Run the copied script with `/bin/sh probe-project-idmap.sh`.
 The probe removes its temporary repository and mounts; it tests a filesystem
 primitive only, not session isolation, credential issuance or acceptance.
 
+`probe-installed-eyes.rb` checks the installed observer and reader together
+as the session account on Linux. Set `GEM_HOME` to the candidate and
+`GEM_PATH` to the candidate plus installed dependencies, then run:
+
+```sh
+ruby probe-installed-eyes.rb /absolute/path/to/node HERDR_VERSION COWORKER_VERSION LAB_VERSION WAKE_VERSION OVERSEER_VERSION
+```
+
+It creates a temporary synthetic Pi transcript and synthetic Herdr binding,
+but uses the live Node process's real UID and Linux birth identity. It checks
+acceptance while that process runs and refusal after exit. It does not control
+Herdr or replace a live-session acceptance test.
+
 ### Restoring a compressed diagnostic export
 
 Some older diagnostic exports may be kept as `UUID.utm.zip` with a private

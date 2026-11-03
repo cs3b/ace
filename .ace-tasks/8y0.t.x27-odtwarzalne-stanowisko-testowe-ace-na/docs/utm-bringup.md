@@ -212,6 +212,8 @@ The versioned `ace-monorepo-e2e/lab-vm/probe-project-idmap.sh` repeated that Git
 
 From committed source `aa96ead6ccd9722621a1d910ff20b8bdb6687849`, local candidates `ace-overseer 0.28.2.pre.utm30` and `ace-wake 0.2.1.pre.utm30` were independently built twice with matching SHA-256 values `6cf19c5146b37bea0614a3ad4fd2df59676eb499b667b8888c053f76e8377b4e` and `74329c91a04e328f5d2441202236583fd57ac7aa8f28f2255894245d59a7b59d`, respectively. The guest verified both hashes and installed them under the separate `/opt/ace/probe-eyes-utm30`; the active manifest and runtime were not changed. As `mo` with `ACE_TOOLCHAIN=installed`, the installed Ruby reader and installed JavaScript extension agreed on the Linux birth identity and UID of the same live Node process. This does not exercise a live Herdr pane, session evidence end-to-end, an isolated session or either requested acceptance scenario.
 
+A further installed-mode Linux component probe wrote a synthetic Pi session with the installed JavaScript extension's real Node process identity and supplied a synthetic Herdr pane binding. The installed Ruby reader accepted the evidence while that process was alive and rejected it after the process exited. The temporary file and process were removed. This probe is versioned as `ace-monorepo-e2e/lab-vm/probe-installed-eyes.rb` and its exact saved version passed on the VM. Both the transcript and the Herdr binding were synthetic, so this is not the live-pane acceptance check.
+
 ## E2E authoring decision (pending implementation)
 
 | Candidate | Decision now | Why E2E and public surface | Relevant unit coverage reviewed |
