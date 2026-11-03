@@ -18,8 +18,9 @@ module Ace::Lab::Auth
         result = launcher.start(unit: unit, terminal: slave)
         assert_equal unit.name, result.unit
         assert_equal 123, result.transport_pid
-        assert_equal ["/usr/bin/systemd-run", "/opt/ace/bin/pi"], verified
-        assert_equal unit.argv, observed.first.drop(1)
+        assert_equal ["/usr/bin/systemd-run", "/opt/ace/bin/pi", RbConfig.ruby, SessionLauncher::ENTRY], verified
+        assert_equal unit.with_preparation_entry(ruby: RbConfig.ruby, entry: SessionLauncher::ENTRY).argv, observed.first.drop(1)
+        assert File.file?(SessionLauncher::ENTRY)
         assert_equal true, observed.last[:unsetenv_others]
         assert_equal true, observed.last[:close_others]
         assert_equal slave, observed.last[:in]

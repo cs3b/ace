@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "session_unit"
+require "rbconfig"
 require "ace/runtime/molecules/protected_socket"
 
 module Ace
@@ -12,6 +13,7 @@ module Ace
       class SessionLauncher
         Launch = Data.define(:unit, :transport_pid)
         Identity = Data.define(:unit, :invocation_id, :process, :pidfd)
+        ENTRY = File.expand_path("../../../../libexec/session-entry", __dir__).freeze
 
         def initialize(privileged: Process.euid.zero?, platform: Ace::Runtime::Molecules::ProtectedLinux.new,
           verify_path: nil, spawn: Process.method(:spawn), manager_factory: nil)
@@ -68,11 +70,14 @@ module Ace
           end
           @verify_path.call("/usr/bin/systemd-run")
           @verify_path.call(unit.executable)
+          @verify_path.call(RbConfig.ruby)
+          @verify_path.call(ENTRY)
+          gated_unit = unit.with_preparation_entry(ruby: RbConfig.ruby, entry: ENTRY)
           # An inherited Bundler, loader, credential or Ruby environment must
           # never reach the privileged systemd client. SessionUnit supplies
           # the configured child environment separately.
           pid = @spawn.call({"PATH" => "/usr/bin:/bin", "LANG" => "C", "LC_ALL" => "C"},
-            *unit.argv, in: terminal, out: terminal, err: terminal,
+            *gated_unit.argv, in: terminal, out: terminal, err: terminal,
             unsetenv_others: true, close_others: true)
           Launch.new(unit: unit.name, transport_pid: pid)
         rescue Ace::Runtime::Error, SystemCallError, IOError => error

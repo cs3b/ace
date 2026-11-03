@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "ace/lab/auth/session_entry"
+
+begin
+  raise Ace::Lab::Auth::Error, "configured session arguments required" unless ARGV.shift == "--"
+  Ace::Lab::Auth::SessionEntry.run(ARGV)
+rescue Ace::Lab::Auth::Error, SystemCallError, IOError
+  warn "ace-lab: isolated session did not complete preparation"
+  exit 1
+end

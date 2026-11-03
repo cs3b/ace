@@ -32,6 +32,11 @@ module Ace
         def name = "ace-auth-session-#{@role}-#{@id}.service"
         def executable = @command.first.dup
 
+        def with_preparation_entry(ruby:, entry:)
+          self.class.new(role: @role, id: @id, environment: @environment,
+            command: [ruby, entry, "--", *@command])
+        end
+
         def argv
           properties = {
             "Type" => "exec", "Slice" => SessionPeer::SLICE,
