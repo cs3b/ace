@@ -18,7 +18,7 @@ node_version = manifest['node']['version']
 if len(versions) != 1 or not re.fullmatch(r'[A-Za-z0-9.]+', versions[0]) or not re.fullmatch(r'[0-9.]+', node_version):
     raise SystemExit('invalid pinned runtime versions')
 source = os.path.join('/opt/ace/runtime/gems/gems', 'ace-wake-' + versions[0], 'handbook/extensions/ace-wake')
-integration = '/home/mo/.pi/agent/extensions/herdr-agent-state.ts'
+integration = '/opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts'
 if not os.path.isfile(os.path.join(source, 'index.js')) or not os.path.isfile(integration):
     raise SystemExit('required installed extensions are unavailable')
 
@@ -83,6 +83,19 @@ try:
         check = subprocess.run(['/usr/sbin/runuser', '-u', 'mo', '--', '/usr/bin/test', '-w', path], timeout=10)
         if check.returncode != 1:
             raise RuntimeError('managed extension write check failed or agent has write access')
+    installed = '/opt/ace/runtime/pi-agent/extensions'
+    installed_entries = inventory(['--no-extensions', '--extension', os.path.join(installed, 'ace-wake/index.js'),
+                                   '--extension', os.path.join(installed, 'herdr-agent-state.ts')])
+    for name in ('eyes', 'watch'):
+        matches = [entry for entry in installed_entries if entry.get('name') == name]
+        if len(matches) != 1 or not str((matches[0].get('sourceInfo') or {}).get('path', '')).startswith(installed + '/'):
+            raise RuntimeError('installed projection did not provide ' + name)
+    if 'untrusted-probe' in {entry.get('name') for entry in installed_entries}:
+        raise RuntimeError('installed projection loaded a user extension')
+    for path in (installed, os.path.join(installed, 'ace-wake'),
+                 os.path.join(installed, 'ace-wake/index.js'), integration):
+        if subprocess.run(['/usr/sbin/runuser', '-u', 'mo', '--', '/usr/bin/test', '-w', path], timeout=10).returncode != 1:
+            raise RuntimeError('installed extension is writable or cannot be checked')
     print('protected Pi extensions loaded; user extension excluded; agent cannot write managed files')
     passed = True
 finally:
