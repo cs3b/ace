@@ -1378,6 +1378,32 @@ module Ace
           refute_includes corrupt.keys, "_path"
         end
 
+        def test_corrupt_lease_blocks_new_issuance_without_reminting
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          File.write(File.join(@dir, "leases", "#{lease.fetch("id")}.json"), "{")
+
+          error = assert_raises(Refusal) do
+            svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: %w[ace])
+          end
+          assert_match(/corrupt/, error.message)
+          assert_equal 1, @fake.issued.length
+        end
+
+        def test_unattributable_lease_blocks_new_issuance
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          svc.store.update(lease.fetch("id")) { |record| record.delete("task") }
+
+          assert_raises(Error) { svc.revoke(lease_id: lease.fetch("id")) }
+          assert_raises(Refusal) do
+            svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: %w[ace])
+          end
+          assert_equal 1, @fake.issued.length
+        end
+
         # R6 (re-review): a REALLY spawned child must not inherit any
         # ambient credential override the lease does not contain — the
         # child environment is an allowlist, not a merge.

@@ -431,6 +431,9 @@ module Ace
         # recorded — never a claimed revocation.
         def revoke(lease_id:, force: false)
           lease = @store.load(lease_id)
+          unless %w[task assignment profile role].all? { |field| lease[field].is_a?(String) && !lease[field].empty? }
+            raise Error, "lease correlation is incomplete; host recovery is required"
+          end
           @store.with_correlation_lock(task: lease.fetch("task"), assignment: lease.fetch("assignment"),
             profile: lease.fetch("profile"), role: lease.fetch("role")) do
             revoke_locked(lease_id: lease_id, force: force)
@@ -684,7 +687,14 @@ module Ace
         # second mint, never treating a local pending record as a
         # remote revocation.
         def settle_unresolved(task:, assignment:, profile:, role:, principal:)
-          matching = @store.all.select do |record|
+          records = @store.all
+          if records.any? { |record| record["corrupt"] ||
+              %w[task assignment profile role].any? { |field| !record[field].is_a?(String) || record[field].empty? } ||
+              !%w[preparing issued revoke-pending revoked].include?(record["state"]) }
+            raise Refusal.new("a lease record is corrupt or incomplete and may represent an unresolved grant; " \
+              "no new lease can be issued until the host owner resolves it")
+          end
+          matching = records.select do |record|
             record["task"] == task && record["assignment"] == assignment &&
               record["profile"] == profile && record["role"] == role
           end

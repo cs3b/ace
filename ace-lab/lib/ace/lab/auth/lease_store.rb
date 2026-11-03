@@ -278,15 +278,15 @@ module Ace
 
         def atomic_write(path, lease)
           FileUtils.mkdir_p(@dir)
-          temporary = "#{path}.#{Process.pid}.tmp"
-          File.open(temporary, "w") do |file|
+          temporary = "#{path}.#{SecureRandom.hex(16)}.tmp"
+          created = false
+          File.open(temporary, File::WRONLY | File::CREAT | File::EXCL, 0o600) do |file|
+            created = true
+            file.chmod(0o600)
             file.write(JSON.pretty_generate(lease))
             file.flush
             file.fsync
           end
-          # 0600 BEFORE the rename: the record never exists at the target
-          # path with umask-default permissions, even for an instant.
-          FileUtils.chmod(0o600, temporary)
           begin
             File.rename(temporary, path)
           rescue Errno::ENOENT
@@ -298,7 +298,7 @@ module Ace
         rescue SystemCallError, IOError => e
           raise Error, "lease record write is unavailable (#{e.class})"
         ensure
-          if temporary
+          if created
             begin
               File.unlink(temporary)
             rescue SystemCallError
