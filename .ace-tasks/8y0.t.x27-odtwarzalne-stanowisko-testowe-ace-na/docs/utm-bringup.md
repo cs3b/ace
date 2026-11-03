@@ -240,6 +240,8 @@ Diagnostic utm37 (SHA-256 `f459e436f84d43b53df142e2dde2e6fb184a8597b87e0b786fbfb
 
 The `--check-detached-descendant` diagnostic on utm37 confirmed a separate lifecycle failure: a command can exit successfully after starting a new session while its detached child remains in the worker cgroup. The probe then stopped its own temporary systemd unit. A successful parent exit is therefore not sufficient to authorize credential cleanup or task completion. Session issuance remains disabled until descendants are contained and their exit is proven.
 
+A separate `probe-cgroup-containment.py` passed on the retained VM with a non-delegated DynamicUser unit: a privilege-dropped process entered a root-controlled per-command cgroup, could not move back to the parent, and its detached child was killed without stopping the session main process. The temporary cgroup and unit were removed. An earlier attempt inspected the service before its dynamic UID was applied; using systemd `Type=exec` corrected that probe. This demonstrates an OS primitive only; ACE does not yet create or enforce the per-command cgroup.
+
 The public `ace-lab auth` CLI currently constructs a local `Service` directly; it has no session socket client for the guarded issuer. Consequently the successful socket probes use a test client and do not establish a usable public request/exec flow for a dynamic-UID worker. That integration remains required along with the issuer supervision gate and session launcher.
 
 ## E2E authoring decision (pending implementation)

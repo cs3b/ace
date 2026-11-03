@@ -177,6 +177,14 @@ mode intentionally stops only the disposable unit created by the probe.
 it confirms that a detached child survives a successful runner exit, then
 stops the probe's own unit. A positive diagnostic does not mean acceptance.
 
+`probe-cgroup-containment.py` runs as root in a disposable working VM. It
+starts its own non-delegated DynamicUser unit and puts a privilege-dropped
+test command in a root-controlled child cgroup. It checks that the command
+cannot move itself to the parent, starts a detached descendant, kills the
+child cgroup and confirms that the descendant exits while the unit's main
+process remains alive. It removes its temporary cgroup and unit. This checks
+OS primitives only; it does not prove ACE's session runner uses them.
+
 `probe-authenticated-runner.py` takes the same arguments. It creates a local
 socket and a temporary dynamic-UID systemd session, then invokes the installed
 `SessionPeer`, `SessionAttachment` and `SessionRunner` together to touch a
