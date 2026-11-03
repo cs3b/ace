@@ -6,6 +6,7 @@ import os
 import pty
 import select
 import subprocess
+import sys
 import time
 import uuid
 
@@ -25,6 +26,14 @@ command = ["/usr/bin/systemd-run", "--quiet", "--wait", "--pipe", "--unit=" + un
            "--property=DynamicUser=yes", "--property=NoNewPrivileges=yes",
            "--property=CapabilityBoundingSet=", "--property=PrivateMounts=yes",
            "/usr/bin/python3", "-c", program]
+if len(sys.argv) == 2:
+    command = json.loads(sys.argv[1])
+    assert isinstance(command, list) and command[0] == "/usr/bin/systemd-run"
+    units = [arg.removeprefix("--unit=") for arg in command if arg.startswith("--unit=")]
+    assert len(units) == 1 and units[0].startswith("ace-auth-session-worker-")
+    unit = units[0]
+else:
+    assert len(sys.argv) == 1
 process = None
 try:
     process = subprocess.Popen(command, stdin=slave, stdout=slave, stderr=slave)
@@ -49,6 +58,7 @@ try:
     assert process.wait(timeout=3) == 0, output.decode(errors="replace")
     result = json.loads(output.decode().strip())
     assert result["uid"] != 0 and result["tty"] is True, result
+    assert result.get("foreground") == result["pid"], result
     print(json.dumps({"unit": unit, "observed": result}))
 finally:
     subprocess.run(["/usr/bin/systemctl", "stop", unit], check=False, timeout=15,
