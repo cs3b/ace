@@ -333,6 +333,9 @@ module Ace
           unless lease["principal"] == @principal.call && session_matches?(lease)
             raise Refusal.new("lease '#{lease_id}' belongs to a different principal")
           end
+          unless issuer_matches?(lease)
+            raise Refusal.new("lease '#{lease_id}' belongs to a different issuer invocation")
+          end
           if Process.euid.zero? && !@session_uid && !@injected_runner
             raise Refusal.new("root execution requires an authenticated non-root session identity")
           end
@@ -340,7 +343,7 @@ module Ace
 
           @store.with_exec_lock(lease_id) do
             lease = @store.load(lease_id)
-            unless lease["principal"] == @principal.call && session_matches?(lease) && @store.live?(lease) && !lease.key?("execution")
+            unless lease["principal"] == @principal.call && session_matches?(lease) && issuer_matches?(lease) && @store.live?(lease) && !lease.key?("execution")
               raise Refusal.new("lease '#{lease_id}' is no longer live for this principal")
             end
             profile = profile_for(lease["profile"])
@@ -383,7 +386,7 @@ module Ace
             # execution before starting a child so recovery cannot mistake
             # a dead issuer for proof that its descendants have stopped.
             @store.update(lease["id"]) do |record|
-              unless record["principal"] == @principal.call && session_matches?(record) && @store.live?(record) && !record.key?("execution")
+              unless record["principal"] == @principal.call && session_matches?(record) && issuer_matches?(record) && @store.live?(record) && !record.key?("execution")
                 raise Refusal.new("lease '#{lease_id}' is no longer live for this principal")
               end
               record["execution"] = "in-progress"
@@ -849,6 +852,10 @@ module Ace
           else
             !lease.key?("session_uid")
           end
+        end
+
+        def issuer_matches?(lease)
+          !@session_uid || lease["issuer_invocation"] == @issuer_invocation
         end
 
         # No caller or provider projection may silently replace the selected

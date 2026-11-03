@@ -485,6 +485,25 @@ module Ace
           end
         end
 
+        def test_same_session_cannot_execute_a_lease_owned_by_another_issuer
+          skip "requires a non-root account for the fake peer" if Process.uid.zero?
+
+          Process.stub(:euid, 0) do
+            isolated = Molecules::GrantResolver.stub(:read_verified, @document) do
+              Service.new(session: session_identity, issuer_invocation: "b" * 32)
+            end
+            account = Etc.getpwuid(Process.uid)
+            lease = isolated.store.create(profile: "developer", role: "developer", principal: account.name,
+              task: "t", assignment: "a", repos: ["ace"], use_until: (Time.now.utc + 60).iso8601,
+              provider_expiry: nil, session_uid: account.uid, session_id: "a" * 32,
+              session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: "c" * 32)
+            isolated.store.update(lease["id"]) { |record| record["state"] = "issued" }
+            error = assert_raises(Refusal) { isolated.exec(lease_id: lease["id"], argv: ["true"]) }
+            assert_match(/different issuer invocation/, error.message)
+            assert_equal "issued", isolated.store.load(lease["id"])["state"]
+          end
+        end
+
         def test_root_exec_without_a_non_root_session_is_refused
           owner = Molecules::GrantResolver.stub(:read_verified, @document) do
             Service.new(principal: -> { "test-worker" })

@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Refuse session lease execution by a different issuer instance than the one responsible for its cleanup.
 - Classify missing or malformed extension projections and preserve dry-run filesystem state; verify directory traversal and reject unsafe receipt paths.
 
 - Require root-controlled extension sources, destinations and receipts in
