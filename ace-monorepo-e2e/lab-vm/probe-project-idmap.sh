@@ -52,5 +52,7 @@ setpriv --reuid="$session_id" --regid="$session_id" --clear-groups \
   ' sh "$probe_dir/project"
 [ "$(stat -c '%u:%g' "$probe_dir/unmapped/.ace-wt/test/README")" = "$project_uid:$project_gid" ]
 [ "$(runuser -u mo -- env HOME="$probe_dir" GIT_CONFIG_NOSYSTEM=1 git -C "$probe_dir/unmapped" rev-list --count test)" = 2 ]
+umount "$probe_dir/project"
+[ -z "$(runuser -u mo -- env HOME="$probe_dir" GIT_CONFIG_NOSYSTEM=1 git -C "$probe_dir/project/.ace-wt/test" status --porcelain)" ]
 printf 'idmapped temporary Git worktree: pass (project ownership retained)\n'
 PROBE
