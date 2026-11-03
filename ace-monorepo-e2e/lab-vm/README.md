@@ -159,6 +159,28 @@ releases that process to run Git. A pidfd confirms the same process exits when
 the unit stops. This tests operating-system primitives, not an ACE launcher,
 token issuance or a real agent session.
 
+`probe-session-runner.py` takes the same installed-candidate arguments as
+`probe-issuer-cleanup.py` and runs as root in the disposable VM. It creates a
+temporary dynamic-UID unit and mapped project, then calls the installed
+`SessionRunner`. Its test-only attachment opens the unit's cgroup, and the
+privilege-dropped child attaches itself; the
+probe checks the child's UID, empty supplementary groups, capabilities,
+`NoNewPrivileges`, mount namespace and cgroup, as well as `mo` ownership of
+the resulting file. It also requires rejection of a mount namespace owned by
+a separate user namespace. It removes the unit and temporary project on success and
+preserves the project for diagnosis on failure. The test seam does not prove
+`SessionPeer`, issuer supervision, token issuance or an ACE agent launch.
+
+`probe-authenticated-runner.py` takes the same arguments. It creates a local
+socket and a temporary dynamic-UID systemd session, then invokes the installed
+`SessionPeer`, `SessionAttachment` and `SessionRunner` together to touch a
+file in an id-mapped temporary project. It checks the resulting `mo` ownership
+and restores the Yama setting. Its dummy command does not request a credential;
+the production issuer and ACE worker launcher remain separate acceptance work.
+With `--prepopulate-runtime`, the probe inserts an unexpected file in the
+session runtime directory and requires two consecutive requests to fail
+without executing the command.
+
 `probe-installed-eyes.rb` checks the installed observer and reader together
 as the session account on Linux. Set `GEM_HOME` to the candidate and
 `GEM_PATH` to the candidate plus installed dependencies, then run:
