@@ -361,6 +361,10 @@ Behavior and guarantees:
   require the Herdr Pi integration alongside it. Outside a configured lab,
   installed Pi retains normal extension discovery; isolated lab session setup
   must enforce its installed runtime and require the protected manifest.
+  The session launcher must set `ACE_LAB_SESSION=1`, which makes the Pi
+  startup check refuse any other toolchain, non-Linux platform, or missing
+  manifest. This environment variable is a readiness check, not proof of
+  session identity or protection against an agent changing its environment.
   The projection is receipt-based: only files recorded in the target's
   `.ace-lab-extension-projection.json` receipt are ever removed, so
   user-authored extensions in the same directory stay untouched. The
