@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Preserve a session's verified private mount namespace when executing its
+  delegated command, and refuse namespace replacement or foreign ownership.
+- Keep identical repository-scoped credential requests idempotent regardless
+  of the profile's repository order.
+- Preserve confirmed credential revocation when a concurrent execution's
+  cleanup later reports an uncertain provider outcome.
+- Keep an operator-forced terminal outcome distinct from confirmed remote
+  revocation when the revoke command is repeated.
 - Bind lease execution and revocation to the owning principal; only the root
   operator can force an unconfirmed revocation closed.
 - Keep temporary credential files private from their creation, including when

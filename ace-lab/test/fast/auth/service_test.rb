@@ -3,6 +3,7 @@
 require_relative "../../test_helper"
 require "ace/lab/auth"
 require "open3"
+require "timeout"
 
 module Ace
   module Lab
@@ -75,11 +76,13 @@ module Ace
           Providers.register("fake", @fake = FakeProvider.new)
           @peer_handle = File.open(File::NULL)
           @main_handle = File.open(File::NULL)
+          @mount_namespace = File.open(File::NULL)
         end
 
         def teardown
           @peer_handle.close unless @peer_handle.closed?
           @main_handle.close unless @main_handle.closed?
+          @mount_namespace.close unless @mount_namespace.closed?
           FileUtils.remove_entry(@dir) if @dir
           Providers.reset!
         end
@@ -87,7 +90,8 @@ module Ace
         def session_identity
           SessionPeer::Identity.new(uid: Process.uid, gid: Process.gid, role: "worker",
             invocation_id: "a" * 32, unit: "ace-auth-session-worker-0123456789abcdef.service",
-            cwd: Dir.pwd, runtime_dir: "/run/ace-auth-0123456789abcdef", pidfd: @peer_handle, main_pidfd: @main_handle)
+            cwd: Dir.pwd, runtime_dir: "/run/ace-auth-0123456789abcdef", pidfd: @peer_handle, main_pidfd: @main_handle,
+            main_pid: Process.pid, mount_namespace: @mount_namespace)
         end
 
         def service(document: @document)
@@ -493,6 +497,17 @@ module Ace
           assert_equal 1, @fake.issued.size, "concurrent requests mint one token"
         end
 
+        def test_idempotent_retry_with_unsorted_profile_repository_scope
+          document = YAML.safe_load(@document)
+          document["auth"]["profiles"]["developer"]["repos"] = %w[other ace]
+          svc = service(document: YAML.dump(document))
+          args = {profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: %w[ace other]}
+          first = svc.request(**args)
+          second = svc.request(**args)
+          assert_equal first["id"], second["id"]
+          assert_equal 1, @fake.issued.size
+        end
+
         def test_concurrent_identical_requests_serialize_to_one_token
           svc = service
           results = 2.times.map do
@@ -767,6 +782,77 @@ module Ace
 
           error = assert_raises(Error) { svc.revoke(lease_id: "lease-0000000000000000") }
           assert_match(/unknown lease/, error.message)
+        end
+
+        def test_repeated_revoke_preserves_unconfirmed_forced_terminal_result
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          svc.store.update(lease["id"]) do |record|
+            record["state"] = "revoked"
+            record["cleanup"] = {"result" => "forced-terminal"}
+          end
+          assert_equal :forced_terminal, svc.revoke(lease_id: lease["id"])
+          assert_empty @fake.revoked
+        end
+
+        def test_concurrent_revoke_does_not_turn_confirmed_cleanup_into_pending
+          entered = Queue.new
+          release = Queue.new
+          def @fake.revoke(profile:, token_ref:, token: nil)
+            raise Providers::OutcomeUnknownError, "token required" if token.nil?
+            @revoked << token_ref
+            :revoked
+          end
+          svc = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" }, runner: ->(_argv, _env) { entered << true; release.pop; 0 })
+          end
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          execution = Thread.new do
+            {result: svc.exec(lease_id: lease["id"], argv: ["dummy"])}
+          rescue StandardError => e
+            {error: e}
+          end
+          Timeout.timeout(5) { entered.pop }
+          assert_equal :revoked, svc.revoke(lease_id: lease["id"])
+          release << true
+          outcome = execution.value
+          assert_nil outcome[:error], outcome[:error]&.message
+          assert_equal "revoked", svc.status(lease_id: lease["id"])["state"]
+        ensure
+          release << true if execution&.alive?
+          execution&.join
+        end
+
+        def test_late_cleanup_failure_does_not_overwrite_confirmed_revocation
+          entered = Queue.new
+          release = Queue.new
+          mutex = Mutex.new
+          calls = 0
+          @fake.define_singleton_method(:revoke) do |profile:, token_ref:, token: nil|
+            ordinal = mutex.synchronize { calls += 1 }
+            if ordinal == 1
+              entered << true
+              release.pop
+              raise Providers::OutcomeUnknownError, "late failure"
+            end
+            :revoked
+          end
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          execution = Thread.new do
+            {result: svc.exec(lease_id: lease["id"], argv: ["dummy"])}
+          rescue StandardError => e
+            {error: e}
+          end
+          Timeout.timeout(5) { entered.pop }
+          assert_equal :revoked, svc.revoke(lease_id: lease["id"])
+          release << true
+          outcome = execution.value
+          assert_nil outcome[:error], outcome[:error]&.message
+          assert_equal "revoked", svc.status(lease_id: lease["id"])["state"]
+        ensure
+          release << true if execution&.alive?
+          execution&.join
         end
 
         def test_network_shaped_revoke_stays_visible_as_pending_never_claimed

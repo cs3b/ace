@@ -2,6 +2,7 @@
 
 require "etc"
 require "fiddle"
+require_relative "session_namespace"
 
 module Ace
   module Lab
@@ -11,7 +12,7 @@ module Ace
       # a request field. This primitive does not create or authenticate a
       # session and does not issue credentials.
       class SessionRunner
-        def initialize(uid:, cwd:, attach: nil)
+        def initialize(uid:, cwd:, attach: nil, namespace: nil, namespace_joiner: SessionNamespace.method(:enter!))
           raise ArgumentError, "session execution requires a root issuer" unless Process.euid.zero?
 
           uid = Integer(uid)
@@ -23,6 +24,7 @@ module Ace
           @cwd = File.realpath(cwd)
           raise ArgumentError, "session working directory is not a directory" unless File.directory?(@cwd)
           @attach = attach
+          @namespace, @namespace_joiner = namespace, namespace_joiner
         end
 
         def call(argv, env)
@@ -30,57 +32,78 @@ module Ace
           # Do not launch from the issuer's cgroup. Until the system entry
           # point can attach this child to an authenticated session lifetime,
           # it could outlive that session and inherit a recycled dynamic UID.
-          raise ArgumentError, "session lifetime attachment is not available" unless @attach.respond_to?(:call)
+          unless @attach.respond_to?(:prepare) && @attach.respond_to?(:verify_child!)
+            raise ArgumentError, "session lifetime attachment is not available"
+          end
+          raise ArgumentError, "session mount namespace is not available" unless @namespace.is_a?(IO) && !@namespace.closed?
 
           child_env = env.merge("HOME" => @account.dir, "USER" => @account.name,
             "LOGNAME" => @account.name)
-          ready_reader, ready_writer = IO.pipe
-          prepared_reader, prepared_writer = IO.pipe
-          pid = fork do
-            begin
-              ready_writer.close
-              prepared_reader.close
-              Process.setpgid(0, 0)
-              # Never carry the issuer's supplementary groups, including
-              # wheel/sudo or root, into the session command.
-              Process.groups = []
-              # A process moved to a systemd cgroup does not inherit that
-              # unit's process credentials. Set this on the child itself.
-              restrict_privilege_escalation!
-              Process::GID.change_privilege(@account.gid)
-              Process::UID.change_privilege(@account.uid)
-              Dir.chdir(@cwd)
-              prepared_writer.write("1")
-              prepared_writer.close
-              exit! 127 unless ready_reader.read(1) == "1"
-              ready_reader.close
-              exec(child_env, *argv, unsetenv_others: true)
-            rescue StandardError
-              warn "ace-lab auth: failed to start the isolated session command"
-              exit! 127
+          cgroup = @attach.prepare
+          begin
+            ready_reader, ready_writer = IO.pipe
+            prepared_reader, prepared_writer = IO.pipe
+            pid = fork do
+              begin
+                ready_writer.close
+                prepared_reader.close
+                Process.setpgid(0, 0)
+                @namespace_joiner.call(@namespace)
+                @namespace.close
+                # Never carry the issuer's supplementary groups, including
+                # wheel/sudo or root, into the session command.
+                Process.groups = []
+                # A process moved to a systemd cgroup does not inherit that
+                # unit's process credentials. Set this on the child itself.
+                restrict_privilege_escalation!
+                Process::GID.change_privilege(@account.gid)
+                Process::UID.change_privilege(@account.uid)
+                Dir.chdir(@cwd)
+                cgroup.sync = true
+                raise ArgumentError, "session self-attachment failed" unless cgroup.write("0\n") == 2
+                cgroup.close
+                prepared_writer.write("1")
+                prepared_writer.close
+                exit! 127 unless ready_reader.read(1) == "1"
+                ready_reader.close
+                exec(child_env, *argv, unsetenv_others: true)
+              rescue StandardError
+                warn "ace-lab auth: failed to start the isolated session command"
+                exit! 127
+              end
             end
+          rescue Exception
+            [ready_reader, ready_writer, prepared_reader, prepared_writer].compact.each { |io| io.close unless io.closed? }
+            raise
+          ensure
+            cgroup.close unless cgroup.closed?
           end
           ready_reader.close
           prepared_writer.close
+          handle = nil
+          group_signal_supported = false
           begin
+            handle = open_child_handle(pid)
             unless IO.select([prepared_reader], nil, nil, 10) && prepared_reader.read(1) == "1"
               raise ArgumentError, "session child could not drop privileges"
             end
             prepared_reader.close
-            raise ArgumentError, "session attachment failed" unless @attach.call(pid) == true
+            raise ArgumentError, "session attachment failed" unless @attach.verify_child!(pid) == true
+            # Do not run a command unless cancellation can address the entire
+            # process group through the pinned identity, without PID reuse.
+            signal_child!(handle, 0, group: true)
+            group_signal_supported = true
             ready_writer.write("1")
             ready_writer.close
             _, status = Process.wait2(pid)
             status.exitstatus || 128 + status.termsig.to_i
           rescue Exception # ensure a cancelled issuer does not leave its child running
+            ready_writer.close unless ready_writer.closed?
+            prepared_reader.close unless prepared_reader.closed?
             begin
-              Process.kill("KILL", -pid)
+              signal_child!(handle, Signal.list.fetch("KILL"), group: group_signal_supported) if handle
             rescue Errno::ESRCH
-              begin
-                Process.kill("KILL", pid)
-              rescue Errno::ESRCH
-                nil
-              end
+              nil
             end
             begin
               Process.waitpid(pid)
@@ -93,10 +116,32 @@ module Ace
             ready_writer.close unless ready_writer.closed?
             prepared_reader.close unless prepared_reader.closed?
             prepared_writer.close unless prepared_writer.closed?
+            handle.close if handle && !handle.closed?
           end
         end
 
         private
+
+        # Linux pidfds pin the child identity across exit and PID reuse. The
+        # group flag requires Linux 6.9 or later; failure is a readiness error.
+        def open_child_handle(pid)
+          fn = Fiddle::Function.new(Fiddle::Handle::DEFAULT["pidfd_open"],
+            [Fiddle::TYPE_INT, Fiddle::TYPE_UINT], Fiddle::TYPE_INT)
+          fd = fn.call(pid, 0)
+          raise SystemCallError.new("pidfd_open", Fiddle.last_error) if fd.negative?
+          IO.for_fd(fd, autoclose: true)
+        rescue Fiddle::DLError
+          raise ArgumentError, "session execution requires Linux pidfd support"
+        end
+
+        def signal_child!(handle, signal, group: false)
+          fn = Fiddle::Function.new(Fiddle::Handle::DEFAULT["pidfd_send_signal"],
+            [Fiddle::TYPE_INT, Fiddle::TYPE_INT, Fiddle::TYPE_VOIDP, Fiddle::TYPE_UINT], Fiddle::TYPE_INT)
+          result = fn.call(handle.fileno, signal, 0, group ? 4 : 0) # PIDFD_SIGNAL_PROCESS_GROUP
+          raise SystemCallError.new("pidfd_send_signal", Fiddle.last_error) if result.negative?
+        rescue Fiddle::DLError
+          raise ArgumentError, "session execution requires Linux pidfd signal support"
+        end
 
         def restrict_privilege_escalation!
           raise ArgumentError, "session execution requires Linux" unless RUBY_PLATFORM.include?("linux")

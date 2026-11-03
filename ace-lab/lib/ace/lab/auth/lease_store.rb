@@ -85,9 +85,11 @@ module Ace
 
         def load(id)
           path = lease_path(id)
-          raise Error, "unknown lease '#{id}'" unless File.file?(path)
-
           parse_record(path)
+        rescue Errno::ENOENT
+          raise Error, "unknown lease '#{id}'"
+        rescue SystemCallError => e
+          raise Error, "lease record '#{id}' is unavailable (#{e.class})"
         rescue JSON::ParserError
           raise Error, "lease record '#{id}' is unreadable"
         end
@@ -97,11 +99,17 @@ module Ace
         # problem (the remote token may still be live) — never a
         # silently skipped entry that disappears from reconcile.
         def all
-          return [] unless Dir.exist?(@dir)
-
-          Dir.glob(File.join(@dir, "*.json")).sort.filter_map do |path|
+          names = begin
+            Dir.children(@dir)
+          rescue Errno::ENOENT
+            return []
+          rescue SystemCallError => e
+            raise Error, "lease inventory is unavailable (#{e.class})"
+          end
+          names.reject { |name| name.start_with?(".") }.select { |name| name.end_with?(".json") }.sort.filter_map do |name|
+            path = File.join(@dir, name)
             parse_record(path)
-          rescue Errno::EACCES, JSON::ParserError
+          rescue SystemCallError, JSON::ParserError
             {"id" => File.basename(path, ".json"), "state" => nil,
              "corrupt" => true, "_path" => path}
           end
@@ -134,10 +142,12 @@ module Ace
         end
 
         def with_write_lock(id)
-          FileUtils.mkdir_p(@dir)
-          File.open(File.join(@dir, "#{id}.write.lock"), File::CREAT | File::RDWR) do |lock|
-            lock.flock(File::LOCK_EX)
+          lock = open_lock(File.join(@dir, "#{id}.write.lock"))
+          begin
+            lock_flock(lock, File::LOCK_EX)
             yield
+          ensure
+            lock.close
           end
         end
 
@@ -147,24 +157,28 @@ module Ace
         # against a concurrent identical request — the second caller
         # waits and then returns the first caller's live lease.
         def with_correlation_lock(task:, assignment:, profile:, role:)
-          FileUtils.mkdir_p(@dir)
           key = Digest::SHA256.hexdigest([task, assignment, profile, role].join("\e"))
-          File.open(File.join(@dir, "correlation-#{key}.lock"), File::CREAT | File::RDWR) do |lock|
-            lock.flock(File::LOCK_EX)
+          lock = open_lock(File.join(@dir, "correlation-#{key}.lock"))
+          begin
+            lock_flock(lock, File::LOCK_EX)
             yield
+          ensure
+            lock.close
           end
         end
 
         # One exec at a time per lease: an exclusive lock on the lease's
         # exec lockfile, non-blocking — a parallel exec is a refusal.
         def with_exec_lock(id)
-          FileUtils.mkdir_p(@dir)
-          File.open(File.join(@dir, "#{id}.exec.lock"), File::CREAT | File::RDWR) do |lock|
-            unless lock.flock(File::LOCK_EX | File::LOCK_NB)
+          lock = open_lock(File.join(@dir, "#{id}.exec.lock"))
+          begin
+            unless lock_flock(lock, File::LOCK_EX | File::LOCK_NB)
               raise Error, "lease '#{id}' already has a running exec"
             end
 
             yield
+          ensure
+            lock.close
           end
         end
 
@@ -210,6 +224,19 @@ module Ace
         end
 
         private
+
+        def open_lock(path)
+          FileUtils.mkdir_p(@dir)
+          File.open(path, File::CREAT | File::RDWR)
+        rescue SystemCallError => e
+          raise Error, "lease lock is unavailable (#{e.class})"
+        end
+
+        def lock_flock(lock, flags)
+          lock.flock(flags)
+        rescue SystemCallError => e
+          raise Error, "lease lock could not be acquired (#{e.class})"
+        end
 
         def parse_record(path)
           record = JSON.parse(File.read(path))

@@ -10,59 +10,69 @@ module Ace
       class SessionAttachmentTest < Minitest::Test
         UNIT = "ace-auth-session-worker-0123456789abcdef.service"
         INVOCATION = "a" * 32
+        GROUP = "/ace.slice/ace-auth.slice/ace-auth-sessions.slice/#{UNIT}"
 
         def setup
-          @peer = File.open(File::NULL)
-          @main = File.open(File::NULL)
-          @identity = SessionPeer::Identity.new(unit: UNIT, invocation_id: INVOCATION, pidfd: @peer, main_pidfd: @main)
+          @peer, @main, @namespace = 3.times.map { File.open(File::NULL) }
+          @namespace_matches = true
+          @identity = SessionPeer::Identity.new(uid: 62_000, gid: 62_000, unit: UNIT, invocation_id: INVOCATION,
+            pidfd: @peer, main_pidfd: @main, main_pid: 123, mount_namespace: @namespace)
           @platform = Object.new
           class << @platform
-            attr_accessor :dead_handle
+            attr_accessor :dead_handle, :parent_pid
           end
-          def @platform.capture(pid) = {"pid" => pid}
+          def @platform.capture(pid) = {"pid" => pid, "uid" => 62_000, "gid" => 62_000, "groups" => [], "parent_pid" => parent_pid || Process.pid}
           def @platform.pin(_identity) = File.open(File::NULL)
           def @platform.exited?(handle) = handle == dead_handle
           @manager = Object.new
-          def @manager.unit_for_pidfd(handle:) = {"unit" => UNIT, "invocation_id" => INVOCATION}
-          @command = Object.new
-          class << @command
-            attr_reader :argv
-            def call(argv, timeout:) = (@argv = argv)
+          class << @manager
+            attr_accessor :invocation, :group
+            def unit_for_pidfd(handle:) = {"unit" => UNIT, "invocation_id" => invocation || INVOCATION}
+            def inspect_units = {"service" => {"ActiveState" => "active", "Slice" => SessionPeer::SLICE,
+              "InvocationID" => invocation || INVOCATION, "ControlGroup" => group || GROUP}}
           end
+          @opened = nil
         end
 
         def teardown
-          @peer.close
-          @main.close
+          [@peer, @main, @namespace, @opened].compact.each { |io| io.close unless io.closed? }
         end
 
-        def attachment
-          SessionAttachment.new(identity: @identity, platform: @platform, manager: @manager, command: @command)
+        def attachment(opener: ->(_group) { @opened = File.open(File::NULL, "w") })
+          SessionAttachment.new(identity: @identity, platform: @platform, manager: @manager,
+            cgroup_opener: opener, namespace_matcher: ->(_namespace, _pid) { @namespace_matches })
         end
 
-        def test_attaches_only_the_child_to_the_verified_unit
+        def test_prepares_descriptor_and_verifies_the_child_without_migrating_a_pid
           Process.stub(:euid, 0) do
-            assert attachment.call(1234)
-            assert_equal ["ssau", UNIT, "", "1", "1234"], @command.argv.last(5)
+            owner = attachment
+            descriptor = owner.prepare
+            assert_same @opened, descriptor
+            assert owner.verify_child!(1234)
           end
         end
 
-        def test_refuses_a_changed_invocation_before_attaching
-          def @manager.unit_for_pidfd(handle:) = {"unit" => UNIT, "invocation_id" => "b" * 32}
+        def test_refuses_changed_namespace_or_invocation_before_opening
           Process.stub(:euid, 0) do
-            assert_raises(Error) { attachment.call(1234) }
-            assert_nil @command.argv
+            @namespace_matches = false
+            assert_raises(Error) { attachment.prepare }
+            assert_nil @opened
+            @namespace_matches = true
+            @manager.invocation = "b" * 32
+            assert_raises(Error) { attachment.prepare }
+            assert_nil @opened
           end
         end
 
-        def test_refuses_a_changed_invocation_after_attaching
-          count = 0
-          @manager.define_singleton_method(:unit_for_pidfd) do |handle:|
-            count += 1
-            {"unit" => UNIT, "invocation_id" => (count <= 2 ? INVOCATION : "b" * 32)}
-          end
-          Process.stub(:euid, 0) { assert_raises(Error) { attachment.call(1234) } }
-          refute_nil @command.argv
+        def test_closes_descriptor_if_invocation_changes_during_open
+          opener = ->(_group) { @opened = File.open(File::NULL, "w"); @manager.invocation = "b" * 32; @opened }
+          Process.stub(:euid, 0) { assert_raises(Error) { attachment(opener: opener).prepare } }
+          assert @opened.closed?
+        end
+
+        def test_refuses_a_child_with_a_different_parent
+          @platform.parent_pid = Process.pid + 1
+          Process.stub(:euid, 0) { assert_raises(Error) { attachment.verify_child!(1234) } }
         end
 
         def test_session_verification_refuses_an_exited_main_process

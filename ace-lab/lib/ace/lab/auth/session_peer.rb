@@ -6,6 +6,7 @@ require "etc"
 require "ace/runtime"
 require "ace/runtime/molecules/protected_linux"
 require "ace/runtime/molecules/systemd_scope_manager"
+require_relative "session_namespace"
 
 module Ace
   module Lab
@@ -22,19 +23,24 @@ module Ace
                       "CapabilityBoundingSet" => "t", "KillMode" => "s", "Delegate" => "b",
                       "RuntimeDirectory" => "as", "RuntimeDirectoryPreserve" => "s"}.freeze
 
-        Identity = Struct.new(:uid, :gid, :role, :invocation_id, :unit, :cwd, :runtime_dir, :pidfd, :main_pidfd, keyword_init: true) do
+        Identity = Struct.new(:uid, :gid, :role, :invocation_id, :unit, :cwd, :runtime_dir, :pidfd, :main_pidfd,
+          :main_pid, :mount_namespace, keyword_init: true) do
           def close
             pidfd.close unless pidfd.closed?
             main_pidfd.close unless main_pidfd.closed?
+            mount_namespace&.close unless mount_namespace&.closed?
           end
         end
 
         def initialize(platform: Ace::Runtime::Molecules::ProtectedLinux.new,
           manager_factory: ->(unit) { Ace::Runtime::Molecules::SystemdScopeManager.new(slice_unit: SLICE, service_unit: unit) },
-          proc_root: "/proc", runtime_root: "/run", etc_root: "/etc", owner_uid: 0, account_lookup: ->(uid) { Etc.getpwuid(uid) })
+          proc_root: "/proc", runtime_root: "/run", etc_root: "/etc", owner_uid: 0, account_lookup: ->(uid) { Etc.getpwuid(uid) },
+          namespace_factory: nil, namespace_matcher: nil)
           @platform, @manager_factory = platform, manager_factory
           @proc_root, @runtime_root, @owner_uid, @account_lookup = proc_root, runtime_root, owner_uid, account_lookup
           @etc_root = etc_root
+          @namespace_factory = namespace_factory || ->(pid) { SessionNamespace.capture(pid, proc_root: @proc_root) }
+          @namespace_matcher = namespace_matcher || ->(namespace, pid) { SessionNamespace.matches?(namespace, pid, proc_root: @proc_root) }
         end
 
         def authenticate(socket)
@@ -95,6 +101,8 @@ module Ace
               properties["RuntimeDirectoryPreserve"] == "no"
             raise Error, "session systemd isolation policy differs"
           end
+          namespace = @namespace_factory.call(Integer(main_pid, 10))
+          raise Error, "session mount namespace is unavailable" unless namespace.is_a?(IO) && !namespace.closed?
           runtime_dir = File.join(@runtime_root, directory_name)
           @platform.live!(peer)
           raise Error, "session peer has exited" if @platform.exited?(handle)
@@ -103,16 +111,22 @@ module Ace
           @platform.live!(peer)
           raise Error, "session peer has exited" if @platform.exited?(handle)
           unless manager.unit_for_pidfd(handle: handle) == manager_identity &&
-              !@platform.exited?(main_handle) && manager.unit_for_pidfd(handle: main_handle) == manager_identity
+              !@platform.exited?(main_handle) && manager.unit_for_pidfd(handle: main_handle) == manager_identity &&
+              @namespace_matcher.call(namespace, Integer(main_pid, 10)) && !@platform.exited?(main_handle)
             raise Error, "session unit or invocation changed"
           end
 
           Identity.new(uid: peer.fetch("uid"), gid: peer.fetch("gid"), role: match[1],
             invocation_id: manager_identity.fetch("invocation_id"), unit: unit,
-            cwd: cwd, runtime_dir: runtime_dir, pidfd: handle, main_pidfd: main_handle).freeze
-        rescue Exception
+            cwd: cwd, runtime_dir: runtime_dir, pidfd: handle, main_pidfd: main_handle,
+            main_pid: Integer(main_pid, 10), mount_namespace: namespace).freeze
+        rescue Exception => error
           handle&.close unless handle&.closed?
           main_handle&.close unless main_handle&.closed?
+          namespace&.close unless namespace&.closed?
+          if error.is_a?(SystemCallError) || error.is_a?(IOError) || error.is_a?(ArgumentError)
+            raise Error, "session identity could not be verified (#{error.class})"
+          end
           raise
         end
 
@@ -155,9 +169,13 @@ module Ace
 
             if before.uid == peer.fetch("uid")
               raise Error, "session runtime group differs" unless before.gid == peer.fetch("gid")
+              # A failed emptiness check must not leave a searchable,
+              # root-owned directory that a later authentication trusts.
+              directory.chmod(0o000)
               directory.chown(@owner_uid, 0)
+              directory.chmod(0o000)
+              raise Error, "session runtime directory was not empty" unless empty_directory?(directory)
               directory.chmod(0o711)
-              raise Error, "session runtime directory was not empty" unless Dir.empty?(path)
             end
             after = directory.stat
             named = File.lstat(path)
@@ -165,6 +183,20 @@ module Ace
                 after.uid == @owner_uid && (after.mode & 0o777) == 0o711
               raise Error, "session runtime directory is not root-controlled and searchable"
             end
+          end
+        end
+
+        def empty_directory?(directory)
+          raise Error, "session runtime verification requires descriptor-based directory support" unless Dir.respond_to?(:for_fd)
+          duplicate = directory.dup
+          stream = Dir.for_fd(duplicate.fileno)
+          duplicate.autoclose = false # fdopendir owns and closes this descriptor
+          stream.each_child.none?
+        ensure
+          if stream
+            stream.close
+          elsif duplicate && !duplicate.closed?
+            duplicate.close
           end
         end
       end

@@ -62,9 +62,12 @@ module Ace
           File.symlink(@root, File.join(@proc, "123", "cwd"))
           File.chmod(0o711, File.join(@runtime, "ace-auth-0123456789abcdef"))
           @platform, @manager = FakePlatform.new, FakeManager.new
+          @namespace_matches = true
           @peer = SessionPeer.new(platform: @platform, manager_factory: ->(_unit) { @manager },
             proc_root: @proc, runtime_root: @runtime, etc_root: @etc, owner_uid: Process.uid,
-            account_lookup: ->(_uid) { Account.new("ace-worker", 62_000, 62_000) })
+            account_lookup: ->(_uid) { Account.new("ace-worker", 62_000, 62_000) },
+            namespace_factory: ->(_pid) { @captured_namespace = File.open(File::NULL) },
+            namespace_matcher: ->(_namespace, _pid) { @namespace_matches })
         end
 
         def teardown = FileUtils.remove_entry(@root)
@@ -77,9 +80,11 @@ module Ace
           assert_equal File.realpath(@root), identity.cwd
           refute identity.pidfd.closed?
           refute identity.main_pidfd.closed?
+          refute identity.mount_namespace.closed?
           identity.close
           assert identity.pidfd.closed?
           assert identity.main_pidfd.closed?
+          assert identity.mount_namespace.closed?
         end
 
         def test_refuses_a_reused_unit_or_unsafe_runtime_policy
@@ -101,6 +106,13 @@ module Ace
           assert_raises(Error) { @peer.authenticate(FakeSocket.new) }
         end
 
+        def test_unavailable_peer_kernel_support_is_a_typed_error
+          socket = Object.new
+          def socket.getsockopt(*) = raise(Errno::ENOPROTOOPT)
+          error = assert_raises(Error) { @peer.authenticate(socket) }
+          assert_match(/identity could not be verified/, error.message)
+        end
+
         def test_refuses_supplementary_groups_outside_the_session
           @platform.groups = [62_000, 0]
           assert_raises(Error) { @peer.authenticate(FakeSocket.new) }
@@ -109,6 +121,12 @@ module Ace
         def test_refuses_main_process_owned_by_another_identity
           @platform.main_uid = 62_001
           assert_raises(Error) { @peer.authenticate(FakeSocket.new) }
+        end
+
+        def test_refuses_a_namespace_changed_during_authentication
+          @namespace_matches = false
+          assert_raises(Error) { @peer.authenticate(FakeSocket.new) }
+          assert @captured_namespace.closed?
         end
 
         def test_distinct_exited_main_process_is_rejected_even_if_peer_is_alive
@@ -133,6 +151,18 @@ module Ace
             proc_root: @proc, runtime_root: @runtime, etc_root: @etc, owner_uid: Process.uid,
             account_lookup: ->(_uid) { raise ArgumentError, "not found" })
           assert_raises(Error) { peer.authenticate(FakeSocket.new) }
+        end
+
+        def test_runtime_directory_emptiness_uses_pinned_inode
+          skip "descriptor-based directory support unavailable" unless Dir.respond_to?(:for_fd)
+          path = File.join(@root, "pinned")
+          FileUtils.mkdir_p(path)
+          File.open(path) do |directory|
+            File.rename(path, path + ".old")
+            FileUtils.mkdir_p(path)
+            File.write(File.join(path + ".old", "unexpected"), "x")
+            refute @peer.send(:empty_directory?, directory)
+          end
         end
       end
     end

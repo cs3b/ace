@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
 require "etc"
+require "date"
 require "json"
 require "open3"
+require "securerandom"
+require "yaml"
 require_relative "session_runner"
 require_relative "session_attachment"
 
@@ -47,7 +50,8 @@ module Ace
             unless session.is_a?(SessionPeer::Identity) && session.invocation_id.is_a?(String) &&
                 session.invocation_id.match?(/\A[0-9a-f]{32}\z/) && session.runtime_dir.is_a?(String) &&
                 session.runtime_dir.start_with?("/") && File.expand_path(session.runtime_dir) == session.runtime_dir &&
-                session.main_pidfd.is_a?(IO) && !session.main_pidfd.closed?
+                session.main_pidfd.is_a?(IO) && !session.main_pidfd.closed? &&
+                session.mount_namespace.is_a?(IO) && !session.mount_namespace.closed?
               raise ArgumentError, "session execution requires a verified systemd invocation identity"
             end
             unless issuer_invocation.is_a?(String) && issuer_invocation.match?(/\A[0-9a-f]{32}\z/)
@@ -60,7 +64,8 @@ module Ace
 
             attachment = SessionAttachment.new(identity: session)
             @session_attachment = attachment
-            @session_runner = SessionRunner.new(uid: session.uid, cwd: session.cwd, attach: attachment)
+            @session_runner = SessionRunner.new(uid: session.uid, cwd: session.cwd, attach: attachment,
+              namespace: session.mount_namespace)
             account = Etc.getpwuid(Integer(session.uid))
             raise ArgumentError, "session account group differs" unless account.gid == session.gid
             @session_uid = account.uid
@@ -146,7 +151,7 @@ module Ace
           # The granted scope is computed BEFORE the live-lease lookup
           # so a retry is judged against what THIS request asked for.
           requested = Array(repos).map(&:to_s).sort
-          repos = (profile["repos"].empty? ? requested : profile["repos"] & requested)
+          repos = (profile["repos"].empty? ? requested : profile["repos"] & requested).sort
           if repos.empty?
             raise Refusal.new("the granted repository scope would be empty (profile " \
               "'#{profile_name}' repos: [#{profile["repos"].join(", ")}]; requested: " \
@@ -385,7 +390,9 @@ module Ace
           # idempotent result stands and only the handoff is re-cleared.
           if lease["state"] == "revoked"
             handoff.clear(lease_id)
-            return :revoked
+            return :forced_terminal if lease.dig("cleanup", "result") == "forced-terminal"
+            return :revoked if confirmed_revocation?(lease)
+            raise Error, "lease '#{lease_id}' has an unconfirmed terminal cleanup outcome"
           end
 
           if force && lease["state"] == "revoke-pending" &&
@@ -584,6 +591,10 @@ module Ace
         end
 
         def cleanup(lease, profile, handoff)
+          # A concurrent revoke may have already confirmed cleanup while an
+          # exec was running. Never retry or downgrade that settled record.
+          return :revoked if confirmed_revocation?(@store.load(lease["id"]))
+
           credential = handoff.path(lease["id"])
           token = File.file?(credential) ? File.read(credential) : nil
           begin
@@ -591,16 +602,14 @@ module Ace
             outcome = provider.revoke(profile: profile, token_ref: lease["token_ref"],
               token: token)
           rescue Providers::TransientError, Providers::OutcomeUnknownError, Providers::RefusedError, Providers::UnsupportedError => e
-            @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
-            return :"revoke-pending (#{e.class})"
+            return mark_cleanup_pending(lease["id"], e.class.to_s)
           end
 
           # An interrupted issue may still be executing at the forge after
           # our HTTP client timed out or died. A 404 before that request
           # commits is not proof that its token can never appear later.
           if outcome == :already_invalid && token.nil? && %w[preparing revoke-pending].include?(lease["state"])
-            @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
-            return :"revoke-pending (issue outcome remains unknown)"
+            return mark_cleanup_pending(lease["id"], "issue outcome remains unknown")
           end
 
           handoff.clear(lease["id"])
@@ -609,6 +618,21 @@ module Ace
             record["cleanup"] = {"result" => outcome.to_s, "at" => Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")}
           end
           outcome
+        end
+
+        def confirmed_revocation?(record)
+          record["state"] == "revoked" && %w[revoked already_invalid cleared not-issued].include?(record.dig("cleanup", "result"))
+        end
+
+        def mark_cleanup_pending(id, reason)
+          confirmed = false
+          @store.update(id) do |record|
+            confirmed = confirmed_revocation?(record)
+            # A forced terminal result is an operator decision, not proof of
+            # remote revocation; preserve it but never report it confirmed.
+            record["state"] = "revoke-pending" unless record["state"] == "revoked"
+          end
+          confirmed ? :revoked : :"revoke-pending (#{reason})"
         end
 
         def profile_for(name)
