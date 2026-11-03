@@ -153,8 +153,10 @@ systemd `DynamicUser` unit. It checks that the dynamic UID cannot write the
 unmapped project, performs a commit through the mapped view, stops the unit,
 and checks the worktree as `mo`. It removes its unique unit and repository
 on success; on failure it stops its unit and retains the repository for
-diagnosis. The test process enters the mount namespace with `nsenter`; it is
-not attached to the unit's cgroup and this does not prove an ACE launcher.
+diagnosis. The Git commands enter the namespace with `nsenter`. A separate
+dynamic-UID child is attached to the unit's cgroup and must be killed when the
+unit stops. This does not prove an ACE launcher or that the Git commands ran
+inside that cgroup.
 
 `probe-installed-eyes.rb` checks the installed observer and reader together
 as the session account on Linux. Set `GEM_HOME` to the candidate and

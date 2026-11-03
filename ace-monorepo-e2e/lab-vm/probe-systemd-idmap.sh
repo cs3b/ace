@@ -7,14 +7,20 @@ set -eu
 probe_dir=$(mktemp -d /var/lib/ace-e2e/idmap-unit.XXXXXXXX)
 unit="ace-e2e-idmap-$(cat /proc/sys/kernel/random/uuid).service"
 attempted=0
+child=
 cleanup() {
   rc=$?
+  stopped=1
   trap - EXIT
   if [ "$attempted" -eq 1 ]; then
     if ! /usr/bin/systemctl stop "$unit"; then
       echo "Could not stop $unit; preserve $probe_dir for diagnosis" >&2
       rc=1
+      stopped=0
     fi
+  fi
+  if [ -n "$child" ] && [ "$stopped" -eq 1 ]; then
+    wait "$child" 2>/dev/null || :
   fi
   if [ "$rc" -eq 0 ]; then
     rm -rf -- "$probe_dir" || rc=1
@@ -41,7 +47,7 @@ runuser -u mo -- env HOME="$probe_dir" GIT_CONFIG_NOSYSTEM=1 sh -c '
 attempted=1
 /usr/bin/systemd-run --quiet --unit="$unit" --property=Type=exec --property=DynamicUser=yes \
   --property=PrivateMounts=yes --property=NoNewPrivileges=yes --property=ProtectSystem=strict \
-  --property="ReadWritePaths=$probe_dir" /bin/sleep 60
+  --property=Delegate=yes --property="ReadWritePaths=$probe_dir" /bin/sleep 60
 pid=$(/usr/bin/systemctl show --property=MainPID --value "$unit")
 [ "$pid" -gt 0 ]
 session_uid=$(stat -c '%u' "/proc/$pid")
@@ -67,7 +73,27 @@ fi
     git -C "$1/.ace-wt/test" commit -qm change
   ' sh "$probe_dir/project"
 [ "$(stat -c '%u:%g' "$probe_dir/project/.ace-wt/test/README")" = "$owner_uid:$owner_gid" ]
+runuser -u mo -- mkfifo "$probe_dir/project/gate" "$probe_dir/project/ready"
+/usr/bin/nsenter --target "$pid" --mount -- /usr/bin/setpriv --no-new-privs \
+  --reuid="$session_uid" --regid="$session_gid" --clear-groups \
+  /bin/bash -c 'exec 4<> "$1/ready"; printf "ready\n" >&4; exec 3<> "$1/gate"; IFS= read -r -t 15 signal <&3; [ "$signal" = go ]; exec /bin/sleep 60' bash "$probe_dir/project" &
+child=$!
+/usr/bin/timeout 5 /bin/sh -c 'IFS= read -r signal < "$1"; [ "$signal" = ready ]' sh "$probe_dir/project/ready"
+[ "$(awk '/^Uid:/ {print $3}' "/proc/$child/status")" = "$session_uid" ]
+[ "$(awk '/^Gid:/ {print $3}' "/proc/$child/status")" = "$session_gid" ]
+/usr/bin/busctl --system --no-pager --auto-start=no --allow-interactive-authorization=no call \
+  org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager \
+  AttachProcessesToUnit ssau "$unit" '' 1 "$child" >/dev/null
+grep -F "/$unit" "/proc/$child/cgroup" >/dev/null
+/usr/bin/timeout 5 /bin/sh -c 'printf "go\n" > "$1"' sh "$probe_dir/project/gate"
 /usr/bin/systemctl stop "$unit"
 attempted=0
+child_status=0
+wait "$child" || child_status=$?
+child=
+case "$child_status" in
+  137|143) ;;
+  *) echo "attached child exited unexpectedly: $child_status" >&2; exit 1 ;;
+esac
 [ -z "$(runuser -u mo -- env HOME="$probe_dir" GIT_CONFIG_NOSYSTEM=1 git -C "$probe_dir/project/.ace-wt/test" status --porcelain)" ]
-printf 'dynamic systemd UID mapped project: pass (project ownership retained)\n'
+printf 'dynamic systemd UID mapped project and stopped attached child: pass\n'
