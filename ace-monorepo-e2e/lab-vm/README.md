@@ -217,6 +217,10 @@ before the crash and denial after recovery, and remove the administrator only
 after confirmed success. On failure it preserves protected diagnostics and
 the temporary account for recovery. The lease is prepared by the probe; the
 production issuer graph and real agent remain outside this check.
+With `--lease-expiry --real-forgejo`, it prepares a short-lived lease, verifies
+that cleanup refuses to race its running command, then checks that expiration
+stops the command, revokes the local Forgejo token and preserves the session.
+The lease is prepared by the probe, not requested through the public CLI.
 
 `probe-installed-eyes.rb` checks the installed observer and reader together
 as the session account on Linux. Set `GEM_HOME` to the candidate and

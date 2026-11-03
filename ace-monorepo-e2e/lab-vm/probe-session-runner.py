@@ -30,8 +30,10 @@ parser.add_argument('--test-writable-cgroup', action='store_true',
                     help='require refusal when the session cgroup control is writable by others')
 parser.add_argument('--test-reap-after-failure', action='store_true',
                     help='force containment failure and check eventual pidfd-based reaping')
+parser.add_argument('--test-lease-expiry', action='store_true',
+                    help='require expiry to terminate a running command and its descendants')
 args = parser.parse_args()
-if sum((args.test_kill_fallback, args.check_detached_descendant, args.test_reap_after_failure)) > 1:
+if sum((args.test_kill_fallback, args.check_detached_descendant, args.test_reap_after_failure, args.test_lease_expiry)) > 1:
     parser.error('choose only one session termination probe')
 base = '/var/lib/ace-e2e'
 if os.geteuid() != 0:
@@ -233,6 +235,42 @@ ensure
   namespace.close
 end
 '''
+expiry_program = r'''
+gem "ace-lab", "= #{ARGV.fetch(0)}"
+require "ace/lab/auth/session_runner"
+require "ace/lab/auth/session_attachment"
+unit, pid, uid, project = ARGV.values_at(1, 2, 3, 4)
+namespace = Ace::Lab::Auth::SessionNamespace.capture(Integer(pid))
+attach = Object.new
+attach.define_singleton_method(:prepare) do
+  group = IO.popen(["/usr/bin/systemctl", "show", "--property=ControlGroup", "--value", unit], &:read).strip
+  raise "unexpected cgroup" unless $?.success? && File.basename(group) == unit
+  Ace::Lab::Auth::SessionAttachment.allocate.send(:open_cgroup, group)
+end
+attach.define_singleton_method(:verify_child!) { |child| Ace::Lab::Auth::SessionNamespace.matches?(namespace, child) }
+runner = Ace::Lab::Auth::SessionRunner.new(uid: Integer(uid), cwd: project, namespace: namespace, attach: attach)
+marker = File.join(project, "expiry-child")
+late_marker = File.join(project, "expired-before-start")
+begin
+  runner.call(["/usr/bin/touch", late_marker], {}, deadline: Time.now - 1)
+  abort "already expired command started"
+rescue Ace::Lab::Auth::Error => error
+  raise unless error.message.include?("lease expired before execution")
+end
+raise "already expired command wrote a file" if File.exist?(late_marker)
+begin
+  runner.call(["/bin/sh", "-c", '/usr/bin/setsid /bin/sleep 60 & echo $! > "$1"; wait', "runner", marker], {}, deadline: Time.now + 2)
+  abort "expired command completed successfully"
+rescue Ace::Lab::Auth::Error => error
+  raise unless error.message.include?("lease expired during execution")
+end
+child = Integer(File.read(marker))
+stat = File.read("/proc/#{child}/stat") rescue nil
+raise "expired command descendant survived" if stat && !stat.match?(/\) Z /)
+raise "session main stopped" unless system("/usr/bin/systemctl", "is-active", "--quiet", unit)
+namespace.close
+puts "expired command and descendant terminated; session remained active"
+'''
 foreign_namespace_program = r'''
 gem "ace-lab", "= #{ARGV.fetch(0)}"
 require "ace/lab/auth/session_namespace"
@@ -324,6 +362,8 @@ try:
         run([args.ruby, '-e', detached_program, args.version, unit, str(pid), str(uid), project], env=env)
     if args.test_reap_after_failure:
         run([args.ruby, '-e', reap_program, args.version, unit, str(pid), str(uid), project], env=env)
+    if args.test_lease_expiry:
+        run([args.ruby, '-e', expiry_program, args.version, unit, str(pid), str(uid), project], env=env)
     group = output(['/usr/bin/systemctl', 'show', '--property=ControlGroup', '--value', unit])
     group_path = '/sys/fs/cgroup' + group
     if not group or any(name.startswith('ace-exec-') for name in os.listdir(group_path)):

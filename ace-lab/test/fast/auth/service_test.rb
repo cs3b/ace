@@ -1118,7 +1118,8 @@ module Ace
             record["issuer_invocation"] = "a" * 32
           end
           runner = Object.new
-          runner.define_singleton_method(:call) do |_argv, _env, before_start:|
+          runner.define_singleton_method(:call) do |_argv, _env, before_start:, deadline:|
+            raise "lease deadline not propagated" unless deadline == Time.iso8601(lease.fetch("use_until"))
             before_start.call(path)
             raise "cgroup was not recorded before launch" unless svc.store.load(lease["id"])["execution_cgroup"] == path
             0

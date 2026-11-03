@@ -628,7 +628,12 @@ module Ace
               record["execution_cgroup"] = path
             end
           end
-          @session_runner.call(argv, environment, before_start: before_start)
+          deadline = begin
+            Time.iso8601(@store.load(lease_id).fetch("use_until"))
+          rescue ArgumentError, TypeError, KeyError
+            raise Error, "lease execution deadline is invalid"
+          end
+          @session_runner.call(argv, environment, before_start: before_start, deadline: deadline)
         end
 
         def reconcile_locked(lease)

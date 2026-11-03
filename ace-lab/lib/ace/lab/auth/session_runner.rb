@@ -30,7 +30,7 @@ module Ace
           @namespace, @namespace_joiner = namespace, namespace_joiner
         end
 
-        def call(argv, env, before_start: nil)
+        def call(argv, env, before_start: nil, deadline: nil)
           unless argv.is_a?(Array) && !argv.empty? && argv.all? { |arg| arg.is_a?(String) && !arg.include?("\0") } && !argv.first.empty?
             raise ArgumentError, "a valid session command is required"
           end
@@ -48,6 +48,12 @@ module Ace
           end
           raise ArgumentError, "session mount namespace is not available" unless @namespace.is_a?(IO) && !@namespace.closed?
           raise ArgumentError, "session start callback is invalid" unless before_start.nil? || before_start.respond_to?(:call)
+          unless deadline.nil? || deadline.is_a?(Time)
+            raise ArgumentError, "session deadline must be a time"
+          end
+          monotonic_deadline = if deadline
+            Process.clock_gettime(Process::CLOCK_MONOTONIC) + (deadline - Time.now)
+          end
 
           child_env = env.merge("HOME" => @account.dir, "USER" => @account.name,
             "LOGNAME" => @account.name)
@@ -111,8 +117,17 @@ module Ace
             # process group through the pinned identity, without PID reuse.
             signal_child!(handle, 0, group: true)
             group_signal_supported = true
+            if monotonic_deadline && Process.clock_gettime(Process::CLOCK_MONOTONIC) >= monotonic_deadline
+              raise Error, "session command lease expired before execution"
+            end
             ready_writer.write("1")
             ready_writer.close
+            if monotonic_deadline
+              remaining = monotonic_deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+              unless remaining.positive? && IO.select([handle], nil, nil, remaining)
+                raise Error, "session command lease expired during execution"
+              end
+            end
             _, status = Process.wait2(pid)
             # A successful leader may have left detached descendants.
             # The command cgroup is separate from the session's main unit.

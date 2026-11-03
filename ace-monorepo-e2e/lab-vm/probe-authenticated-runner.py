@@ -29,13 +29,16 @@ parser.add_argument('--prepopulate-runtime', action='store_true',
                     help='require two refusals after an untrusted file is placed in the session runtime')
 parser.add_argument('--issuer-crash', action='store_true',
                     help='kill a real session issuer during execution and verify its recovery hook')
+parser.add_argument('--lease-expiry', action='store_true',
+                    help='expire a session command and verify credential revocation')
 parser.add_argument('--real-forgejo', action='store_true',
                     help='use a scoped token on the local disposable Forgejo in the issuer-crash scenario')
 args = parser.parse_args()
-if args.prepopulate_runtime and args.issuer_crash:
+if sum((args.prepopulate_runtime, args.issuer_crash, args.lease_expiry)) > 1:
     parser.error('choose one fault scenario')
-if args.real_forgejo and not args.issuer_crash:
-    parser.error('--real-forgejo requires --issuer-crash')
+if args.real_forgejo and not (args.issuer_crash or args.lease_expiry):
+    parser.error('--real-forgejo requires --issuer-crash or --lease-expiry')
+recovery_mode = args.issuer_crash or args.lease_expiry
 base = '/var/lib/ace-e2e'
 if os.geteuid() != 0:
     parser.error('requires root inside a disposable ACE VM')
@@ -104,14 +107,14 @@ for _ in range(2 if {args.prepopulate_runtime!r} else 1):
   result+=part
  s.close()
  if {args.prepopulate_runtime!r} and result!=b"": sys.exit(4)
- if not {args.prepopulate_runtime!r} and not {args.issuer_crash!r} and result!=b"ok\\n": sys.exit(3)
- if {args.issuer_crash!r} and result!=b"": sys.exit(5)
-if {args.issuer_crash!r}:
+ if not {args.prepopulate_runtime!r} and not {recovery_mode!r} and result!=b"ok\\n": sys.exit(3)
+ if {recovery_mode!r} and result!=b"": sys.exit(5)
+if {recovery_mode!r}:
  import time
  deadline=time.monotonic()+40
  while not os.path.exists({recovered_path!r}) and time.monotonic()<deadline: time.sleep(.05)
  if not os.path.exists({recovered_path!r}): sys.exit(6)
-print("contaminated_runtime_refused_twice" if {args.prepopulate_runtime!r} else (("issuer_crash_real_forgejo_recovered" if {args.real_forgejo!r} else "issuer_crash_recovered") if {args.issuer_crash!r} else "authenticated_session_runner_ok"),flush=True)
+print("lease_expiry_recovered" if {args.lease_expiry!r} else "contaminated_runtime_refused_twice" if {args.prepopulate_runtime!r} else (("issuer_crash_real_forgejo_recovered" if {args.real_forgejo!r} else "issuer_crash_recovered") if {recovery_mode!r} else "authenticated_session_runner_ok"),flush=True)
 '''
 server = r'''require "socket"
 gem "ace-lab", "= #{ARGV.fetch(0)}"
@@ -178,15 +181,41 @@ end
 handoff = Ace::Lab::Auth::CredentialHandoff.new(identity.runtime_dir, recipient: account.name,
   owner_uid: identity.uid, create_root: false)
 handoff.deliver(lease.fetch("id"), token)
-service.store.update(lease.fetch("id")) { |record| record["state"] = "issued" }
-marker = ARGV.fetch(3)
-Thread.new do
-  deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 20
-  sleep 0.01 until File.file?(marker) || Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
-  Process.kill("KILL", Process.pid)
+service.store.update(lease.fetch("id")) do |record|
+  record["state"] = "issued"
+  record["use_until"] = (Time.now.utc + 5).iso8601 if ARGV.fetch(6) == "expiry"
 end
-service.exec(lease_id: lease.fetch("id"), argv: ["/bin/sh", "-c", 'echo started > "$1"; exec /bin/sleep 60', "runner", marker])
-abort "issuer unexpectedly survived"
+marker = ARGV.fetch(3)
+if ARGV.fetch(6) == "crash"
+  Thread.new do
+    deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 20
+    sleep 0.01 until File.file?(marker) || Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+    Process.kill("KILL", Process.pid)
+  end
+  service.exec(lease_id: lease.fetch("id"), argv: ["/bin/sh", "-c", 'echo started > "$1"; exec /bin/sleep 60', "runner", marker])
+  abort "issuer unexpectedly survived"
+else
+  cleanup_attempt = Thread.new do
+    wait_until = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 3
+    sleep 0.01 until File.file?(marker) || Process.clock_gettime(Process::CLOCK_MONOTONIC) > wait_until
+    raise "command did not start before cleanup race" unless File.file?(marker)
+    operator = Ace::Lab::Auth::Service.new(authorization_path: ARGV.fetch(2), principal: -> { "root" })
+    begin
+      operator.revoke_issuer(invocation: ENV.fetch("INVOCATION_ID"))
+      raise "issuer recovery accepted a running command"
+    rescue Ace::Lab::Auth::Error => error
+      raise unless error.message.include?("issuer recovery could not inspect or clean leases")
+    end
+  end
+  begin
+    service.exec(lease_id: lease.fetch("id"), argv: ["/bin/sh", "-c", 'echo started > "$1"; exec /bin/sleep 60', "runner", marker])
+    abort "expired command unexpectedly succeeded"
+  rescue Ace::Lab::Auth::Error => error
+    raise unless error.message.include?("lease expired during execution")
+  end
+  cleanup_attempt.value
+  raise "command did not start" unless File.file?(marker)
+end
 '''
 recovery = r'''gem "ace-lab", "= #{ARGV.fetch(0)}"
 require "ace/lab/auth"
@@ -221,12 +250,12 @@ Environment=GEM_PATH={args.gem_home}:{args.shared_gems}
 Environment=ACE_TOOLCHAIN=installed
 ExecStart={args.ruby} {server_path} {args.version} {project}
 '''
-if args.issuer_crash:
+if recovery_mode:
     server = crash_server
     profile_name = 'forge' if args.real_forgejo else 'test'
     service_conf = service_conf.replace(
         f'ExecStart={args.ruby} {server_path} {args.version} {project}',
-        f'ExecStart={args.ruby} {server_path} {args.version} {project} {config_path} {command_started} {profile_name} {token_path}\n'
+        f'ExecStart={args.ruby} {server_path} {args.version} {project} {config_path} {command_started} {profile_name} {token_path} {"expiry" if args.lease_expiry else "crash"}\n'
         f'ExecStopPost={args.ruby} {recovery_path} {args.version} {config_path} {recovered_path} {worker}')
 worker_conf = f'''[Service]
 Type=exec
@@ -266,11 +295,11 @@ try:
         fd = os.open(password_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(fd, 'w', encoding='utf-8') as file:
             file.write(match.group(1))
-    extra_paths = [recovery_path, config_path] if args.issuer_crash else []
+    extra_paths = [recovery_path, config_path] if recovery_mode else []
     config = f'''auth:\n  leases_dir: {root}/leases\n  credentials_dir: {root}/credentials\n  profiles:\n    test:\n      provider: synthetic\n      roles: [worker]\n      principals: [session:worker]\n      repos: [fixture]\n'''
     if args.real_forgejo:
         config += f'''    forge:\n      provider: forgejo\n      roles: [worker]\n      principals: [session:worker]\n      repos: [e2e-integrator/ace]\n      scopes: ["write:repository"]\n      issuer:\n        url: http://127.0.0.1:3000\n        account: e2e-integrator\n        admin_username: {admin_name}\n        password_file: {password_path}\n'''
-    extra_content = [recovery, config] if args.issuer_crash else []
+    extra_content = [recovery, config] if recovery_mode else []
     for path, content in zip(unit_paths + [client_path, server_path] + extra_paths,
                              [socket_conf, service_conf, worker_conf, client, server] + extra_content):
         with open(path, 'x', encoding='utf-8') as file:
@@ -314,7 +343,7 @@ try:
         os.write(gate_fd, b'go\n')
     finally:
         os.close(gate_fd)
-    deadline = time.monotonic() + (45 if args.issuer_crash else 20)
+    deadline = time.monotonic() + (45 if recovery_mode else 20)
     while time.monotonic() < deadline:
         state = output(['/usr/bin/systemctl', 'show', '--property=ActiveState', '--value', worker])
         if state in ('inactive', 'failed'):
@@ -325,11 +354,13 @@ try:
     journal = output(['/usr/bin/journalctl', '--no-pager', '-o', 'cat', '-u', worker])
     expected = ('contaminated_runtime_refused_twice' if args.prepopulate_runtime else
                 (('issuer_crash_real_forgejo_recovered' if args.real_forgejo else 'issuer_crash_recovered')
-                 if args.issuer_crash else 'authenticated_session_runner_ok'))
+                 if recovery_mode else 'authenticated_session_runner_ok'))
+    if args.lease_expiry:
+        expected = 'lease_expiry_recovered'
     if expected not in journal:
         raise RuntimeError('authenticated session runner did not succeed')
     created_path = os.path.join(project, 'authenticated-created')
-    if args.issuer_crash:
+    if recovery_mode:
         if not os.path.isfile(command_started) or not os.path.isfile(recovered_path):
             raise RuntimeError('issuer crash or recovery marker is missing')
         lease_dir = os.path.join(root, 'leases')

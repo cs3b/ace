@@ -258,7 +258,7 @@ Diagnostic utm49 was built twice from commit `1d57987fc` with only its diagnosti
 
 The public `ace-lab auth` CLI currently constructs a local `Service` directly; it has no session socket client for the guarded issuer. Consequently the successful socket probes use a test client and do not establish a usable public request/exec flow for a dynamic-UID worker. That integration remains required along with the issuer supervision gate and session launcher.
 
-The issuer currently supervises the session and lease expiry separately from command execution. The command runner itself waits for the child without a lease deadline. Before enabling a public request/exec flow, prove that an executing command is stopped and its credential revoked when the lease expires, including the race with issuer cleanup. A nonblocking cleanup attempt that finds the execution lock held is not evidence of timely revocation. Session issuance remains blocked while this is unresolved.
+Diagnostic utm50 (SHA-256 `9e1d72444b785322f4d5c639edb69942c3102ff35d3363911d4d08cebd6b14ab`) was built from the then-uncommitted deadline change. In a real temporary session, it refused to launch an already expired command and terminated a running command and detached descendant at expiry while preserving the session. A separate socket/systemd probe used a test-prepared lease and a local Forgejo token: concurrent issuer cleanup was refused while execution held the lock; expiry stopped the command and the token was revoked, with the temporary administrator removed. This is not evidence for public CLI issuance, the installed production issuer graph, host shutdown, or an ACE worker; those gates remain closed.
 
 ## E2E authoring decision (pending implementation)
 
