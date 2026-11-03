@@ -356,6 +356,11 @@ Behavior and guarantees:
   receipt and existing ancestors must be root-controlled and not writable
   by group or others. Configure the harness to load this protected location;
   projecting files alone does not change the harness's extension discovery.
+  Installed Linux lab Pi starts use one shared `ace-wake` projection and
+  refuse an ambiguous manifest with multiple `ace-wake` entries. They also
+  require the Herdr Pi integration alongside it. Outside a configured lab,
+  installed Pi retains normal extension discovery; isolated lab session setup
+  must enforce its installed runtime and require the protected manifest.
   The projection is receipt-based: only files recorded in the target's
   `.ace-lab-extension-projection.json` receipt are ever removed, so
   user-authored extensions in the same directory stay untouched. The

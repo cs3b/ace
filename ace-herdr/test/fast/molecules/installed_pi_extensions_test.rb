@@ -25,7 +25,7 @@ class InstalledPiExtensionsTest < Minitest::Test
   end
 
   def test_extension_overrides_are_refused
-    %w[--no-extensions --extension --extension=/tmp/x -e -e/tmp/x].each do |argument|
+    %w[--no-extensions -ne --extension --extension=/tmp/x -e -e/tmp/x].each do |argument|
       assert_raises(Ace::Herdr::ExecutorUnavailableError) { Extensions.reject_override!([argument]) }
     end
     Extensions.reject_override!(["--model", "zai/test"])

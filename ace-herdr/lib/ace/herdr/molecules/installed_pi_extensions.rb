@@ -23,6 +23,7 @@ module Ace
 
           guard = Ace::Runtime::Molecules::ProtectedSocket
           guard.root_path!(manifest, directory: false)
+          raise ExecutorUnavailableError, "installed lab manifest is not a regular file" unless File.file?(manifest)
           document = YAML.safe_load(File.read(manifest), permitted_classes: [], aliases: false)
           rows = document.is_a?(Hash) && document.dig("gemset", "extensions")
           matches = rows.is_a?(Array) ? rows.select { |row| row.is_a?(Hash) && row["gem"] == "ace-wake" } : []
@@ -49,7 +50,7 @@ module Ace
         end
 
         def reject_override!(args)
-          return if args.none? { |arg| arg.is_a?(String) && (arg == "--no-extensions" || arg.start_with?("--extension=") || arg == "--extension" || arg.start_with?("-e")) }
+          return if args.none? { |arg| arg.is_a?(String) && (arg == "--no-extensions" || arg == "-ne" || arg.start_with?("--extension=") || arg == "--extension" || arg.start_with?("-e")) }
 
           raise ExecutorUnavailableError, "installed lab Pi extension arguments cannot be overridden"
         end
