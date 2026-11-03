@@ -204,6 +204,9 @@ module Ace
                   "[#{existing["repos"].join(", ")}] for principal '#{existing["principal"]}'; " \
                   "revoke it first or repeat the identical request")
               end
+              unless File.file?(handoff_for(existing).path(existing.fetch("id")))
+                raise Refusal.new("live lease '#{existing["id"]}' has no credential handoff; revoke it before requesting a replacement")
+              end
               next existing.merge("state_detail" => "live")
             end
 
@@ -330,7 +333,7 @@ module Ace
             # unrescued ENOENT from the child env merge.
             unless File.file?(credential)
               raise Refusal.new("lease '#{lease_id}' has no delivered credential at " \
-                "'#{credential}'; run reconcile or request a fresh lease")
+                "'#{credential}'; revoke the lease before requesting a replacement")
             end
 
             # ALLOWLISTED child environment: required non-secret
@@ -676,6 +679,8 @@ module Ace
             else
               if lease["state"] == "preparing" || lease["state"] == "revoke-pending" || !@store.live?(lease)
                 cleanup(lease, profile, handoff)
+              elsif !File.file?(handoff.path(lease.fetch("id")))
+                :"live (credential handoff missing; revoke required)"
               else
                 :live
               end

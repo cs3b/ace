@@ -1443,6 +1443,23 @@ module Ace
           assert_equal "revoke-pending", svc.store.load(lease.fetch("id"))["state"]
         end
 
+        def test_missing_live_handoff_requires_revocation_before_replacement
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          credential = Dir.glob(File.join(@dir, "credentials", "#{lease.fetch("id")}-*")).fetch(0)
+          File.unlink(credential)
+
+          error = assert_raises(Refusal) { svc.exec(lease_id: lease.fetch("id"), argv: ["true"]) }
+          assert_match(/revoke/, error.message)
+          assert_raises(Refusal) { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"]) }
+          report = svc.reconcile.find { |entry| entry["lease"] == lease.fetch("id") }
+          assert_match(/handoff missing/, report.fetch("reconciled"))
+          assert_equal 1, @fake.issued.length
+          assert_equal :revoked, svc.revoke(lease_id: lease.fetch("id"))
+          replacement = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          refute_equal lease.fetch("id"), replacement.fetch("id")
+        end
+
         def test_settlement_selects_handoff_from_the_previous_lease
           svc = service
           lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])

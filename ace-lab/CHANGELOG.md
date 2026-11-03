@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Report a missing live credential handoff and require revocation before
+  issuing a replacement instead of repeatedly returning an unusable lease.
 - Keep each leased command and its descendants in a root-controlled cgroup;
   require confirmed emptiness before reporting command completion and block
   replacement leases when containment is unconfirmed.
