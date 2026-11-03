@@ -280,8 +280,8 @@ module Ace
     end
 
     # 8xti21n3: an ISSUED record past its use_until must not be handed
-    # back by find_live as "live" — a retry mints a fresh grant while
-    # reconcile retires the expired one (never two live grants).
+    # back by find_live as "live" — a retry first retires the expired
+    # grant, then mints a fresh one.
     def test_expired_lease_is_not_reused_by_a_retry_and_reconcile_retires_it
       svc = service
       expired = svc.request(profile_name: "developer", role: "developer",
@@ -302,7 +302,7 @@ module Ace
         "exactly one live grant after expiry + retry"
 
       entry = svc.reconcile.find { |item| item["lease"] == expired["id"] }
-      assert_equal "revoked", entry["reconciled"], "reconcile retires the expired lease"
+      assert_equal "already_revoked", entry["reconciled"], "retry retired the expired lease before reissuing"
     end
 
     # 8xtiatf1: a revoke-pending lease whose credential file is gone

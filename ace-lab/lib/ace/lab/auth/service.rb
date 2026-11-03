@@ -705,7 +705,8 @@ module Ace
                 if current.key?("execution") || current["containment"] == "unconfirmed"
                   raise Refusal.new("a previous command's execution or containment is unconfirmed; no new lease can be issued")
                 end
-                next unless %w[preparing revoke-pending].include?(current["state"])
+                expired_issue = current["state"] == "issued" && !@store.live?(current)
+                next unless expired_issue || %w[preparing revoke-pending].include?(current["state"])
 
                 # Keep the execution lock through settlement. A record may
                 # have changed since the inventory snapshot was read.

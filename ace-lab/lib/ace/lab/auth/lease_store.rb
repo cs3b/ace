@@ -78,8 +78,8 @@ module Ace
         # scope-changed correlation does not match, and
         # DEADLINE-AWARENESS is part of the match: an issued record
         # past its use_until/provider expiry is not returned, so a
-        # retry mints a fresh grant while reconcile retires the expired
-        # one — an expired grant is never handed back as "live".
+        # retry must settle the expired grant before minting a replacement;
+        # an expired grant is never handed back as "live".
         def find_live(task:, assignment:, profile:, role:)
           all.filter_map do |lease|
             next unless lease["task"] == task && lease["assignment"] == assignment &&

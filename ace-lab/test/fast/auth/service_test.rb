@@ -1404,6 +1404,20 @@ module Ace
           assert_equal 1, @fake.issued.length
         end
 
+        def test_expired_lease_with_unconfirmed_revocation_blocks_reissue
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          svc.store.update(lease.fetch("id")) { |record| record["use_until"] = "2020-01-01T00:00:00Z" }
+          @fake.instance_variable_set(:@failure, Providers::TransientError.new("offline"))
+
+          assert_raises(Refusal) do
+            svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: %w[ace])
+          end
+          assert_equal 1, @fake.issued.length
+          assert_equal "revoke-pending", svc.store.load(lease.fetch("id"))["state"]
+        end
+
         # R6 (re-review): a REALLY spawned child must not inherit any
         # ambient credential override the lease does not contain — the
         # child environment is an allowlist, not a merge.
