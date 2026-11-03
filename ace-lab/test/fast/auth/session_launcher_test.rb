@@ -31,5 +31,28 @@ module Ace::Lab::Auth
       launcher = SessionLauncher.new(privileged: false, spawn: ->(*) { flunk "spawned" })
       assert_raises(Error) { launcher.start(unit: nil, terminal: nil) }
     end
+
+    def test_identity_uses_service_pid_and_rejects_replaced_invocation
+      unit = "ace-auth-session-worker-1234567890abcdef.service"
+      state = {"ActiveState" => "active", "MainPID" => "456", "InvocationID" => "a" * 32}
+      manager = Object.new
+      manager.define_singleton_method(:inspect_units) { {"service" => state.dup} }
+      manager.define_singleton_method(:unit_for_pidfd) { |handle:| {"unit" => unit, "invocation_id" => "a" * 32} }
+      platform = Object.new
+      platform.define_singleton_method(:capture) { |pid| {"pid" => pid, "uid" => 62000, "gid" => 62000, "groups" => []} }
+      handles = []
+      platform.define_singleton_method(:pin) { |_identity| handles << File.open(File::NULL); handles.last }
+      platform.define_singleton_method(:exited?) { |_handle| false }
+      launcher = SessionLauncher.new(privileged: true, platform: platform, manager_factory: ->(_) { manager })
+      launch = SessionLauncher::Launch.new(unit: unit, transport_pid: 123)
+      identity = launcher.identify(launch)
+      assert_equal 456, identity.process.fetch("pid")
+      refute identity.pidfd.closed?
+      state["InvocationID"] = "b" * 32
+      assert_raises(Error) { launcher.identify(launch) }
+      assert handles.last.closed?
+    ensure
+      handles&.each { |handle| handle.close unless handle.closed? }
+    end
   end
 end

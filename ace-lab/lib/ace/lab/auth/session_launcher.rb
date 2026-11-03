@@ -11,11 +11,52 @@ module Ace
       # until systemd lifecycle verification and terminal handoff complete.
       class SessionLauncher
         Launch = Data.define(:unit, :transport_pid)
+        Identity = Data.define(:unit, :invocation_id, :process, :pidfd)
 
         def initialize(privileged: Process.euid.zero?, platform: Ace::Runtime::Molecules::ProtectedLinux.new,
-          verify_path: nil, spawn: Process.method(:spawn))
+          verify_path: nil, spawn: Process.method(:spawn), manager_factory: nil)
           @privileged, @platform, @spawn = privileged, platform, spawn
           @verify_path = verify_path || Ace::Runtime::Molecules::ProtectedSocket.method(:root_path!)
+          @manager_factory = manager_factory || lambda { |unit|
+            Ace::Runtime::Molecules::SystemdScopeManager.new(slice_unit: SessionPeer::SLICE, service_unit: unit)
+          }
+        end
+
+        # Capture the actual service process, never the systemd-run transport.
+        # This proves process identity only; Pi first-turn/eyes readiness is a
+        # separate product observation. The caller owns the returned pidfd.
+        def identify(launch)
+          raise Error, "session identity requires the root host endpoint" unless @privileged
+          unless launch.is_a?(Launch) && SessionPeer::UNIT.match?(launch.unit)
+            raise ArgumentError, "invalid session launch"
+          end
+          manager = @manager_factory.call(launch.unit)
+          state = manager.inspect_units.fetch("service")
+          pid = state.fetch("MainPID")
+          unless state["ActiveState"] == "active" && pid.is_a?(String) && pid.match?(/\A[1-9][0-9]*\z/)
+            raise Error, "session process has not started"
+          end
+          process = @platform.capture(Integer(pid, 10))
+          unless SessionPeer::DYNAMIC_UIDS.cover?(process.fetch("uid")) && process["gid"] == process["uid"] &&
+              process.fetch("groups").all? { |group| group == process["gid"] }
+            raise Error, "session process is not an isolated dynamic identity"
+          end
+          handle = @platform.pin(process)
+          binding = manager.unit_for_pidfd(handle: handle)
+          after = manager.inspect_units.fetch("service")
+          unless binding["unit"] == launch.unit && binding["invocation_id"] == state["InvocationID"] &&
+              after["InvocationID"] == state["InvocationID"] && after["MainPID"] == pid &&
+              after["ActiveState"] == "active" && !@platform.exited?(handle)
+            raise Error, "session process changed during terminal handoff"
+          end
+          identity = Identity.new(unit: launch.unit, invocation_id: binding.fetch("invocation_id"),
+            process: process.freeze, pidfd: handle)
+          handle = nil
+          identity
+        rescue Ace::Runtime::Error, SystemCallError, IOError, KeyError, ArgumentError => error
+          raise Error, "session identity is unavailable (#{error.class})"
+        ensure
+          handle&.close
         end
 
         def start(unit:, terminal:)
