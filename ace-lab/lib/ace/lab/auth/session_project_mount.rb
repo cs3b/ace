@@ -39,6 +39,10 @@ module Ace
           @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mount",
             "--bind", "-o", "X-mount.idmap=u:#{stat.uid}:#{uid}:1 g:#{stat.gid}:#{gid}:1",
             "/proc/self/fd/4", project], namespace: namespace, source: source)
+          # ProtectSystem=strict makes the inherited project mount read-only.
+          # Relax only this private bind mount after applying the identity map.
+          @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mount",
+            "-o", "remount,bind,rw", "--", project], namespace: namespace, source: source)
           @platform.live!(identity.process)
           unless SessionNamespace.matches?(namespace, identity.process.fetch("pid"))
             raise Error, "session namespace changed during project preparation"
