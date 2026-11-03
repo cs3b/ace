@@ -500,6 +500,9 @@ module Ace
             isolated.store.update(lease["id"]) { |record| record["state"] = "issued" }
             error = assert_raises(Refusal) { isolated.exec(lease_id: lease["id"], argv: ["true"]) }
             assert_match(/different issuer invocation/, error.message)
+            assert_raises(Refusal) { isolated.status(lease_id: lease["id"]) }
+            assert_empty isolated.status
+            assert_raises(Refusal) { isolated.revoke(lease_id: lease["id"]) }
             assert_equal "issued", isolated.store.load(lease["id"])["state"]
           end
         end

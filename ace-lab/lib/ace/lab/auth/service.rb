@@ -306,9 +306,17 @@ module Ace
         # --- status --------------------------------------------------------
 
         def status(lease_id: nil)
-          return public_view(@store.load(lease_id)) if lease_id
+          if lease_id
+            lease = @store.load(lease_id)
+            if @session_uid && !(session_matches?(lease) && issuer_matches?(lease))
+              raise Refusal.new("lease belongs to a different session or issuer")
+            end
+            return public_view(lease)
+          end
 
-          @store.all.map { |lease| public_view(lease) }
+          records = @store.all
+          records = records.select { |lease| session_matches?(lease) && issuer_matches?(lease) } if @session_uid
+          records.map { |lease| public_view(lease) }
         end
 
         # --- exec ----------------------------------------------------------
@@ -476,7 +484,7 @@ module Ace
           lease = @store.load(lease_id)
           principal = @principal.call
           operator = @session_uid.nil? && Process.uid.zero? && principal == "root"
-          unless (lease["principal"] == principal && session_matches?(lease)) || operator
+          unless (lease["principal"] == principal && session_matches?(lease) && issuer_matches?(lease)) || operator
             raise Refusal.new("lease '#{lease_id}' belongs to a different principal")
           end
           if force && !operator

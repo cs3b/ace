@@ -11,7 +11,12 @@ module Ace
     module Auth
       class IssuerRequestTest < Minitest::Test
         class FakeService
-          attr_reader :arguments
+          attr_reader :arguments, :revoked
+          def status(lease_id:) = {"state" => "issued"}
+          def revoke(lease_id:)
+            @revoked = lease_id
+            :revoked
+          end
           def store = self
           def with_issuer_lifecycle_lock(exclusive:)
             raise "issuer must use shared lock" if exclusive
@@ -40,25 +45,93 @@ module Ace
 
         def test_returns_the_lease_then_waits_for_the_session_without_exposing_token_reference
           thread = Thread.new { @runner.call(@server, invocation: "a" * 32) }
-          @client.write(JSON.generate("profile" => "forge", "role" => "developer", "task" => "t",
+          @client.write(JSON.generate("action" => "request", "profile" => "forge", "role" => "developer", "task" => "t",
             "assignment" => "a", "repos" => ["owner/repo"]) + "\n")
           response = JSON.parse(@client.gets)
           assert response.fetch("ok")
-          assert_equal "lease-test", response.fetch("lease").fetch("id")
-          refute response.fetch("lease").key?("token_ref")
+          assert_equal "lease-test", response.fetch("result").fetch("id")
+          refute response.fetch("result").key?("token_ref")
           assert_equal "", @client.read
           assert thread.alive?
           @main_writer.close
           assert_equal :session_ended, thread.value
           assert_equal ["owner/repo"], @service.arguments.fetch(:repos)
+          assert_equal "lease-test", @service.revoked
         end
 
         def test_rejects_unknown_request_fields_before_issuance
           thread = Thread.new { @runner.call(@server, invocation: "a" * 32) }
-          @client.write(JSON.generate("profile" => "forge", "uid" => 0) + "\n")
+          @client.write(JSON.generate("action" => "request", "profile" => "forge", "uid" => 0) + "\n")
           response = JSON.parse(@client.gets)
           refute response.fetch("ok")
           assert_nil @service.arguments
+          assert_equal :refused, thread.value
+        end
+
+        def test_failed_revocation_reports_supervision_failure
+          @service.define_singleton_method(:revoke) { |lease_id:| :"revoke-pending" }
+          thread = Thread.new { @runner.call(@server, invocation: "a" * 32) }
+          @client.puts JSON.generate("action" => "request", "profile" => "forge", "role" => "worker",
+            "task" => "t", "assignment" => "a", "repos" => ["o/r"])
+          assert JSON.parse(@client.gets).fetch("ok")
+          @main_writer.close
+          assert_equal :cleanup_failed, thread.value
+        end
+
+        def test_exec_receives_stdio_only_after_authentication_and_returns_real_result
+          @service.define_singleton_method(:exec) do |lease_id:, argv:|
+            STDOUT.write("worker-output")
+            STDOUT.flush
+            {"exit" => 7, "lease" => lease_id, "cleanup" => "revoked"}
+          end
+          pid = fork do
+            @client.close
+            @runner.call(@server, invocation: "a" * 32)
+            exit! 0
+          end
+          @server.close
+          Dir.mktmpdir do |dir|
+            File.open(File.join(dir, "output"), "w+") do |output|
+              @client.puts JSON.generate("action" => "exec", "lease" => "lease-test", "argv" => ["git", "status"])
+              assert_equal({"stdio" => true}, JSON.parse(@client.gets))
+              File.open(File::NULL) { |input| @client.send_io(input) }
+              @client.send_io(output)
+              @client.send_io(output)
+              result = JSON.parse(@client.gets)
+              assert_equal 7, result.fetch("result").fetch("exit")
+              output.rewind
+              assert_equal "worker-output", output.read
+            end
+          end
+          Process.waitpid(pid)
+          pid = nil
+        ensure
+          if pid
+            Process.kill("KILL", pid)
+            Process.waitpid(pid)
+          end
+        end
+
+        def test_plain_byte_in_place_of_descriptor_does_not_block_handler
+          thread = Thread.new { @runner.call(@server, invocation: "a" * 32) }
+          @client.puts JSON.generate("action" => "exec", "lease" => "lease-test", "argv" => ["true"])
+          assert_equal({"stdio" => true}, JSON.parse(@client.gets))
+          @client.write("x")
+          assert thread.join(1), "malformed descriptor input held the connection"
+          refute JSON.parse(@client.gets).fetch("ok")
+          assert_equal :refused, thread.value
+        ensure
+          @client.close unless @client.closed?
+          thread&.join(6)
+        end
+
+        def test_oversized_status_returns_bounded_refusal
+          @service.define_singleton_method(:status) { |lease_id:| [{"task" => "x" * 70_000}] }
+          thread = Thread.new { @runner.call(@server, invocation: "a" * 32) }
+          @client.puts JSON.generate("action" => "status")
+          response = @client.gets
+          assert_operator response.bytesize, :<, 1024
+          refute JSON.parse(response).fetch("ok")
           assert_equal :refused, thread.value
         end
 
@@ -68,7 +141,7 @@ module Ace
             store = LeaseStore.new(directory)
             @service.define_singleton_method(:store) { store }
             issuer = Thread.new { @runner.call(@server, invocation: "a" * 32) }
-            @client.write(JSON.generate("profile" => "forge", "role" => "developer", "task" => "t",
+            @client.write(JSON.generate("action" => "request", "profile" => "forge", "role" => "developer", "task" => "t",
               "assignment" => "a", "repos" => ["owner/repo"]) + "\n")
             assert JSON.parse(@client.gets).fetch("ok")
             recovery = Thread.new { store.with_issuer_lifecycle_lock(exclusive: true) { :recovered } }
@@ -85,7 +158,7 @@ module Ace
 
         def test_rejects_duplicate_json_keys_before_issuance
           thread = Thread.new { @runner.call(@server, invocation: "a" * 32) }
-          @client.write('{"profile":"forge","profile":"other","role":"worker","task":"t","assignment":"a","repos":["o/r"]}' + "\n")
+          @client.write('{"action":"request","profile":"forge","profile":"other","role":"worker","task":"t","assignment":"a","repos":["o/r"]}' + "\n")
           refute JSON.parse(@client.gets).fetch("ok")
           assert_nil @service.arguments
           assert_equal :refused, thread.value

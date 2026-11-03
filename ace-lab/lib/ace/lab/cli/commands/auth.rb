@@ -35,7 +35,12 @@ module Ace
 
           def call(action:, target: nil, **options)
             require_relative "../../auth"
-            service = ::Ace::Lab::Auth::Service.new
+            service = if ENV["ACE_LAB_SESSION"] == "1"
+              require_relative "../../auth/issuer_client"
+              ::Ace::Lab::Auth::IssuerClient.new
+            else
+              ::Ace::Lab::Auth::Service.new
+            end
 
             result = case action
             when "request"

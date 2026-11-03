@@ -47,12 +47,12 @@ module Ace
           assert_empty @commands
         end
 
-        def test_verifies_a_template_using_a_control_instance
+        def test_verifies_the_singleton_service
           runner = lambda do |argv|
             return true unless argv.include?("show")
 
             name = argv.last
-            fragment = name.sub("@ace-verify.service", "@.service")
+            fragment = name
             "Id=#{name}\nLoadState=loaded\nFragmentPath=#{File.join(@dir, fragment)}\nDropInPaths=\nNeedDaemonReload=no\n"
           end
           installer = IssuerInstaller.new(unit_dir: @dir, owner_uid: Process.uid, privileged: true,
@@ -114,8 +114,8 @@ module Ace
 
         def test_active_issuer_instance_blocks_before_writing_or_enabling
           runner = lambda do |argv|
-            if argv.include?("list-units")
-              "ace-lab-auth@1.service loaded active running\n"
+            if argv.last == "ace-lab-auth.service"
+              "Id=ace-lab-auth.service\nActiveState=active\n"
             else
               "Id=#{argv.last}\nActiveState=inactive\n"
             end

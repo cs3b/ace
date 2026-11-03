@@ -10,15 +10,15 @@ module Ace
         def test_socket_is_ordered_after_recovery_and_each_issuer_has_cleanup
           units = IssuerUnits.render(ruby: "/opt/ace/ruby/bin/ruby", gem_home: "/opt/ace/gems",
             gem_root: "/opt/ace/gems/gems/ace-lab-0.14.2")
-          assert_equal %w[ace-lab-auth-recovery.service ace-lab-auth.socket ace-lab-auth@.service], units.keys.sort
+          assert_equal %w[ace-lab-auth-recovery.service ace-lab-auth.service ace-lab-auth.socket], units.keys.sort
           assert_includes units.fetch("ace-lab-auth.socket"), "Requires=ace-lab-auth-recovery.service"
           assert_includes units.fetch("ace-lab-auth.socket"), "After=ace-lab-auth-recovery.service"
-          assert_includes units.fetch("ace-lab-auth.socket"), "Accept=yes"
+          assert_includes units.fetch("ace-lab-auth.socket"), "Accept=no"
           assert_includes units.fetch("ace-lab-auth.socket"), "RemoveOnStop=yes"
           refute_match(/^Service=/, units.fetch("ace-lab-auth.socket"))
-          assert_includes units.fetch("ace-lab-auth@.service"), "ExecStopPost=/opt/ace/ruby/bin/ruby -I/opt/ace/gems/gems/ace-lab-0.14.2/lib /opt/ace/gems/gems/ace-lab-0.14.2/libexec/issuer-cleanup"
-          assert_includes units.fetch("ace-lab-auth@.service"), "ACE_TOOLCHAIN=installed"
-          assert_includes units.fetch("ace-lab-auth@.service"), "RUBYGEMS_GEMDEPS"
+          assert_includes units.fetch("ace-lab-auth.service"), "ExecStopPost=/opt/ace/ruby/bin/ruby -I/opt/ace/gems/gems/ace-lab-0.14.2/lib /opt/ace/gems/gems/ace-lab-0.14.2/libexec/issuer-cleanup"
+          assert_includes units.fetch("ace-lab-auth.service"), "ACE_TOOLCHAIN=installed"
+          assert_includes units.fetch("ace-lab-auth.service"), "RUBYGEMS_GEMDEPS"
           assert_includes units.fetch("ace-lab-auth-recovery.service"), "LD_AUDIT"
           assert_includes units.fetch("ace-lab-auth-recovery.service"), "libexec/issuer-recover"
         end

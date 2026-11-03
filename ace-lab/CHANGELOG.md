@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replace per-connection issuer units with a single socket-activated service;
+  isolated-session auth commands share its invocation and authenticated socket
+  transport. Supervision and connection capacity are separate; installation
+  remains gated pending complete host readiness verification.
 - Reuse identical read-only gem probes within a single verification pass to avoid repeated dependency traversal subprocesses.
 
 ### Fixed

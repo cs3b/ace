@@ -48,14 +48,13 @@ module Ace
               ListenStream=/run/lab/ace-lab-auth.sock
               DirectoryMode=0755
               SocketMode=0666
-              Accept=yes
+              Accept=no
               RemoveOnStop=yes
-              MaxConnections=64
 
               [Install]
               WantedBy=sockets.target
             UNIT
-            "ace-lab-auth@.service" => <<~UNIT
+            "ace-lab-auth.service" => <<~UNIT
               [Unit]
               Requires=ace-lab-auth-recovery.service
               After=ace-lab-auth-recovery.service
@@ -64,11 +63,12 @@ module Ace
               Type=simple
               User=root
               UMask=0077
-              StandardInput=socket
+              StandardInput=null
               StandardOutput=journal
               StandardError=journal
               TimeoutStopSec=60s
-              #{environment}ExecStart=#{ruby} -I#{gem_root}/lib #{gem_root}/libexec/issuer-request
+              #{environment}ExecStartPre=#{ruby} -I#{gem_root}/lib #{gem_root}/libexec/issuer-recover
+              ExecStart=#{ruby} -I#{gem_root}/lib #{gem_root}/libexec/issuer-request
               ExecStopPost=#{ruby} -I#{gem_root}/lib #{gem_root}/libexec/issuer-cleanup
             UNIT
           }

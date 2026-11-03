@@ -138,7 +138,7 @@ module Ace
         end
 
         def verify_inactive_units!
-          %w[ace-lab-auth.socket ace-lab-auth-recovery.service].each do |name|
+          %w[ace-lab-auth.socket ace-lab-auth.service ace-lab-auth-recovery.service].each do |name|
             argv = [SYSTEMCTL, "--system", "--no-pager", "--no-ask-password", "show", "--all",
                     "--property=Id,ActiveState", "--", name]
             fields = @runner.call(argv).to_s.lines.to_h { |line| line.chomp.split("=", 2) }
@@ -146,17 +146,13 @@ module Ace
               raise Error, "issuer unit '#{name}' is not inactive; stop and recover it first"
             end
           end
-          argv = [SYSTEMCTL, "--system", "--no-pager", "--no-ask-password", "list-units", "--all",
-                  "--plain", "--no-legend", "--state=active,activating,deactivating,reloading,failed",
-                  "--", "ace-lab-auth@*.service"]
-          raise Error, "issuer instances must be stopped and recovered first" unless @runner.call(argv).to_s.strip.empty?
         rescue ArgumentError
           raise Error, "systemd issuer state response is malformed"
         end
 
         def verify_loaded_units!(unit_dir:, units:)
           units.each do |name|
-            query_name = name.end_with?("@.service") ? name.sub("@.service", "@ace-verify.service") : name
+            query_name = name
             argv = [SYSTEMCTL, "--system", "--no-pager", "--no-ask-password", "show", "--all",
                     "--property=Id,LoadState,FragmentPath,DropInPaths,NeedDaemonReload", "--", query_name]
             output = @runner.call(argv)
