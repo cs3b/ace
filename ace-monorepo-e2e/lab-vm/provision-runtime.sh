@@ -189,5 +189,9 @@ EOF
 chown -R root:root "$runtime"
 chmod -R go-w "$runtime"
 test "$(stat -c '%U:%G' /lab)" = mo:mo
-! sudo -n -l -U mo >/dev/null 2>&1
+sudo_listing=$(LC_ALL=C sudo -n -l -U mo) || { echo 'Cannot inspect mo sudo policy' >&2; exit 1; }
+case "$sudo_listing" in
+  'User mo is not allowed to run sudo on '*) ;;
+  *) echo 'mo has sudo access or sudo policy could not be verified' >&2; exit 1 ;;
+esac
 printf '%s\n' 'Runtime provisioned; Herdr native build and E2E readiness remain separate checks.'

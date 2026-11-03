@@ -266,6 +266,8 @@ Diagnostic utm51 was built twice from commit `aa4580104` with only the diagnosti
 
 Diagnostic utm52 was built twice from commit `5dad42154` with only the diagnostic version changed; both packages and the guest copy had SHA-256 `ad1bd4e7f0c258bcbc3a91b416e37f119e6bf10ed81bcbc07d960d7a2184333d`. Its real local Forgejo expiry and issuer-crash probes both passed and removed their temporary administrators; exact command-cgroup recovery also passed. The test prepared the leases, so public issuance, agent launch and end-to-end acceptance remain unproven.
 
+After sufficient disk space was available, `lab-vm reset` exported and fingerprint-verified the previous work VM `D9220E19-E139-4479-891C-1233AB7B9321` before creating clone `BA379D3A-74AB-4028-947C-6A7CBC29436B`. The clone booted `aarch64`, cloud-init completed, QEMU guest agent was active, `mo` had no supplementary groups or passwordless sudo, and the prior runtime, project, task directories and Pi auth file were absent. This proves one environment reset, not a full E2E run. The check also exposed that `sudo -l -U mo` exits 0 when access is denied on this guest; the provisioner now checks its actual policy output and refuses both granted and unverifiable policy. The corrected check was exercised against the real guest policy and a synthetic granted policy.
+
 ## E2E authoring decision (pending implementation)
 
 | Candidate | Decision now | Why E2E and public surface | Relevant unit coverage reviewed |
