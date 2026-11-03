@@ -14,6 +14,65 @@ module Ace
       class SessionAttachment
         CGROUP_ROOT = "/sys/fs/cgroup"
         CGROUP2_MAGIC = 0x6367_7270
+        def self.command_cgroup_path?(path, unit)
+          unit.is_a?(String) && SessionPeer::UNIT.match?(unit) && path.is_a?(String) && path.bytesize <= 4096 &&
+            path.match?(%r{\A#{Regexp.escape(CGROUP_ROOT)}/(?:[A-Za-z0-9_.:-]+/)*#{Regexp.escape(unit)}/ace-exec-[0-9a-f]{32}\z}) &&
+            File.expand_path(path) == path
+        end
+
+        # Used only by the root issuer's existing recovery flow after it
+        # acquires the lease's exec lock. The recorded path was persisted
+        # before fork and belongs to a non-delegated session cgroup.
+        def self.recover_command!(path:, unit:, invocation_id:, manager: nil)
+          raise Error, "command recovery requires root" unless Process.euid.zero?
+          unless command_cgroup_path?(path, unit) && invocation_id.is_a?(String) && invocation_id.match?(/\A[0-9a-f]{32}\z/)
+            raise Error, "command recovery identity is invalid"
+          end
+          helper = allocate
+          root_control = helper.send(:open_control_file, File.join(CGROUP_ROOT, "cgroup.procs"), File::RDONLY)
+          root_control.close
+          parent = File.dirname(path)
+          return :absent unless helper.send(:verify_cgroup_ancestry!, parent, allow_missing: true)
+          begin
+            group_stat = File.lstat(path)
+          rescue Errno::ENOENT
+            return :absent
+          end
+          unless group_stat.directory? && !group_stat.symlink? && group_stat.uid.zero? && (group_stat.mode & 0o022).zero?
+            raise Error, "recorded command cgroup is not root-controlled"
+          end
+          parent_stat = File.stat(parent)
+          manager ||= Ace::Runtime::Molecules::SystemdScopeManager.new(slice_unit: SessionPeer::SLICE, service_unit: unit)
+          service = manager.inspect_units.fetch("service")
+          expected_group = parent.delete_prefix(CGROUP_ROOT)
+          unless service["InvocationID"] == invocation_id && service["Slice"] == SessionPeer::SLICE &&
+              service["ControlGroup"] == expected_group
+            raise Error, "recorded command session invocation differs"
+          end
+          procs = helper.send(:open_control_file, File.join(path, "cgroup.procs"), File::WRONLY)
+          kill = helper.send(:open_control_file, File.join(path, "cgroup.kill"), File::WRONLY)
+          events = helper.send(:open_control_file, File.join(path, "cgroup.events"), File::RDONLY)
+          current_parent, current_group = File.stat(parent), File.lstat(path)
+          after = manager.inspect_units.fetch("service")
+          unless [parent_stat.dev, parent_stat.ino] == [current_parent.dev, current_parent.ino] &&
+              [group_stat.dev, group_stat.ino] == [current_group.dev, current_group.ino] &&
+              !current_group.symlink? && after["InvocationID"] == invocation_id &&
+              after["Slice"] == SessionPeer::SLICE && after["ControlGroup"] == expected_group
+            raise Error, "recorded command identity changed during recovery"
+          end
+          prepared = Prepared.new(procs: procs, kill: kill, events: events, path: path)
+          prepared.terminate!
+          prepared.close
+          :contained
+        rescue Ace::Runtime::Error, SystemCallError, IOError, KeyError => e
+          raise Error, "command recovery could not verify containment (#{e.class})"
+        ensure
+          if prepared
+            prepared.close
+          else
+            [root_control, procs, kill, events].compact.each { |io| io.close unless io.closed? }
+          end
+        end
         Prepared = Struct.new(:procs, :kill, :events, :path, keyword_init: true) do
           def terminate!
             kill.sync = true
@@ -142,13 +201,18 @@ module Ace
           raise
         end
 
-        def verify_cgroup_ancestry!(directory)
+        def verify_cgroup_ancestry!(directory, allow_missing: false)
           current = CGROUP_ROOT
           parts = directory.delete_prefix(CGROUP_ROOT + "/").split("/")
           raise Error, "session cgroup path is invalid" if parts.empty? || parts.include?("..")
           ([nil] + parts).each do |part|
             current = File.join(current, part) if part
-            entry = File.lstat(current)
+            begin
+              entry = File.lstat(current)
+            rescue Errno::ENOENT
+              return false if allow_missing
+              raise
+            end
             unless entry.directory? && !entry.symlink? && entry.uid.zero? && (entry.mode & 0o022).zero?
               raise Error, "session cgroup ancestry is not root-controlled"
             end
@@ -159,6 +223,7 @@ module Ace
               end
             end
           end
+          true
         end
 
         def open_control_file(path, access)

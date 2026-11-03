@@ -83,6 +83,14 @@ module Ace
           Process.stub(:euid, 0) { assert_raises(Error) { attachment(opener: opener).prepare } }
         end
 
+        def test_command_cgroup_path_must_be_exact_and_belong_to_the_session_unit
+          path = "/sys/fs/cgroup/ace.slice/#{UNIT}/ace-exec-#{'b' * 32}"
+          assert SessionAttachment.command_cgroup_path?(path, UNIT)
+          refute SessionAttachment.command_cgroup_path?(path.sub(UNIT, "other.service"), UNIT)
+          refute SessionAttachment.command_cgroup_path?(path.sub("ace.slice", "../ace.slice"), UNIT)
+          refute SessionAttachment.command_cgroup_path?(path + "/child", UNIT)
+        end
+
         def test_command_cleanup_requires_a_confirmed_empty_cgroup
           Dir.mktmpdir do |dir|
             kill_path = File.join(dir, "kill")

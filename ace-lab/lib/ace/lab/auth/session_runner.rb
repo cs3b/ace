@@ -30,7 +30,7 @@ module Ace
           @namespace, @namespace_joiner = namespace, namespace_joiner
         end
 
-        def call(argv, env)
+        def call(argv, env, before_start: nil)
           unless argv.is_a?(Array) && !argv.empty? && argv.all? { |arg| arg.is_a?(String) && !arg.include?("\0") } && !argv.first.empty?
             raise ArgumentError, "a valid session command is required"
           end
@@ -47,11 +47,15 @@ module Ace
             raise ArgumentError, "session lifetime attachment is not available"
           end
           raise ArgumentError, "session mount namespace is not available" unless @namespace.is_a?(IO) && !@namespace.closed?
+          raise ArgumentError, "session start callback is invalid" unless before_start.nil? || before_start.respond_to?(:call)
 
           child_env = env.merge("HOME" => @account.dir, "USER" => @account.name,
             "LOGNAME" => @account.name)
           cgroup = @attach.prepare
           begin
+            # Persist the exact command cgroup before a child can exist.
+            # Recovery can then contain an orphan after an issuer crash.
+            before_start&.call(cgroup.path)
             ready_reader, ready_writer = IO.pipe
             prepared_reader, prepared_writer = IO.pipe
             pid = fork do
@@ -128,9 +132,10 @@ module Ace
               contain!(cgroup)
             rescue UncontainedSessionError
               # Do not block on a process whose death was not established;
-              # reap it if it has already exited and preserve the failure.
+              # reap it if it has already exited, otherwise wait on its
+              # pinned identity in the background without polling.
               begin
-                Process.waitpid(pid, Process::WNOHANG)
+                reap_later(handle) unless Process.waitpid(pid, Process::WNOHANG)
               rescue Errno::ECHILD
                 nil
               end
@@ -158,6 +163,28 @@ module Ace
           raise Error, "command cgroup did not confirm termination" unless cgroup.terminate! == true
         rescue StandardError => e
           raise UncontainedSessionError, "command cgroup could not be confirmed empty (#{e.class})"
+        end
+
+        def reap_later(handle)
+          return unless handle && !handle.closed?
+          held = handle.dup
+          Thread.new do
+            begin
+              waitid = Fiddle::Function.new(Fiddle::Handle::DEFAULT["waitid"],
+                [Fiddle::TYPE_INT, Fiddle::TYPE_INT, Fiddle::TYPE_VOIDP, Fiddle::TYPE_INT], Fiddle::TYPE_INT)
+              info = Fiddle::Pointer.malloc(256, Fiddle::RUBY_FREE)
+              loop do
+                result = waitid.call(3, held.fileno, info, 4) # P_PIDFD, WEXITED
+                break if result.zero? || Fiddle.last_error != Errno::EINTR::Errno
+              end
+            rescue Fiddle::DLError, IOError, SystemCallError
+              nil
+            ensure
+              held.close unless held.closed?
+            end
+          end
+        rescue ThreadError, SystemCallError, IOError
+          held&.close unless held&.closed?
         end
 
         # Linux pidfds pin the child identity across exit and PID reuse. The

@@ -320,10 +320,14 @@ module Ace
 
         def test_issuer_recovery_refuses_session_lease_without_issuer_identity
           worker = service
-          worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
+          lease = worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
             task: "task", assignment: "assignment", repos: ["ace"], session_uid: 1234, session_id: "b" * 32,
             session_unit: "ace-auth-session-worker-0123456789abcdef.service",
-            use_until: (Time.now.utc + 60).iso8601, provider_expiry: nil)
+            use_until: (Time.now.utc + 60).iso8601, provider_expiry: nil, issuer_invocation: "a" * 32)
+          path = File.join(@dir, "leases", "#{lease.fetch('id')}.json")
+          damaged = JSON.parse(File.read(path))
+          damaged.delete("issuer_invocation")
+          File.write(path, JSON.generate(damaged))
           operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
           Process.stub(:uid, 0) { Process.stub(:euid, 0) do
             assert_raises(Error) { operator.revoke_issuer(invocation: "a" * 32) }
@@ -921,6 +925,24 @@ module Ace
           assert_equal "revoked", svc.status(lease_id: lease["id"])["state"]
         end
 
+        def test_credential_disappearing_during_cleanup_remains_pending
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          credential = Dir.glob(File.join(@dir, "credentials", "*")).fetch(0)
+          read = File.method(:read)
+          raced = ->(path, *args, **kwargs) { raise Errno::ENOENT if path == credential; read.call(path, *args, **kwargs) }
+          outcome = File.stub(:read, raced) { svc.revoke(lease_id: lease["id"]) }
+          assert_match(/revoke-pending/, outcome.to_s)
+          assert_equal "revoke-pending", svc.store.load(lease["id"])["state"]
+        end
+
+        def test_invalid_stored_deadline_is_a_typed_error
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          svc.store.update(lease["id"]) { |record| record["use_until"] = "not-a-date" }
+          assert_raises(Error) { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"]) }
+        end
+
         def test_reconcile_reports_one_broken_handoff_and_continues
           svc = service
           leases = %w[first second].map do |name|
@@ -975,6 +997,25 @@ module Ace
           assert_raises(Refusal) { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"]) }
           assert_equal 1, @fake.issued.size
           assert_equal [lease["token_ref"]], @fake.revoked
+        end
+
+        def test_cleanup_error_preserves_uncontained_failure_and_marker
+          svc = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" }, runner: ->(*) { raise UncontainedSessionError, "unconfirmed" })
+          end
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          def @fake.revoke(**) = raise(Errno::EIO)
+          error = assert_raises(UncontainedSessionError) { svc.exec(lease_id: lease["id"], argv: ["true"]) }
+          assert_kind_of Errno::EIO, error.cause
+          assert_equal "unconfirmed", svc.store.load(lease["id"])["execution"]
+        end
+
+        def test_cleanup_system_error_after_success_is_a_typed_failure
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          def @fake.revoke(**) = raise(Errno::EIO)
+          assert_raises(Error) { svc.exec(lease_id: lease["id"], argv: ["true"]) }
+          refute svc.store.load(lease["id"]).key?("execution")
         end
 
         def test_reissued_lease_waits_for_a_previously_revoked_execution_to_finish
@@ -1063,6 +1104,31 @@ module Ace
           assert_empty @fake.revoked
         end
 
+        def test_session_runner_persists_the_exact_command_cgroup_before_launch
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          unit = "ace-auth-session-worker-0123456789abcdef.service"
+          session_id = "c" * 32
+          path = "/sys/fs/cgroup/ace.slice/#{unit}/ace-exec-#{'d' * 32}"
+          svc.store.update(lease["id"]) do |record|
+            record["execution"] = "in-progress"
+            record["session_unit"] = unit
+            record["session_id"] = session_id
+            record["session_uid"] = 1234
+            record["issuer_invocation"] = "a" * 32
+          end
+          runner = Object.new
+          runner.define_singleton_method(:call) do |_argv, _env, before_start:|
+            before_start.call(path)
+            raise "cgroup was not recorded before launch" unless svc.store.load(lease["id"])["execution_cgroup"] == path
+            0
+          end
+          svc.instance_variable_set(:@session_runner, runner)
+          svc.instance_variable_set(:@session_unit, unit)
+          svc.instance_variable_set(:@session_id, session_id)
+          assert_equal 0, svc.send(:run_leased_command, ["true"], {}, lease["id"])
+        end
+
         def test_issuer_recovery_refuses_to_claim_a_marked_execution_complete
           invocation = "a" * 32
           svc = service
@@ -1081,6 +1147,41 @@ module Ace
           assert_equal ["token"], @fake.revoked
           assert_equal "revoked", svc.store.load(lease["id"])["state"]
           assert_equal "in-progress", svc.store.load(lease["id"])["execution"]
+        end
+
+        def test_issuer_recovery_contains_exact_recorded_command_before_revocation
+          invocation, session_id = "a" * 32, "c" * 32
+          unit = "ace-auth-session-worker-0123456789abcdef.service"
+          path = "/sys/fs/cgroup/ace.slice/#{unit}/ace-exec-#{'d' * 32}"
+          svc = service
+          lease = svc.store.create(profile: "developer", role: "developer", principal: "test-worker",
+            task: "t", assignment: "a", repos: ["ace"], use_until: (Time.now.utc + 60).iso8601,
+            provider_expiry: nil, token_ref: "token", session_uid: 1234, session_id: session_id,
+            session_unit: unit, issuer_invocation: invocation)
+          svc.store.update(lease["id"]) do |record|
+            record["state"] = "issued"
+            record["execution"] = "in-progress"
+            record["execution_cgroup"] = path
+          end
+          observed = nil
+          recover = ->(**values) { observed = values; :contained }
+          state_during_revoke = nil
+          @fake.define_singleton_method(:revoke) do |**|
+            state_during_revoke = svc.store.load(lease["id"])["state"]
+            :revoked
+          end
+          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
+          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
+            SessionAttachment.stub(:recover_command!, recover) do
+              assert_equal "revoked", operator.revoke_issuer(invocation: invocation).fetch(0).fetch("cleanup")
+            end
+          end }
+          assert_equal({path: path, unit: unit, invocation_id: session_id}, observed)
+          assert_equal "revoke-pending", state_during_revoke
+          record = svc.store.load(lease["id"])
+          refute record.key?("execution")
+          refute record.key?("execution_cgroup")
+          assert_equal "revoked", record["state"]
         end
 
         def test_exec_refuses_credential_overrides_from_caller_environment
@@ -1188,6 +1289,73 @@ module Ace
           [request, revoke].compact.each { |thread| thread.join(3) }
         end
 
+        def test_reconcile_does_not_overtake_issuance_across_processes
+          skip "fork unavailable" unless Process.respond_to?(:fork)
+          ready_read, ready_write = IO.pipe
+          release_read, release_write = IO.pipe
+          attempted_read, attempted_write = IO.pipe
+          revoked = File.join(@dir, "revoked-during-issue")
+          provider = @fake
+          original_issue = provider.method(:issue)
+          provider.define_singleton_method(:issue) do |profile:, lease:|
+            ready_write.write("1")
+            release_read.read(1)
+            original_issue.call(profile: profile, lease: lease)
+          end
+          provider.define_singleton_method(:revoke) do |**|
+            File.write(revoked, "revoked")
+            :revoked
+          end
+          svc = service
+          issuer = fork do
+            begin
+              svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+              exit! 0
+            rescue StandardError
+              exit! 1
+            end
+          end
+          Timeout.timeout(5) { ready_read.read(1) }
+          reconciler = fork do
+            lock = svc.store.method(:with_correlation_lock)
+            svc.store.define_singleton_method(:with_correlation_lock) do |**args, &block|
+              attempted_write.write("1")
+              lock.call(**args, &block)
+            end
+            begin
+              svc.reconcile
+              exit! 0
+            rescue StandardError
+              exit! 1
+            end
+          end
+          Timeout.timeout(5) { attempted_read.read(1) }
+          refute File.exist?(revoked), "reconcile revoked an issue that had not finished"
+          release_write.write("1")
+          _, status = Timeout.timeout(5) { Process.wait2(issuer) }
+          issuer = nil
+          assert status.success?, "issuer process failed"
+          _, status = Timeout.timeout(5) { Process.wait2(reconciler) }
+          reconciler = nil
+          assert status.success?, "reconciler process failed"
+          assert_equal "issued", svc.store.all.fetch(0)["state"]
+          refute File.exist?(revoked)
+        ensure
+          [issuer, reconciler].compact.each do |pid|
+            begin
+              unless Process.waitpid(pid, Process::WNOHANG)
+                Process.kill("KILL", pid) # our own unreaped test child
+                Process.waitpid(pid)
+              end
+            rescue Errno::ESRCH, Errno::ECHILD
+              nil
+            end
+          end
+          [ready_read, ready_write, release_read, release_write, attempted_read, attempted_write].compact.each do |io|
+            io.close unless io.closed?
+          end
+        end
+
         def test_status_never_exposes_the_token_reference
           svc = service
           lease = svc.request(profile_name: "developer", role: "developer",
@@ -1196,6 +1364,17 @@ module Ace
           single = svc.status(lease_id: lease["id"])
           refute_includes single.keys, "token_ref"
           refute_includes svc.status.map(&:keys).flatten.uniq, "token_ref"
+        end
+
+        def test_status_does_not_expose_internal_path_of_corrupt_record
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          File.write(File.join(@dir, "leases", "#{lease.fetch("id")}.json"), "{")
+
+          corrupt = svc.status.find { |record| record["id"] == lease["id"] }
+          assert corrupt.fetch("corrupt")
+          refute_includes corrupt.keys, "_path"
         end
 
         # R6 (re-review): a REALLY spawned child must not inherit any

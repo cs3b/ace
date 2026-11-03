@@ -364,10 +364,10 @@ module Ace
               provider = Providers.resolve(profile["provider"])
               exit_code = if provider.respond_to?(:with_exec_environment)
                 provider.with_exec_environment(profile: profile, credential: credential) do |provider_env|
-                  @runner.call(argv, preserve_installed_runtime!(child_env.merge(provider_env)))
+                  run_leased_command(argv, preserve_installed_runtime!(child_env.merge(provider_env)), lease["id"])
                 end
               else
-                @runner.call(argv, preserve_installed_runtime!(child_env))
+                run_leased_command(argv, preserve_installed_runtime!(child_env), lease["id"])
               end
               unless exit_code.is_a?(Integer) && exit_code.between?(0, 255)
                 raise Error, "execution returned an invalid exit status"
@@ -383,18 +383,31 @@ module Ace
               # A failed spawn, provider error or interrupted caller must not
               # leave an issued credential live merely because no exit code
               # was returned. Reconciliation retains unresolved revocations.
-              if uncontained
-                @store.update(lease["id"]) do |record|
-                  record["state"] = "revoke-pending"
-                  record["containment"] = "unconfirmed"
-                  record["execution"] = "unconfirmed"
+              primary_error = $!
+              begin
+                if uncontained
+                  @store.update(lease["id"]) do |record|
+                    record["state"] = "revoke-pending"
+                    record["containment"] = "unconfirmed"
+                    record["execution"] = "unconfirmed"
+                  end
+                  # Revoking the remote credential limits exposure, but does
+                  # not establish that the command's processes have stopped.
+                  cleanup = cleanup(lease, profile, handoff, allow_executing: true)
+                else
+                  @store.update(lease["id"]) do |record|
+                    record.delete("execution")
+                    record.delete("execution_cgroup")
+                    record["state"] = "revoke-pending" unless record["state"] == "revoked"
+                  end
+                  cleanup = cleanup(lease, profile, handoff)
                 end
-                # Revoking the remote credential limits exposure, but does
-                # not establish that the command's processes have stopped.
-                cleanup = cleanup(lease, profile, handoff, allow_executing: true)
-              else
-                @store.update(lease["id"]) { |record| record.delete("execution") }
-                cleanup = cleanup(lease, profile, handoff)
+              rescue Error, SystemCallError, IOError => error
+                if primary_error.is_a?(UncontainedSessionError)
+                  raise UncontainedSessionError.new(primary_error.message), cause: error
+                end
+                raise primary_error, cause: nil if primary_error
+                raise Error, "credential cleanup failed (#{error.class})"
               end
             end
             if exit_code.zero? && !%i[revoked already_invalid cleared not-issued].include?(cleanup)
@@ -472,6 +485,8 @@ module Ace
             return :"revoke-pending (profile '#{lease["profile"]}' removed from the authorization document)"
           end
 
+          # Explicit revocation is allowed during execution to cut remote
+          # access immediately; the execution marker still prevents reuse.
           cleanup(lease, profile, handoff, allow_executing: true)
         end
         private :revoke_locked
@@ -521,7 +536,14 @@ module Ace
                 unless current["id"] == record["id"] && current["issuer_invocation"] == invocation
                   raise Error, "issuer lease identity changed during recovery"
                 end
+                containment_error = nil
+                begin
+                  recover_recorded_command!(current) if current.key?("execution")
+                rescue Error, Ace::Runtime::Error, SystemCallError, IOError => e
+                  containment_error = e
+                end
                 revoke(lease_id: record.fetch("id"))
+                raise containment_error if containment_error
                 after = @store.load(record.fetch("id"))
                 raise Error, "issuer command execution is unresolved" if after.key?("execution")
                 unless after["state"] == "revoked" && %w[revoked already_invalid cleared not-issued].include?(after.dig("cleanup", "result"))
@@ -570,6 +592,44 @@ module Ace
         end
 
         private
+
+        def recover_recorded_command!(lease)
+          path = lease["execution_cgroup"]
+          unit = lease["session_unit"]
+          session_id = lease["session_id"]
+          unless SessionAttachment.command_cgroup_path?(path, unit) && session_id.is_a?(String) && session_id.match?(/\A[0-9a-f]{32}\z/)
+            raise Error, "unresolved command has no verified cgroup identity"
+          end
+          SessionAttachment.recover_command!(path: path, unit: unit, invocation_id: session_id)
+          @store.update(lease.fetch("id")) do |record|
+            unless record["execution_cgroup"] == path && record["session_unit"] == unit && record["session_id"] == session_id &&
+                record["issuer_invocation"] == lease["issuer_invocation"] && record.key?("execution")
+              raise Error, "command recovery identity changed"
+            end
+            record.delete("execution")
+            record.delete("execution_cgroup")
+            record.delete("containment")
+            record["state"] = "revoke-pending" unless record["state"] == "revoked"
+          end
+        end
+
+        def run_leased_command(argv, environment, lease_id)
+          return @runner.call(argv, environment) unless @session_runner
+
+          before_start = lambda do |path|
+            unless SessionAttachment.command_cgroup_path?(path, @session_unit)
+              raise Error, "command cgroup identity is invalid"
+            end
+            @store.update(lease_id) do |record|
+              unless record["execution"] == "in-progress" && record["session_unit"] == @session_unit &&
+                  record["session_id"] == @session_id
+                raise Error, "command execution identity changed before launch"
+              end
+              record["execution_cgroup"] = path
+            end
+          end
+          @session_runner.call(argv, environment, before_start: before_start)
+        end
 
         def reconcile_locked(lease)
           if lease.key?("execution")
@@ -630,40 +690,31 @@ module Ace
                 if current.key?("execution") || current["containment"] == "unconfirmed"
                   raise Refusal.new("a previous command's execution or containment is unconfirmed; no new lease can be issued")
                 end
+                next unless %w[preparing revoke-pending].include?(current["state"])
+
+                # Keep the execution lock through settlement. A record may
+                # have changed since the inventory snapshot was read.
+                if current["state"] == "revoke-pending" && current["token_ref"].to_s.empty?
+                  raise Refusal.new("a previous issue for task '#{task}' assignment '#{assignment}' " \
+                    "profile '#{profile}' has an unresolved remote outcome (lease '#{current["id"]}', " \
+                    "no deterministic remote identity); it was NOT re-minted — run reconcile, wait " \
+                    "for the provider's native expiry, or close it explicitly before requesting again")
+                end
+                record_profile = profile_for(profile)
+                handoff = CredentialHandoff.new(@credentials_dir, recipient: current["principal"] || principal)
+                outcome = cleanup(current, record_profile, handoff)
+                next if %i[revoked already_invalid cleared].include?(outcome)
+
+                raise Refusal.new("a previous issue for task '#{task}' assignment '#{assignment}' " \
+                  "profile '#{profile}' has an unresolved remote outcome (lease '#{current["id"]}', " \
+                  "state #{current["state"]}); it was NOT re-minted — run reconcile, wait for the " \
+                  "provider's native expiry, or close it explicitly before requesting again")
               end
             rescue Refusal
               raise
             rescue Error
               raise Refusal.new("a previous command is still running or its execution state is unavailable")
             end
-          end
-          unresolved = matching.select { |record| %w[preparing revoke-pending].include?(record["state"]) }
-          return if unresolved.empty?
-
-          record_profile = profile_for(profile)
-          unresolved.each do |record|
-            # An unknown ISSUE outcome (revoke-pending after a lost
-            # response) without a deterministic remote identity can
-            # NEVER be confirmed settled — the retry is refused until
-            # reconcile or the provider's native expiry settles it. A
-            # PREPARING record (issuer died mid-flight, nothing ever
-            # delivered) is settled best-effort through the provider
-            # below; only a confirmed outcome lets the retry proceed.
-            if record["state"] == "revoke-pending" && record["token_ref"].to_s.empty?
-              raise Refusal.new("a previous issue for task '#{task}' assignment '#{assignment}' " \
-                "profile '#{profile}' has an unresolved remote outcome (lease '#{record["id"]}', " \
-                "no deterministic remote identity); it was NOT re-minted — run reconcile, wait " \
-                "for the provider's native expiry, or close it explicitly before requesting again")
-            end
-
-            handoff = CredentialHandoff.new(@credentials_dir, recipient: record["principal"] || principal)
-            outcome = cleanup(record, record_profile, handoff)
-            next if %i[revoked already_invalid cleared].include?(outcome)
-
-            raise Refusal.new("a previous issue for task '#{task}' assignment '#{assignment}' " \
-              "profile '#{profile}' has an unresolved remote outcome (lease '#{record["id"]}', " \
-              "state #{record["state"]}); it was NOT re-minted — run reconcile, wait for the " \
-              "provider's native expiry, or close it explicitly before requesting again")
           end
         end
 
@@ -695,7 +746,11 @@ module Ace
           return :revoked if confirmed_revocation?(current)
 
           credential = handoff.path(lease["id"])
-          token = File.file?(credential) ? File.read(credential) : nil
+          begin
+            token = File.file?(credential) ? File.read(credential) : nil
+          rescue SystemCallError, IOError => e
+            return mark_cleanup_pending(lease["id"], e.class.to_s)
+          end
           begin
             provider = Providers.resolve(profile["provider"])
             outcome = provider.revoke(profile: profile, token_ref: lease["token_ref"],
@@ -707,7 +762,7 @@ module Ace
           # An interrupted issue may still be executing at the forge after
           # our HTTP client timed out or died. A 404 before that request
           # commits is not proof that its token can never appear later.
-          if outcome == :already_invalid && token.nil? && %w[preparing revoke-pending].include?(lease["state"])
+          if outcome == :already_invalid && token.nil? && %w[preparing revoke-pending].include?(current["state"])
             return mark_cleanup_pending(lease["id"], "issue outcome remains unknown")
           end
 
@@ -761,7 +816,7 @@ module Ace
         end
 
         def public_view(lease)
-          lease.reject { |key, _| key == "token_ref" }
+          lease.reject { |key, _| key == "token_ref" || key.start_with?("_") }
             .merge("live" => @store.live?(lease))
         end
 

@@ -48,6 +48,12 @@ module Ace
         # @return [Hash] the created (PREPARING) lease record
         def create(profile:, role:, principal:, task:, assignment:, repos:,
           use_until:, provider_expiry:, token_ref: nil, id: nil, session_uid: nil, session_id: nil, session_unit: nil, issuer_invocation: nil)
+          identity = [session_uid, session_id, session_unit, issuer_invocation]
+          if identity.any? { |value| !value.nil? } && !(session_uid.is_a?(Integer) && session_uid.positive? &&
+              [session_id, issuer_invocation].all? { |value| value.is_a?(String) && value.match?(/\A[0-9a-f]{32}\z/) } &&
+              session_unit.is_a?(String) && SessionPeer::UNIT.match?(session_unit))
+            raise Error, "lease session identity is incomplete"
+          end
           lease = {"id" => id || "lease-#{SecureRandom.hex(8)}",
                    "profile" => profile, "role" => role, "principal" => principal,
                    "task" => task, "assignment" => assignment, "repos" => repos.sort,
@@ -125,18 +131,20 @@ module Ace
           with_write_lock(id) do
             lease = begin
               parse_record(path)
-            rescue JSON::ParserError, Errno::ENOENT => e
+            rescue JSON::ParserError, SystemCallError => e
               # A corrupt/missing record is a named store failure, never a
               # raw parser error escaping through the update seam.
               raise Error, "lease '#{id}' cannot be read at #{path}: #{e.class} #{e.message}"
             end
             yield(lease)
+            raise Error, "lease session identity is incomplete" unless valid_session_identity?(lease)
             atomic_write(path, lease)
             lease
           end
         end
 
         def write(lease)
+          raise Error, "lease session identity is incomplete" unless valid_session_identity?(lease)
           atomic_write(lease_path(lease["id"]), lease)
           lease
         end
@@ -157,7 +165,7 @@ module Ace
         # against a concurrent identical request — the second caller
         # waits and then returns the first caller's live lease.
         def with_correlation_lock(task:, assignment:, profile:, role:)
-          key = Digest::SHA256.hexdigest([task, assignment, profile, role].join("\e"))
+          key = Digest::SHA256.hexdigest(JSON.generate([task, assignment, profile, role]))
           lock = open_lock(File.join(@dir, "correlation-#{key}.lock"))
           begin
             lock_flock(lock, File::LOCK_EX)
@@ -222,15 +230,27 @@ module Ace
           end
 
           true
+        rescue ArgumentError, TypeError => e
+          raise Error, "lease deadline is invalid (#{e.class})"
         end
 
         private
 
         def open_lock(path)
           FileUtils.mkdir_p(@dir)
-          File.open(path, File::CREAT | File::RDWR)
+          lock = File.open(path, File::CREAT | File::RDWR | File::NOFOLLOW, 0o600)
+          held, named = lock.stat, File.lstat(path)
+          unless held.file? && !named.symlink? && held.uid == Process::Sys.geteuid && held.nlink == 1 &&
+              (held.mode & 0o022).zero? && [held.dev, held.ino] == [named.dev, named.ino]
+            raise Error, "lease lock is not safely owned"
+          end
+          lock
         rescue SystemCallError => e
+          lock&.close unless lock&.closed?
           raise Error, "lease lock is unavailable (#{e.class})"
+        rescue Exception
+          lock&.close unless lock&.closed?
+          raise
         end
 
         def lock_flock(lock, flags)
@@ -244,13 +264,16 @@ module Ace
           unless record.is_a?(Hash) && record["id"] == File.basename(path, ".json")
             raise JSON::ParserError, "lease record identity differs"
           end
-          if %w[session_uid session_id session_unit issuer_invocation].any? { |field| record.key?(field) }
-            valid = record["session_uid"].is_a?(Integer) && record["session_uid"].positive? &&
-              %w[session_id issuer_invocation].all? { |field| record[field].is_a?(String) && record[field].match?(/\A[0-9a-f]{32}\z/) } &&
-              record["session_unit"].is_a?(String) && SessionPeer::UNIT.match?(record["session_unit"])
-            raise JSON::ParserError, "lease session identity is incomplete" unless valid
-          end
+          raise JSON::ParserError, "lease session identity is incomplete" unless valid_session_identity?(record)
           record
+        end
+
+        def valid_session_identity?(record)
+          fields = %w[session_uid session_id session_unit issuer_invocation]
+          return true unless fields.any? { |field| record.key?(field) }
+          record["session_uid"].is_a?(Integer) && record["session_uid"].positive? &&
+            %w[session_id issuer_invocation].all? { |field| record[field].is_a?(String) && record[field].match?(/\A[0-9a-f]{32}\z/) } &&
+            record["session_unit"].is_a?(String) && SessionPeer::UNIT.match?(record["session_unit"])
         end
 
         def atomic_write(path, lease)
@@ -269,6 +292,18 @@ module Ace
           rescue Errno::ENOENT
             FileUtils.mkdir_p(File.dirname(path))
             File.rename(temporary, path)
+          end
+          # Persist the directory entry as well as the file data.
+          File.open(File.dirname(path), File::RDONLY) { |directory| directory.fsync }
+        rescue SystemCallError, IOError => e
+          raise Error, "lease record write is unavailable (#{e.class})"
+        ensure
+          if temporary
+            begin
+              File.unlink(temporary)
+            rescue SystemCallError
+              nil
+            end
           end
         end
 
