@@ -153,10 +153,11 @@ systemd `DynamicUser` unit. It checks that the dynamic UID cannot write the
 unmapped project, performs a commit through the mapped view, stops the unit,
 and checks the worktree as `mo`. It removes its unique unit and repository
 on success; on failure it stops its unit and retains the repository for
-diagnosis. A dynamic-UID child enters the namespace with `nsenter`, is attached
-to the unit's cgroup, and only then runs the Git commands. It must be killed
-when the unit stops. This tests the operating-system primitives, not an ACE
-launcher, token issuance or a real agent session.
+diagnosis. Systemd starts the dynamic-UID process in its own cgroup. A root
+helper uses `nsenter` to prepare the process's private mount namespace, then
+releases that process to run Git. A pidfd confirms the same process exits when
+the unit stops. This tests operating-system primitives, not an ACE launcher,
+token issuance or a real agent session.
 
 `probe-installed-eyes.rb` checks the installed observer and reader together
 as the session account on Linux. Set `GEM_HOME` to the candidate and
