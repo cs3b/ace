@@ -21,6 +21,9 @@ parser.add_argument('--ruby', required=True)
 parser.add_argument('--gem-home', required=True)
 parser.add_argument('--shared-gems', required=True)
 parser.add_argument('--version', required=True)
+parser.add_argument('--test-kill-fallback', action='store_true',
+                    help='force pidfd signaling failure and require the session cgroup to terminate')
+parser.add_argument('--signal-error', choices=('EPERM', 'ESRCH'), default='EPERM')
 args = parser.parse_args()
 base = '/var/lib/ace-e2e'
 if os.geteuid() != 0:
@@ -74,7 +77,10 @@ attach = Object.new
 attach.define_singleton_method(:prepare) do
   group = IO.popen(["/usr/bin/systemctl", "show", "--property=ControlGroup", "--value", unit], &:read).strip
   raise "unexpected cgroup" unless $?.success? && File.basename(group) == unit && group.start_with?("/")
-  File.open(File.join("/sys/fs/cgroup", group.delete_prefix("/"), "cgroup.procs"), File::WRONLY | File::NOFOLLOW)
+  dir = File.join("/sys/fs/cgroup", group.delete_prefix("/"))
+  pair = Struct.new(:procs, :kill) { def close = [procs, kill].each { |io| io.close unless io.closed? } }
+  pair.new(File.open(File.join(dir, "cgroup.procs"), File::WRONLY | File::NOFOLLOW),
+    File.open(File.join(dir, "cgroup.kill"), File::WRONLY | File::NOFOLLOW))
 end
 attach.define_singleton_method(:verify_child!) do |child|
   next false unless SessionNamespace.matches?(namespace, child)
@@ -94,6 +100,50 @@ unless [after.dev, after.ino] == [parent_namespace.dev, parent_namespace.ino] &&
 end
 namespace.close
 puts "installed SessionRunner joined mapped namespace and attached its child"
+'''
+fallback_program = r'''
+gem "ace-lab", "= #{ARGV.fetch(0)}"
+require "ace/lab/auth/session_runner"
+require "ace/lab/auth/session_namespace"
+unit, pid, uid, project = ARGV.values_at(1, 2, 3, 4)
+namespace = Ace::Lab::Auth::SessionNamespace.capture(Integer(pid))
+attach = Object.new
+attach.define_singleton_method(:prepare) do
+  group = IO.popen(["/usr/bin/systemctl", "show", "--property=ControlGroup", "--value", unit], &:read).strip
+  raise "unexpected cgroup" unless $?.success? && File.basename(group) == unit && group.start_with?("/")
+  dir = File.join("/sys/fs/cgroup", group.delete_prefix("/"))
+  pair = Struct.new(:procs, :kill) { def close = [procs, kill].each { |io| io.close unless io.closed? } }
+  pair.new(File.open(File.join(dir, "cgroup.procs"), File::WRONLY | File::NOFOLLOW),
+    File.open(File.join(dir, "cgroup.kill"), File::WRONLY | File::NOFOLLOW))
+end
+attach.define_singleton_method(:verify_child!) { |child| Ace::Lab::Auth::SessionNamespace.matches?(namespace, child) }
+runner = Ace::Lab::Auth::SessionRunner.new(uid: Integer(uid), cwd: project, namespace: namespace, attach: attach)
+signal = runner.method(:signal_child!)
+runner.define_singleton_method(:signal_child!) do |handle, number, group: false|
+  raise Errno.const_get(ARGV.fetch(5)) if number != 0
+  signal.call(handle, number, group: group)
+end
+marker = File.join(project, "kill-fallback-ready")
+main = Thread.current
+interrupter = Thread.new do
+  deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 10
+  sleep 0.01 until File.file?(marker) || Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+  main.raise(Interrupt, "cancel probe")
+end
+begin
+  begin
+    runner.call(["/bin/sh", "-c", 'echo ready > "$1"; exec /bin/sleep 60', "runner", marker], {})
+    abort "runner did not receive cancellation"
+  rescue Interrupt
+    raise "session command did not start" unless File.file?(marker)
+  end
+  raise "session survived cgroup kill" if system("/usr/bin/systemctl", "is-active", "--quiet", unit)
+  puts "failed pidfd signal terminated the pinned session cgroup"
+ensure
+  interrupter.kill
+  interrupter.join
+  namespace.close
+end
 '''
 foreign_namespace_program = r'''
 gem "ace-lab", "= #{ARGV.fetch(0)}"
@@ -157,6 +207,9 @@ try:
     owner = os.stat(os.path.join(project, 'session-runner-created'))
     if (owner.st_uid, owner.st_gid) != (account.pw_uid, account.pw_gid):
         raise RuntimeError('file owner differs from project owner')
+    if args.test_kill_fallback:
+        run([args.ruby, '-e', fallback_program, args.version, unit, str(pid), str(uid), project,
+             args.signal_error], env=env)
     run(['/usr/bin/systemctl', 'stop', unit])
     attempted = False
     passed = True

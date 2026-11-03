@@ -170,6 +170,9 @@ the resulting file. It also requires rejection of a mount namespace owned by
 a separate user namespace. It removes the unit and temporary project on success and
 preserves the project for diagnosis on failure. The test seam does not prove
 `SessionPeer`, issuer supervision, token issuance or an ACE agent launch.
+With `--test-kill-fallback`, it also forces pidfd signaling to fail after a
+command starts and checks that the pinned session cgroup terminates. This
+mode intentionally stops only the disposable unit created by the probe.
 
 `probe-authenticated-runner.py` takes the same arguments. It creates a local
 socket and a temporary dynamic-UID systemd session, then invokes the installed
