@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keep each leased command and its descendants in a root-controlled cgroup;
+  require confirmed emptiness before reporting command completion and block
+  replacement leases when containment is unconfirmed.
+- Persist in-flight execution in the lease record so issuer crashes cannot
+  silently make a running or uncontained command eligible for reuse.
+- Reject empty or malformed commands and malformed environment handoffs;
+  execute argv directly without exposing the environment through `env`.
 - Serialize issuance with revoke and reconciliation for the same lease
   correlation; report individual recovery failures without masking other leases.
 - Accept confirmed already-invalid credentials as successful cleanup and

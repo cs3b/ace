@@ -215,6 +215,7 @@ module Ace
         # or is mid-revocation — neither is ever usable or "live".
         def live?(lease, at: Time.now)
           return false unless lease["state"] == "issued"
+          return false if lease.key?("execution") || lease["containment"] == "unconfirmed"
           return false if lease["use_until"] && Time.parse(lease["use_until"]) <= at
           if lease["provider_expiry"] && Time.parse(lease["provider_expiry"]) <= at
             return false

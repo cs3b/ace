@@ -98,7 +98,7 @@ module Ace
           unless account.uid == peer["uid"] && account.name == properties["User"] && account.gid == peer["gid"] &&
               properties["DynamicUser"] == true && properties["NoNewPrivileges"] == true &&
               properties["CapabilityBoundingSet"] == 0 && properties["KillMode"] == "control-group" &&
-              properties["Delegate"] == true && properties["RuntimeDirectory"] == [directory_name] &&
+              properties["Delegate"] == false && properties["RuntimeDirectory"] == [directory_name] &&
               properties["RuntimeDirectoryPreserve"] == "no"
             raise Error, "session systemd isolation policy differs"
           end
@@ -125,7 +125,7 @@ module Ace
           handle&.close unless handle&.closed?
           main_handle&.close unless main_handle&.closed?
           namespace&.close unless namespace&.closed?
-          if error.is_a?(SystemCallError) || error.is_a?(IOError) || error.is_a?(ArgumentError)
+          if error.is_a?(Ace::Runtime::Error) || error.is_a?(SystemCallError) || error.is_a?(IOError) || error.is_a?(ArgumentError)
             raise Error, "session identity could not be verified (#{error.class})"
           end
           raise

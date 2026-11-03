@@ -35,10 +35,10 @@ module Ace
         end
 
         def teardown
-          [@peer, @main, @namespace, @opened, @kill].compact.each { |io| io.close unless io.closed? }
+          [@peer, @main, @namespace, @opened, @kill, @events].compact.each { |io| io.close unless io.closed? }
         end
 
-        def attachment(opener: ->(_group) { @opened = File.open(File::NULL, "w"); @kill = File.open(File::NULL, "w"); SessionAttachment::Prepared.new(procs: @opened, kill: @kill) })
+        def attachment(opener: ->(_group) { @opened = File.open(File::NULL, "w"); @kill = File.open(File::NULL, "w"); @events = File.open(File::NULL); SessionAttachment::Prepared.new(procs: @opened, kill: @kill, events: @events) })
           SessionAttachment.new(identity: @identity, platform: @platform, manager: @manager,
             cgroup_opener: opener, namespace_matcher: ->(_namespace, _pid) { @namespace_matches })
         end
@@ -66,10 +66,11 @@ module Ace
         end
 
         def test_closes_descriptor_if_invocation_changes_during_open
-          opener = ->(_group) { @opened = File.open(File::NULL, "w"); @kill = File.open(File::NULL, "w"); @manager.invocation = "b" * 32; SessionAttachment::Prepared.new(procs: @opened, kill: @kill) }
+          opener = ->(_group) { @opened = File.open(File::NULL, "w"); @kill = File.open(File::NULL, "w"); @events = File.open(File::NULL); @manager.invocation = "b" * 32; SessionAttachment::Prepared.new(procs: @opened, kill: @kill, events: @events) }
           Process.stub(:euid, 0) { assert_raises(Error) { attachment(opener: opener).prepare } }
           assert @opened.closed?
           assert @kill.closed?
+          assert @events.closed?
         end
 
         def test_refuses_a_child_with_a_different_parent
@@ -80,6 +81,36 @@ module Ace
         def test_reports_a_vanished_cgroup_as_a_typed_error
           opener = ->(_group) { raise Errno::ENOENT }
           Process.stub(:euid, 0) { assert_raises(Error) { attachment(opener: opener).prepare } }
+        end
+
+        def test_command_cleanup_requires_a_confirmed_empty_cgroup
+          Dir.mktmpdir do |dir|
+            kill_path = File.join(dir, "kill")
+            events_path = File.join(dir, "events")
+            File.write(kill_path, "")
+            File.write(events_path, "populated 0\n")
+            pair = SessionAttachment::Prepared.new(procs: File.open(File::NULL, "w"),
+              kill: File.open(kill_path, "w"), events: File.open(events_path))
+            assert pair.terminate!
+            assert_equal "1\n", File.read(kill_path)
+            pair.events.close
+            assert_raises(Error) { pair.terminate! }
+            pair.close
+          end
+        end
+
+        def test_failure_to_remove_a_confirmed_empty_command_group_is_reported
+          Dir.mktmpdir do |dir|
+            group = File.join(dir, "group")
+            Dir.mkdir(group)
+            File.write(File.join(group, "unexpected"), "")
+            events = File.join(dir, "events")
+            File.write(events, "populated 0\n")
+            pair = SessionAttachment::Prepared.new(procs: File.open(File::NULL, "w"),
+              kill: File.open(File::NULL, "w"), events: File.open(events), path: group)
+            assert pair.terminate!
+            assert_raises(UncontainedSessionError) { pair.close }
+          end
         end
 
         def test_session_verification_refuses_an_exited_main_process

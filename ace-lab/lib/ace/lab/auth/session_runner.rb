@@ -2,6 +2,7 @@
 
 require "etc"
 require "fiddle"
+require_relative "error"
 require_relative "session_namespace"
 
 module Ace
@@ -21,6 +22,8 @@ module Ace
           @account = Etc.getpwuid(uid)
           raise ArgumentError, "a session must not use the root group" if @account.gid.zero?
           raise ArgumentError, "session working directory must be an absolute path" unless cwd.is_a?(String) && cwd.start_with?("/")
+          # Resolve the name here, but enter it after setns so the session's
+          # id-mapped project mount, rather than a host-opened fd, is used.
           @cwd = File.realpath(cwd)
           raise ArgumentError, "session working directory is not a directory" unless File.directory?(@cwd)
           @attach = attach
@@ -28,7 +31,7 @@ module Ace
         end
 
         def call(argv, env)
-          unless argv.is_a?(Array) && !argv.empty? && argv.all? { |arg| arg.is_a?(String) && !arg.include?("\0") }
+          unless argv.is_a?(Array) && !argv.empty? && argv.all? { |arg| arg.is_a?(String) && !arg.include?("\0") } && !argv.first.empty?
             raise ArgumentError, "a valid session command is required"
           end
           unless env.is_a?(Hash) && env.all? { |key, value|
@@ -56,6 +59,7 @@ module Ace
                 ready_writer.close
                 prepared_reader.close
                 cgroup.kill.close
+                cgroup.events.close
                 Process.setpgid(0, 0)
                 @namespace_joiner.call(@namespace)
                 @namespace.close
@@ -106,22 +110,31 @@ module Ace
             ready_writer.write("1")
             ready_writer.close
             _, status = Process.wait2(pid)
+            # A successful leader may have left detached descendants.
+            # The command cgroup is separate from the session's main unit.
+            contain!(cgroup)
             status.exitstatus || 128 + status.termsig.to_i
           rescue Exception # cancel through the pinned child identity
             ready_writer.close unless ready_writer.closed?
             prepared_reader.close unless prepared_reader.closed?
             begin
               signal_child!(handle, Signal.list.fetch("KILL"), group: group_signal_supported) if handle
-            rescue StandardError => error
-              # If signaling the pinned process fails, terminate the entire
-              # pinned session cgroup; never leave an executing child behind
-              # while its issuer proceeds with credential cleanup.
-              # After release, ESRCH may mean the group leader exited while
-              # descendants survived, so it also needs session-wide cleanup.
-              unless error.is_a?(Errno::ESRCH) && !group_signal_supported
-                cgroup.kill.sync = true
-                raise ArgumentError, "session cgroup cancellation failed" unless cgroup.kill.write("1\n") == 2
+            rescue StandardError
+              # The command cgroup remains the containment backstop.
+              nil
+            end
+            # Includes descendants that started a different process group.
+            begin
+              contain!(cgroup)
+            rescue UncontainedSessionError
+              # Do not block on a process whose death was not established;
+              # reap it if it has already exited and preserve the failure.
+              begin
+                Process.waitpid(pid, Process::WNOHANG)
+              rescue Errno::ECHILD
+                nil
               end
+              raise
             end
             begin
               Process.waitpid(pid)
@@ -140,6 +153,12 @@ module Ace
         end
 
         private
+
+        def contain!(cgroup)
+          raise Error, "command cgroup did not confirm termination" unless cgroup.terminate! == true
+        rescue StandardError => e
+          raise UncontainedSessionError, "command cgroup could not be confirmed empty (#{e.class})"
+        end
 
         # Linux pidfds pin the child identity across exit and PID reuse. The
         # group flag requires Linux 6.9 or later; failure is a readiness error.

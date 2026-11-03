@@ -30,7 +30,7 @@ module Ace
             @main_pid = "123"
             @properties = {"User" => "ace-worker", "DynamicUser" => true,
                            "NoNewPrivileges" => true, "CapabilityBoundingSet" => 0,
-                           "KillMode" => "control-group", "Delegate" => true,
+                           "KillMode" => "control-group", "Delegate" => false,
                            "RuntimeDirectory" => ["ace-auth-0123456789abcdef"],
                            "RuntimeDirectoryPreserve" => "no"}
           end
@@ -94,7 +94,7 @@ module Ace
           @manager.properties["RuntimeDirectoryPreserve"] = "yes"
           assert_raises(Error) { @peer.authenticate(FakeSocket.new) }
           @manager.properties["RuntimeDirectoryPreserve"] = "no"
-          @manager.properties["Delegate"] = false
+          @manager.properties["Delegate"] = true
           assert_raises(Error) { @peer.authenticate(FakeSocket.new) }
         end
 
@@ -111,6 +111,11 @@ module Ace
           def socket.getsockopt(*) = raise(Errno::ENOPROTOOPT)
           error = assert_raises(Error) { @peer.authenticate(socket) }
           assert_match(/identity could not be verified/, error.message)
+        end
+
+        def test_manager_identity_failures_are_typed_auth_errors
+          @manager.define_singleton_method(:unit_for_pidfd) { |handle:| raise Ace::Runtime::RuntimeUnavailableError }
+          assert_raises(Error) { @peer.authenticate(FakeSocket.new) }
         end
 
         def test_refuses_supplementary_groups_outside_the_session

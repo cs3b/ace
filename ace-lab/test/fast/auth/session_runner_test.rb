@@ -8,10 +8,11 @@ module Ace
     module Auth
       class SessionRunnerTest < Minitest::Test
         class FakeAttachment
-          Prepared = Struct.new(:procs, :kill) do
-            def close = [procs, kill].each { |io| io.close unless io.closed? }
+          Prepared = Struct.new(:procs, :kill, :events) do
+            def close = [procs, kill, events].each { |io| io.close unless io.closed? }
+            def terminate! = true
           end
-          def prepare = Prepared.new(File.open(File::NULL, "w"), File.open(File::NULL, "w"))
+          def prepare = Prepared.new(File.open(File::NULL, "w"), File.open(File::NULL, "w"), File.open(File::NULL))
           def verify_child!(_pid) = false
         end
 

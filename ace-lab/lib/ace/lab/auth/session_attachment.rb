@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "fiddle"
+require "securerandom"
 require_relative "session_peer"
 
 module Ace
@@ -13,9 +14,36 @@ module Ace
       class SessionAttachment
         CGROUP_ROOT = "/sys/fs/cgroup"
         CGROUP2_MAGIC = 0x6367_7270
-        Prepared = Struct.new(:procs, :kill, keyword_init: true) do
+        Prepared = Struct.new(:procs, :kill, :events, :path, keyword_init: true) do
+          def terminate!
+            kill.sync = true
+            raise Error, "command cgroup cancellation failed" unless kill.write("1\n") == 2
+            deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+            loop do
+              events.rewind
+              values = events.read.to_s.lines.map(&:split).to_h
+              if values["populated"] == "0"
+                @terminated = true
+                return true
+              end
+              raise Error, "command cgroup did not become empty" if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+              sleep 0.01
+            end
+          rescue SystemCallError, IOError => e
+            raise Error, "command cgroup cleanup failed (#{e.class})"
+          end
+
           def close
-            [procs, kill].compact.each { |io| io.close unless io.closed? }
+            [procs, kill, events].compact.each { |io| io.close unless io.closed? }
+            Dir.rmdir(path) if path && File.directory?(path)
+          rescue Errno::ENOENT
+            nil
+          rescue SystemCallError => e
+            # Keep the original containment failure when cleanup was not
+            # confirmed. Otherwise do not report a completed command if
+            # its supposedly empty cgroup could not be removed.
+            raise UncontainedSessionError, "command cgroup removal failed (#{e.class})" if @terminated
+            nil
           end
         end
 
@@ -41,7 +69,7 @@ module Ace
           verify_session!
           group = verified_group!
           descriptor = @cgroup_opener.call(group)
-          unless descriptor.is_a?(Prepared) && [descriptor.procs, descriptor.kill].all? { |io| io.is_a?(IO) && !io.closed? }
+          unless descriptor.is_a?(Prepared) && [descriptor.procs, descriptor.kill, descriptor.events].all? { |io| io.is_a?(IO) && !io.closed? }
             raise Error, "session cgroup is unavailable"
           end
           verify_session!
@@ -99,18 +127,43 @@ module Ace
 
         def open_cgroup(group)
           directory = File.join(CGROUP_ROOT, group.delete_prefix("/"))
-          procs = open_control_file(File.join(directory, "cgroup.procs"))
-          kill = open_control_file(File.join(directory, "cgroup.kill"))
-          Prepared.new(procs: procs, kill: kill)
+          verify_cgroup_ancestry!(directory)
+          path = File.join(directory, "ace-exec-#{SecureRandom.hex(16)}")
+          Dir.mkdir(path, 0o700)
+          procs = open_control_file(File.join(path, "cgroup.procs"), File::WRONLY)
+          kill = open_control_file(File.join(path, "cgroup.kill"), File::WRONLY)
+          events = open_control_file(File.join(path, "cgroup.events"), File::RDONLY)
+          Prepared.new(procs: procs, kill: kill, events: events, path: path)
         rescue Exception
           procs&.close unless procs&.closed?
           kill&.close unless kill&.closed?
+          events&.close unless events&.closed?
+          Dir.rmdir(path) if path && File.directory?(path)
           raise
         end
 
-        def open_control_file(path)
+        def verify_cgroup_ancestry!(directory)
+          current = CGROUP_ROOT
+          parts = directory.delete_prefix(CGROUP_ROOT + "/").split("/")
+          raise Error, "session cgroup path is invalid" if parts.empty? || parts.include?("..")
+          ([nil] + parts).each do |part|
+            current = File.join(current, part) if part
+            entry = File.lstat(current)
+            unless entry.directory? && !entry.symlink? && entry.uid.zero? && (entry.mode & 0o022).zero?
+              raise Error, "session cgroup ancestry is not root-controlled"
+            end
+            %w[cgroup.procs cgroup.threads].each do |name|
+              control = File.lstat(File.join(current, name))
+              unless control.file? && !control.symlink? && control.uid.zero? && (control.mode & 0o022).zero?
+                raise Error, "session cgroup controls are not root-controlled"
+              end
+            end
+          end
+        end
+
+        def open_control_file(path, access)
           raise Error, "session cgroup path is not canonical" unless File.realpath(path) == path
-          descriptor = File.open(path, File::WRONLY | File::NOFOLLOW)
+          descriptor = File.open(path, access | File::NOFOLLOW)
           descriptor.close_on_exec = true
           opened, named = descriptor.stat, File.lstat(path)
           unless opened.file? && !named.symlink? && [opened.dev, opened.ino] == [named.dev, named.ino] && cgroup2?(descriptor)
@@ -125,7 +178,7 @@ module Ace
         def cgroup2?(descriptor)
           function = Fiddle::Function.new(Fiddle::Handle::DEFAULT["fstatfs"],
             [Fiddle::TYPE_INT, Fiddle::TYPE_VOIDP], Fiddle::TYPE_INT)
-          buffer = Fiddle::Pointer.malloc(256)
+          buffer = Fiddle::Pointer.malloc(256, Fiddle::RUBY_FREE)
           function.call(descriptor.fileno, buffer).zero? && buffer[0, Fiddle::SIZEOF_LONG].unpack1("l!") == CGROUP2_MAGIC
         rescue Fiddle::DLError
           false
