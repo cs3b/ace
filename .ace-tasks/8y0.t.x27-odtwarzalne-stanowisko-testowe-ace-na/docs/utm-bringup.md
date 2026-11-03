@@ -238,6 +238,8 @@ With utm35 the local Forgejo delayed-issuance probe also confirmed that an uncer
 
 Diagnostic utm37 (SHA-256 `f459e436f84d43b53df142e2dde2e6fb184a8597b87e0b786fbfb67a5cd67c7b`) included the subsequent independent-load fix and argv/environment validation. Its installed `session_attachment` loaded its own auth error definition, and the same temporary-unit EPERM/ESRCH cancellation probes passed. The subsequent source commit is `f9752de3a`. The changed packages and issuer remain unapproved for release; the production startup, live Herdr session and requested autonomous Forgejo cycle have not been verified.
 
+The `--check-detached-descendant` diagnostic on utm37 confirmed a separate lifecycle failure: a command can exit successfully after starting a new session while its detached child remains in the worker cgroup. The probe then stopped its own temporary systemd unit. A successful parent exit is therefore not sufficient to authorize credential cleanup or task completion. Session issuance remains disabled until descendants are contained and their exit is proven.
+
 The public `ace-lab auth` CLI currently constructs a local `Service` directly; it has no session socket client for the guarded issuer. Consequently the successful socket probes use a test client and do not establish a usable public request/exec flow for a dynamic-UID worker. That integration remains required along with the issuer supervision gate and session launcher.
 
 ## E2E authoring decision (pending implementation)

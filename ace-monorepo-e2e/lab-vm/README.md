@@ -173,6 +173,9 @@ preserves the project for diagnosis on failure. The test seam does not prove
 With `--test-kill-fallback`, it also forces pidfd signaling to fail after a
 command starts and checks that the pinned session cgroup terminates. This
 mode intentionally stops only the disposable unit created by the probe.
+`--check-detached-descendant` is a diagnostic for the currently known issue:
+it confirms that a detached child survives a successful runner exit, then
+stops the probe's own unit. A positive diagnostic does not mean acceptance.
 
 `probe-authenticated-runner.py` takes the same arguments. It creates a local
 socket and a temporary dynamic-UID systemd session, then invokes the installed

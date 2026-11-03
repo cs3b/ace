@@ -24,7 +24,11 @@ parser.add_argument('--version', required=True)
 parser.add_argument('--test-kill-fallback', action='store_true',
                     help='force pidfd signaling failure and require the session cgroup to terminate')
 parser.add_argument('--signal-error', choices=('EPERM', 'ESRCH'), default='EPERM')
+parser.add_argument('--check-detached-descendant', action='store_true',
+                    help='diagnose whether a detached child survives a successful command')
 args = parser.parse_args()
+if args.test_kill_fallback and args.check_detached_descendant:
+    parser.error('choose only one session termination probe')
 base = '/var/lib/ace-e2e'
 if os.geteuid() != 0:
     parser.error('requires root inside a disposable ACE VM')
@@ -145,6 +149,32 @@ ensure
   namespace.close
 end
 '''
+detached_program = r'''
+gem "ace-lab", "= #{ARGV.fetch(0)}"
+require "ace/lab/auth/session_runner"
+require "ace/lab/auth/session_namespace"
+unit, pid, uid, project = ARGV.values_at(1, 2, 3, 4)
+namespace = Ace::Lab::Auth::SessionNamespace.capture(Integer(pid))
+attach = Object.new
+attach.define_singleton_method(:prepare) do
+  group = IO.popen(["/usr/bin/systemctl", "show", "--property=ControlGroup", "--value", unit], &:read).strip
+  raise "unexpected cgroup" unless $?.success? && File.basename(group) == unit && group.start_with?("/")
+  dir = File.join("/sys/fs/cgroup", group.delete_prefix("/"))
+  pair = Struct.new(:procs, :kill) { def close = [procs, kill].each { |io| io.close unless io.closed? } }
+  pair.new(File.open(File.join(dir, "cgroup.procs"), File::WRONLY | File::NOFOLLOW),
+    File.open(File.join(dir, "cgroup.kill"), File::WRONLY | File::NOFOLLOW))
+end
+attach.define_singleton_method(:verify_child!) { |child| Ace::Lab::Auth::SessionNamespace.matches?(namespace, child) }
+runner = Ace::Lab::Auth::SessionRunner.new(uid: Integer(uid), cwd: project, namespace: namespace, attach: attach)
+marker = File.join(project, "detached-child-pid")
+status = runner.call(["/bin/sh", "-c", '/usr/bin/setsid /bin/sleep 60 & echo $! > "$1"', "runner", marker], {})
+raise "command failed" unless status.zero?
+child = Integer(File.read(marker))
+path = File.readlines("/proc/#{child}/cgroup").find { |line| line.start_with?("0::") }
+raise "detached child is not live in the session" unless path && path.strip.end_with?("/" + unit)
+puts "confirmed_issue: detached child remains after successful runner exit"
+namespace.close
+'''
 foreign_namespace_program = r'''
 gem "ace-lab", "= #{ARGV.fetch(0)}"
 require "ace/lab/auth/session_namespace"
@@ -210,6 +240,8 @@ try:
     if args.test_kill_fallback:
         run([args.ruby, '-e', fallback_program, args.version, unit, str(pid), str(uid), project,
              args.signal_error], env=env)
+    if args.check_detached_descendant:
+        run([args.ruby, '-e', detached_program, args.version, unit, str(pid), str(uid), project], env=env)
     run(['/usr/bin/systemctl', 'stop', unit])
     attempted = False
     passed = True
