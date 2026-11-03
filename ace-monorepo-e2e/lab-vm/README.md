@@ -162,8 +162,8 @@ token issuance or a real agent session.
 `probe-session-runner.py` takes the same installed-candidate arguments as
 `probe-issuer-cleanup.py` and runs as root in the disposable VM. It creates a
 temporary dynamic-UID unit and mapped project, then calls the installed
-`SessionRunner`. Its test-only attachment opens the unit's cgroup, and the
-privilege-dropped child attaches itself; the
+`SessionRunner`. Its test-only attachment creates a command cgroup under the
+unit, and the privilege-dropped child attaches itself; the
 probe checks the child's UID, empty supplementary groups, capabilities,
 `NoNewPrivileges`, mount namespace and cgroup, as well as `mo` ownership of
 the resulting file. It also requires rejection of a mount namespace owned by
@@ -193,6 +193,11 @@ fresh service refuses reuse and reports unresolved execution. It removes its
 private synthetic files on success and preserves them on failure. This does
 not exercise a real agent, provider or systemd issuer supervision.
 
+`probe-command-recovery.py` takes the same arguments and runs as root in the
+disposable VM. It requires refusal of an unrelated systemd invocation, then
+checks that installed issuer recovery stops the exact recorded command and
+revokes a synthetic lease while preserving the session main process.
+
 `probe-authenticated-runner.py` takes the same arguments. It creates a local
 socket and a temporary dynamic-UID systemd session, then invokes the installed
 `SessionPeer`, `SessionAttachment` and `SessionRunner` together to touch a
@@ -202,6 +207,16 @@ the production issuer and ACE worker launcher remain separate acceptance work.
 With `--prepopulate-runtime`, the probe inserts an unexpected file in the
 session runtime directory and requires two consecutive requests to fail
 without executing the command.
+With `--issuer-crash`, it creates a synthetic lease, kills the real
+socket-activated issuer while its session command runs, and checks that a
+temporary `ExecStopPost` invokes issuer recovery, terminates the recorded
+command and revokes the lease without stopping the session main process.
+The default provider and lease are synthetic. Add `--real-forgejo` to create
+a temporary local Forgejo administrator and a scoped token, confirm access
+before the crash and denial after recovery, and remove the administrator only
+after confirmed success. On failure it preserves protected diagnostics and
+the temporary account for recovery. The lease is prepared by the probe; the
+production issuer graph and real agent remain outside this check.
 
 `probe-installed-eyes.rb` checks the installed observer and reader together
 as the session account on Linux. Set `GEM_HOME` to the candidate and

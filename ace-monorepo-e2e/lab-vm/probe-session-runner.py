@@ -28,8 +28,10 @@ parser.add_argument('--check-detached-descendant', action='store_true',
                     help='diagnose whether a detached child survives a successful command')
 parser.add_argument('--test-writable-cgroup', action='store_true',
                     help='require refusal when the session cgroup control is writable by others')
+parser.add_argument('--test-reap-after-failure', action='store_true',
+                    help='force containment failure and check eventual pidfd-based reaping')
 args = parser.parse_args()
-if args.test_kill_fallback and args.check_detached_descendant:
+if sum((args.test_kill_fallback, args.check_detached_descendant, args.test_reap_after_failure)) > 1:
     parser.error('choose only one session termination probe')
 base = '/var/lib/ace-e2e'
 if os.geteuid() != 0:
@@ -58,7 +60,7 @@ project = os.path.join(root, 'project')
 os.mkdir(project)
 account = pwd.getpwnam('mo')
 os.chown(project, account.pw_uid, account.pw_gid)
-unit = 'ace-e2e-runner-' + secrets.token_hex(16) + '.service'
+unit = 'ace-auth-session-worker-' + secrets.token_hex(8) + '.service'
 attempted = False
 passed = False
 namespace_fd = None
@@ -96,8 +98,15 @@ attach.define_singleton_method(:verify_child!) do |child|
     cgroups.size == 1 && cgroups.first.delete_prefix("0::").strip.match?(%r{/#{Regexp.escape(unit)}/ace-exec-[0-9a-f]+\z})
 end
 runner = SessionRunner.new(uid: Integer(uid), cwd: project, namespace: namespace, attach: attach)
-status = runner.call(["/usr/bin/touch", File.join(project, "session-runner-created")], {"PATH" => "/usr/bin:/bin"})
+recorded = nil
+before_start = lambda do |path|
+  raise "invalid command cgroup path" unless SessionAttachment.command_cgroup_path?(path, unit)
+  raise "command ran before its cgroup was recorded" if File.exist?(File.join(project, "session-runner-created"))
+  recorded = path
+end
+status = runner.call(["/usr/bin/touch", File.join(project, "session-runner-created")], {"PATH" => "/usr/bin:/bin"}, before_start: before_start)
 raise "session runner failed: #{status}" unless status == 0
+raise "command cgroup was not recorded or cleaned" unless recorded && !File.exist?(recorded)
 after = File.stat("/proc/self/ns/mnt")
 unless [after.dev, after.ino] == [parent_namespace.dev, parent_namespace.ino] && Dir.pwd == parent_cwd
   raise "issuer process filesystem context changed"
@@ -171,6 +180,58 @@ raise "detached child survived successful runner exit" if stat && !stat.match?(/
 raise "session main did not survive command cleanup" unless system("/usr/bin/systemctl", "is-active", "--quiet", unit)
 puts "detached child terminated after command exit; session remained active"
 namespace.close
+'''
+reap_program = r'''
+gem "ace-lab", "= #{ARGV.fetch(0)}"
+require "ace/lab/auth/session_runner"
+require "ace/lab/auth/session_attachment"
+unit, pid, uid, project = ARGV.values_at(1, 2, 3, 4)
+namespace = Ace::Lab::Auth::SessionNamespace.capture(Integer(pid))
+attach = Object.new
+attach.define_singleton_method(:prepare) do
+  group = IO.popen(["/usr/bin/systemctl", "show", "--property=ControlGroup", "--value", unit], &:read).strip
+  raise "unexpected cgroup" unless $?.success? && File.basename(group) == unit && group.start_with?("/")
+  prepared = Ace::Lab::Auth::SessionAttachment.allocate.send(:open_cgroup, group)
+  @path = prepared.path
+  prepared.define_singleton_method(:terminate!) { raise IOError, "synthetic containment failure" }
+  prepared
+end
+attach.define_singleton_method(:verify_child!) do |child|
+  @child_pid = child
+  Ace::Lab::Auth::SessionNamespace.matches?(namespace, child)
+end
+runner = Ace::Lab::Auth::SessionRunner.new(uid: Integer(uid), cwd: project, namespace: namespace, attach: attach)
+signal = runner.method(:signal_child!)
+runner.define_singleton_method(:signal_child!) do |handle, number, group: false|
+  raise Errno::EPERM if number != 0
+  signal.call(handle, number, group: group)
+end
+marker = File.join(project, "reaper-ready")
+main = Thread.current
+interrupter = Thread.new do
+  deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 10
+  sleep 0.01 until File.file?(marker) || Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+  main.raise(Interrupt, "cancel probe")
+end
+begin
+  begin
+    runner.call(["/bin/sh", "-c", 'echo ready > "$1"; exec /bin/sleep 1', "runner", marker], {})
+    abort "containment failure was accepted"
+  rescue Ace::Lab::Auth::UncontainedSessionError
+    raise "session command did not start" unless File.file?(marker)
+  end
+  child = attach.instance_variable_get(:@child_pid)
+  deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+  sleep 0.01 while File.exist?("/proc/#{child}") && Process.clock_gettime(Process::CLOCK_MONOTONIC) < deadline
+  raise "uncontained child was not reaped" if File.exist?("/proc/#{child}")
+  Dir.rmdir(attach.instance_variable_get(:@path))
+  raise "session main stopped" unless system("/usr/bin/systemctl", "is-active", "--quiet", unit)
+  puts "unconfirmed containment reported; exited child reaped through pidfd"
+ensure
+  interrupter.kill
+  interrupter.join
+  namespace.close
+end
 '''
 foreign_namespace_program = r'''
 gem "ace-lab", "= #{ARGV.fetch(0)}"
@@ -261,6 +322,8 @@ try:
              args.signal_error], env=env)
     if args.check_detached_descendant:
         run([args.ruby, '-e', detached_program, args.version, unit, str(pid), str(uid), project], env=env)
+    if args.test_reap_after_failure:
+        run([args.ruby, '-e', reap_program, args.version, unit, str(pid), str(uid), project], env=env)
     group = output(['/usr/bin/systemctl', 'show', '--property=ControlGroup', '--value', unit])
     group_path = '/sys/fs/cgroup' + group
     if not group or any(name.startswith('ace-exec-') for name in os.listdir(group_path)):
