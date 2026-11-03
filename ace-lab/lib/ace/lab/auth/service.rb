@@ -5,6 +5,7 @@ require "date"
 require "json"
 require "open3"
 require "securerandom"
+require "time"
 require "yaml"
 require_relative "error"
 require_relative "session_runner"
@@ -108,6 +109,9 @@ module Ace
         # project config grants nothing.
         def request(profile_name:, role:, task:, assignment:, repos: [],
           ttl_minutes: nil)
+          unless [profile_name, role, task, assignment].all? { |value| value.is_a?(String) && value.valid_encoding? && !value.strip.empty? }
+            raise Refusal.new("profile, role, task and assignment must be non-empty strings")
+          end
           if Process.euid.zero? && !@session_uid && !@injected_runner
             raise Refusal.new("root issuance requires an authenticated non-root session identity")
           end
@@ -209,7 +213,7 @@ module Ace
             # cannot be confirmed refuses the retry: a local pending
             # record is never proof the remote token is gone.
             settle_unresolved(task: task, assignment: assignment,
-              profile: profile_name, role: role, principal: principal)
+              profile: profile_name, role: role)
 
             lease_id = "lease-#{SecureRandom.hex(8)}"
             # Duck-typed capability: bundled providers always implement
@@ -688,7 +692,7 @@ module Ace
         # pending/unknown settlement REFUSES the retry: never a blind
         # second mint, never treating a local pending record as a
         # remote revocation.
-        def settle_unresolved(task:, assignment:, profile:, role:, principal:)
+        def settle_unresolved(task:, assignment:, profile:, role:)
           records = @store.all
           if records.any? { |record| record["corrupt"] ||
               %w[task assignment profile role].any? { |field| !record[field].is_a?(String) || record[field].empty? } ||
@@ -719,7 +723,7 @@ module Ace
                     "for the provider's native expiry, or close it explicitly before requesting again")
                 end
                 record_profile = profile_for(profile)
-                handoff = CredentialHandoff.new(@credentials_dir, recipient: current["principal"] || principal)
+                handoff = handoff_for(current)
                 outcome = cleanup(current, record_profile, handoff)
                 next if %i[revoked already_invalid cleared].include?(outcome)
 

@@ -1413,6 +1413,17 @@ module Ace
           assert_equal 1, @fake.issued.length
         end
 
+        def test_request_refuses_incomplete_correlation_before_creating_a_lease
+          svc = service
+          [nil, "", "  ", 1].each do |value|
+            assert_raises(Refusal) do
+              svc.request(profile_name: "developer", role: "developer", task: value, assignment: "a", repos: ["ace"])
+            end
+          end
+          assert_empty svc.store.all
+          assert_empty @fake.issued
+        end
+
         def test_expired_lease_with_unconfirmed_revocation_blocks_reissue
           svc = service
           lease = svc.request(profile_name: "developer", role: "developer",
@@ -1425,6 +1436,28 @@ module Ace
           end
           assert_equal 1, @fake.issued.length
           assert_equal "revoke-pending", svc.store.load(lease.fetch("id"))["state"]
+        end
+
+        def test_settlement_selects_handoff_from_the_previous_lease
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          unit = "ace-auth-session-worker-0123456789abcdef.service"
+          svc.store.update(lease.fetch("id")) do |record|
+            record.merge!("use_until" => "2020-01-01T00:00:00Z", "session_uid" => 1234,
+              "session_id" => "a" * 32, "session_unit" => unit, "issuer_invocation" => "b" * 32)
+          end
+          seen = []
+          select_handoff = lambda do |record|
+            seen << record.fetch("session_unit")
+            CredentialHandoff.new(File.join(@dir, "credentials"), recipient: record.fetch("principal"))
+          end
+
+          svc.stub(:handoff_for, select_handoff) do
+            replacement = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+            refute_equal lease.fetch("id"), replacement.fetch("id")
+          end
+          assert_equal [unit], seen
+          assert_equal "revoked", svc.store.load(lease.fetch("id"))["state"]
         end
 
         # R6 (re-review): a REALLY spawned child must not inherit any

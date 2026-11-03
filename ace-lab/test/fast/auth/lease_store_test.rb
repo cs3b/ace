@@ -7,6 +7,18 @@ module Ace
   module Lab
     module Auth
       class LeaseStoreTest < Minitest::Test
+        def test_rejects_empty_correlation_before_writing
+          Dir.mktmpdir do |dir|
+            store = LeaseStore.new(dir)
+            options = {profile: "p", role: "r", principal: "p", task: "t", assignment: "a",
+                       repos: ["repo"], use_until: (Time.now.utc + 60).iso8601, provider_expiry: nil}
+            %i[profile role principal task assignment].each do |field|
+              assert_raises(Error) { store.create(**options.merge(field => "  ")) }
+            end
+            assert_empty store.all
+          end
+        end
+
         def test_rejects_partial_session_identity_before_writing
           Dir.mktmpdir do |dir|
             store = LeaseStore.new(dir)

@@ -48,6 +48,9 @@ module Ace
         # @return [Hash] the created (PREPARING) lease record
         def create(profile:, role:, principal:, task:, assignment:, repos:,
           use_until:, provider_expiry:, token_ref: nil, id: nil, session_uid: nil, session_id: nil, session_unit: nil, issuer_invocation: nil)
+          unless [profile, role, principal, task, assignment].all? { |value| value.is_a?(String) && value.valid_encoding? && !value.strip.empty? }
+            raise Error, "lease correlation is incomplete"
+          end
           identity = [session_uid, session_id, session_unit, issuer_invocation]
           if identity.any? { |value| !value.nil? } && !(session_uid.is_a?(Integer) && session_uid.positive? &&
               [session_id, issuer_invocation].all? { |value| value.is_a?(String) && value.match?(/\A[0-9a-f]{32}\z/) } &&
