@@ -139,6 +139,14 @@ refuses a nonexistent profile. It cleans up only its uniquely named units and
 restores the previous Yama setting. Its successful refusal does not mean that
 session token issuance has been enabled.
 
+`probe-project-idmap.sh` runs as root in a disposable Linux working VM. It
+creates a temporary `mo`-owned Git repository, maps it to a separate numeric
+UID inside a private mount namespace, then creates a worktree and commit
+through that view. It checks that `mo` still owns the resulting file and can
+read the branch. Run the copied script with `/bin/sh probe-project-idmap.sh`.
+The probe removes its temporary repository and mounts; it tests a filesystem
+primitive only, not session isolation, credential issuance or acceptance.
+
 ### Restoring a compressed diagnostic export
 
 Some older diagnostic exports may be kept as `UUID.utm.zip` with a private
