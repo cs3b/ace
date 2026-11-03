@@ -83,15 +83,28 @@ module Ace
           end
 
           output_dir = entry["path"]
+          if ENV["ACE_TOOLCHAIN"] == "installed"
+            begin
+              ExtensionProjection.validate_protected_files!(source, expected.keys)
+              ExtensionProjection.validate_protected_files!(output_dir,
+                expected.keys + [RECEIPT_NAME], allow_missing: true)
+            rescue Ace::Lab::Error => e
+              return failed(entry, version, e.message)
+            end
+          end
           escape = projection_escape_reason(output_dir, expected.keys)
           return failed(entry, version, escape) if escape
 
           receipt = read_receipt(output_dir)
+          if receipt
+            escape = projection_escape_reason(output_dir, receipt["files"])
+            return failed(entry, version, escape) if escape
+          end
           loaded_version = receipt && receipt["gem"] == entry["gem"] ? receipt["version"] : nil
 
           changed = projection_changed?(output_dir, expected, receipt, version)
           if !changed
-            converge_modes(output_dir, expected, entry)
+            converge_modes(output_dir, expected, entry) unless @dry_run
             return entry_report(entry, version, "unchanged", loaded_version, false,
               receipt ? receipt.fetch("files") : expected.keys)
           end
@@ -157,6 +170,7 @@ module Ace
           # touched).
           previous = read_receipt(output_dir)&.fetch("files", []) || []
           retained = previous.filter_map do |relative|
+            ExtensionProjection.validate_destination!(output_dir, relative)
             target = File.join(output_dir, relative)
             next relative if expected.key?(relative)
 
@@ -175,22 +189,25 @@ module Ace
         # so the target executor can always read its extensions.
         def converge_modes(output_dir, expected, entry)
           account = @account_lookup.call(entry["account"])
+          owner = ENV["ACE_TOOLCHAIN"] == "installed" ? [0, 0] : (account && [account.uid, account.gid])
           targets = expected.keys.map { |relative| File.join(output_dir, relative) }
           targets << File.join(output_dir, RECEIPT_NAME)
           targets.each do |target|
             next unless File.file?(target)
 
             FileUtils.chmod(FILE_MODE, target)
-            FileUtils.chown(account.uid, account.gid, target) if account
+            FileUtils.chown(*owner, target) if owner
           end
           root = File.realpath(output_dir)
+          FileUtils.chmod(DIR_MODE, root)
+          FileUtils.chown(*owner, root) if owner
           dirs = expected.keys.filter_map do |relative|
             File.dirname(File.join(root, relative)) if relative.include?(File::SEPARATOR)
           end.uniq
           until dirs.empty?
             dir = dirs.pop
             FileUtils.chmod(DIR_MODE, dir)
-            FileUtils.chown(account.uid, account.gid, dir) if account
+            FileUtils.chown(*owner, dir) if owner
             parent = File.dirname(dir)
             dirs << parent if dir != root && parent.start_with?("#{root}/") && !dirs.include?(parent) && parent != root
           end
@@ -210,7 +227,7 @@ module Ace
           return nil unless File.file?(path)
 
           document = JSON.parse(File.read(path))
-          document.is_a?(Hash) ? document : nil
+          ExtensionProjection.valid_receipt?(document) ? document : nil
         rescue JSON::ParserError, Errno::EACCES
           nil
         end

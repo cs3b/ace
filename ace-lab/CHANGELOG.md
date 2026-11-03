@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Classify missing or malformed extension projections and preserve dry-run filesystem state; verify directory traversal and reject unsafe receipt paths.
+
+- Require root-controlled extension sources, destinations and receipts in
+  installed mode, and project managed extension files as root.
 - Keep grants with invalid or missing provider-managed expiry pending for
   revocation instead of exposing an unusable or unbounded live lease.
 - Report a missing live credential handoff and require revocation before

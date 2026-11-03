@@ -141,17 +141,17 @@ begin
         test "$(stat -c '%U:%G %a' /etc/lab/ace-lab/authorization.yml)" = 'root:root 644'
         # Use Herdr's own pinned native integration to report Pi lifecycle
         # and native session identity. Install it before any agent starts.
-        test -d /home/mo/.pi/agent/extensions
-        test ! -L /home/mo/.pi/agent/extensions
-        test "$(stat -c '%U:%G' /home/mo/.pi/agent/extensions)" = root:root
-        test ! -e /home/mo/.pi/agent/extensions/herdr-agent-state.ts
-        test ! -L /home/mo/.pi/agent/extensions/herdr-agent-state.ts
-        HOME=/home/mo PI_CODING_AGENT_DIR=/home/mo/.pi/agent herdr integration install pi
-        test -f /home/mo/.pi/agent/extensions/herdr-agent-state.ts
-        test ! -L /home/mo/.pi/agent/extensions/herdr-agent-state.ts
-        chown root:root /home/mo/.pi/agent/extensions/herdr-agent-state.ts
-        chmod 0644 /home/mo/.pi/agent/extensions/herdr-agent-state.ts
-        integration_status=$(runuser -u mo -- env "PATH=$PATH" HOME=/home/mo PI_CODING_AGENT_DIR=/home/mo/.pi/agent herdr integration status)
+        test -d /opt/ace/runtime/pi-agent/extensions
+        test ! -L /opt/ace/runtime/pi-agent/extensions
+        test "$(stat -c '%U:%G' /opt/ace/runtime/pi-agent/extensions)" = root:root
+        test ! -e /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts
+        test ! -L /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts
+        HOME=/home/mo PI_CODING_AGENT_DIR=/opt/ace/runtime/pi-agent herdr integration install pi
+        test -f /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts
+        test ! -L /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts
+        chown root:root /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts
+        chmod 0644 /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts
+        integration_status=$(runuser -u mo -- env "PATH=$PATH" HOME=/home/mo PI_CODING_AGENT_DIR=/opt/ace/runtime/pi-agent herdr integration status)
         printf '%s\n' "$integration_status"
         # Status text is the pinned Herdr build's contract; recheck on bump.
         printf '%s\n' "$integration_status" | grep -q '^pi: current ('

@@ -143,6 +143,25 @@ module Organisms
       assert_match(/working directory/, report["message"])
     end
 
+    def test_foreground_start_uses_managed_pi_extensions
+      flags = ["--no-extensions", "--extension", "/opt/ace/wake/index.js"]
+      Ace::Herdr::Molecules::InstalledPiExtensions.stub(:arguments, flags) do
+        report = orchestrator(FakeExecutor.new).bootstrap(dry_run: true)
+        assert_equal "dry_run", report["status"]
+        assert_includes report["command"], "/opt/ace/wake/index.js"
+        assert_includes report["command"], "--no-extensions"
+      end
+    end
+
+    def test_foreground_start_blocks_if_managed_extensions_are_unsafe
+      failure = -> { raise Ace::Herdr::ExecutorUnavailableError, "unsafe extensions" }
+      Ace::Herdr::Molecules::InstalledPiExtensions.stub(:arguments, failure) do
+        report = orchestrator(FakeExecutor.new).bootstrap(dry_run: true)
+        assert_equal "blocked", report["status"]
+        assert_match(/unsafe extensions/, report["message"])
+      end
+    end
+
     def test_first_start_sends_the_first_prompt_after_the_agent_is_started
       executor = FakeExecutor.new(pane_current: {"result" => {"workspace_id" => "ws1"}})
 

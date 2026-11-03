@@ -30,6 +30,25 @@ module Molecules
       {"gem" => gem, "path" => path, "account" => "lab-overseer"}
     end
 
+    def test_installed_projection_refuses_user_controlled_ancestors_before_writing
+      previous = ENV["ACE_TOOLCHAIN"]
+      ENV["ACE_TOOLCHAIN"] = "installed"
+      Dir.mktmpdir do |dir|
+        gem_home = File.join(dir, "gems")
+        installed_gem(gem_home, "ace-wake", "0.1.0", {"ace-wake/index.js" => "// entry\n"})
+        target = File.join(dir, "extensions")
+        gems = [{"name" => "ace-wake", "version" => "0.1.0"}]
+        [false, true].each do |dry_run|
+          report = provisioner(gem_home, dry_run: dry_run).call(extensions: [entry(target)], gems: gems).first
+          assert_equal "failed", report.fetch("status")
+          assert_match(/not root-controlled/, report.fetch("message"))
+          refute File.exist?(target)
+        end
+      end
+    ensure
+      previous.nil? ? ENV.delete("ACE_TOOLCHAIN") : ENV["ACE_TOOLCHAIN"] = previous
+    end
+
     def test_projects_from_the_installed_gem_and_records_loaded_version
       Dir.mktmpdir do |dir|
         gem_home = File.join(dir, "gems")
@@ -107,6 +126,36 @@ module Molecules
         assert_equal "projected", report["status"]
         assert_equal true, report["restart_required"]
         refute File.exist?(target), "dry-run must not create the projection"
+      end
+    end
+
+    def test_dry_run_does_not_repair_permissions_on_an_unchanged_projection
+      Dir.mktmpdir do |dir|
+        gem_home = File.join(dir, "gems")
+        installed_gem(gem_home, "ace-wake", "0.1.0", {"ace-wake/index.js" => "entry"})
+        target = File.join(dir, "extensions")
+        gems = [{"name" => "ace-wake", "version" => "0.1.0"}]
+        provisioner(gem_home).call(extensions: [entry(target)], gems: gems)
+        file = File.join(target, "ace-wake/index.js")
+        File.chmod(0o600, file)
+        provisioner(gem_home, dry_run: true).call(extensions: [entry(target)], gems: gems)
+        assert_equal 0o600, File.stat(file).mode & 0o777
+      end
+    end
+
+    def test_invalid_receipt_cannot_delete_files_outside_projection
+      Dir.mktmpdir do |dir|
+        gem_home = File.join(dir, "gems")
+        installed_gem(gem_home, "ace-wake", "0.1.0", {"ace-wake/index.js" => "entry"})
+        target = File.join(dir, "extensions")
+        gems = [{"name" => "ace-wake", "version" => "0.1.0"}]
+        provisioner(gem_home).call(extensions: [entry(target)], gems: gems)
+        victim = File.join(dir, "victim")
+        File.write(victim, "keep")
+        File.write(File.join(target, RECEIPT), JSON.generate({"files" => ["../victim"]}))
+        report = provisioner(gem_home).call(extensions: [entry(target)], gems: gems).first
+        assert_equal "projected", report["status"]
+        assert_equal "keep", File.read(victim)
       end
     end
 

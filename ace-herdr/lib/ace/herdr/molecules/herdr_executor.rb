@@ -5,6 +5,7 @@ require "open3"
 require "json"
 require "timeout"
 require_relative "bounded_process"
+require_relative "installed_pi_extensions"
 
 module Ace
   module Herdr
@@ -56,6 +57,9 @@ module Ace
         # after `--` (e.g. pi's --model/--thinking/--append-system-prompt;
         # the overseer start contract, 8xs.t.pu0.1).
         def agent_start(name:, kind:, pane:, timeout_ms:, args: [])
+          managed = kind == "pi" ? InstalledPiExtensions.arguments : []
+          InstalledPiExtensions.reject_override!(args) unless managed.empty?
+          args = managed + args
           cmd = [@binary, "agent", "start", name, "--kind", kind,
             "--pane", pane, "--timeout", timeout_ms.to_s]
           cmd += ["--", *args] unless args.empty?

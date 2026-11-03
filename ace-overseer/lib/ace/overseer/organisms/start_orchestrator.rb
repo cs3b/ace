@@ -6,6 +6,7 @@ require_relative "../molecules/project_root_resolver"
 require_relative "../molecules/project_bundle"
 require_relative "../molecules/eyes_session_evidence"
 require "ace/herdr"
+require "ace/herdr/molecules/installed_pi_extensions"
 require "ace/lab"
 require "ace/support/cli/toolchain"
 require "json"
@@ -170,6 +171,7 @@ module Ace
           end
           raise Ace::Overseer::Error, "standing instructions file is missing: #{guide}" unless File.file?(guide)
           command = ["pi", "--model", plan["profile"]["model"]]
+          command += Ace::Herdr::Molecules::InstalledPiExtensions.arguments
           thinking = plan["profile"]["thinking"]
           command += ["--thinking", thinking] if thinking
           command += ["--append-system-prompt", guide, FIRST_TURN_PROMPT]
@@ -177,6 +179,8 @@ module Ace
             "root" => root, "profile" => plan["profile_name"],
             "instructions" => {"source" => source, "path" => guide},
             "command" => command, "message" => "launch the coordinator in the current terminal"}
+        rescue Ace::Herdr::ExecutorError => e
+          blocked(e.message)
         rescue SystemCallError => e
           blocked("foreground start cannot access its working directory: #{e.class}")
         end

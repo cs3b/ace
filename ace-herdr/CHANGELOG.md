@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- In installed Linux labs, start Pi with the protected ace-wake and Herdr extensions and refuse caller-supplied extension overrides.
+
 ## [0.10.0] - 2026-11-02
 
 ### Added

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Load protected lab Pi extensions for foreground overseer starts.
+
 ### Added
 
 - Observe configured project Overseer session state changes through the existing lab topology and Herdr.

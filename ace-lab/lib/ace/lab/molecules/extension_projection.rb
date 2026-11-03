@@ -17,6 +17,59 @@ module Ace
 
         module_function
 
+        # Installed operational extensions must not sit below a directory
+        # that an agent can replace. The leaf may be created by the root
+        # installer, but every existing ancestor must already be protected.
+        def validate_protected_root!(path)
+          unless path.is_a?(String) && path.start_with?("/") && File.expand_path(path) == path && path != "/"
+            raise Ace::Lab::Error, "installed extension path must be a canonical absolute path"
+          end
+          current = "/"
+          root_stat = File.lstat(current)
+          unless root_stat.directory? && root_stat.uid.zero? && (root_stat.mode & 0o022).zero?
+            raise Ace::Lab::Error, "installed extension filesystem root is not root-controlled"
+          end
+          path.split("/").reject(&:empty?).each do |part|
+            current = File.join(current, part)
+            begin
+              stat = File.lstat(current)
+            rescue Errno::ENOENT
+              break
+            end
+            unless stat.directory? && !stat.symlink? && stat.uid.zero? && (stat.mode & 0o022).zero?
+              raise Ace::Lab::Error, "installed extension directory is not root-controlled: #{current}"
+            end
+          end
+          true
+        rescue SystemCallError => e
+          raise Ace::Lab::Error, "installed extension directory cannot be inspected (#{e.class})"
+        end
+
+        def validate_protected_files!(root, relative_paths, allow_missing: false)
+          validate_protected_root!(root)
+          relative_paths.each do |relative|
+            validate_destination!(root, relative)
+            current = root
+            segments = relative.split(File::SEPARATOR)
+            segments.each_with_index do |part, index|
+              current = File.join(current, part)
+              begin
+                stat = File.lstat(current)
+              rescue Errno::ENOENT
+                break if allow_missing
+                raise
+              end
+              kind_ok = index == segments.length - 1 ? stat.file? : stat.directory?
+              unless kind_ok && !stat.symlink? && stat.uid.zero? && (stat.mode & 0o022).zero?
+                raise Ace::Lab::Error, "installed extension path is not root-controlled: #{current}"
+              end
+            end
+          end
+          true
+        rescue SystemCallError => e
+          raise Ace::Lab::Error, "installed extension file cannot be inspected (#{e.class})"
+        end
+
         # The installed gem's own tree at the EXACT declared version.
         # @return [String, nil] the handbook/extensions directory or nil
         #   when the gem (or its extensions tree) is not installed
@@ -30,8 +83,14 @@ module Ace
         # gem's handbook/extensions tree (e.g. "ace-wake/index.js").
         # @return [Hash<String, String>]
         def source_files(source_root)
-          Dir.glob(File.join(source_root, "**", "*")).select { |path| File.file?(path) }
+          Dir.glob(File.join(source_root, "**", "*"), File::FNM_DOTMATCH).select { |path| File.file?(path) }
             .to_h { |path| [path.delete_prefix("#{source_root}/"), path] }
+        end
+
+        def valid_receipt?(receipt)
+          receipt.is_a?(Hash) && receipt["files"].is_a?(Array) && receipt["files"].all? do |path|
+            path.is_a?(String) && !path.start_with?("/") && path.split("/", -1).all? { |segment| !segment.empty? && segment != "." && segment != ".." }
+          end
         end
 
         # Resolve and fully validate a projection destination before

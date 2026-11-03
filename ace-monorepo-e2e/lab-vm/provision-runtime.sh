@@ -158,7 +158,7 @@ print('gemset:\n  gem_home: /opt/ace/runtime/gems\n  gems:')
 for name in roots:
     gem = gems[name]
     print('    - name: ' + gem['name'] + '\n      version: ' + gem['version'])
-print('  extensions:\n    - gem: ace-wake\n      path: /home/mo/.pi/agent/extensions\n      account: mo')
+print('  extensions:\n    - gem: ace-wake\n      path: /opt/ace/runtime/pi-agent/extensions\n      account: mo')
 PY
 chmod 0644 /etc/lab/ace-lab/install.yml
 export PATH="$GEM_HOME/bin:$PATH" ACE_TOOLCHAIN=installed

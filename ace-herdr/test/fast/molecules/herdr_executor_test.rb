@@ -80,6 +80,19 @@ module Ace
           )
         end
 
+        def test_installed_pi_start_injects_protected_extensions_and_refuses_overrides
+          executor = StubbedExecutor.new(binary: "herdr")
+          flags = ["--no-extensions", "--extension", "/opt/ace/wake/index.js"]
+          InstalledPiExtensions.stub(:arguments, flags) do
+            executor.agent_start(name: "worker", kind: "pi", pane: "p5", timeout_ms: 1000, args: ["--model", "test"])
+            assert_equal ["herdr", "agent", "start", "worker", "--kind", "pi", "--pane", "p5", "--timeout", "1000", "--", *flags, "--model", "test"], executor.commands.last
+            assert_raises(ExecutorUnavailableError) do
+              executor.agent_start(name: "worker", kind: "pi", pane: "p5", timeout_ms: 1000, args: ["--extension=/tmp/evil.js"])
+            end
+            assert_equal 1, executor.commands.size
+          end
+        end
+
         def test_agent_start_passes_harness_args_after_separator
           executor = StubbedExecutor.new(binary: "herdr")
 

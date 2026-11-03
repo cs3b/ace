@@ -222,6 +222,16 @@ that cleanup refuses to race its running command, then checks that expiration
 stops the command, revokes the local Forgejo token and preserves the session.
 The lease is prepared by the probe, not requested through the public CLI.
 
+`probe-protected-projection.rb VERSION` runs as root in the provisioned
+working VM with `ACE_TOOLCHAIN=installed` and `GEM_HOME`/`GEM_PATH` selecting
+the candidate. It verifies root-owned extension projection and verification,
+and rejects a user-controlled ancestor and an agent-owned projected file.
+`probe-protected-pi.py` runs as root in the same VM and invokes the installed
+Pi CLI as `mo`. It verifies that a user-controlled extension is discoverable
+in the control run, then is excluded by `--no-extensions` while explicit
+protected `/eyes` and `/watch` extensions load. Both are component probes;
+neither launches a Herdr agent or verifies session-scoped authorization.
+
 `probe-installed-eyes.rb` checks the installed observer and reader together
 as the session account on Linux. Set `GEM_HOME` to the candidate and
 `GEM_PATH` to the candidate plus installed dependencies, then run:

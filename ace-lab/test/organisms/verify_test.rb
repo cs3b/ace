@@ -936,6 +936,46 @@ module Organisms
       YAML
     end
 
+    def test_missing_extension_source_is_a_classified_failure
+      Dir.mktmpdir do |dir|
+        reason = Ace::Lab::Organisms::Verify.new.send(:extension_reason,
+          {"gem" => "missing", "path" => File.join(dir, "extensions"), "account" => "worker"},
+          {"version" => "0.1.0"}, dir, nil)
+        assert_match(/not installed/, reason)
+      end
+    end
+
+    def test_malformed_extension_receipt_is_a_classified_failure
+      Dir.mktmpdir do |dir|
+        source = File.join(dir, "gems", "wake-0.1.0", "handbook", "extensions", "wake")
+        FileUtils.mkdir_p(source)
+        File.write(File.join(source, "index.js"), "entry")
+        target = File.join(dir, "extensions")
+        FileUtils.mkdir_p(target)
+        File.write(File.join(target, ".ace-lab-extension-projection.json"), JSON.generate({"gem" => "wake", "version" => "0.1.0", "files" => "invalid"}))
+        reason = Ace::Lab::Organisms::Verify.new.send(:extension_reason,
+          {"gem" => "wake", "path" => target, "account" => "worker"}, {"version" => "0.1.0"}, dir, nil)
+        assert_match(/invalid files/, reason)
+      end
+    end
+
+    def test_projection_directory_must_be_traversable_for_the_declared_account
+      Dir.mktmpdir do |dir|
+        source = File.join(dir, "gems", "wake-0.1.0", "handbook", "extensions", "wake")
+        FileUtils.mkdir_p(source)
+        File.write(File.join(source, "index.js"), "entry")
+        target = File.join(dir, "extensions")
+        entry = {"gem" => "wake", "path" => target, "account" => "worker"}
+        gem = {"name" => "wake", "version" => "0.1.0"}
+        Ace::Lab::Molecules::ExtensionProvisioner.new(gem_home: dir).call(extensions: [entry], gems: [gem])
+        File.chmod(0o700, target)
+        reason = Ace::Lab::Organisms::Verify.new.send(:extension_reason, entry, gem, dir, nil)
+        assert_match(/not traversable/, reason)
+        Ace::Lab::Molecules::ExtensionProvisioner.new(gem_home: dir).call(extensions: [entry], gems: [gem])
+        assert_equal 0o755, File.stat(target).mode & 0o777
+      end
+    end
+
     def test_extension_projection_check_fails_without_a_receipt_and_passes_after_projection
       Dir.mktmpdir do |gemdir|
         gem_home = File.join(gemdir, "runtime")
@@ -989,6 +1029,27 @@ module Organisms
             ext_check["reason"])
         end
       end
+    end
+
+    def test_installed_extension_verification_refuses_unprotected_path_before_reading_receipt
+      previous = ENV["ACE_TOOLCHAIN"]
+      Dir.mktmpdir do |dir|
+        gem_home = File.join(dir, "runtime")
+        source = File.join(gem_home, "gems", "ace-wake-probe-0.1.0", "handbook", "extensions", "ace-wake-probe")
+        FileUtils.mkdir_p(source)
+        File.write(File.join(source, "index.js"), "// entry\n")
+        target = File.join(dir, "extensions")
+        FileUtils.mkdir_p(target)
+        File.write(File.join(target, ".ace-lab-extension-projection.json"), "not-json")
+        ENV["ACE_TOOLCHAIN"] = "installed"
+        reason = Ace::Lab::Organisms::Verify.new.send(:extension_reason,
+          {"gem" => "ace-wake-probe", "path" => target, "account" => "ace-worker"},
+          {"name" => "ace-wake-probe", "version" => "0.1.0"}, gem_home, nil)
+        assert_match(/not root-controlled/, reason)
+        refute_match(/not valid JSON/, reason)
+      end
+    ensure
+      previous.nil? ? ENV.delete("ACE_TOOLCHAIN") : ENV["ACE_TOOLCHAIN"] = previous
     end
 
     def test_manifest_without_gemset_reports_no_gem_checks

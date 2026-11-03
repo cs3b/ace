@@ -174,9 +174,11 @@ gemset:                      # optional (gad.2): target runtime + required gem s
   gems:                      # exact versions, unique names
     - name: ace-lab
       version: 0.13.0        # must be an exact gem version (no ranges)
+    - name: ace-wake
+      version: 0.2.0
   extensions:                # optional (8xs.t.pu0.0): harness extension projections
     - gem: ace-wake          # must be declared in gems above
-      path: /Users/overseer/.pi/agent/extensions  # absolute target directory
+      path: /opt/lab/pi-agent/extensions  # root-controlled operational directory
       account: lab-overseer  # must be a declared account (the loading executor)
 ```
 
@@ -349,8 +351,12 @@ Behavior and guarantees:
 - **Extension projections (8xs.t.pu0.0).** Each `gemset.extensions`
   entry projects the installed gem's `handbook/extensions` tree — at
   its EXACT declared version, never the checkout and never a newer
-  sibling — into the declared target directory. The projection is
-  receipt-based: only files recorded in the target's
+  sibling — into the declared target directory. In `ACE_TOOLCHAIN=installed`
+  mode, the projection is root-owned; its source, destination,
+  receipt and existing ancestors must be root-controlled and not writable
+  by group or others. Configure the harness to load this protected location;
+  projecting files alone does not change the harness's extension discovery.
+  The projection is receipt-based: only files recorded in the target's
   `.ace-lab-extension-projection.json` receipt are ever removed, so
   user-authored extensions in the same directory stay untouched. The
   report carries `loaded_version` (the version the running harness
