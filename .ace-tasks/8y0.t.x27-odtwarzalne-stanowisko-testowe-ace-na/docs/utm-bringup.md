@@ -260,6 +260,8 @@ The public `ace-lab auth` CLI currently constructs a local `Service` directly; i
 
 Diagnostic utm50 (SHA-256 `9e1d72444b785322f4d5c639edb69942c3102ff35d3363911d4d08cebd6b14ab`) was built from the then-uncommitted deadline change. In a real temporary session, it refused to launch an already expired command and terminated a running command and detached descendant at expiry while preserving the session. A separate socket/systemd probe used a test-prepared lease and a local Forgejo token: concurrent issuer cleanup was refused while execution held the lock; expiry stopped the command and the token was revoked, with the temporary administrator removed. This is not evidence for public CLI issuance, the installed production issuer graph, host shutdown, or an ACE worker; those gates remain closed.
 
+Diagnostic utm51 was built twice from commit `aa4580104` with only the diagnostic version changed; both packages and the guest copy had SHA-256 `13adef0e80a5b6c96ccf953b5313ea541c70459df7acc60de63f2d078fc99989`. The expiry and issuer-crash probes again revoked real local Forgejo tokens and removed their temporary administrators; isolated command expiry and exact-cgroup recovery passed. The token leases were test-prepared, and these checks do not enable or exercise the public issuer flow.
+
 ## E2E authoring decision (pending implementation)
 
 | Candidate | Decision now | Why E2E and public surface | Relevant unit coverage reviewed |

@@ -297,8 +297,10 @@ module Ace
           unless argv.is_a?(Array) && !argv.empty? && argv.all? { |arg| arg.is_a?(String) && !arg.include?("\0") } && !argv.first.empty?
             raise Refusal.new("execution requires a valid command")
           end
-          unless env.is_a?(Hash) && (env.keys - CHILD_ENV_ALLOWLIST).empty?
-            raise Refusal.new("execution environment contains variables outside the allowlist")
+          unless env.is_a?(Hash) && env.all? { |key, value|
+            CHILD_ENV_ALLOWLIST.include?(key) && value.is_a?(String) && !value.include?("\0")
+          }
+            raise Refusal.new("execution environment contains invalid or disallowed variables")
           end
           lease = @store.load(lease_id)
           unless lease["principal"] == @principal.call && session_matches?(lease)
@@ -729,7 +731,7 @@ module Ace
             rescue Refusal
               raise
             rescue Error
-              raise Refusal.new("a previous command is still running or its execution state is unavailable")
+              raise Refusal.new("a previous lease could not be settled; inspect its execution, store and provider state")
             end
           end
         end

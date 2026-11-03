@@ -1192,6 +1192,15 @@ module Ace
           assert_equal "issued", svc.status(lease_id: lease["id"])["state"]
         end
 
+        def test_exec_rejects_invalid_allowlisted_environment_values
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          [1, nil, "bad\0value"].each do |value|
+            assert_raises(Refusal) { svc.exec(lease_id: lease.fetch("id"), argv: ["true"], env: {"PATH" => value}) }
+          end
+          assert_equal "issued", svc.status(lease_id: lease.fetch("id"))["state"]
+        end
+
         def test_exec_refuses_invalid_argv_before_reading_credentials
           svc = service
           lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
