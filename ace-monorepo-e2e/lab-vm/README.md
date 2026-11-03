@@ -147,6 +147,15 @@ read the branch. Run the copied script with `/bin/sh probe-project-idmap.sh`.
 The probe removes its temporary repository and mounts; it tests a filesystem
 primitive only, not session isolation, credential issuance or acceptance.
 
+`probe-systemd-idmap.sh` runs as root on the disposable working VM and tests
+the same Git operation inside the private mount namespace of a temporary
+systemd `DynamicUser` unit. It checks that the dynamic UID cannot write the
+unmapped project, performs a commit through the mapped view, stops the unit,
+and checks the worktree as `mo`. It removes its unique unit and repository
+on success; on failure it stops its unit and retains the repository for
+diagnosis. The test process enters the mount namespace with `nsenter`; it is
+not attached to the unit's cgroup and this does not prove an ACE launcher.
+
 `probe-installed-eyes.rb` checks the installed observer and reader together
 as the session account on Linux. Set `GEM_HOME` to the candidate and
 `GEM_PATH` to the candidate plus installed dependencies, then run:
