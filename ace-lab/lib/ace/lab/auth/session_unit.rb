@@ -30,6 +30,7 @@ module Ace
         end
 
         def name = "ace-auth-session-#{@role}-#{@id}.service"
+        def executable = @command.first.dup
 
         def argv
           properties = {
