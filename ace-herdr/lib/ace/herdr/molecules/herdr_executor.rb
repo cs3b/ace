@@ -24,6 +24,10 @@ module Ace
           @process = process
         end
 
+        def agent_list
+          run!([@binary, "agent", "list"])
+        end
+
         # Probe the agent living in a pane (raises AgentNotFoundError when none)
         def agent_get(pane)
           run!([@binary, "agent", "get", pane])

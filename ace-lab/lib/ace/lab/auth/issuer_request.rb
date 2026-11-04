@@ -12,6 +12,7 @@ require_relative "session_report"
 require_relative "session_delegate"
 require_relative "session_control"
 require_relative "host_readiness"
+require_relative "session_workspaces"
 
 module Ace
   module Lab
@@ -25,13 +26,14 @@ module Ace
         REQUIRED = %w[action profile role task assignment repos].freeze
         PUBLIC_LEASE_FIELDS = %w[id profile role task assignment repos use_until provider_expiry state_detail].freeze
 
-        def initialize(authenticate: ->(socket) { SessionPeer.new.authenticate(socket) }, launch: SessionLaunchRequest.new, reports: SessionReport.new, delegate: SessionDelegate.new, control: SessionControl.new, host_readiness: HostReadiness.new,
+        def initialize(authenticate: ->(socket) { SessionPeer.new.authenticate(socket) }, launch: SessionLaunchRequest.new, reports: SessionReport.new, delegate: SessionDelegate.new, control: SessionControl.new, host_readiness: HostReadiness.new, workspaces: SessionWorkspaces.new,
           service_factory: ->(identity, invocation) {
             Service.new(session: identity, issuer_invocation: invocation, supervised: true)
           })
           @authenticate, @service_factory = authenticate, service_factory
           @launch, @reports, @delegate, @control = launch, reports, delegate, control
           @host_readiness = host_readiness
+          @workspaces = workspaces
         end
 
         def call(socket, invocation:, allow_request: true, supervising: nil)
@@ -54,6 +56,8 @@ module Ace
           if request.key?("method")
             handler = if request["method"] == SessionDelegate::METHOD
               @delegate
+            elsif SessionWorkspaces::METHODS.include?(request["method"])
+              @workspaces
             elsif SessionControl::METHODS.include?(request["method"])
               @control
             else
@@ -187,6 +191,8 @@ module Ace
           if value.key?("method")
             validator = if value["method"] == SessionDelegate::METHOD
               SessionDelegate
+            elsif SessionWorkspaces::METHODS.include?(value["method"])
+              SessionWorkspaces
             elsif SessionControl::METHODS.include?(value["method"])
               SessionControl
             else

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../atoms/start_contract"
+require_relative "isolated_start"
 require_relative "../atoms/observation_sources"
 require_relative "../molecules/project_root_resolver"
 require_relative "../molecules/project_bundle"
@@ -85,6 +86,7 @@ module Ace
         #   replaced_pane, message}; scope lab additionally carries
         #   {projects: [{id, path, status, ...}], project_count, ready}
         def call(dry_run: false)
+          return isolated_start.call(dry_run: dry_run) if isolated_runtime?
           plan = Atoms::StartContract.normalize(Atoms::StartContract.bootstrap(@config, scope: @scope || "lab"))
           if @scope && plan["scope"] != @scope
             raise Ace::Overseer::Error, "configured start scope '#{plan["scope"]}' conflicts with requested '#{@scope}'; nested lab scopes are refused"
@@ -149,6 +151,7 @@ module Ace
         # Bare start is just the foreground harness entrypoint. It does
         # not discover a terminal, inspect agents or analyze topology.
         def bootstrap(dry_run: false)
+          return isolated_start.call(dry_run: dry_run) if isolated_runtime?
           plan = Atoms::StartContract.normalize(@config)
           unless plan["profile"]["harness"] == "pi"
             raise Ace::Overseer::Error, "foreground start requires the configured pi harness"
@@ -180,6 +183,7 @@ module Ace
         # Explicit tool available to the running Lab agent. This operation
         # manages configured project children, never the coordinator itself.
         def reconcile(dry_run: false)
+          return isolated_start.reconcile(dry_run: dry_run) if isolated_runtime?
           plan = Atoms::StartContract.normalize(@config)
           raise Ace::Overseer::Error, "project reconciliation requires lab scope" unless plan["scope"] == "lab"
 
@@ -187,6 +191,21 @@ module Ace
         end
 
         private
+
+        def isolated_runtime?
+          return true if @env["ACE_LAB_SESSION"] == "1"
+          return false unless @env["ACE_TOOLCHAIN"] == "installed" && File.exist?(Ace::Lab.install_manifest_path)
+          document = Ace::Lab::Molecules::InstallManifestLoader.load
+          unless document["session_runtime"].is_a?(Hash)
+            raise Ace::Overseer::Error, "installed lab runtime is missing its isolated session configuration"
+          end
+          true
+        end
+
+        def isolated_start
+          IsolatedStart.new(executor: @executor, cwd: @cwd, env: @env, scope: @scope,
+            root_resolver: @root_resolver)
+        end
 
         # --- lab scope (task 8xs.t.pu0.a) -----------------------------------
         # The lab root is its own coordination directory with its own

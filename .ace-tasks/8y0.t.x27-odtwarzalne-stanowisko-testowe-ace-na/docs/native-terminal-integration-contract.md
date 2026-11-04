@@ -20,8 +20,8 @@ The staging mount propagation fix was required for the live coordinator mount.
 No synthetic transcript or observer evidence was used. Positive first-turn
 and active-eyes readiness remains unproven.
 
-Current implementation work still required: route standard Overseer start and
-coworker dispatch through this isolated native path; deploy and prove the implemented authorized host
+Current implementation work still required: deploy and prove the standard
+Overseer start integration, route coworker dispatch through this isolated native path; deploy and prove the implemented authorized host
 readiness; support worktree execution without runtime overrides; finish
 task/report/eyes and lease fault integration; register and run TS-MONO-003/004
 twice after clean resets with one final pinned manifest. Missing rg/fd must
@@ -54,6 +54,34 @@ App-level settle-event transition each passed (`0839c523-09ad-446c-a19f-b7e35fe5
 (`390f6a67-8b93-4973-9aa5-7df9a7e22cca`). Independent review approved the correction.
 The exact mail-patch replay reproduces the source commit. These are component
 checks; standard start/dispatch and two clean scenario runs remain outstanding.
+
+## Standard start integration (source, pending live validation)
+
+On a configured installed host or within `ACE_LAB_SESSION=1`, all standard
+start entrypoints use `IsolatedStart`; no foreground Pi, project bundle setup,
+ordinary shell command or ordinary agent launch is used. Bare start infers lab
+versus project from canonical roots in the protected deployment manifest.
+The host selects role/runtime/instructions. A lab start launches its coordinator;
+project preparation remains the coordinator's delegated work. Explicit reconcile
+starts/reuses configured project overseers and reports partial until all have
+independent readiness evidence.
+
+The session workspace endpoint permits list/create only to supervisors, only
+for granted configured projects, with a host-selected cwd and no environment
+or shell overrides. It returns grouping metadata, not host pane contents.
+Herdr remains the sole workspace/terminal owner. A standard start discovers
+owners by native role/project identity and reserved name, rejects ambiguity,
+uses the isolated launcher and bounded input-ready wait, then submits the
+canonical first prompt once without waiting for model work. The report remains
+`ready: false` after submission. A reused owner is only checked for authenticated
+first-turn/eyes evidence; uncertain prompt delivery never causes a resend.
+
+Component validation: workspace/issuer 25 tests /101 assertions
+(`88144016-f4b1-4026-8e57-b86d72e242ba`), isolated start 8 /27 including lost
+prompt acknowledgement/reuse (`bad24421-ad48-4f04-ba37-bbb8923a1d5e`), existing
+start integration 43 /204 with one platform skip (`a1884c40-cc54-4b2d-b8b0-9517a4fc23ca`),
+Herdr executor 52 /88 (`e6d86b9f-24ad-484e-b90c-6eb345a17517`). These do not
+replace the pending installed standard-start and clean E2E runs.
 
 ## Historical integration checkpoint: native77 / issuer80
 

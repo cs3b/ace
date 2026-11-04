@@ -69,6 +69,12 @@ module Ace
           )
         end
 
+        def test_agent_list_uses_native_inventory
+          executor = StubbedExecutor.new
+          executor.agent_list
+          assert_equal [["herdr", "agent", "list"]], executor.commands
+        end
+
         def test_agent_start_builds_expected_argv
           executor = StubbedExecutor.new(binary: "herdr")
 
