@@ -1,31 +1,35 @@
 # Native terminal integration contract
 
-## Current live integration state (2026-11-04, candidate86)
+## Current live integration state (2026-11-04, candidate88)
 
-The diagnostic VM now runs native `9bc62225f7c2049d34f7b7287901555852b80cf4`
-with ace-herdr `0.10.1.pre.utm86`, ace-lab `0.14.2.pre.utm85` and ace-overseer
-`0.28.2.pre.utm84` from root-owned `/opt/ace/diagnostic/utm86/gems`.
-Native SHA256: `acb9b64d93006118bb1daca42634f80897ac5f73030b6c1a21ee18bfccabba92`.
+The diagnostic VM runs native `e70ad71d36b53b866743f3c81330813502db3627`
+(SHA256 `7128db42600b7cc110214719389b7877aced28210abb1651c0af69a77413640e`)
+with ace-herdr `0.10.1.pre.utm87`, ace-lab `0.14.2.pre.utm88` and ace-overseer
+`0.28.2.pre.utm84` from root-owned `/opt/ace/diagnostic/utm88/gems`.
 This diagnostic set is not an acceptance manifest.
 
 Real model-driven isolated delegation and guarded prompt delivery were proven
-on candidate83. Candidate86 additionally proves an authenticated readiness
-query from actual Pi through the singleton issuer, target authentication,
-private read-only evidence descriptor, installed owner evaluator, and final
-immutable native identity reread. With eyes deliberately off, the result was
-`ready: false` for `term_65f6bbcb5c43a2`, invocation
-`a603c648bbd24fc183c358028d23d2b2`, root `/lab/ace`, role `project-overseer`.
+on candidate83. Candidate86 proved actual authenticated project readiness,
+including private read-only evidence FD and installed owner evaluation, with
+expected `ready: false` while eyes were deliberately off. Candidate88 now
+also launches the lab coordinator in `/lab` through native Herdr and a real
+DynamicUser mount namespace. Its actual Pi readiness query returned
+`ready: false`, terminal `term_65f6bfa1dffeb3`, invocation
+`fce7223b384e43a39776f42415fe3102`, root `/lab`, role `lab-overseer`.
+The staging mount propagation fix was required for the live coordinator mount.
 No synthetic transcript or observer evidence was used. Positive first-turn
 and active-eyes readiness remains unproven.
 
 Current implementation work still required: route standard Overseer start and
-coworker dispatch through this isolated native path; establish the explicit
-protected coordinator-root selection and authorized host readiness; support
-worktree execution without runtime overrides; finish task/report/eyes and
-lease fault integration; register and run TS-MONO-003/004 twice after clean
-resets with one final pinned manifest. Missing rg/fd must be supplied by that
-installation instead of downloaded per session. Historical checkpoints below
-are component evidence, not current runtime configuration or acceptance.
+coworker dispatch through this isolated native path; implement authorized host
+readiness; support worktree execution without runtime overrides; finish
+task/report/eyes and lease fault integration; register and run TS-MONO-003/004
+twice after clean resets with one final pinned manifest. Missing rg/fd must
+be supplied by that installation instead of downloaded per session. Existing
+fixture/start helpers still contain the earlier non-isolated launch and
+provider-auth setup and must adopt the protected runtime before acceptance.
+Historical checkpoints below are component evidence, not current runtime
+configuration or acceptance.
 
 ## Historical integration checkpoint: native77 / issuer80
 
