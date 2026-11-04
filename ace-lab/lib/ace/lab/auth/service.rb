@@ -41,10 +41,12 @@ module Ace
         # @param session [SessionPeer::Identity, nil] authenticated peer
         #   supplied by a trusted system entry point, never client fields
         # @param issuer_invocation [String, nil] trusted systemd issuer invocation
-        def initialize(authorization_path: nil, runner: nil, principal: nil, session: nil, issuer_invocation: nil)
+        def initialize(authorization_path: nil, runner: nil, principal: nil, session: nil, issuer_invocation: nil,
+          supervised: false)
           raise ArgumentError, "principal must be callable" unless principal.nil? || principal.respond_to?(:call)
           @authorization_path = authorization_path || Ace::Lab.authorization_path
           @injected_runner = !runner.nil?
+          @supervised = supervised == true
           if session
             raise ArgumentError, "session execution requires a root issuer" unless Process.euid.zero?
             raise ArgumentError, "session execution does not accept caller-supplied identity or runner" if principal || runner
@@ -131,10 +133,10 @@ module Ace
             raise Refusal.new("principal '#{subject}' is not allowed by profile '#{profile_name}'; " \
               "escalate to the host owner")
           end
-          if @session_uid
-            # A dynamic uid can be recycled after a unit exits. Until the
-            # system entry point proves session-bound cleanup and revocation,
-            # even a provider-expiring credential file could outlive its uid.
+          if @session_uid && !@supervised
+            # Only the trusted singleton request handler opts into issuance:
+            # it owns supervision through session exit, expiry and revocation.
+            # Direct session-bound service callers cannot mint unattended grants.
             raise Refusal.new("session access requires revocation supervision and session-bound cleanup before issuance")
           end
           @session_attachment&.verify_session!

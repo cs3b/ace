@@ -44,7 +44,7 @@ module Ace
         end
 
         def test_returns_the_lease_then_waits_for_the_session_without_exposing_token_reference
-          thread = Thread.new { @runner.call(@server, invocation: "a" * 32) }
+          thread = Thread.new { @runner.call(@server, invocation: "a" * 32, supervising: -> { true }) }
           @client.write(JSON.generate("action" => "request", "profile" => "forge", "role" => "developer", "task" => "t",
             "assignment" => "a", "repos" => ["owner/repo"]) + "\n")
           response = JSON.parse(@client.gets)
@@ -59,8 +59,19 @@ module Ace
           assert_equal "lease-test", @service.revoked
         end
 
-        def test_rejects_unknown_request_fields_before_issuance
+        def test_missing_supervisor_refuses_before_issuance
           thread = Thread.new { @runner.call(@server, invocation: "a" * 32) }
+          @client.puts JSON.generate("action" => "request", "profile" => "forge", "role" => "worker",
+            "task" => "t", "assignment" => "a", "repos" => ["o/r"])
+          response = JSON.parse(@client.gets)
+          refute response.fetch("ok")
+          assert_match(/supervision is unavailable/, response.fetch("error"))
+          assert_nil @service.arguments
+          assert_equal :refused, thread.value
+        end
+
+        def test_rejects_unknown_request_fields_before_issuance
+          thread = Thread.new { @runner.call(@server, invocation: "a" * 32, supervising: -> { true }) }
           @client.write(JSON.generate("action" => "request", "profile" => "forge", "uid" => 0) + "\n")
           response = JSON.parse(@client.gets)
           refute response.fetch("ok")
@@ -70,7 +81,7 @@ module Ace
 
         def test_failed_revocation_reports_supervision_failure
           @service.define_singleton_method(:revoke) { |lease_id:| :"revoke-pending" }
-          thread = Thread.new { @runner.call(@server, invocation: "a" * 32) }
+          thread = Thread.new { @runner.call(@server, invocation: "a" * 32, supervising: -> { true }) }
           @client.puts JSON.generate("action" => "request", "profile" => "forge", "role" => "worker",
             "task" => "t", "assignment" => "a", "repos" => ["o/r"])
           assert JSON.parse(@client.gets).fetch("ok")
@@ -86,7 +97,7 @@ module Ace
           end
           pid = fork do
             @client.close
-            @runner.call(@server, invocation: "a" * 32)
+            @runner.call(@server, invocation: "a" * 32, supervising: -> { true })
             exit! 0
           end
           @server.close
@@ -113,7 +124,7 @@ module Ace
         end
 
         def test_plain_byte_in_place_of_descriptor_does_not_block_handler
-          thread = Thread.new { @runner.call(@server, invocation: "a" * 32) }
+          thread = Thread.new { @runner.call(@server, invocation: "a" * 32, supervising: -> { true }) }
           @client.puts JSON.generate("action" => "exec", "lease" => "lease-test", "argv" => ["true"])
           assert_equal({"stdio" => true}, JSON.parse(@client.gets))
           @client.write("x")
@@ -127,7 +138,7 @@ module Ace
 
         def test_oversized_status_returns_bounded_refusal
           @service.define_singleton_method(:status) { |lease_id:| [{"task" => "x" * 70_000}] }
-          thread = Thread.new { @runner.call(@server, invocation: "a" * 32) }
+          thread = Thread.new { @runner.call(@server, invocation: "a" * 32, supervising: -> { true }) }
           @client.puts JSON.generate("action" => "status")
           response = @client.gets
           assert_operator response.bytesize, :<, 1024
@@ -140,7 +151,7 @@ module Ace
           Dir.mktmpdir("ace-issuer-request-", parent) do |directory|
             store = LeaseStore.new(directory)
             @service.define_singleton_method(:store) { store }
-            issuer = Thread.new { @runner.call(@server, invocation: "a" * 32) }
+            issuer = Thread.new { @runner.call(@server, invocation: "a" * 32, supervising: -> { true }) }
             @client.write(JSON.generate("action" => "request", "profile" => "forge", "role" => "developer", "task" => "t",
               "assignment" => "a", "repos" => ["owner/repo"]) + "\n")
             assert JSON.parse(@client.gets).fetch("ok")
@@ -157,7 +168,7 @@ module Ace
         end
 
         def test_rejects_duplicate_json_keys_before_issuance
-          thread = Thread.new { @runner.call(@server, invocation: "a" * 32) }
+          thread = Thread.new { @runner.call(@server, invocation: "a" * 32, supervising: -> { true }) }
           @client.write('{"action":"request","profile":"forge","profile":"other","role":"worker","task":"t","assignment":"a","repos":["o/r"]}' + "\n")
           refute JSON.parse(@client.gets).fetch("ok")
           assert_nil @service.arguments

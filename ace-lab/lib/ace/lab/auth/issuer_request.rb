@@ -21,7 +21,9 @@ module Ace
         PUBLIC_LEASE_FIELDS = %w[id profile role task assignment repos use_until provider_expiry state_detail].freeze
 
         def initialize(authenticate: ->(socket) { SessionPeer.new.authenticate(socket) },
-          service_factory: ->(identity, invocation) { Service.new(session: identity, issuer_invocation: invocation) })
+          service_factory: ->(identity, invocation) {
+            Service.new(session: identity, issuer_invocation: invocation, supervised: true)
+          })
           @authenticate, @service_factory = authenticate, service_factory
         end
 
@@ -34,6 +36,9 @@ module Ace
           request = read_request(socket)
           if request["action"] == "request" && !allow_request
             raise Refusal, "issuer lease supervision capacity is exhausted"
+          end
+          if request["action"] == "request" && !supervising.respond_to?(:call)
+            raise Refusal, "issuer lease supervision is unavailable"
           end
           service = @service_factory.call(identity, invocation)
           service.store.with_issuer_lifecycle_lock(exclusive: false) do
@@ -58,7 +63,7 @@ module Ace
               deadline = Time.iso8601(lease.fetch("use_until"))
               remaining = deadline - Time.now.utc
               raise Error, "issued lease is already expired" unless remaining.positive?
-              supervising&.call
+              supervising.call
               public_lease = lease.select { |key, _| PUBLIC_LEASE_FIELDS.include?(key) }
               reply(socket, "ok" => true, "result" => public_lease)
               socket.close
