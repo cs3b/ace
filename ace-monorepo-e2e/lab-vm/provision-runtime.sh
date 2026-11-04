@@ -116,14 +116,17 @@ EOF
 gem install --local --no-document "./builder-$builder_version.gem"
 gem install --local --no-document "./rubygems-generate_index-$index_version.gem"
 gem generate_index --directory /var/lib/ace-e2e/gem-repository
+# Install the protected runtime before consumers resolve prerelease dependencies.
+runtime_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-runtime"))' "$input/release-manifest.json")
+gem install --local --no-document "./ace-runtime-$runtime_version.gem"
 # Explicitly install the pinned prerelease adapter before ace-lab resolves it.
 forgejo_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-git-forgejo"))' "$input/release-manifest.json")
 gem install --local --no-document "./ace-git-forgejo-$forgejo_version.gem"
-gem install --local --no-document "./ace-lab-$lab_version.gem"
 # Explicitly install the pinned prerelease ace-herdr before other roots resolve
 # dependencies; RubyGems does not otherwise select prereleases implicitly.
 herdr_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-herdr"))' "$input/release-manifest.json")
 gem install --local --no-document "./ace-herdr-$herdr_version.gem"
+gem install --local --no-document "./ace-lab-$lab_version.gem"
 # The changed overseer and Pi instructions are installed as pinned candidate
 # gems, not loaded from the project checkout.
 overseer_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-overseer"))' "$input/release-manifest.json")

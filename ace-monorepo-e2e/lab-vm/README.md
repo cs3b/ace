@@ -63,26 +63,27 @@ host's `zai` Pi credential into the working VM. It checks that the installed
 runtime and native Herdr are already present and does not start the overseer.
 Before starting agents, the fixture installs the pinned Herdr binary's own Pi
 integration and checks its status as `mo`; this supplies Herdr with Pi lifecycle
-and session identity reports. The current extension projection is writable by
-`mo` and its parent can be replaced by `mo`; it does not yet satisfy the
-root-owned operational-runtime requirement. This setup path has not yet passed
-a complete VM run.
+and session identity reports. Operational gems and extensions remain root-owned;
+provider credentials live only in `/etc/lab/ace-lab/pi-auth.json` (0600).
+The protected deployment selects roles, runtime and per-session grants. Public
+`ace-lab install` converges the singleton issuer; `ace-lab verify` checks it.
+No credentials are placed in mo's Pi home or a base image.
 
-The seeded ACE revision has no project Overseer start configuration and also
-contains an old tracked HITL route for another lab, including Hermes paths.
-Those are deliberate input defects for the bootstrap commission. No Hermes
-service runs in this fixture; project readiness requires the worker to leave a
-working local route rather than relying on the old machine or its paths.
+The seeded ACE revision has no project Overseer start/eyes configuration. That
+is the repair goal. Both scopes already have valid local HITL routes; the
+project contains no route to Hermes or another lab. Project tasks, assignments,
+reports and worktrees remain inside `/lab/ace`; lab coordination is private to
+`/lab/.ace-tasks/_overseer`.
 
-`bin/lab-vm-lab-start RUN_ID` is the initial launch path under development. It
-starts a real headless Herdr server, creates the lab workspace and local HITL
-route, launches `ace-overseer start`, and delivers a single high-level project
-goal. A separate `captain` terminal displays local HITL questions without
-interpreting them as shell commands; the operator can inspect its pane from
-the receipt and answer the exact case through `ace-hitl reply`. It records the
-returned identities and refuses to repeat any attempted start. For a new run,
-reset the working VM and prepare a new fixture. It does not create the overseer's tasks or launch its
-workers. The returned prompt receipt does not establish successful delegation.
+`bin/lab-vm-lab-start RUN_ID` starts the headless Herdr server and calls public
+`ace-overseer start --scope lab --format json`. Product code owns workspace
+selection and isolated session admission. The helper sends one high-level
+bootstrap goal to the returned terminal and records the acknowledgement.
+It never creates the overseer's tasks, dispatches workers or marks readiness.
+Local operator replies use `ace-hitl reply CASE --stdin` in the case owner's
+scope. An attempted start is never blindly repeated; inspect the retained
+receipt and VM, or reset for a new run. A prompt acknowledgement is not
+successful delegation, first-turn readiness or acceptance.
 
 The intended acceptance is a full autonomous cycle: a lab Overseer delegates
 the project bootstrap, then the project Overseer independently orders and
@@ -262,3 +263,21 @@ Before removing an uncompressed exported package, the archived copy was
 extracted and its complete file fingerprint was compared with the original;
 compare the printed fingerprint with `package_fingerprint` in the sidecar.
 Archives may contain test credentials and must remain private.
+
+### Acceptance instrumentation
+
+`bin/lab-vm-guest mo RUN_ID COMMAND ARG...` runs the public installed command
+as the fixture owner in `/lab`, with the installed runtime selected. Use an
+explicit working directory for project commands. `operator` instead of `mo`
+is host-only fault instrumentation through QEMU: stop a selected session or
+issuer, inspect systemd cleanup, or temporarily remove a required runtime
+file. It checks the run receipt against the currently owned VM before every
+call. This helper is never installed in the guest or offered to an agent.
+Restore each injected fault before advancing to the next case; record its
+start/end and exact affected session/file. Never repair the commissioned
+project or create tasks/reviews/merges using operator instrumentation.
+
+Scenarios share one working VM per acceptance set: run TS-MONO-003 first, then
+TS-MONO-004 against its fixture receipt. Reset before repeating the pair with
+identical release-manifest bytes. A failure preserves the VM and evidence;
+continuation after a product change is diagnostic until a new clean pair runs.

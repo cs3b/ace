@@ -811,3 +811,38 @@ ace-lab0.14.2.pre.utm94 SHA256
 2c1fe3abd7379b6cd92151ba3bee5b81e20e4398eddbd555fd1b427af6228bc7,
 source edf9663ea632302608c47078b89a6ab9b8e50534, uploaded to lab-operator home.
 No TS-MONO-003/004 registration or clean acceptance run is claimed yet.
+
+### Installed observation and public installation follow-up
+
+Source bc0aa0400 added cross-project owner observation and bootstrap task
+ownership. The real installed95 session found the subprocess environment seam:
+Toolchain.child_environment is a delta containing nil removals, whereas
+BoundedProcess requires a complete string environment. Source956097b9a merges
+then compacts it; its real child-process regression passes. Installed96 eyes
+then reported all lab/project sources healthy (enabled, zeroerrors, no breaker).
+A local reply to existing case8y38dz woke the coordinator and produced a real
+public dispatch attempt. That exposed Herdr's partial Lab require; source2fbe5cb60
+loads the public Lab entry and tests the standalone process (5tests/26assertions,
+92b447e6-f5ac-4a8b-b482-aa311c403e1d). The prior assignment was also in a lab
+worktree; fresh fixtures now follow target-project task ownership. No successful
+worker execution is claimed from these diagnostic attempts.
+
+Source2fbe5cb60 connects singleton installation to Prepare and read-only
+readiness to Verify, including CLI failure sections. Healthy active reruns do
+not mutate service state. Identical inactive units activate, including a crash
+between writing files and daemon-reload; failed/mixed states remain blocked.
+Verification checks exact files/effective units, socket/recovery state and a
+running issuer's root PID, invocation, argv and executable. Independent review
+converged after fixing both inactive cases. Full lab:1005tests/4692assertions,
+zero failures/errors,16platform skips
+(1683eee8-bb81-49fd-af38-6db68e69ca79).
+
+Eight candidate gems were built from2fbe5cb60b10febd79af32ca661a3cd366909d49
+with utm97 versions; release-manifest.json records every hash. Native94 remains
+exactly b0be31ac215bd68934caae4bb17c3eb3dd0b6be0 and its recorded artifact.
+Fresh fixture changes keep model credentials root0600, configure protected
+roles/scoped Forgejo profiles, seed valid local HITL routes, and launch via
+public ace-overseer start. Host instrumentation is never available to agents.
+TS-MONO-003/004 load through existing runner dry-run (3/4cases). They have not
+passed an execution yet. Preserve this distinction until both complete twice
+with a reset and identical manifest between pairs.

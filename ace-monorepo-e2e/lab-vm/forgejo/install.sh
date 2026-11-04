@@ -102,7 +102,7 @@ test "$pid" -gt 1
 ss -lntp '( sport = :3000 )' | grep -F "pid=$pid," >/dev/null
 # Passwords and token output remain root-only, inside the working VM.
 install -d -o root -g root -m 0700 /run/ace-e2e-forgejo
-for user in e2e-admin e2e-integrator e2e-reviewer; do
+for user in e2e-admin e2e-integrator e2e-reviewer e2e-worker; do
   admin=
   [ "$user" != e2e-admin ] || admin=--admin
   runuser -u forgejo -- /usr/local/bin/forgejo admin user create --config /etc/forgejo/app.ini --work-path /var/lib/forgejo --username "$user" --email "$user@example.invalid" --random-password --must-change-password=false $admin > "/run/ace-e2e-forgejo/$user.password" 2>&1

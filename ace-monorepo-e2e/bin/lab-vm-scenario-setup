@@ -1,0 +1,44 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+require "json"
+require "open3"
+require "fileutils"
+load File.expand_path("lab-vm", __dir__)
+begin
+  mode, destination = ARGV
+  raise "usage: lab-vm-scenario-setup fresh|existing EVIDENCE_DIRECTORY" unless
+    ARGV.size == 2 && %w[fresh existing].include?(mode)
+  destination = File.expand_path(destination)
+  raise "unsafe evidence destination" if File.symlink?(destination)
+  FileUtils.mkdir_p(destination, mode: 0o700)
+  path = File.join(destination, "fixture.json")
+  raise "setup evidence already exists" if File.exist?(path) || File.symlink?(path)
+  if mode == "fresh"
+    [["lab-vm", "prepare"], ["lab-vm", "reset"], ["lab-vm-runtime", "provision"]].each do |name, action|
+      raise "#{name} #{action} failed" unless system(File.join(__dir__, name), action)
+    end
+    output, error, status = Open3.capture3(File.join(__dir__, "lab-vm-forgejo"), "create")
+    warn error unless error.empty?
+    raise "Forgejo fixture creation failed" unless status.success?
+    receipt = JSON.parse(output)
+    raise "fixture preparation failed" unless system(File.join(__dir__, "lab-vm-fixture"), "prepare", receipt.fetch("run_id"))
+  else
+    work = LabVm.status.fetch("work")
+    raise "run TS-MONO-003 first" unless work && work["status"] == "started"
+    candidates = Dir.glob(File.join(LabVm.local_dir, "runs", "*", "fixture.json")).filter_map do |candidate|
+      next if File.symlink?(candidate) || File.symlink?(File.dirname(candidate))
+      value = JSON.parse(File.read(candidate))
+      value if value["status"] == "ready" && value["vm_uuid"].to_s.casecmp?(work.fetch("uuid"))
+    end
+    raise "exactly one prepared fixture on the current VM is required" unless candidates.length == 1
+    receipt = candidates.first
+  end
+  receipt = receipt.merge("scenario_source" => LabVm::ROOT,
+    "runtime_fingerprint" => LabVm.runtime_configuration_fingerprint,
+    "release_manifest_sha256" => Digest::SHA256.file(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/release-manifest.json")).hexdigest)
+  File.open(path, File::WRONLY | File::CREAT | File::EXCL | File::NOFOLLOW, 0o600) { |file| file.write(JSON.pretty_generate(receipt) + "\n") }
+  puts "Fixture evidence: #{path}"
+rescue StandardError => error
+  warn "lab-vm-scenario-setup: #{error.message}"
+  exit 1
+end

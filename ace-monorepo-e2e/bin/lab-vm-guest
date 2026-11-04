@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+# Host-side test instrumentation, never installed in the guest or given to agents.
+require "json"
+load File.expand_path("lab-vm", __dir__)
+begin
+  role = ARGV.shift
+  run_id = ARGV.shift
+  raise "usage: lab-vm-guest mo|operator RUN_ID COMMAND [ARG...]" unless %w[mo operator].include?(role) &&
+    run_id.to_s.match?(/\A[a-f0-9]{16}\z/) && !ARGV.empty?
+  LabVm.with_lifecycle_lock do
+    path = File.join(LabVm.local_dir, "runs", run_id, "fixture.json")
+    raise "unsafe fixture receipt" if File.symlink?(File.dirname(path)) || File.symlink?(path) || !File.file?(path)
+    receipt = JSON.parse(File.read(path))
+    work = LabVm.status.fetch("work")
+    unless receipt["schema"] == "ace-e2e-forgejo-fixture/v1" && receipt["run_id"] == run_id &&
+        receipt["status"] == "ready" && work && work["status"] == "started" &&
+        receipt.fetch("vm_uuid").casecmp?(work.fetch("uuid"))
+      raise "fixture does not identify the running owned VM"
+    end
+    uuid = work.fetch("uuid")
+    # Exact operator argv is deliberate fault instrumentation. No agent can
+    # access this macOS helper or QEMU control channel from its isolated unit.
+    argv = if role == "operator"
+      ARGV
+    else
+      ["/usr/sbin/runuser", "-u", "mo", "--", "/bin/sh", "-c",
+        'set -e; . /etc/profile.d/ace-e2e.sh; cd /lab; exec "$@"', "ace-e2e", *ARGV]
+    end
+    code, output = LabVm.guest_exec(uuid, *argv, timeout_s: 120)
+    puts output
+    exit code
+  end
+rescue StandardError => error
+  warn "lab-vm-guest: #{error.message}"
+  exit 1
+end

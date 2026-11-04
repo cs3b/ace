@@ -1,0 +1,43 @@
+test-id: TS-MONO-003
+title: "Autonomous bootstrap and ordered Forgejo integration"
+area: monorepo
+package: ace-monorepo-e2e
+priority: high
+tags: [utm, arm64, forgejo, autonomy, installed]
+cost-tier: extended
+tool-under-test: ace-overseer
+automation-candidate: false
+e2e-justification: >
+  Requires native ARM64 Herdr/Pi, isolated Linux systemd sessions, the real
+  scoped issuer and local Forgejo. Mocks cannot prove delegation, lifecycle,
+  independent review, ordered integration or absence of idle model turns.
+e2e-evidence-strength: command-output
+e2e-false-positive-risk: high
+unit-coverage-reviewed:
+  - ace-lab/test/fast/auth/issuer_install_integration_test.rb
+  - ace-lab/test/fast/auth/session_launcher_test.rb
+  - ace-herdr/test/fast/organisms/isolated_dispatcher_test.rb
+  - ace-overseer/test/fast/organisms/event_observation_test.rb
+requires:
+  tools: [ruby, git, ssh, scp]
+sandbox-layout:
+  results/setup/fixture.json: "Existing fixture owner receipt plus exact runtime fingerprint and manifest hash"
+  results/tc/01/commands.stdout: "Actual captured commands.stdout; never a synthetic verdict"
+  results/tc/01/commands.stderr: "Actual captured commands.stderr; never a synthetic verdict"
+  results/tc/01/commands.exit: "Actual captured commands.exit; never a synthetic verdict"
+  results/tc/01/state.json: "Actual captured state.json; never a synthetic verdict"
+  results/tc/01/sessions.json: "Actual captured sessions.json; never a synthetic verdict"
+  results/tc/02/commands.stdout: "Actual captured commands.stdout; never a synthetic verdict"
+  results/tc/02/commands.stderr: "Actual captured commands.stderr; never a synthetic verdict"
+  results/tc/02/commands.exit: "Actual captured commands.exit; never a synthetic verdict"
+  results/tc/02/state.json: "Actual captured state.json; never a synthetic verdict"
+  results/tc/02/sessions.json: "Actual captured sessions.json; never a synthetic verdict"
+  results/tc/03/commands.stdout: "Actual captured commands.stdout; never a synthetic verdict"
+  results/tc/03/commands.stderr: "Actual captured commands.stderr; never a synthetic verdict"
+  results/tc/03/commands.exit: "Actual captured commands.exit; never a synthetic verdict"
+  results/tc/03/state.json: "Actual captured state.json; never a synthetic verdict"
+  results/tc/03/sessions.json: "Actual captured sessions.json; never a synthetic verdict"
+setup:
+  - run: |
+      source_root="${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}"
+      "$source_root/ace-monorepo-e2e/bin/lab-vm-scenario-setup" fresh "$PWD/results/setup"

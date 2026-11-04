@@ -39,7 +39,7 @@ def inventory():
             url = f"https://rubygems.org/downloads/{filename}"
         elif item["source"] == "local":
             commit = item.get("source_commit", "")
-            if name not in ("ace-coworker", "ace-wake", "ace-lab", "ace-herdr", "ace-git-forgejo", "ace-overseer", "ace-handbook-integration-pi") or not re.fullmatch(r"[a-f0-9]{40}", commit):
+            if name not in ("ace-runtime", "ace-coworker", "ace-wake", "ace-lab", "ace-herdr", "ace-git-forgejo", "ace-overseer", "ace-handbook-integration-pi") or not re.fullmatch(r"[a-f0-9]{40}", commit):
                 raise ValueError("invalid local gem build source")
             url = f"local:{name}:{version}:{commit}"
         else:

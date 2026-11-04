@@ -5,7 +5,7 @@ require "rubygems/package"
 require "set"
 
 module LabVmGemGraph
-  ROOTS = %w[ace-git-commit ace-handbook-integration-pi ace-test ace-test-runner
+  ROOTS = %w[ace-lab ace-git-commit ace-handbook-integration-pi ace-test ace-test-runner
     ace-wake rubygems-generate_index].freeze
 
   def self.validate!(manifest, artifact_dir, roots: ROOTS)

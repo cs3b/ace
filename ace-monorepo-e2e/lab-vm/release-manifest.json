@@ -29,10 +29,10 @@
     },
     {
       "name": "ace-coworker",
-      "version": "0.8.1.pre.utm6",
-      "sha256": "cc8ec6e47522ba4147f21f3bb136f93aeacb4c0dd10a33cb2e6639daa35c9001",
+      "version": "0.8.1.pre.utm97",
+      "sha256": "4cb10361c80b36be4eed4884a590361dd65a5764e128d86b6091c78603f7c0ac",
       "source": "local",
-      "source_commit": "1d446f9cafefea16ff886b787f3cd058c8d37d00"
+      "source_commit": "2fbe5cb60b10febd79af32ca661a3cd366909d49"
     },
     {
       "name": "ace-git",
@@ -48,10 +48,10 @@
     },
     {
       "name": "ace-git-forgejo",
-      "version": "0.8.1.pre.utm2",
-      "sha256": "5d08a51156cfb49ba70ec4dd2a61013d6940ae1cd9093c1ae2de130ce6604af3",
+      "version": "0.8.1.pre.utm97",
+      "sha256": "2ccdde7df072d64a462c434b5c318f24f80c75018448e9ef8b00c74b9d22ee41",
       "source": "local",
-      "source_commit": "211b6068167562050ee037df3cf119975e957556"
+      "source_commit": "2fbe5cb60b10febd79af32ca661a3cd366909d49"
     },
     {
       "name": "ace-git-github",
@@ -73,17 +73,17 @@
     },
     {
       "name": "ace-handbook-integration-pi",
-      "version": "0.8.1.pre.utm2",
-      "sha256": "9b02317aadc7d4c4eda80a178de8254ef440ec1a1520fc2a64c66509ee5f60f2",
+      "version": "0.8.1.pre.utm97",
+      "sha256": "fd3174bcbd8e7097d2f082d9b8b8e3be74393459b5c929cfd525b5461f8a8906",
       "source": "local",
-      "source_commit": "3e4bac12933cc9ee7c2721c9bc907463823ff7e1"
+      "source_commit": "2fbe5cb60b10febd79af32ca661a3cd366909d49"
     },
     {
       "name": "ace-herdr",
-      "version": "0.10.1.pre.utm5",
-      "sha256": "8960612994e7672c305da5cd2f66d181e98e77a9cf4f18c260b7aa4cc807c454",
+      "version": "0.10.1.pre.utm97",
+      "sha256": "617f2e4690e95c880a46d241caa2071fabb2b7a455e5b865a6c3a33ad4bd995d",
       "source": "local",
-      "source_commit": "8163a8c53f975c5c063f619c0da8bc9e8df9dfaa"
+      "source_commit": "2fbe5cb60b10febd79af32ca661a3cd366909d49"
     },
     {
       "name": "ace-hitl",
@@ -105,10 +105,10 @@
     },
     {
       "name": "ace-lab",
-      "version": "0.14.2.pre.utm57",
-      "sha256": "6cc30dcab352ae0bcd148fe062ffe8bc018f565b90b7dd277690d2493927fd0f",
+      "version": "0.14.2.pre.utm97",
+      "sha256": "d1b724a06bbb787d0210cda6e88a23cc8e19e553a900793a4bef68719ebfb7ac",
       "source": "local",
-      "source_commit": "8163a8c53f975c5c063f619c0da8bc9e8df9dfaa"
+      "source_commit": "2fbe5cb60b10febd79af32ca661a3cd366909d49"
     },
     {
       "name": "ace-llm",
@@ -124,10 +124,10 @@
     },
     {
       "name": "ace-overseer",
-      "version": "0.28.2.pre.utm32",
-      "sha256": "56befc126c9cdfead896c98f52dcb01906e7da6760aee64cbb03750f575ab942",
+      "version": "0.28.2.pre.utm97",
+      "sha256": "3edbc96ee998b1001e5aa992e034631eef52b4e3d5512cf3011a9e8c0ce6bf4a",
       "source": "local",
-      "source_commit": "8163a8c53f975c5c063f619c0da8bc9e8df9dfaa"
+      "source_commit": "2fbe5cb60b10febd79af32ca661a3cd366909d49"
     },
     {
       "name": "ace-review",
@@ -137,9 +137,10 @@
     },
     {
       "name": "ace-runtime",
-      "version": "0.4.1",
-      "sha256": "90287f72123319492c6f7a4bbeb711e5227a509c505734bcec9513a99745472a",
-      "source": "https://rubygems.org"
+      "version": "0.4.2.pre.utm97",
+      "sha256": "c6966cdeaf2082075f4d3814d60396ceb8fbe1cbdca96b4ba90bfbe347f32df2",
+      "source": "local",
+      "source_commit": "2fbe5cb60b10febd79af32ca661a3cd366909d49"
     },
     {
       "name": "ace-support-cli",
@@ -221,10 +222,10 @@
     },
     {
       "name": "ace-wake",
-      "version": "0.2.1.pre.utm31",
-      "sha256": "14ff96d846a5b33c8c7be207a5d82bd60562edfd7d8c4c1ee0bb2bcb54a84f67",
+      "version": "0.2.1.pre.utm97",
+      "sha256": "93cd9c7e5f30f2ef907c0ad64c528760f1c952746c8a040721fc7c0a918a1903",
       "source": "local",
-      "source_commit": "6459e5692655bab9a5162bb59a9202c6a89c42bf"
+      "source_commit": "2fbe5cb60b10febd79af32ca661a3cd366909d49"
     },
     {
       "name": "addressable",
@@ -358,10 +359,10 @@
   "herdr": {
     "rust_version": "1.96.1",
     "target": "aarch64-unknown-linux-musl",
-    "selection_sha256": "fcb02b4b85d48585c873b7a1cbf84c46cea1a26ed02e0562b18717a8785a470e",
+    "selection_sha256": "1d6993a995ba3cf9862960952210dab44bff66b47d8ee2345b8d9337e3189805",
     "baseline_commit": "7b116c05bfda646af39d2524c54e70c751f57ee8",
-    "artifact_sha256": "df1b806aa1e4bde126577fbafc6d3f25d098574637d89ab39b68c57896e3334c",
-    "provenance_sha256": "f0f3dfddd91b4d4fb5a8e51db9c165b30b393b68d6e07628fe4421d47af8dada"
+    "artifact_sha256": "83544723f41df791ef64b3a7ac120d2e153023c9cce37aa81d1869f72b7bcc6c",
+    "provenance_sha256": "ea80a30cd955db26eef85a8016f4adc2188a1ef6d09ce544adabcef44d7cd5c2"
   },
   "pi": {
     "package": "@earendil-works/pi-coding-agent",

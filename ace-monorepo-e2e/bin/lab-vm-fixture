@@ -66,7 +66,7 @@ begin
       test ! -e /etc/lab/ace-lab/authorization.yml
       test ! -L /etc/lab/ace-lab/authorization.yml
       for path in /home/mo /home/mo/.pi /home/mo/.pi/agent; do test ! -L "$path"; done
-      for path in /lab/.git /lab/.ace /lab/.gitignore /lab/ace /home/mo/.pi/agent/auth.json /tmp/ace-e2e-fixture.bundle /home/lab-operator/lab /home/lab-operator/fixture.bundle /home/lab-operator/ace-e2e-auth.json; do
+      for path in /lab/.git /lab/.ace /lab/.gitignore /lab/ace /etc/lab/ace-lab/pi-auth.json /tmp/ace-e2e-fixture.bundle /home/lab-operator/lab /home/lab-operator/fixture.bundle /home/lab-operator/ace-e2e-auth.json; do
         test ! -e "$path"
         test ! -L "$path"
       done
@@ -88,7 +88,7 @@ begin
         file.write(JSON.generate({"zai" => auth.fetch("zai")}))
         file.flush
         mutated = true
-        raise "fixture transfer failed" unless system("scp", "-q", "-r", *options, bundle, lab, remote)
+        raise "fixture transfer failed" unless system("scp", "-q", "-r", *options, bundle, lab, File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/session-fixture.rb"), remote)
         auth_staged = true
         raise "provider auth transfer failed" unless system("scp", "-q", *options, file.path, "#{remote}ace-e2e-auth.json")
       end
@@ -97,7 +97,7 @@ begin
         test -d /lab
         test ! -L /lab
         for path in /home/mo /home/mo/.pi /home/mo/.pi/agent; do test ! -L "$path"; done
-        for path in /lab/.git /lab/.ace /lab/.gitignore /lab/ace /home/mo/.pi/agent/auth.json /tmp/ace-e2e-fixture.bundle; do
+        for path in /lab/.git /lab/.ace /lab/.gitignore /lab/ace /etc/lab/ace-lab/pi-auth.json /tmp/ace-e2e-fixture.bundle; do
           test ! -e "$path"
           test ! -L "$path"
         done
@@ -105,8 +105,7 @@ begin
         cp -R /home/lab-operator/lab/. /lab/
         chown -R mo:mo /lab/.ace /lab/.gitignore
         test "$(stat -c '%U:%G' /lab)" = mo:mo
-        install -d -o mo -g mo -m 0700 /home/mo/.pi/agent
-        install -o mo -g mo -m 0600 /home/lab-operator/ace-e2e-auth.json /home/mo/.pi/agent/auth.json
+        install -o root -g root -m 0600 /home/lab-operator/ace-e2e-auth.json /etc/lab/ace-lab/pi-auth.json
         rm -f /home/lab-operator/ace-e2e-auth.json
         install -o root -g root -m 0644 /home/lab-operator/fixture.bundle /tmp/ace-e2e-fixture.bundle
         runuser -u mo -- git -C /lab init -q -b main
@@ -119,6 +118,7 @@ begin
         runuser -u mo -- git -C /lab/ace remote set-url origin http://127.0.0.1:3000/#{repo}.git
         runuser -u mo -- git -C /lab/ace config user.name 'ACE E2E Worker'
         runuser -u mo -- git -C /lab/ace config user.email 'ace-e2e@example.invalid'
+        runuser -u mo -- mkdir -p /lab/ace/.ace-tasks/_overseer /lab/ace/.ace-local/hitl /lab/ace/.ace/hitl
         # The trusted deployment manifest declares project visibility; only
         # ace-lab install converges the root-owned authorization document.
         test ! -e /etc/lab/ace-lab/authorization.yml
@@ -126,16 +126,14 @@ begin
         test -f /etc/lab/ace-lab/install.yml
         test ! -L /etc/lab/ace-lab/install.yml
         test "$(stat -c '%U:%G %a' /etc/lab/ace-lab/install.yml)" = 'root:root 644'
-        python3 -c 'import pathlib,re; s=pathlib.Path("/etc/lab/ace-lab/install.yml").read_text(); assert s.endswith("\\n") and not re.search(r"(?m)^(projects|grants)\\s*:",s), "unexpected install manifest"'
-        cat >> /etc/lab/ace-lab/install.yml <<'YAML'
-        projects:
-          - id: ace
-            path: /lab/ace
-            remote: http://127.0.0.1:3000/#{repo}.git
-            label: ACE E2E fixture
-        grants:
-          mo: [ace]
-        YAML
+        . /etc/profile.d/ace-e2e.sh
+        test ! -e /var/lib/ace-e2e/session-fixture.rb
+        install -o root -g root -m 0644 /home/lab-operator/session-fixture.rb /var/lib/ace-e2e/session-fixture.rb
+        test "$(sha256sum /var/lib/ace-e2e/session-fixture.rb | cut -d' ' -f1)" = '#{Digest::SHA256.file(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/session-fixture.rb")).hexdigest}'
+        ruby /var/lib/ace-e2e/session-fixture.rb
+        install -d -o root -g root -m 0755 /run/lab
+        install -d -o mo -g mo -m 0700 /run/lab/herdr
+        printf '%s\n' 'export HERDR_SOCKET_PATH=/run/lab/herdr/herdr.sock' >> /etc/profile.d/ace-e2e.sh
         . /etc/profile.d/ace-e2e.sh
         GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=/lab/ace ace-lab install
         test "$(stat -c '%U:%G %a' /etc/lab/ace-lab/authorization.yml)" = 'root:root 644'

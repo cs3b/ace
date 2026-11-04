@@ -4,7 +4,6 @@
 # Start one lab coordinator and deliver one user-level goal. This harness
 # does not create tasks, dispatch workers or respond on the coordinator's behalf.
 require "json"
-require "base64"
 require "tempfile"
 load File.expand_path("lab-vm", __dir__)
 
@@ -78,71 +77,23 @@ begin
         raise "Herdr server did not become ready (running: #{status["running"].inspect}, compatible: #{status["compatible"].inspect})" if LabVm.uptime >= deadline
         sleep 1
       end
-      workspace = guest_json(uuid, "herdr", "workspace", "create", "--cwd", "/lab", "--label", "overseer", "--env", "ACE_TOOLCHAIN=installed")
-      workspace_id = workspace.dig("result", "workspace", "workspace_id")
-      pane_id = workspace.dig("result", "root_pane", "pane_id")
-      unless workspace_id.to_s.match?(/\A[a-zA-Z0-9_:-]+\z/) && pane_id.to_s.match?(/\A[a-zA-Z0-9_:-]+\z/)
-        raise "Herdr returned invalid workspace or pane identity"
+      # Public start owns workspace selection, trusted isolated admission and
+      # its initial prompt. The harness supplies only the user's single goal.
+      start = guest_json(uuid, "ace-overseer", "start", "--scope", "lab", "--format", "json")
+      terminal = start["pane"]
+      unless start["status"] == "started" && start["scope"] == "lab" &&
+          start["root"] == "/lab" && terminal.to_s.match?(/\Aterm_[0-9a-f]+\z/)
+        raise "public start did not confirm a new isolated lab coordinator"
       end
-      receipt.merge!("workspace" => workspace_id, "pane" => pane_id, "status" => "workspace_created")
-      save_start_receipt(output_path, receipt)
-
-      # A local operator is a distinct recipient, not the coordinator's own
-      # pane. Keep its terminal in cat so delivered text is displayed rather
-      # than interpreted by a shell. The host can read it and answer the exact
-      # case through the existing HITL CLI; no agent or relay is introduced.
-      operator = guest_json(uuid, "herdr", "workspace", "create", "--cwd", "/lab", "--label", "captain")
-      operator_workspace = operator.dig("result", "workspace", "workspace_id")
-      operator_pane = operator.dig("result", "root_pane", "pane_id")
-      unless operator_workspace.to_s.match?(/\A[a-zA-Z0-9_:-]+\z/) && operator_pane.to_s.match?(/\A[a-zA-Z0-9_:-]+\z/) && operator_pane != pane_id
-        raise "Herdr returned invalid operator workspace or pane identity"
-      end
-      receipt.merge!("operator_workspace" => operator_workspace, "operator_pane" => operator_pane)
-      save_start_receipt(output_path, receipt)
-      code, = guest_mo(uuid, "herdr", "pane", "run", operator_pane,
-        "printf '%s%s\\n' ACE_E2E_ OPERATOR_READY; exec cat")
-      raise "local operator pane launch failed" unless code.zero?
-      code, = guest_mo(uuid, "herdr", "pane", "wait-output", "--match", "ACE_E2E_OPERATOR_READY", "--timeout", "30000", operator_pane)
-      raise "local operator pane did not become ready" unless code.zero?
-
-      config = {"hitl" => {"machine" => "utm-e2e", "default_recipient" => "overseer",
-        "recipients" => {"overseer" => {"machine" => "utm-e2e", "panel" => pane_id},
-          "captain" => {"machine" => "utm-e2e", "panel" => operator_pane}},
-        "adapters" => {"routes" => [{"route" => "overseer-terminal", "recipients" => ["overseer"],
-          "adapter" => "terminal", "runtime" => "herdr", "pane" => pane_id, "machine" => "utm-e2e"},
-          {"route" => "captain-terminal", "recipients" => ["captain"], "adapter" => "terminal",
-            "runtime" => "herdr", "pane" => operator_pane, "machine" => "utm-e2e"}]}}}
-      encoded = Base64.strict_encode64(JSON.generate(config))
-      setup = "set -eu; test ! -L /home/mo/.ace; test ! -e /home/mo/.ace/hitl/config.yml; test ! -L /home/mo/.ace/hitl/config.yml; test ! -L /home/mo/.ace/hitl; mkdir -p /home/mo/.ace/hitl; printf '%s' '#{encoded}' | base64 -d > /home/mo/.ace/hitl/config.yml; chmod 0600 /home/mo/.ace/hitl/config.yml"
-      code, = guest_mo(uuid, "/bin/sh", "-c", setup)
-      raise "local HITL route setup failed" unless code.zero?
-      # Herdr pane run uses its exit status and emits no JSON on success.
-      code, = guest_mo(uuid, "herdr", "pane", "run", pane_id, "ace-overseer start")
-      raise "lab coordinator launch failed" unless code.zero?
-      receipt["status"] = "awaiting_agent"
-      save_start_receipt(output_path, receipt)
-
-      deadline = LabVm.uptime + 180
-      last_status = "not detected"
-      loop do
-        listing = guest_json(uuid, "herdr", "agent", "list")
-        agents = listing.dig("result", "agents")
-        raise "invalid Herdr agent inventory" unless agents.is_a?(Array)
-        matches = agents.select { |agent| agent["pane_id"] == pane_id && agent["agent"] == "pi" }
-        raise "ambiguous coordinator identity" if matches.length > 1
-        last_status = matches.first["agent_status"].to_s if matches.length == 1
-        # A detected Pi can accept a prompt while working, idle or done.
-        # Native Herdr does not expose interactive_ready for pane-run Pi.
-        # These status names are the pinned Herdr build's contract; recheck
-        # them when updating that binary.
-        break if matches.length == 1 && %w[working idle done].include?(matches.first["agent_status"])
-        raise "lab coordinator did not become ready (last state: #{last_status})" if LabVm.uptime >= deadline
-        sleep 1
-      end
-      receipt["status"] = "prompt_pending"
+      receipt.merge!("terminal" => terminal, "workspace" => start.fetch("workspace"),
+        "status" => "prompt_pending", "ready" => false)
       save_start_receipt(output_path, receipt)
       goal = "Przygotuj projekt ACE wskazany w konfiguracji laba i doprowadź jego nadzorcę do gotowości."
-      guest_json(uuid, "herdr", "agent", "prompt", pane_id, goal)
+      reply = guest_json(uuid, "herdr", "agent", "prompt", terminal, goal)
+      unless reply.dig("result", "type") == "agent_prompted" &&
+          reply.dig("result", "agent", "terminal_id") == terminal
+        raise "goal acknowledgement differs; preserve the session without resending"
+      end
       receipt["status"] = "prompt_delivered"
       save_start_receipt(output_path, receipt)
       puts JSON.pretty_generate(receipt.merge("receipt" => output_path))
