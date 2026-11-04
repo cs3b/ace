@@ -1,6 +1,50 @@
 # Native terminal integration contract
 
-## Current integration state (2026-11-04)
+## Current live integration state (2026-11-04)
+
+Native source `91026fe397b4e2f6b4c1566a006706f83c2a3fe4` is built by
+its owner procedure and installed as diagnostic native77. Artifact SHA-256:
+`e4bea13aebba5db4edb583d1f2e39d6ec3bce19ef322ce845530a574bf01828e`;
+provenance SHA-256:
+`c072d3439fced544fe60a5f760bf32a22b25dd15f27d5d7dad408f7667658ff1`.
+
+Actual launch found and fixed a Ruby descriptor-class mismatch: systemd's
+Socket.for_fd listener accepts Socket objects, while handoff required UNIXSocket.
+The production check now validates an open AF_UNIX stream and the regression
+uses Socket.pair. Tests: 12 / 65 assertions, report
+`19f6c28d-0674-40a3-bd70-6298b8b6accf`; independent review found no blocker.
+Failure diagnostics name only phase, exception class and containment booleans,
+never exception text. Cleanup failure may retain the original operation phase.
+
+Issuer80 is installed with normal IssuerInstaller readiness checks from
+`c24b9dcf9c01a63194c6f79f5362fe0efe126234`, ace-lab 0.14.2.pre.utm80,
+artifact SHA-256 `74eca8222ef25fa84b5c8f676f86ade713bf4b4676d97e1b6a60381516a28b3b`.
+Worker runtime selection still points to the prior self-contained utm75 gem
+home: this mixed diagnostic set is not an acceptance manifest.
+
+Native CLI successfully admitted worker80 into w1:p3 / terminal
+term_65f6a6411c4fb5. Pi 0.86.1 loaded installed worker instructions, project
+AGENTS.md and protected ace-wake/herdr-agent-state extensions. Startup initially
+blocked at project trust. SessionPreparation now seeds private settings with
+`defaultProjectTrust: never`; installed project resources stay ignored and the
+interactive trust dialog is absent. This is startup behavior, not an immutable
+security boundary. Preparation tests 3 / 19 assertions passed; independently
+reviewed. Pi still downloads its own missing rg/fd: final pinned installation
+must supply these dependencies before clean acceptance.
+
+The real native Pi worker completed a diagnostic public-CLI lease assignment:
+`lease-cce2c3947c980e02`, task diagnostic-native80, assignment worker80.
+Request used e2e-worker / worker / e2e-integrator/ace / TTL 1 minute.
+Auth exec ran git ls-remote against local Forgejo, returned exit 0 and main
+`6c0fe3b9487caa029c502630df675e45bef0c008`; cleanup was revoked. Subsequent
+auth status reported state revoked, live false, cleanup at
+2026-11-04T02:48:05Z. Pi's terminal shows eyes off. This is a component
+vertical slice, not the autonomous bootstrap or recovery acceptance. Process/PTY admission and
+visible Pi startup are proven; first-turn/eyes readiness, authenticated scoped
+reporting, delegation routing, TS-MONO-003/004 and two clean identical-manifest
+runs are still unaccepted. Existing historical probes below do not close them.
+
+## Prior integration state (2026-11-04)
 
 This section supersedes the historical progress entries below. Native
 `agent.start_isolated` now asynchronously admits a configured project/role,
