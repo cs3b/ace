@@ -243,3 +243,44 @@ Verification: targeted issuer/launch/peer tests 27/103; complete ace-lab suite
 not evidence of native pane integration or actual Pi launch. The native
 client/backend/pane route, scoped session communication, first-turn/eyes
 readiness and installed configured endpoint probe remain outstanding.
+
+## Native launch client and terminal construction
+
+Selected native source `7405a1259c4f25332fc0b90f7d64355e8808b01b`, tree
+`176ddaac492dbb92b89654b96a1fb491f90f2c23`, adds the fixed protected issuer
+client and `TerminalRuntime::from_isolated_session`. It reuses SpawnedPty,
+the PTY actor, guarded origin and child watcher. Pane shutdown retains the
+launcher ChildKiller instead of numeric-PID signalling. Isolated sessions
+refuse the existing terminal-only server-handoff mechanism because that
+mechanism does not transfer their lifecycle owner. Preparation has a bounded
+45-second handshake; this is process-start evidence, never agent readiness.
+
+Independent review found an actor-construction failure leak: the detached
+watcher retained the lifecycle channel before fallible actor initialization.
+The watcher now starts after successful actor creation. An injected actor
+failure test proves that all native lifecycle descriptors close, allowing the
+issuer to contain the session; ordinary process failures kill and reap their
+child. Review closed the finding after inspecting this correction.
+
+ARM64 validation: configured request tests 2/2 (nextest
+`ce421eb0-27d0-4d9c-a45e-0480943af6e4`); isolated lifecycle/transfer/failure
+filter 6/6 (`2647a642-e062-46f4-9279-70d30e065a8b`); complete pane test module
+139/139 (`cc6a19cc-33a4-4bd8-8b88-839dfba87a1e`). Formatted with pinned
+Rust 1.96.1. Exact patch replay reproduces both source and tree hashes;
+packaging tests 13/42 pass. Full `just check` and non-Linux builds were not run.
+
+The native API still does not call this constructor. Compiler unused-path
+warnings accurately reflect that remaining work. Native managed start must
+be asynchronous, expose an advertised capability, and avoid replacing an
+ordinary shell under the same pane identity while its old PaneDied event is
+still pending. Session-originated scoped communication also remains open.
+
+The root singleton endpoint is installed diagnostically as ace-lab
+`0.14.2.pre.utm74` from `3b9c5c79cab8f9d090598f8d90340a91f10e2727`, SHA-256
+`4558e65b56d50c65c5a1541309f1ea5e9a64c2ef337695b51b60b94eda8fb681`,
+in `/opt/ace/diagnostic/utm74/gems` with the utm73 runtime correction.
+Default IssuerInstaller passed all runtime/unit/host checks and returned
+installed; previous units are preserved in utm74/previous-units. The guest
+manifest has not yet been configured with session roles/model runtime, and
+no live configured Pi launch has been attempted. Acceptance manifest remains
+unchanged. All of this is component evidence only.

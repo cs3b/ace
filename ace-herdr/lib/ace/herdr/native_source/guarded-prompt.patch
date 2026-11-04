@@ -4115,3 +4115,752 @@ index 0000000..dae56c2
 +        }
 +    }
 +}
+From 7405a1259c4f25332fc0b90f7d64355e8808b01b Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 02:49:19 +0100
+Subject: [PATCH] feat(linux): attach configured isolated sessions to terminal
+ lifecycle
+
+---
+ src/pane.rs                           | 325 +++++++++++++++++++++-----
+ src/platform/linux.rs                 |   2 +
+ src/platform/linux/session_handoff.rs |   4 +-
+ src/platform/linux/session_launch.rs  |  93 ++++++++
+ src/platform/mod.rs                   |  13 ++
+ src/pty/backend.rs                    |   2 +
+ src/pty/backend/unix.rs               |   2 +
+ src/terminal/runtime.rs               |  28 +++
+ 8 files changed, 405 insertions(+), 64 deletions(-)
+ create mode 100644 src/platform/linux/session_launch.rs
+
+diff --git a/src/pane.rs b/src/pane.rs
+index 7b296da..a9bc6ea 100644
+--- a/src/pane.rs
++++ b/src/pane.rs
+@@ -1363,6 +1363,7 @@ pub struct PaneRuntime {
+     persistence_cwd: Mutex<Option<std::path::PathBuf>>,
+     cwd_process_exited: Arc<AtomicBool>,
+     child_wait_completed: Option<Arc<AtomicBool>>,
++    isolated_killer: Option<Mutex<Box<dyn portable_pty::ChildKiller + Send + Sync>>>,
+     kitty_keyboard_flags: Arc<AtomicU16>,
+     content_seq: Arc<AtomicU64>,
+     content_write_lock: Arc<Mutex<()>>,
+@@ -1565,11 +1566,7 @@ impl Drop for PaneRuntime {
+         self.compression.abort();
+         self.io.shutdown();
+         if !self.preserve_processes_on_drop {
+-            shutdown_pane_processes(
+-                self.pane_id,
+-                self.child_pid.load(Ordering::Acquire),
+-                self.child_wait_completed.as_deref(),
+-            );
++            self.stop_owned_processes();
+         }
+     }
+ }
+@@ -2087,22 +2084,52 @@ fn publish_reported_cwd(
+ }
+ 
+ impl PaneRuntime {
++    fn stop_owned_processes(&self) {
++        if let Some(killer) = &self.isolated_killer {
++            if self
++                .child_wait_completed
++                .as_ref()
++                .is_some_and(|done| done.load(Ordering::Acquire))
++            {
++                return;
++            }
++            match killer.lock() {
++                Ok(mut killer) => {
++                    if let Err(error) = killer.kill() {
++                        warn!(pane = self.pane_id.raw(), %error, "isolated session stop request failed");
++                    }
++                }
++                Err(_) => warn!(
++                    pane = self.pane_id.raw(),
++                    "isolated session control lock poisoned"
++                ),
++            }
++        } else {
++            shutdown_pane_processes(
++                self.pane_id,
++                self.child_pid.load(Ordering::Acquire),
++                self.child_wait_completed.as_deref(),
++            );
++        }
++    }
++
+     pub fn shutdown(mut self) {
+         if let Some(handle) = self.detect_handle.take() {
+             handle.abort();
+         }
+         self.compression.abort();
+         self.io.shutdown();
+-        shutdown_pane_processes(
+-            self.pane_id,
+-            self.child_pid.load(Ordering::Acquire),
+-            self.child_wait_completed.as_deref(),
+-        );
++        self.stop_owned_processes();
+         self.preserve_processes_on_drop = true;
+     }
+ 
+     #[cfg(unix)]
+     pub fn duplicate_handoff_fd(&self) -> std::io::Result<std::os::fd::RawFd> {
++        if self.isolated_killer.is_some() {
++            return Err(std::io::Error::other(
++                "isolated lifecycle cannot be transferred as a terminal-only handoff",
++            ));
++        }
+         self.io.duplicate_handoff_fd()
+     }
+ 
+@@ -2192,6 +2219,44 @@ impl PaneRuntime {
+             .write_terminal_response(|| self.terminal.apply_host_terminal_appearance(appearance));
+     }
+ 
++    // The configured launch runs outside the app loop. Attach its verified
++    // process through the same terminal actor and child watcher as ordinary panes.
++    #[allow(clippy::too_many_arguments)]
++    pub(crate) fn from_isolated_session(
++        pane_id: PaneId,
++        rows: u16,
++        cols: u16,
++        spawned: crate::pty::backend::SpawnedPty,
++        scrollback_limit_bytes: usize,
++        host_terminal_theme: crate::terminal_theme::TerminalTheme,
++        host_terminal_appearance: Option<crate::terminal_theme::HostAppearance>,
++        events: mpsc::Sender<AppEvent>,
++        render_notify: Arc<Notify>,
++        render_dirty: Arc<RenderSignal>,
++    ) -> std::io::Result<Self> {
++        if !spawned.isolated {
++            return Err(std::io::Error::other(
++                "configured isolated process required",
++            ));
++        }
++        Self::spawn_with_process(
++            pane_id,
++            rows,
++            cols,
++            scrollback_limit_bytes,
++            host_terminal_theme,
++            host_terminal_appearance,
++            events,
++            render_notify,
++            render_dirty,
++            || Ok(spawned),
++            PtyIoActor::spawn,
++            "failed to attach isolated session",
++            SpawnInitialState::default(),
++            AgentDetection::Enabled,
++        )
++    }
++
+     // Runtime construction threads PTY geometry, host context, launch policy, and render hooks.
+     #[allow(clippy::too_many_arguments)]
+     pub fn spawn(
+@@ -2248,7 +2313,7 @@ impl PaneRuntime {
+         cmd.cwd(crate::platform::normalize_cwd_for_launch(&cwd));
+         apply_pane_terminal_env(&mut cmd);
+         apply_pane_launch_env(&mut cmd, launch_env);
+-        Self::spawn_command_builder(
++        Self::spawn_with_process(
+             pane_id,
+             rows,
+             cols,
+@@ -2258,7 +2323,8 @@ impl PaneRuntime {
+             events,
+             render_notify,
+             render_dirty,
+-            cmd,
++            || crate::pty::backend::spawn_with_portable_pty(rows, cols, cmd),
++            PtyIoActor::spawn,
+             "failed to spawn shell",
+             SpawnInitialState {
+                 detected_agent: None,
+@@ -2290,7 +2356,7 @@ impl PaneRuntime {
+         cmd.cwd(crate::platform::normalize_cwd_for_launch(&cwd));
+         apply_pane_terminal_env(&mut cmd);
+         apply_pane_launch_env(&mut cmd, launch_env);
+-        Self::spawn_command_builder(
++        Self::spawn_with_process(
+             pane_id,
+             rows,
+             cols,
+@@ -2300,7 +2366,8 @@ impl PaneRuntime {
+             events,
+             render_notify,
+             render_dirty,
+-            cmd,
++            || crate::pty::backend::spawn_with_portable_pty(rows, cols, cmd),
++            PtyIoActor::spawn,
+             "failed to spawn command pane",
+             SpawnInitialState::default(),
+             agent_detection,
+@@ -2337,7 +2404,7 @@ impl PaneRuntime {
+         cmd.cwd(crate::platform::normalize_cwd_for_launch(&cwd));
+         apply_pane_terminal_env(&mut cmd);
+         apply_pane_launch_env(&mut cmd, launch_env);
+-        Self::spawn_command_builder(
++        Self::spawn_with_process(
+             pane_id,
+             rows,
+             cols,
+@@ -2347,7 +2414,8 @@ impl PaneRuntime {
+             events,
+             render_notify,
+             render_dirty,
+-            cmd,
++            || crate::pty::backend::spawn_with_portable_pty(rows, cols, cmd),
++            PtyIoActor::spawn,
+             "failed to spawn argv command pane",
+             SpawnInitialState::default(),
+             agent_detection,
+@@ -2524,6 +2592,7 @@ impl PaneRuntime {
+             persistence_cwd: Mutex::new(None),
+             cwd_process_exited,
+             child_wait_completed: None,
++            isolated_killer: None,
+             kitty_keyboard_flags,
+             content_seq,
+             content_write_lock,
+@@ -2540,7 +2609,7 @@ impl PaneRuntime {
+ 
+     // Runtime construction needs to thread PTY size, environment, theme, render hooks, and detection policy together.
+     #[allow(clippy::too_many_arguments)]
+-    fn spawn_command_builder(
++    fn spawn_with_process(
+         pane_id: PaneId,
+         rows: u16,
+         cols: u16,
+@@ -2550,7 +2619,8 @@ impl PaneRuntime {
+         events: mpsc::Sender<AppEvent>,
+         render_notify: Arc<Notify>,
+         render_dirty: Arc<RenderSignal>,
+-        cmd: CommandBuilder,
++        spawn: impl FnOnce() -> std::io::Result<crate::pty::backend::SpawnedPty>,
++        spawn_actor: impl FnOnce(PtyIoActorConfig) -> std::io::Result<PtyIoActorHandle>,
+         spawn_error_message: &'static str,
+         initial_state: SpawnInitialState<'_>,
+         agent_detection: AgentDetection,
+@@ -2579,59 +2649,22 @@ impl PaneRuntime {
+         let kitty_keyboard_flags = Arc::new(AtomicU16::new(0));
+         let content_write_lock = Arc::new(Mutex::new(()));
+ 
+-        let spawned = crate::pty::backend::spawn_with_portable_pty(rows, cols, cmd)
++        let spawned = spawn()
+             .inspect_err(|err| error!(pane = pane_id.raw(), err = %err, "{spawn_error_message}"))?;
+ 
++        let isolated_killer = spawned
++            .isolated
++            .then(|| Mutex::new(spawned.child.clone_killer()));
+         #[cfg(unix)]
+         let guarded_origin = spawned.origin.clone();
+         // --- Child watcher task ---
+-        let child_pid = Arc::new(AtomicU32::new(0));
++        let child_pid = Arc::new(AtomicU32::new(spawned.child.process_id().unwrap_or(0)));
+         let reported_cwd = Arc::new(Mutex::new(None));
+         let child_wait_completed = Arc::new(AtomicBool::new(false));
+         let content_seq = Arc::new(AtomicU64::new(0));
+         let detection_content_seq = Arc::new(AtomicU64::new(0));
+         let full_lifecycle_authority_active = Arc::new(AtomicBool::new(false));
+         let self_reported_agent_active = Arc::new(AtomicBool::new(false));
+-        {
+-            let child_pid = child_pid.clone();
+-            let child_wait_completed = child_wait_completed.clone();
+-            let events = events.clone();
+-            let rt = tokio::runtime::Handle::current();
+-            #[cfg(unix)]
+-            let guarded_origin = guarded_origin.clone();
+-            let mut child = spawned.child;
+-            if let Some(pid) = child.process_id() {
+-                child_pid.store(pid, Ordering::Release);
+-                crate::logging::pane_spawned(pane_id.raw(), pid);
+-            }
+-            tokio::task::spawn_blocking(move || {
+-                let exit_reason = match child.wait() {
+-                    Ok(status) => {
+-                        let exit_reason = crate::platform::classify_child_exit(&status);
+-                        let status_text = format!("{status:?}");
+-                        crate::logging::pane_exited(pane_id.raw(), &status_text);
+-                        exit_reason
+-                    }
+-                    Err(e) => {
+-                        crate::logging::pane_exit_failed(pane_id.raw(), &e.to_string());
+-                        crate::platform::ChildExitReason::WaitFailed
+-                    }
+-                };
+-                #[cfg(unix)]
+-                if let Some(origin) = guarded_origin {
+-                    origin.mark_exited();
+-                }
+-                child_wait_completed.store(true, Ordering::Release);
+-                // Use blocking send — PaneDied is critical, must not be dropped
+-                if let Err(e) = rt.block_on(events.send(AppEvent::PaneDied {
+-                    pane_id,
+-                    exit_reason,
+-                })) {
+-                    error!(pane = pane_id.raw(), err = %e, "failed to send PaneDied event");
+-                }
+-            });
+-        }
+-
+         let io = {
+             let terminal = terminal.clone();
+             let response_writer = response_tx.clone();
+@@ -2693,20 +2726,75 @@ impl PaneRuntime {
+                     terminal_responses: result.terminal_responses,
+                 }
+             });
+-            PaneRuntimeIo::Actor(PtyIoActor::spawn(PtyIoActorConfig {
++            match spawn_actor(PtyIoActorConfig {
+                 pane_id: pane_id.raw(),
+                 #[cfg(unix)]
+                 master_fd: spawned.master_fd,
+                 #[cfg(unix)]
+-                origin: guarded_origin,
++                origin: guarded_origin.clone(),
+                 #[cfg(windows)]
+                 master: spawned.master,
+                 initially_quiesced: false,
+                 on_read,
+                 on_reader_exit: None,
+-            })?)
++            }) {
++                Ok(actor) => PaneRuntimeIo::Actor(actor),
++                Err(error) => {
++                    if !spawned.isolated {
++                        let mut child = spawned.child;
++                        let _ = child.kill();
++                        tokio::task::spawn_blocking(move || {
++                            let _ = child.wait();
++                        });
++                    }
++                    // No watcher owns an isolated lifecycle yet. Dropping
++                    // child and killer closes the launch channel, requiring
++                    // the issuer to stop and revoke this session.
++                    return Err(error);
++                }
++            }
+         };
+ 
++        {
++            let child_pid = child_pid.clone();
++            let child_wait_completed = child_wait_completed.clone();
++            let events = events.clone();
++            let rt = tokio::runtime::Handle::current();
++            #[cfg(unix)]
++            let guarded_origin = guarded_origin.clone();
++            let mut child = spawned.child;
++            if let Some(pid) = child.process_id() {
++                child_pid.store(pid, Ordering::Release);
++                crate::logging::pane_spawned(pane_id.raw(), pid);
++            }
++            tokio::task::spawn_blocking(move || {
++                let exit_reason = match child.wait() {
++                    Ok(status) => {
++                        let exit_reason = crate::platform::classify_child_exit(&status);
++                        let status_text = format!("{status:?}");
++                        crate::logging::pane_exited(pane_id.raw(), &status_text);
++                        exit_reason
++                    }
++                    Err(e) => {
++                        crate::logging::pane_exit_failed(pane_id.raw(), &e.to_string());
++                        crate::platform::ChildExitReason::WaitFailed
++                    }
++                };
++                #[cfg(unix)]
++                if let Some(origin) = guarded_origin {
++                    origin.mark_exited();
++                }
++                child_wait_completed.store(true, Ordering::Release);
++                // Use blocking send — PaneDied is critical, must not be dropped
++                if let Err(e) = rt.block_on(events.send(AppEvent::PaneDied {
++                    pane_id,
++                    exit_reason,
++                })) {
++                    error!(pane = pane_id.raw(), err = %e, "failed to send PaneDied event");
++                }
++            });
++        }
++
+         // --- Detection task ---
+         let (detect_handle, detect_reset_notify, pending_release) = if agent_detection
+             == AgentDetection::Enabled
+@@ -3137,6 +3225,7 @@ impl PaneRuntime {
+             persistence_cwd: Mutex::new(None),
+             cwd_process_exited: child_wait_completed.clone(),
+             child_wait_completed: Some(child_wait_completed),
++            isolated_killer,
+             kitty_keyboard_flags,
+             content_seq,
+             content_write_lock,
+@@ -3916,6 +4005,7 @@ impl PaneRuntime {
+                 persistence_cwd: Mutex::new(None),
+                 cwd_process_exited: Arc::new(AtomicBool::new(false)),
+                 child_wait_completed: None,
++                isolated_killer: None,
+                 kitty_keyboard_flags: Arc::new(AtomicU16::new(0)),
+                 content_seq: Arc::new(AtomicU64::new(0)),
+                 content_write_lock: Arc::new(Mutex::new(())),
+@@ -3935,6 +4025,113 @@ impl PaneRuntime {
+ 
+ #[cfg(test)]
+ mod tests {
++    #[cfg(unix)]
++    #[tokio::test]
++    async fn isolated_actor_failure_closes_all_lifecycle_owners_before_starting_watcher() {
++        use std::io::Read;
++        use std::os::unix::net::UnixStream;
++        #[derive(Debug, Clone)]
++        struct Child(Arc<UnixStream>);
++        impl portable_pty::ChildKiller for Child {
++            fn kill(&mut self) -> std::io::Result<()> {
++                Ok(())
++            }
++            fn clone_killer(&self) -> Box<dyn portable_pty::ChildKiller + Send + Sync> {
++                Box::new(self.clone())
++            }
++        }
++        impl portable_pty::Child for Child {
++            fn process_id(&self) -> Option<u32> {
++                Some(42)
++            }
++            fn try_wait(&mut self) -> std::io::Result<Option<portable_pty::ExitStatus>> {
++                panic!("watcher started before actor")
++            }
++            fn wait(&mut self) -> std::io::Result<portable_pty::ExitStatus> {
++                panic!("watcher started before actor")
++            }
++        }
++        let (client, mut issuer) = UnixStream::pair().unwrap();
++        issuer
++            .set_read_timeout(Some(std::time::Duration::from_secs(1)))
++            .unwrap();
++        let child = Child(Arc::new(client));
++        assert_eq!(Arc::strong_count(&child.0), 1);
++        let spawned = crate::pty::backend::SpawnedPty {
++            master_fd: std::fs::File::open("/dev/null").unwrap().into(),
++            child: Box::new(child),
++            origin: None,
++            isolated: true,
++        };
++        let (events, _rx) = mpsc::channel(8);
++        let result = PaneRuntime::spawn_with_process(
++            PaneId::from_raw(42),
++            24,
++            80,
++            4096,
++            crate::terminal_theme::TerminalTheme::default(),
++            None,
++            events,
++            Arc::new(Notify::new()),
++            Arc::new(RenderSignal::new()),
++            || Ok(spawned),
++            |_| Err(std::io::Error::other("injected actor startup failure")),
++            "test actor failure",
++            SpawnInitialState::default(),
++            AgentDetection::Enabled,
++        );
++        assert!(result.is_err());
++        let mut bytes = [0u8; 1];
++        assert_eq!(
++            issuer.read(&mut bytes).unwrap(),
++            0,
++            "issuer must observe lifecycle disconnect"
++        );
++    }
++
++    #[derive(Debug, Clone)]
++    struct IsolatedTestKiller(std::sync::Arc<std::sync::atomic::AtomicUsize>);
++    impl portable_pty::ChildKiller for IsolatedTestKiller {
++        fn kill(&mut self) -> std::io::Result<()> {
++            self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
++            Ok(())
++        }
++        fn clone_killer(&self) -> Box<dyn portable_pty::ChildKiller + Send + Sync> {
++            Box::new(self.clone())
++        }
++    }
++
++    #[tokio::test]
++    async fn isolated_shutdown_uses_owned_lifecycle_once() {
++        let (mut runtime, _rx) = PaneRuntime::test_with_channel(80, 24);
++        let calls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
++        runtime.isolated_killer = Some(Mutex::new(Box::new(IsolatedTestKiller(calls.clone()))));
++        runtime.shutdown();
++        assert_eq!(calls.load(Ordering::SeqCst), 1);
++    }
++
++    #[tokio::test]
++    async fn isolated_completed_child_is_not_stopped_again() {
++        let (mut runtime, _rx) = PaneRuntime::test_with_channel(80, 24);
++        let calls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
++        runtime.isolated_killer = Some(Mutex::new(Box::new(IsolatedTestKiller(calls.clone()))));
++        runtime.child_wait_completed = Some(Arc::new(AtomicBool::new(true)));
++        drop(runtime);
++        assert_eq!(calls.load(Ordering::SeqCst), 0);
++    }
++
++    #[cfg(unix)]
++    #[tokio::test]
++    async fn isolated_runtime_refuses_terminal_only_transfer() {
++        let (mut runtime, _rx) = PaneRuntime::test_with_channel(80, 24);
++        let calls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
++        runtime.isolated_killer = Some(Mutex::new(Box::new(IsolatedTestKiller(calls))));
++        assert!(runtime
++            .duplicate_handoff_fd()
++            .unwrap_err()
++            .to_string()
++            .contains("isolated lifecycle"));
++    }
+     use super::*;
+     use std::ffi::OsStr;
+ 
+@@ -5086,6 +5283,7 @@ mod tests {
+             child_pid: Arc::new(AtomicU32::new(0)),
+             reported_cwd: Arc::new(Mutex::new(None)),
+             child_wait_completed: None,
++            isolated_killer: None,
+             kitty_keyboard_flags: Arc::new(AtomicU16::new(0)),
+             content_seq: Arc::new(AtomicU64::new(0)),
+             content_write_lock: Arc::new(Mutex::new(())),
+@@ -5126,6 +5324,7 @@ mod tests {
+             child_pid: Arc::new(AtomicU32::new(0)),
+             reported_cwd: Arc::new(Mutex::new(None)),
+             child_wait_completed: None,
++            isolated_killer: None,
+             kitty_keyboard_flags: Arc::new(AtomicU16::new(0)),
+             content_seq: Arc::new(AtomicU64::new(0)),
+             content_write_lock: Arc::new(Mutex::new(())),
+diff --git a/src/platform/linux.rs b/src/platform/linux.rs
+index 13b136a..117cf3b 100644
+--- a/src/platform/linux.rs
++++ b/src/platform/linux.rs
+@@ -28,6 +28,8 @@ mod config_file_tests;
+ 
+ mod session_child;
+ mod session_handoff;
++mod session_launch;
++pub(crate) use session_launch::spawn_isolated_session;
+ 
+ mod guarded_origin;
+ pub(crate) use guarded_origin::capture_guarded_child;
+diff --git a/src/platform/linux/session_handoff.rs b/src/platform/linux/session_handoff.rs
+index dae56c2..1bc9680 100644
+--- a/src/platform/linux/session_handoff.rs
++++ b/src/platform/linux/session_handoff.rs
+@@ -50,7 +50,9 @@ pub(crate) fn receive(mut stream: UnixStream) -> io::Result<SessionHandoff> {
+         return Err(io::Error::other("session launcher is not root"));
+     }
+     stream.set_nonblocking(false)?;
+-    stream.set_read_timeout(Some(Duration::from_secs(5)))?;
++    // The root endpoint resolves the installed command and prepares the
++    // gated unit before sending descriptors; this is not a ready-state wait.
++    stream.set_read_timeout(Some(Duration::from_secs(45)))?;
+     let (header, mut handles) = receive_header(&stream)?;
+     let size = u32::from_be_bytes(header) as usize;
+     if !(1..=1024).contains(&size) {
+diff --git a/src/platform/linux/session_launch.rs b/src/platform/linux/session_launch.rs
+new file mode 100644
+index 0000000..3c6a93d
+--- /dev/null
++++ b/src/platform/linux/session_launch.rs
+@@ -0,0 +1,93 @@
++//! Configured launch client for the existing root-owned ACE issuer.
++use super::session_handoff;
++use crate::pty::backend::SpawnedPty;
++use std::io::{self, Write};
++use std::os::unix::{
++    fs::{FileTypeExt, MetadataExt},
++    net::UnixStream,
++};
++use std::time::Duration;
++
++const ENDPOINT: &str = "/run/lab/ace-lab-auth.sock";
++
++fn request(project: &str, role: &str, rows: u16, cols: u16) -> io::Result<Vec<u8>> {
++    if project.is_empty()
++        || project.len() > 512
++        || project.chars().any(char::is_control)
++        || !matches!(
++            role,
++            "lab-overseer" | "project-overseer" | "worker" | "verifier" | "integrator"
++        )
++        || rows == 0
++        || cols == 0
++    {
++        return Err(io::Error::other("invalid configured session launch"));
++    }
++    let mut bytes = serde_json::to_vec(&serde_json::json!({
++        "action": "launch", "project": project, "role": role, "rows": rows, "cols": cols
++    }))?;
++    bytes.push(b'\n');
++    Ok(bytes)
++}
++
++pub(crate) fn spawn_isolated_session(
++    project: &str,
++    role: &str,
++    rows: u16,
++    cols: u16,
++) -> io::Result<SpawnedPty> {
++    let request = request(project, role, rows, cols)?;
++    for path in ["/", "/run", "/run/lab"] {
++        let metadata = std::fs::symlink_metadata(path)?;
++        if !metadata.is_dir() || metadata.uid() != 0 || metadata.mode() & 0o022 != 0 {
++            return Err(io::Error::other("session launcher path is not protected"));
++        }
++    }
++    let metadata = std::fs::symlink_metadata(ENDPOINT)?;
++    if !metadata.file_type().is_socket() || metadata.uid() != 0 {
++        return Err(io::Error::other(
++            "session launcher endpoint is not protected",
++        ));
++    }
++    let mut stream = UnixStream::connect(ENDPOINT)?;
++    stream.set_write_timeout(Some(Duration::from_secs(5)))?;
++    stream.write_all(&request)?;
++    let handoff = session_handoff::receive(stream)?;
++    if handoff.rows != rows || handoff.cols != cols {
++        return Err(io::Error::other("session terminal geometry differs"));
++    }
++    Ok(SpawnedPty {
++        master_fd: handoff.master,
++        origin: Some(handoff.origin),
++        child: Box::new(handoff.child),
++        isolated: true,
++    })
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn configured_request_contains_no_command_or_identity_override() {
++        let bytes = request("ace", "worker", 24, 80).unwrap();
++        assert_eq!(bytes.last(), Some(&b'\n'));
++        let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
++        assert_eq!(
++            value,
++            serde_json::json!({"action":"launch", "project":"ace", "role":"worker", "rows":24, "cols":80})
++        );
++    }
++    #[test]
++    fn invalid_request_is_rejected_before_connecting() {
++        for (project, role, rows, cols) in [
++            ("", "worker", 24, 80),
++            ("ace\n", "worker", 24, 80),
++            ("ace", "root", 24, 80),
++            ("ace", "worker", 0, 80),
++            ("ace", "worker", 24, 0),
++        ] {
++            assert!(request(project, role, rows, cols).is_err());
++        }
++        assert!(request(&"a".repeat(513), "worker", 24, 80).is_err());
++    }
++}
+diff --git a/src/platform/mod.rs b/src/platform/mod.rs
+index 0ea23d5..703930b 100644
+--- a/src/platform/mod.rs
++++ b/src/platform/mod.rs
+@@ -5,6 +5,19 @@
+ 
+ pub(crate) mod guarded_prompt;
+ 
++#[cfg(not(target_os = "linux"))]
++pub(crate) fn spawn_isolated_session(
++    _project: &str,
++    _role: &str,
++    _rows: u16,
++    _cols: u16,
++) -> std::io::Result<crate::pty::backend::SpawnedPty> {
++    Err(std::io::Error::new(
++        std::io::ErrorKind::Unsupported,
++        "isolated sessions require the Linux system launcher",
++    ))
++}
++
+ #[cfg(unix)]
+ pub(crate) mod ssh_agent;
+ 
+diff --git a/src/pty/backend.rs b/src/pty/backend.rs
+index d09922b..264add1 100644
+--- a/src/pty/backend.rs
++++ b/src/pty/backend.rs
+@@ -11,6 +11,7 @@ use portable_pty::{native_pty_system, Child, CommandBuilder, MasterPty, PtySize}
+ pub(crate) struct SpawnedPty {
+     pub master: Box<dyn MasterPty + Send>,
+     pub child: Box<dyn Child + Send + Sync>,
++    pub isolated: bool,
+ }
+ 
+ #[cfg(windows)]
+@@ -36,5 +37,6 @@ pub(crate) fn spawn_with_portable_pty(
+     Ok(SpawnedPty {
+         master: pair.master,
+         child,
++        isolated: false,
+     })
+ }
+diff --git a/src/pty/backend/unix.rs b/src/pty/backend/unix.rs
+index d0c2916..cc80486 100644
+--- a/src/pty/backend/unix.rs
++++ b/src/pty/backend/unix.rs
+@@ -8,6 +8,7 @@ pub(crate) struct SpawnedPty {
+     pub master_fd: OwnedFd,
+     pub child: Box<dyn Child + Send + Sync>,
+     pub origin: Option<std::sync::Arc<crate::platform::guarded_prompt::GuardedChildOrigin>>,
++    pub isolated: bool,
+ }
+ 
+ pub(crate) fn spawn_with_portable_pty(
+@@ -43,6 +44,7 @@ pub(crate) fn spawn_with_portable_pty(
+         master_fd: actor_fd,
+         child,
+         origin,
++        isolated: false,
+     })
+ }
+ 
+diff --git a/src/terminal/runtime.rs b/src/terminal/runtime.rs
+index a971ef6..9b20d14 100644
+--- a/src/terminal/runtime.rs
++++ b/src/terminal/runtime.rs
+@@ -219,6 +219,34 @@ impl TerminalRuntime {
+         .map(Self)
+     }
+ 
++    #[allow(clippy::too_many_arguments)]
++    pub(crate) fn from_isolated_session(
++        pane_id: PaneId,
++        rows: u16,
++        cols: u16,
++        spawned: crate::pty::backend::SpawnedPty,
++        scrollback_limit_bytes: usize,
++        host_terminal_theme: crate::terminal_theme::TerminalTheme,
++        host_terminal_appearance: Option<crate::terminal_theme::HostAppearance>,
++        events: mpsc::Sender<AppEvent>,
++        render_notify: Arc<Notify>,
++        render_dirty: Arc<RenderSignal>,
++    ) -> std::io::Result<Self> {
++        crate::pane::PaneRuntime::from_isolated_session(
++            pane_id,
++            rows,
++            cols,
++            spawned,
++            scrollback_limit_bytes,
++            host_terminal_theme,
++            host_terminal_appearance,
++            events,
++            render_notify,
++            render_dirty,
++        )
++        .map(Self)
++    }
++
+     pub fn apply_host_terminal_theme(&self, theme: crate::terminal_theme::TerminalTheme) {
+         self.0.apply_host_terminal_theme(theme);
+     }
