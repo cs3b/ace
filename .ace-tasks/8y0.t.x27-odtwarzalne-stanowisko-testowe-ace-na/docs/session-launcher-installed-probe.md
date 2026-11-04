@@ -47,3 +47,20 @@ the probe incorrectly tried to stop an already-finished, unloaded unit; the
 probe now confirms transport completion before cleanup. Earlier failure
 directories remain preserved for diagnosis. Private-state masking and Herdr
 integration are still required before this can run a real worker safely.
+
+## Private overseer task mask
+
+Artifact ace-lab 0.14.2.pre.utm61 from
+`05074bfc76b891fbebc972897ccb99d879b6ad14`, SHA-256
+`ff511a351c15af54aea883025b12c7bc7cdd4693518e0c95d1d5b00bb84a1225`,
+installed under `/opt/ace/diagnostic/utm61/gems`, passed the strengthened
+project probe. The child actually attempted to open a private sentinel and
+received PermissionError before writing its ordinary project result.
+
+Observed unit `ace-auth-session-worker-b29e40199a9ad177.service`, invocation
+`e103afc29a78410985befe491e0d4104`, session UID 62762, backing file UID 1001.
+Probe exit 0; barrier, project write and private-task denial all passed.
+The successful temporary project was removed after transport completion.
+This proves the selected `_overseer` path is masked, not that every alternate
+path, other project, assignment or session directory is isolated. Complete
+session filesystem isolation and native Herdr integration remain open.

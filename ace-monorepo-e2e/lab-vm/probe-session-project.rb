@@ -23,8 +23,9 @@ sentinel = File.join(private_tasks, "private-sentinel")
 File.write(sentinel, "must remain private")
 File.chown(account.uid, account.gid, sentinel)
 output = File.join(project, "result")
+privacy_check = "try:\n    open(#{sentinel.inspect}).read()\nexcept PermissionError:\n    pass\nelse:\n    raise RuntimeError('private task was readable')\n"
 unit = Ace::Lab::Auth::SessionUnit.new(role: "worker", id: SecureRandom.hex(8),
-  command: [File.realpath("/usr/bin/python3"), "-c", "import os; assert not os.access(#{sentinel.inspect}, os.R_OK); open(#{output.inspect}, 'w').write('worker completed')"],
+  command: [File.realpath("/usr/bin/python3"), "-c", "exec(#{privacy_check.inspect}); open(#{output.inspect}, 'w').write('worker completed')"],
   environment: {"GEM_HOME" => ENV.fetch("GEM_HOME"), "GEM_PATH" => ENV.fetch("GEM_PATH")})
 launcher = Ace::Lab::Auth::SessionLauncher.new
 launch = identity = nil
@@ -67,7 +68,8 @@ PTY.open do |master, slave|
       sleep 0.05
     end
     puts JSON.generate(unit: identity.unit, invocation: identity.invocation_id,
-      session_uid: identity.process.fetch("uid"), backing_uid: stat.uid, barrier: "passed", write: "passed")
+      session_uid: identity.process.fetch("uid"), backing_uid: stat.uid, barrier: "passed", write: "passed",
+      private_task_open: "denied")
     completed = true
   rescue StandardError
     begin
