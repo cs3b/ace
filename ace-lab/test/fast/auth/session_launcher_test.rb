@@ -48,8 +48,8 @@ module Ace::Lab::Auth
         File.open(File::NULL) do |handle|
           identity = SessionLauncher::Identity.new(unit: unit, invocation_id: invocation,
             process: {"pid" => 456}, pidfd: handle)
-          assert_raises(ArgumentError) { launcher.handoff(identity, terminal: master, channel: sender, rows: 0, cols: 80) }
-          assert launcher.handoff(identity, terminal: master, channel: sender, rows: 24, cols: 80)
+          assert_raises(ArgumentError) { launcher.handoff(identity, terminal: master, channel: sender, directory: "/lab/ace", rows: 0, cols: 80) }
+          assert launcher.handoff(identity, terminal: master, channel: sender, directory: "/lab/ace", rows: 24, cols: 80)
           header, _, flags, *controls = receiver.recvmsg(4, 0, 4096, scm_rights: true)
           assert_equal 0, flags & Socket::MSG_CTRUNC
           assert_equal 1, controls.size
@@ -59,11 +59,11 @@ module Ace::Lab::Auth
           assert_equal handle.stat.rdev, received.last.stat.rdev
           payload = JSON.parse(receiver.read(header.unpack1("N")))
           assert_equal({"protocol" => "ace.session-launch/v1", "unit" => unit,
-            "invocation" => invocation, "pid" => 456, "rows" => 24, "cols" => 80}, payload)
+            "invocation" => invocation, "pid" => 456, "rows" => 24, "cols" => 80, "directory" => "/lab/ace"}, payload)
           refute master.closed?
           refute handle.closed?
           manager.define_singleton_method(:unit_for_pidfd) { |handle:| {"unit" => unit, "invocation_id" => "b" * 32} }
-          assert_raises(Error) { launcher.handoff(identity, terminal: master, channel: sender, rows: 24, cols: 80) }
+          assert_raises(Error) { launcher.handoff(identity, terminal: master, channel: sender, directory: "/lab/ace", rows: 24, cols: 80) }
           assert_nil IO.select([receiver], nil, nil, 0)
         end
       end

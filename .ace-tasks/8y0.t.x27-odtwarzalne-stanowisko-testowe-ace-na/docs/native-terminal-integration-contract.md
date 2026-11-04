@@ -1,5 +1,49 @@
 # Native terminal integration contract
 
+## Current integration state (2026-11-04)
+
+This section supersedes the historical progress entries below. Native
+`agent.start_isolated` now asynchronously admits a configured project/role,
+reserves the agent name, and attaches the authenticated PTY to a new terminal.
+The root-selected `/lab/<project>` directory is part of the handoff. Starts are
+server-owned: API disconnection does not cancel an accepted session, which is
+rediscoverable by name. Numeric workspace aliases are bounds-checked and the
+completion resolves the captured stable workspace ID.
+
+Persisted terminals retain only project/role selection. Restoration goes back
+through the protected launcher; disabled or failed restoration remains visibly
+unavailable and never launches an ordinary shell. CLI `agent start-isolated`
+and the ACE executor adapter expose the same closed selector, with no argv,
+credential, UID, cwd or extension overrides. Success means process admission,
+not first-turn/eyes readiness.
+
+Independent static review closed the numeric-workspace panic and found no
+additional issue in the API, restoration, lifecycle adoption or directory
+handoff. ARM64 validation: 3933 Rust tests passed (14 skipped), nextest
+`594bfe52-3732-4cd7-b023-12257f995aab`; after the CLI addition, isolated filter
+11/11 passed (`03f810cd-6d05-41ca-8b9d-aee8519c83e3`). ACE executor tests:
+51 tests / 87 assertions, report `159e48b0-0434-460c-99d3-85823d8e733b`.
+The full recipe initially stopped after 149 passing Python tests because Bun
+was missing. Bun 1.3.14 (the native CI pin) was downloaded and verified against
+its published SHA-256 `a27ffb63a8310375836e0d6f668ae17fa8d8d18b88c37c821c65331973a19a3b`;
+the remaining recipes passed separately: maintenance 149 Python + 5 Bun tests,
+UI architecture 6, integration assets 55, and docs contracts 7.
+
+Native source is pinned to `95f69ef3fc5ecbd4f450f99e3420361997b84eac`,
+tree `748edb750067b2f575a89b4a7d1deee569f62dc9`; exact mail replay matches.
+Packaging tests pass 13/42 (`e018d3eb-7bac-4c99-a27b-fd9f33ec0d38`).
+Independent review also approved the CLI/wrapper and live-shell fixture changes.
+
+Still required: build/deploy this native delta and the paired Ruby
+handoff; actual configured Pi launch; authenticated session-scoped communication
+without exposing the host Herdr control socket; product start/delegation route
+selection; first-turn plus eyes readiness; TS-MONO-003/004 execution; two clean
+identical-manifest runs. Installed diagnostic issuer74 still uses the old
+handoff without `directory`, so it cannot be used with this native receiver.
+None of these component results establishes full-cycle acceptance.
+
+## Historical component evidence
+
 Scope: the accepted isolated launcher integration, not a second terminal
 runtime or agent-state store.
 

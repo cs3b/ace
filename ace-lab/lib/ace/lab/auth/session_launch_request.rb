@@ -45,7 +45,7 @@ module Ace
               # Release only after all private mounts and credentials exist.
               master.write("start\n")
               @launcher.handoff(identity, terminal: master, channel: socket,
-                rows: request.fetch("rows"), cols: request.fetch("cols"))
+                rows: request.fetch("rows"), cols: request.fetch("cols"), directory: selection.path)
               stopped = await_exit(socket, identity, caller)
               @launcher.stop(identity)
               contained = true

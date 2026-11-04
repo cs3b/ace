@@ -4864,3 +4864,1378 @@ index a971ef6..9b20d14 100644
      pub fn apply_host_terminal_theme(&self, theme: crate::terminal_theme::TerminalTheme) {
          self.0.apply_host_terminal_theme(theme);
      }
+From 95f69ef3fc5ecbd4f450f99e3420361997b84eac Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 03:12:58 +0100
+Subject: [PATCH] feat: admit and restore configured isolated agents through
+ native API
+
+---
+ docs/next/api/herdr-api.schema.json   |  60 ++++++++
+ src/api/schema.rs                     |   2 +
+ src/api/schema/agents.rs              |   9 ++
+ src/api/schema/response.rs            |   3 +
+ src/api/schema/server.rs              |   3 +
+ src/api/schema/tests.rs               |  15 ++
+ src/api/server.rs                     |   3 +
+ src/app/actions.rs                    |   1 +
+ src/app/agents.rs                     |   8 +-
+ src/app/api.rs                        |  12 ++
+ src/app/api/agents.rs                 |   4 +
+ src/app/api/isolated_agents.rs        | 211 ++++++++++++++++++++++++++
+ src/app/mod.rs                        |   2 +
+ src/cli/agent.rs                      |  59 ++++++-
+ src/cli/status.rs                     |   1 +
+ src/events.rs                         |  36 ++++-
+ src/pane.rs                           |   1 +
+ src/persist/restore.rs                | 101 ++++++++++++
+ src/persist/snapshot.rs               |  11 +-
+ src/platform/linux/session_handoff.rs |   8 +
+ src/platform/linux/session_launch.rs  |   1 +
+ src/platform/mod.rs                   |   4 +
+ src/pty/backend.rs                    |   2 +
+ src/pty/backend/unix.rs               |   2 +
+ src/server/headless/tests/mod.rs      |   3 +
+ src/terminal/state.rs                 |   9 ++
+ src/update.rs                         |   3 +
+ src/workspace.rs                      |  31 ++++
+ src/workspace/tab.rs                  |  53 +++++++
+ tests/cli/agents.rs                   |  29 ++++
+ tests/cli/surface.rs                  |  21 ++-
+ 31 files changed, 692 insertions(+), 16 deletions(-)
+ create mode 100644 src/app/api/isolated_agents.rs
+
+diff --git a/docs/next/api/herdr-api.schema.json b/docs/next/api/herdr-api.schema.json
+index 022c899..cd5105a 100644
+--- a/docs/next/api/herdr-api.schema.json
++++ b/docs/next/api/herdr-api.schema.json
+@@ -1441,6 +1441,30 @@
+           ],
+           "type": "object"
+         },
++        "AgentStartIsolatedParams": {
++          "additionalProperties": false,
++          "properties": {
++            "name": {
++              "type": "string"
++            },
++            "project": {
++              "type": "string"
++            },
++            "role": {
++              "type": "string"
++            },
++            "workspace_id": {
++              "type": "string"
++            }
++          },
++          "required": [
++            "name",
++            "workspace_id",
++            "project",
++            "role"
++          ],
++          "type": "object"
++        },
+         "AgentStartParams": {
+           "properties": {
+             "args": {
+@@ -5589,6 +5613,22 @@
+           ],
+           "type": "object"
+         },
++        {
++          "properties": {
++            "method": {
++              "const": "agent.start_isolated",
++              "type": "string"
++            },
++            "params": {
++              "$ref": "#/schemas/request/$defs/AgentStartIsolatedParams"
++            }
++          },
++          "required": [
++            "method",
++            "params"
++          ],
++          "type": "object"
++        },
+         {
+           "properties": {
+             "method": {
+@@ -9748,6 +9788,22 @@
+               ],
+               "type": "object"
+             },
++            {
++              "properties": {
++                "agent": {
++                  "$ref": "#/schemas/success_response/$defs/AgentInfo"
++                },
++                "type": {
++                  "const": "agent_isolated_started",
++                  "type": "string"
++                }
++              },
++              "required": [
++                "type",
++                "agent"
++              ],
++              "type": "object"
++            },
+             {
+               "properties": {
+                 "agent": {
+@@ -10776,6 +10832,10 @@
+               "description": "Whether this server supports endpoint health probes.",
+               "type": "boolean"
+             },
++            "isolated_sessions": {
++              "description": "Configured Linux system-session launch through agent.start_isolated.",
++              "type": "boolean"
++            },
+             "live_handoff": {
+               "type": "boolean"
+             },
+diff --git a/src/api/schema.rs b/src/api/schema.rs
+index d7ea332..eeb715a 100644
+--- a/src/api/schema.rs
++++ b/src/api/schema.rs
+@@ -135,6 +135,8 @@ pub enum Method {
+     AgentFocus(AgentTarget),
+     #[serde(rename = "agent.start")]
+     AgentStart(AgentStartParams),
++    #[serde(rename = "agent.start_isolated")]
++    AgentStartIsolated(AgentStartIsolatedParams),
+     #[serde(rename = "agent.prompt")]
+     AgentPrompt(AgentPromptParams),
+     #[serde(rename = "terminal.inhibit_input")]
+diff --git a/src/api/schema/agents.rs b/src/api/schema/agents.rs
+index a5c3007..7944c70 100644
+--- a/src/api/schema/agents.rs
++++ b/src/api/schema/agents.rs
+@@ -163,6 +163,15 @@ pub enum AgentViewSortOrder {
+     Desc,
+ }
+ 
++#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
++#[serde(deny_unknown_fields)]
++pub struct AgentStartIsolatedParams {
++    pub name: String,
++    pub workspace_id: String,
++    pub project: String,
++    pub role: String,
++}
++
+ #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+ pub struct AgentStartParams {
+     pub name: String,
+diff --git a/src/api/schema/response.rs b/src/api/schema/response.rs
+index 13fd15c..30d3aa0 100644
+--- a/src/api/schema/response.rs
++++ b/src/api/schema/response.rs
+@@ -97,6 +97,9 @@ pub enum ResponseResult {
+     AgentInfo {
+         agent: AgentInfo,
+     },
++    AgentIsolatedStarted {
++        agent: AgentInfo,
++    },
+     AgentStarted {
+         agent: AgentInfo,
+         argv: Vec<String>,
+diff --git a/src/api/schema/server.rs b/src/api/schema/server.rs
+index 1adb62f..6c46cde 100644
+--- a/src/api/schema/server.rs
++++ b/src/api/schema/server.rs
+@@ -21,6 +21,9 @@ pub struct ServerSshAgentRegisterParams {
+ 
+ #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+ pub struct ServerCapabilities {
++    /// Configured Linux system-session launch through agent.start_isolated.
++    #[serde(default, skip_serializing_if = "super::is_false")]
++    pub isolated_sessions: bool,
+     pub live_handoff: bool,
+     #[serde(default)]
+     pub detached_server_daemon: bool,
+diff --git a/src/api/schema/tests.rs b/src/api/schema/tests.rs
+index 2199451..af5cb8d 100644
+--- a/src/api/schema/tests.rs
++++ b/src/api/schema/tests.rs
+@@ -731,6 +731,7 @@ fn success_response_round_trips() {
+                 surface_interest: true,
+                 health_check: true,
+                 ssh_agent_registration: false,
++                isolated_sessions: false,
+             }),
+         },
+     };
+@@ -1517,3 +1518,17 @@ fn input_drain_pure_tests_closed_wire_and_exact_origin() {
+         assert_eq!(encoded["error"].as_object().expect("closed error").len(), 2);
+     }
+ }
++
++#[test]
++fn isolated_start_is_a_distinct_closed_configuration_request() {
++    let value = serde_json::json!({"id":"launch", "method":"agent.start_isolated", "params":{
++        "name":"worker", "workspace_id":"w1", "project":"ace", "role":"worker"}});
++    let request: Request = serde_json::from_value(value.clone()).unwrap();
++    assert!(matches!(request.method, Method::AgentStartIsolated(_)));
++    assert_eq!(serde_json::to_value(request).unwrap(), value);
++    for field in ["args", "cwd", "uid", "runtime", "principal"] {
++        let mut invalid = value.clone();
++        invalid["params"][field] = serde_json::json!("override");
++        assert!(serde_json::from_value::<Request>(invalid).is_err());
++    }
++}
+diff --git a/src/api/server.rs b/src/api/server.rs
+index 5f698c0..2ceca17 100644
+--- a/src/api/server.rs
++++ b/src/api/server.rs
+@@ -74,6 +74,7 @@ fn default_capabilities() -> Option<ServerCapabilities> {
+         surface_interest: true,
+         health_check: true,
+         ssh_agent_registration: false,
++        isolated_sessions: crate::platform::supports_isolated_sessions(),
+     })
+ }
+ 
+@@ -626,6 +627,7 @@ pub(crate) fn api_method_name(method: &Method) -> &'static str {
+         Method::AgentViewClear(_) => "agent.view.clear",
+         Method::AgentFocus(_) => "agent.focus",
+         Method::AgentStart(_) => "agent.start",
++        Method::AgentStartIsolated(_) => "agent.start_isolated",
+         Method::AgentPrompt(_) => "agent.prompt",
+         Method::TerminalInhibitInput(_) => "terminal.inhibit_input",
+         Method::AgentWait(_) => "agent.wait",
+@@ -1462,6 +1464,7 @@ mod tests {
+                 surface_interest: true,
+                 health_check: true,
+                 ssh_agent_registration: false,
++                isolated_sessions: false,
+             }),
+             None,
+             None,
+diff --git a/src/app/actions.rs b/src/app/actions.rs
+index e1ae2ff..3810c57 100644
+--- a/src/app/actions.rs
++++ b/src/app/actions.rs
+@@ -1633,6 +1633,7 @@ impl AppState {
+             AppEvent::WorktreeAddFinished(_) => Vec::new(),
+             AppEvent::WorktreeRemoveFinished(_) => Vec::new(),
+             AppEvent::WorktreeReadFinished(_) => Vec::new(),
++            AppEvent::IsolatedLaunchFinished(_) => Vec::new(),
+             AppEvent::TabBarCommandFinished { .. } => Vec::new(),
+             AppEvent::PluginCommandFinished { .. } => Vec::new(),
+         }
+diff --git a/src/app/agents.rs b/src/app/agents.rs
+index fd2a58e..50db9cb 100644
+--- a/src/app/agents.rs
++++ b/src/app/agents.rs
+@@ -12,7 +12,7 @@ const INVALID_AGENT_TIMEOUT_MESSAGE: &str =
+     "agent start timeout must be greater than 3000ms and at most 300000ms";
+ const INVALID_AGENT_NAME_MESSAGE: &str = "agent name must start with a lowercase letter and contain only lowercase letters, digits, '-' or '_' (1-32 characters)";
+ 
+-fn valid_agent_name(name: &str) -> bool {
++pub(super) fn valid_agent_name(name: &str) -> bool {
+     let mut chars = name.chars();
+     matches!(chars.next(), Some('a'..='z'))
+         && name.len() <= 32
+@@ -103,7 +103,7 @@ impl App {
+ 
+         if let Some(name) = normalized_name.as_deref() {
+             let conflicts = self.agent_name_conflicts(name, &resolved.terminal_id);
+-            if !conflicts.is_empty() {
++            if !conflicts.is_empty() || self.isolated_launches.contains(name) {
+                 return Err(AgentRenameError::DuplicateName {
+                     name: name.to_string(),
+                     candidates: conflicts,
+@@ -163,7 +163,7 @@ impl App {
+         let persisted_agent_session =
+             crate::agent_resume::persisted_session_from_launch_args(kind, &params.args);
+         let conflicts = self.agent_name_conflicts(&name, "");
+-        if !conflicts.is_empty() {
++        if !conflicts.is_empty() || self.isolated_launches.contains(&name) {
+             return Err(AgentStartError::DuplicateName {
+                 name,
+                 candidates: conflicts,
+@@ -402,7 +402,7 @@ impl App {
+         })
+     }
+ 
+-    fn agent_name_conflicts(
++    pub(super) fn agent_name_conflicts(
+         &self,
+         name: &str,
+         except_terminal_id: &str,
+diff --git a/src/app/api.rs b/src/app/api.rs
+index 54132f2..ac79091 100644
+--- a/src/app/api.rs
++++ b/src/app/api.rs
+@@ -4,6 +4,7 @@ mod agent_view;
+ mod agents;
+ mod env;
+ mod integrations;
++mod isolated_agents;
+ mod layouts;
+ mod panes;
+ pub(crate) mod plugins;
+@@ -29,6 +30,10 @@ enum RuntimeExitAction {
+ impl App {
+     pub(crate) fn handle_internal_event_with_render_impact(&mut self, ev: AppEvent) -> bool {
+         match ev {
++            AppEvent::IsolatedLaunchFinished(result) => {
++                self.finish_isolated_agent_launch(*result);
++                true
++            }
+             AppEvent::GitStatusRefreshed {
+                 results,
+                 cache_updates,
+@@ -1087,6 +1092,13 @@ impl App {
+                 return self.handle_agent_view_clear(request.id, params);
+             }
+             Method::AgentStart(params) => return self.handle_agent_start(request.id, params),
++            Method::AgentStartIsolated(_) => {
++                return responses::encode_error(
++                    request.id,
++                    "deferred_launch_required",
++                    "isolated launch requires the asynchronous API dispatcher",
++                )
++            }
+             Method::TerminalInhibitInput(_) => {
+                 return agents::input_drain_error(
+                     request.id,
+diff --git a/src/app/api/agents.rs b/src/app/api/agents.rs
+index 17ce8c1..b93d37b 100644
+--- a/src/app/api/agents.rs
++++ b/src/app/api/agents.rs
+@@ -87,6 +87,10 @@ impl App {
+         request: crate::api::schema::Request,
+         respond_to: std::sync::mpsc::Sender<String>,
+     ) -> bool {
++        if let crate::api::schema::Method::AgentStartIsolated(params) = request.method.clone() {
++            self.defer_isolated_agent_launch(request.id, params, respond_to);
++            return true;
++        }
+         if let crate::api::schema::Method::TerminalInhibitInput(params) = request.method.clone() {
+             self.defer_input_inhibit(request.id, params, respond_to);
+             return true;
+diff --git a/src/app/api/isolated_agents.rs b/src/app/api/isolated_agents.rs
+new file mode 100644
+index 0000000..6c74c8a
+--- /dev/null
++++ b/src/app/api/isolated_agents.rs
+@@ -0,0 +1,211 @@
++use super::responses::{encode_error, encode_success};
++use crate::api::schema::{AgentStartIsolatedParams, ResponseResult};
++use crate::app::App;
++use crate::events::{AppEvent, IsolatedLaunchResult};
++use std::sync::mpsc::Sender;
++
++impl App {
++    pub(super) fn defer_isolated_agent_launch(
++        &mut self,
++        id: String,
++        mut params: AgentStartIsolatedParams,
++        respond_to: Sender<String>,
++    ) {
++        let failure = if !crate::platform::supports_isolated_sessions() {
++            Some(("unsupported", "isolated sessions require Linux"))
++        } else if !crate::app::agents::valid_agent_name(&params.name) {
++            Some(("invalid_name", "invalid agent name"))
++        } else if self.isolated_launches.contains(&params.name)
++            || !self.agent_name_conflicts(&params.name, "").is_empty()
++        {
++            Some((
++                "duplicate_agent_name",
++                "agent name is already active or launching",
++            ))
++        } else if self.isolated_launches.len() >= 16 {
++            Some(("launch_capacity", "too many pending isolated launches"))
++        } else {
++            None
++        };
++        if let Some((code, message)) = failure {
++            let _ = respond_to.send(encode_error(id, code, message));
++            return;
++        }
++        let Some(workspace_id) = self
++            .parse_workspace_id(&params.workspace_id)
++            .and_then(|index| self.state.workspaces.get(index))
++            .map(|workspace| workspace.id.clone())
++        else {
++            let _ = respond_to.send(encode_error(
++                id,
++                "workspace_not_found",
++                "launch workspace is unavailable",
++            ));
++            return;
++        };
++        params.workspace_id = workspace_id;
++        self.isolated_launches.insert(params.name.clone());
++        let (rows, cols) = self.state.estimate_pane_size();
++        let events = self.event_tx.clone();
++        tokio::task::spawn_blocking(move || {
++            let result =
++                crate::platform::spawn_isolated_session(&params.project, &params.role, rows, cols);
++            let completion = IsolatedLaunchResult {
++                id,
++                params,
++                rows,
++                cols,
++                result,
++                respond_to,
++            };
++            // If the app has gone away, dropping this result closes the
++            // lifecycle channel and the root issuer contains the session.
++            let _ = events.blocking_send(AppEvent::IsolatedLaunchFinished(Box::new(completion)));
++        });
++    }
++
++    pub(super) fn finish_isolated_agent_launch(&mut self, result: IsolatedLaunchResult) {
++        let IsolatedLaunchResult {
++            id,
++            params,
++            rows,
++            cols,
++            result,
++            respond_to,
++        } = result;
++        self.isolated_launches.remove(&params.name);
++        let spawned = match result {
++            Ok(spawned) => spawned,
++            Err(error) => {
++                let _ = respond_to.send(encode_error(
++                    id,
++                    "isolated_launch_failed",
++                    error.to_string(),
++                ));
++                return;
++            }
++        };
++        let Some(ws_idx) = self
++            .state
++            .workspaces
++            .iter()
++            .position(|workspace| workspace.id == params.workspace_id)
++        else {
++            let _ = respond_to.send(encode_error(
++                id,
++                "workspace_not_found",
++                "launch workspace was removed",
++            ));
++            return;
++        };
++        if !self.agent_name_conflicts(&params.name, "").is_empty() {
++            let _ = respond_to.send(encode_error(
++                id,
++                "duplicate_agent_name",
++                "agent name became unavailable",
++            ));
++            return;
++        }
++        let created = self.state.workspaces[ws_idx].create_isolated_tab(
++            rows,
++            cols,
++            spawned,
++            self.state.pane_scrollback_limit_bytes,
++            self.state.host_terminal_theme,
++            self.state.host_terminal_appearance,
++        );
++        let (tab_idx, mut terminal, runtime) = match created {
++            Ok(created) => created,
++            Err(error) => {
++                let _ = respond_to.send(encode_error(
++                    id,
++                    "isolated_attach_failed",
++                    error.to_string(),
++                ));
++                return;
++            }
++        };
++        let pane_id = self.state.workspaces[ws_idx].tabs[tab_idx].root_pane;
++        let terminal_id = terminal.id.clone();
++        terminal.isolated_launch = Some(crate::terminal::state::IsolatedSessionConfig {
++            project: params.project,
++            role: params.role,
++        });
++        terminal.begin_managed_agent(
++            params.name,
++            crate::detect::Agent::Pi,
++            std::time::Instant::now(),
++            crate::app::agents::AGENT_START_SETTLE_DELAY,
++            std::time::Duration::from_secs(120),
++        );
++        self.terminal_runtimes.insert(terminal_id.clone(), runtime);
++        self.state.terminals.insert(terminal_id.clone(), terminal);
++        self.state.remove_alias_shadowed_by_new_pane(pane_id);
++        let agent = self
++            .agent_info(ws_idx, pane_id)
++            .expect("new isolated terminal must have agent information");
++        let response = encode_success(id, ResponseResult::AgentIsolatedStarted { agent });
++        // Starts are server-owned, like ordinary native agent.start. Losing
++        // the API response does not cancel an accepted session: callers can
++        // rediscover it by its reserved name, never launch a duplicate.
++        self.emit_tab_created_events(ws_idx, tab_idx);
++        let _ = respond_to.send(response);
++        self.state.mark_session_dirty();
++        self.schedule_session_save();
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    fn app() -> App {
++        let (_tx, rx) = tokio::sync::mpsc::unbounded_channel();
++        App::new(
++            &crate::config::Config::default(),
++            crate::app::AppPolicy::TEST,
++            None,
++            rx,
++            crate::api::EventHub::default(),
++        )
++    }
++    fn params() -> AgentStartIsolatedParams {
++        AgentStartIsolatedParams {
++            name: "worker".into(),
++            workspace_id: "missing".into(),
++            project: "ace".into(),
++            role: "worker".into(),
++        }
++    }
++    #[tokio::test]
++    async fn isolated_missing_workspace_never_reserves_or_creates_a_terminal() {
++        let mut app = app();
++        let (tx, rx) = std::sync::mpsc::channel();
++        let before = app.state.terminals.len();
++        let mut request = params();
++        request.workspace_id = "999999".into();
++        app.defer_isolated_agent_launch("test".into(), request, tx);
++        let reply: serde_json::Value = serde_json::from_str(&rx.recv().unwrap()).unwrap();
++        assert!(reply.get("error").is_some());
++        assert!(app.isolated_launches.is_empty());
++        assert_eq!(app.state.terminals.len(), before);
++    }
++    #[tokio::test]
++    async fn isolated_failed_launch_releases_name_without_creating_topology() {
++        let mut app = app();
++        app.isolated_launches.insert("worker".into());
++        let (tx, rx) = std::sync::mpsc::channel();
++        let before = app.state.terminals.len();
++        app.finish_isolated_agent_launch(IsolatedLaunchResult {
++            id: "test".into(),
++            params: params(),
++            rows: 24,
++            cols: 80,
++            result: Err(std::io::Error::other("controlled launch refusal")),
++            respond_to: tx,
++        });
++        let reply: serde_json::Value = serde_json::from_str(&rx.recv().unwrap()).unwrap();
++        assert_eq!(reply["error"]["code"], "isolated_launch_failed");
++        assert!(app.isolated_launches.is_empty());
++        assert_eq!(app.state.terminals.len(), before);
++    }
++}
+diff --git a/src/app/mod.rs b/src/app/mod.rs
+index 8fad961..0bbf0a0 100644
+--- a/src/app/mod.rs
++++ b/src/app/mod.rs
+@@ -101,6 +101,7 @@ impl AppPolicy {
+ }
+ 
+ pub struct App {
++    pub(crate) isolated_launches: std::collections::HashSet<String>,
+     pub state: AppState,
+     pub(crate) pixel_mouse_available: bool,
+     pub(crate) terminal_runtimes: crate::terminal::TerminalRuntimeRegistry,
+@@ -614,6 +615,7 @@ impl App {
+             last_render_at: None,
+             last_presentation_at: None,
+             api_rx,
++            isolated_launches: Default::default(),
+             event_hub,
+             last_focus,
+             policy,
+diff --git a/src/cli/agent.rs b/src/cli/agent.rs
+index 5a941b7..7c6f7d8 100644
+--- a/src/cli/agent.rs
++++ b/src/cli/agent.rs
+@@ -2,8 +2,9 @@ use std::time::{Duration, Instant};
+ 
+ use crate::api::schema::{
+     AgentPromptParams, AgentPromptWaitOptions, AgentReadParams, AgentRenameParams,
+-    AgentSendKeysParams, AgentStartParams, AgentTarget, AgentWaitParams, EmptyParams, ErrorBody,
+-    ErrorResponse, Method, PaneProcessInfoParams, PaneTarget, ReadFormat, ReadSource, Request,
++    AgentSendKeysParams, AgentStartIsolatedParams, AgentStartParams, AgentTarget, AgentWaitParams,
++    EmptyParams, ErrorBody, ErrorResponse, Method, PaneProcessInfoParams, PaneTarget, ReadFormat,
++    ReadSource, Request,
+ };
+ 
+ const AGENT_START_POLL_INTERVAL: Duration = Duration::from_millis(100);
+@@ -26,6 +27,7 @@ pub(super) fn run_agent_command(args: &[String]) -> std::io::Result<i32> {
+         "wait" => agent_wait(&args[1..]),
+         "attach" => agent_attach(&args[1..]),
+         "start" => agent_start(&args[1..]),
++        "start-isolated" => agent_start_isolated(&args[1..]),
+         "explain" => agent_explain(&args[1..]),
+         "help" | "--help" | "-h" => {
+             print_agent_help();
+@@ -286,6 +288,58 @@ fn matched_rule_region_preview<'a>(
+         .filter(|preview| !preview.is_empty())
+ }
+ 
++// Admission starts a protected session; it does not claim first-turn/eyes readiness.
++fn agent_start_isolated(args: &[String]) -> std::io::Result<i32> {
++    let usage = "usage: herdr agent start-isolated <name> --workspace ID --project ID --role ROLE";
++    let Some(name) = args
++        .first()
++        .filter(|name| !name.starts_with('-') && !name.is_empty())
++    else {
++        eprintln!("{usage}");
++        return Ok(2);
++    };
++    let mut workspace = None;
++    let mut project = None;
++    let mut role = None;
++    let mut index = 1;
++    while index < args.len() {
++        let target = match args[index].as_str() {
++            "--workspace" => &mut workspace,
++            "--project" => &mut project,
++            "--role" => &mut role,
++            _ => {
++                eprintln!("{usage}");
++                return Ok(2);
++            }
++        };
++        let Some(value) = args
++            .get(index + 1)
++            .filter(|value| !value.starts_with('-') && !value.is_empty())
++        else {
++            eprintln!("{usage}");
++            return Ok(2);
++        };
++        if target.replace(value.clone()).is_some() {
++            eprintln!("{usage}");
++            return Ok(2);
++        }
++        index += 2;
++    }
++    let (Some(workspace_id), Some(project), Some(role)) = (workspace, project, role) else {
++        eprintln!("{usage}");
++        return Ok(2);
++    };
++    super::print_response(&super::send_request(&Request {
++        id: "cli:agent:start-isolated".into(),
++        method: Method::AgentStartIsolated(AgentStartIsolatedParams {
++            name: name.clone(),
++            workspace_id,
++            project,
++            role,
++        }),
++    })?)
++}
++
+ fn agent_start(args: &[String]) -> std::io::Result<i32> {
+     let Some(name) = args.first() else {
+         eprintln!("usage: herdr agent start <name> --kind KIND --pane ID [--timeout MS] [-- <agent-args...>]");
+@@ -931,6 +985,7 @@ fn agent_read(args: &[String]) -> std::io::Result<i32> {
+ }
+ 
+ fn print_agent_help() {
++    eprintln!("  herdr agent start-isolated <name> --workspace ID --project ID --role ROLE (process start only)");
+     eprintln!("herdr agent commands:");
+     eprintln!("  herdr agent list");
+     eprintln!("  herdr agent get <target>");
+diff --git a/src/cli/status.rs b/src/cli/status.rs
+index 826c8ea..f46a378 100644
+--- a/src/cli/status.rs
++++ b/src/cli/status.rs
+@@ -425,6 +425,7 @@ mod tests {
+                 surface_interest: true,
+                 health_check: true,
+                 ssh_agent_registration: false,
++                isolated_sessions: false,
+             }),
+         }
+     }
+diff --git a/src/events.rs b/src/events.rs
+index c87a50a..30d1e33 100644
+--- a/src/events.rs
++++ b/src/events.rs
+@@ -76,13 +76,17 @@ pub(crate) struct WorktreeReadData {
+ /// An event from a background task to the main loop.
+ #[derive(Debug)]
+ pub enum AppEvent {
++    IsolatedLaunchFinished(Box<IsolatedLaunchResult>),
+     /// A pane's child process exited.
+     PaneDied {
+         pane_id: PaneId,
+         exit_reason: crate::platform::ChildExitReason,
+     },
+     /// A worktree-removal runtime could not be restored normally.
+-    WorktreeRuntimeRestoreFailed { pane_id: PaneId, operation_id: u64 },
++    WorktreeRuntimeRestoreFailed {
++        pane_id: PaneId,
++        operation_id: u64,
++    },
+     /// Process detection identified an agent before its screen state was confirmed.
+     AgentProcessDetected {
+         pane_id: PaneId,
+@@ -90,7 +94,10 @@ pub enum AppEvent {
+         observed_at: Instant,
+     },
+     /// The current Codex input screen is visible during managed startup.
+-    CodexPromptObserved { pane_id: PaneId, ready: bool },
++    CodexPromptObserved {
++        pane_id: PaneId,
++        ready: bool,
++    },
+     /// Fallback detector state changed in a pane.
+     StateChanged {
+         pane_id: PaneId,
+@@ -175,10 +182,15 @@ pub enum AppEvent {
+     },
+     /// A pane child emitted one or more executable BEL characters.
+     /// The host-facing process forwards them to its outer terminal.
+-    TerminalBell { pane_id: PaneId, count: u16 },
++    TerminalBell {
++        pane_id: PaneId,
++        count: u16,
++    },
+     /// A pane child emitted a valid OSC 52 clipboard write. The main loop
+     /// re-emits it through herdr's own clipboard writer.
+-    ClipboardWrite { content: Vec<u8> },
++    ClipboardWrite {
++        content: Vec<u8>,
++    },
+     /// A pane child reported its shell current directory through terminal
+     /// metadata such as OSC 7.
+     TerminalCwdReported {
+@@ -212,3 +224,19 @@ pub enum AppEvent {
+     /// Background worktree discovery completed for an API list/open request.
+     WorktreeReadFinished(Box<WorktreeReadResult>),
+ }
++
++pub struct IsolatedLaunchResult {
++    pub(crate) id: String,
++    pub(crate) params: crate::api::schema::AgentStartIsolatedParams,
++    pub(crate) rows: u16,
++    pub(crate) cols: u16,
++    pub(crate) result: std::io::Result<crate::pty::backend::SpawnedPty>,
++    pub(crate) respond_to: std::sync::mpsc::Sender<String>,
++}
++impl std::fmt::Debug for IsolatedLaunchResult {
++    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
++        f.debug_struct("IsolatedLaunchResult")
++            .field("id", &self.id)
++            .finish_non_exhaustive()
++    }
++}
+diff --git a/src/pane.rs b/src/pane.rs
+index a9bc6ea..47ed6d9 100644
+--- a/src/pane.rs
++++ b/src/pane.rs
+@@ -4062,6 +4062,7 @@ mod tests {
+             child: Box::new(child),
+             origin: None,
+             isolated: true,
++            directory: Some(std::path::PathBuf::from("/lab/ace")),
+         };
+         let (events, _rx) = mpsc::channel(8);
+         let result = PaneRuntime::spawn_with_process(
+diff --git a/src/persist/restore.rs b/src/persist/restore.rs
+index e79a0f3..f362ce8 100644
+--- a/src/persist/restore.rs
++++ b/src/persist/restore.rs
+@@ -453,6 +453,7 @@ fn unavailable_restored_terminal(
+     if let Some(pane) = pane {
+         terminal.manual_label = pane.label.clone();
+         terminal.launch_argv = pane.launch_argv.clone();
++        terminal.isolated_launch = pane.isolated_launch.clone();
+         if let Some(session) = restored_terminal_agent_session(pane.agent_session.as_ref(), false) {
+             terminal.set_persisted_agent_session(session);
+         }
+@@ -514,6 +515,59 @@ fn restore_tab(
+             .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| "/".into()));
+ 
+         let cwd = saved_cwd;
++        if let Some(config) = saved_pane.and_then(|pane| pane.isolated_launch.clone()) {
++            let restored = if runtime_context.resume_agents_on_restore {
++                crate::platform::spawn_isolated_session(&config.project, &config.role, rows, cols)
++                    .and_then(|spawned| {
++                        let configured_cwd = spawned
++                            .directory
++                            .clone()
++                            .ok_or_else(|| std::io::Error::other("configured directory missing"))?;
++                        let runtime = TerminalRuntime::from_isolated_session(
++                            *id,
++                            rows,
++                            cols,
++                            spawned,
++                            runtime_context.scrollback_limit_bytes,
++                            crate::terminal_theme::TerminalTheme::default(),
++                            None,
++                            runtime_context.events.clone(),
++                            runtime_context.render_notify.clone(),
++                            runtime_context.render_dirty.clone(),
++                        )?;
++                        Ok((configured_cwd, runtime))
++                    })
++            } else {
++                Err(std::io::Error::other(
++                    "isolated session restoration is disabled",
++                ))
++            };
++            let terminal = match restored {
++                Ok((configured_cwd, runtime)) => {
++                    let mut terminal = TerminalState::new(TerminalId::alloc(), configured_cwd);
++                    terminal.isolated_launch = Some(config);
++                    if let Some(name) = saved_pane.and_then(|pane| pane.agent_name.clone()) {
++                        terminal.begin_managed_agent(
++                            name,
++                            crate::detect::Agent::Pi,
++                            std::time::Instant::now(),
++                            std::time::Duration::from_secs(3),
++                            std::time::Duration::from_secs(120),
++                        );
++                    }
++                    terminal_runtimes.insert(terminal.id.clone(), runtime);
++                    terminal
++                }
++                Err(error) => unavailable_restored_terminal(
++                    saved_pane,
++                    cwd,
++                    format!("Isolated session could not be restored: {error}"),
++                ),
++            };
++            panes.insert(*id, PaneState::new(terminal.id.clone()));
++            terminals.push(terminal);
++            continue;
++        }
+         let has_import = old_id.is_some_and(|old_id| imported_panes.contains_key(old_id));
+         if !has_import && !cwd.is_dir() {
+             let terminal = unavailable_restored_terminal(
+@@ -1442,6 +1496,46 @@ mod tests {
+         }
+     }
+ 
++    #[tokio::test]
++    async fn isolated_disabled_restore_preserves_configuration_without_shell_fallback() {
++        let cwd = std::env::current_dir().unwrap();
++        let snapshot: SessionSnapshot = serde_json::from_value(serde_json::json!({
++            "version":3, "active":0, "selected":0, "workspaces":[{
++                "id":"isolated", "identity_cwd":cwd, "tabs":[{
++                    "layout":serde_json::to_value(LayoutSnapshot::Pane(0)).unwrap(), "zoomed":false,
++                    "panes":{"0":{"cwd":cwd, "agent_name":"worker", "managed_agent_kind":"pi",
++                        "isolated_launch":{"project":"ace", "role":"worker"}}}
++                }]
++            }]
++        }))
++        .unwrap();
++        let (events, _receiver) = mpsc::channel(8);
++        let (workspaces, terminals, runtimes) = restore(
++            &snapshot,
++            None,
++            24,
++            80,
++            4096,
++            "/must-not-launch-a-shell",
++            crate::config::ShellModeConfig::NonLogin,
++            false,
++            events,
++            Arc::new(Notify::new()),
++            Arc::new(RenderSignal::new()),
++        );
++        assert_eq!(workspaces.len(), 1);
++        assert!(runtimes.is_empty());
++        let terminal = terminals.values().next().unwrap();
++        assert!(terminal
++            .restore_error
++            .as_ref()
++            .unwrap()
++            .contains("isolated session restoration is disabled"));
++        assert_eq!(terminal.isolated_launch.as_ref().unwrap().project, "ace");
++        assert_eq!(terminal.agent_name.as_deref(), Some("worker"));
++        assert!(terminal.pending_agent_resume_plan.is_none());
++    }
++
+     #[tokio::test]
+     async fn restore_carries_persisted_agent_session_metadata() {
+         let cwd = std::env::current_dir().unwrap();
+@@ -1474,6 +1568,7 @@ mod tests {
+                             }),
+                             agent_resume: None,
+                             launch_argv: None,
++                            isolated_launch: None,
+                         },
+                     )]),
+                     zoomed: false,
+@@ -1556,6 +1651,7 @@ mod tests {
+                                 agent_session: None,
+                                 agent_resume: None,
+                                 launch_argv: None,
++                                isolated_launch: None,
+                             },
+                         ),
+                         (
+@@ -1568,6 +1664,7 @@ mod tests {
+                                 agent_session: None,
+                                 agent_resume: None,
+                                 launch_argv: None,
++                                isolated_launch: None,
+                             },
+                         ),
+                     ]),
+@@ -1622,6 +1719,7 @@ mod tests {
+                     agent_session: None,
+                     agent_resume: None,
+                     launch_argv: None,
++                    isolated_launch: None,
+                 },
+             )
+         };
+@@ -1638,6 +1736,7 @@ mod tests {
+             }),
+             agent_resume: None,
+             launch_argv: None,
++            isolated_launch: None,
+         };
+         let snapshot = SessionSnapshot {
+             version: super::super::snapshot::SNAPSHOT_VERSION,
+@@ -1790,6 +1889,7 @@ mod tests {
+                             }),
+                             agent_resume: None,
+                             launch_argv: None,
++                            isolated_launch: None,
+                         },
+                     )]),
+                     zoomed: false,
+@@ -2096,6 +2196,7 @@ mod tests {
+                 agent_session: None,
+                 agent_resume: None,
+                 launch_argv: None,
++                isolated_launch: None,
+             },
+         );
+         let mut history = SessionHistorySnapshot {
+diff --git a/src/persist/snapshot.rs b/src/persist/snapshot.rs
+index 3518ef4..9e01a40 100644
+--- a/src/persist/snapshot.rs
++++ b/src/persist/snapshot.rs
+@@ -98,6 +98,8 @@ pub struct TabSnapshot {
+ 
+ #[derive(Serialize, Deserialize)]
+ pub struct PaneSnapshot {
++    #[serde(default, skip_serializing_if = "Option::is_none")]
++    pub isolated_launch: Option<crate::terminal::state::IsolatedSessionConfig>,
+     pub cwd: PathBuf,
+     #[serde(default, skip_serializing_if = "Option::is_none")]
+     pub label: Option<String>,
+@@ -339,7 +341,9 @@ fn capture_tab(
+             .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| "/".into()));
+         let label = terminal.and_then(|terminal| terminal.manual_label.clone());
+         let (agent_name, managed_agent_kind) = terminal
+-            .filter(|terminal| !terminal.managed_agent_launch_pending())
++            .filter(|terminal| {
++                terminal.isolated_launch.is_some() || !terminal.managed_agent_launch_pending()
++            })
+             .map(|terminal| {
+                 (
+                     terminal.agent_name.clone(),
+@@ -388,6 +392,7 @@ fn capture_tab(
+                 agent_session,
+                 agent_resume,
+                 launch_argv,
++                isolated_launch: terminal.and_then(|terminal| terminal.isolated_launch.clone()),
+             },
+         );
+     }
+@@ -707,6 +712,7 @@ mod tests {
+                 agent_session: None,
+                 agent_resume: None,
+                 launch_argv: None,
++                isolated_launch: None,
+             },
+         );
+         panes.insert(
+@@ -719,6 +725,7 @@ mod tests {
+                 agent_session: None,
+                 agent_resume: None,
+                 launch_argv: None,
++                isolated_launch: None,
+             },
+         );
+ 
+@@ -1405,6 +1412,7 @@ mod tests {
+                 agent_session: None,
+                 agent_resume: None,
+                 launch_argv: None,
++                isolated_launch: None,
+             },
+         );
+         panes.insert(
+@@ -1419,6 +1427,7 @@ mod tests {
+                 agent_session: None,
+                 agent_resume: None,
+                 launch_argv: None,
++                isolated_launch: None,
+             },
+         );
+ 
+diff --git a/src/platform/linux/session_handoff.rs b/src/platform/linux/session_handoff.rs
+index 1bc9680..1758f1d 100644
+--- a/src/platform/linux/session_handoff.rs
++++ b/src/platform/linux/session_handoff.rs
+@@ -19,6 +19,7 @@ struct Metadata {
+     unit: String,
+     invocation: String,
+     pid: u32,
++    directory: std::path::PathBuf,
+     rows: u16,
+     cols: u16,
+ }
+@@ -27,6 +28,7 @@ pub(crate) struct SessionHandoff {
+     pub master: OwnedFd,
+     pub origin: Arc<GuardedChildOrigin>,
+     pub child: SessionChild,
++    pub directory: std::path::PathBuf,
+     pub rows: u16,
+     pub cols: u16,
+ }
+@@ -64,6 +66,11 @@ pub(crate) fn receive(mut stream: UnixStream) -> io::Result<SessionHandoff> {
+     if metadata.protocol != "ace.session-launch/v1" || metadata.rows == 0 || metadata.cols == 0 {
+         return Err(io::Error::other("invalid session terminal metadata"));
+     }
++    if !metadata.directory.is_absolute()
++        || metadata.directory.parent() != Some(std::path::Path::new("/lab"))
++    {
++        return Err(io::Error::other("invalid configured session directory"));
++    }
+     let pidfd = handles.pop().unwrap();
+     let master = handles.pop().unwrap();
+     let mut terminal_number: libc::c_uint = 0;
+@@ -76,6 +83,7 @@ pub(crate) fn receive(mut stream: UnixStream) -> io::Result<SessionHandoff> {
+         master,
+         origin,
+         child,
++        directory: metadata.directory,
+         rows: metadata.rows,
+         cols: metadata.cols,
+     })
+diff --git a/src/platform/linux/session_launch.rs b/src/platform/linux/session_launch.rs
+index 3c6a93d..064ab7d 100644
+--- a/src/platform/linux/session_launch.rs
++++ b/src/platform/linux/session_launch.rs
+@@ -61,6 +61,7 @@ pub(crate) fn spawn_isolated_session(
+         origin: Some(handoff.origin),
+         child: Box::new(handoff.child),
+         isolated: true,
++        directory: Some(handoff.directory),
+     })
+ }
+ 
+diff --git a/src/platform/mod.rs b/src/platform/mod.rs
+index 703930b..13b8aee 100644
+--- a/src/platform/mod.rs
++++ b/src/platform/mod.rs
+@@ -5,6 +5,10 @@
+ 
+ pub(crate) mod guarded_prompt;
+ 
++pub(crate) fn supports_isolated_sessions() -> bool {
++    cfg!(target_os = "linux")
++}
++
+ #[cfg(not(target_os = "linux"))]
+ pub(crate) fn spawn_isolated_session(
+     _project: &str,
+diff --git a/src/pty/backend.rs b/src/pty/backend.rs
+index 264add1..7890ddc 100644
+--- a/src/pty/backend.rs
++++ b/src/pty/backend.rs
+@@ -12,6 +12,7 @@ pub(crate) struct SpawnedPty {
+     pub master: Box<dyn MasterPty + Send>,
+     pub child: Box<dyn Child + Send + Sync>,
+     pub isolated: bool,
++    pub directory: Option<std::path::PathBuf>,
+ }
+ 
+ #[cfg(windows)]
+@@ -38,5 +39,6 @@ pub(crate) fn spawn_with_portable_pty(
+         master: pair.master,
+         child,
+         isolated: false,
++        directory: None,
+     })
+ }
+diff --git a/src/pty/backend/unix.rs b/src/pty/backend/unix.rs
+index cc80486..e1b794a 100644
+--- a/src/pty/backend/unix.rs
++++ b/src/pty/backend/unix.rs
+@@ -9,6 +9,7 @@ pub(crate) struct SpawnedPty {
+     pub child: Box<dyn Child + Send + Sync>,
+     pub origin: Option<std::sync::Arc<crate::platform::guarded_prompt::GuardedChildOrigin>>,
+     pub isolated: bool,
++    pub directory: Option<std::path::PathBuf>,
+ }
+ 
+ pub(crate) fn spawn_with_portable_pty(
+@@ -45,6 +46,7 @@ pub(crate) fn spawn_with_portable_pty(
+         child,
+         origin,
+         isolated: false,
++        directory: None,
+     })
+ }
+ 
+diff --git a/src/server/headless/tests/mod.rs b/src/server/headless/tests/mod.rs
+index 27f3bff..92a0f1c 100644
+--- a/src/server/headless/tests/mod.rs
++++ b/src/server/headless/tests/mod.rs
+@@ -5753,6 +5753,9 @@ fn headless_scheduled_tasks_clears_disabled_agent_manifest_update_deadline() {
+ #[tokio::test]
+ async fn headless_scheduled_tasks_start_pending_agent_resume_without_foreground_client() {
+     let mut server = test_headless_server();
++    // This test submits a resume command: unlike passive render fixtures it
++    // needs a live shell, not an immediately exiting placeholder process.
++    server.app.state.default_shell = "/bin/sh".into();
+     let workspace = crate::workspace::Workspace::test_new("restored");
+     let pane_id = workspace.tabs[0].root_pane;
+     let terminal_id = workspace.terminal_id(pane_id).cloned().unwrap();
+diff --git a/src/terminal/state.rs b/src/terminal/state.rs
+index 11d540b..bcd5d25 100644
+--- a/src/terminal/state.rs
++++ b/src/terminal/state.rs
+@@ -1,3 +1,10 @@
++#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
++#[serde(deny_unknown_fields)]
++pub struct IsolatedSessionConfig {
++    pub project: String,
++    pub role: String,
++}
++
+ use std::collections::HashMap;
+ use std::path::PathBuf;
+ use std::time::{Duration, Instant};
+@@ -127,6 +134,7 @@ struct RecentAgentProcessExit {
+ /// pane/view state no longer owns terminal identity, cwd, labels, or agent
+ /// metadata.
+ pub struct TerminalState {
++    pub isolated_launch: Option<IsolatedSessionConfig>,
+     pub id: TerminalId,
+     pub cwd: PathBuf,
+     pub detected_agent: Option<Agent>,
+@@ -197,6 +205,7 @@ impl TerminalState {
+             last_agent_completion_seq: None,
+             revision: 0,
+             launch_argv: None,
++            isolated_launch: None,
+             respawn_shell_on_exit: false,
+             recent_agent_process_exit: None,
+             agent_process_acquisition_pending: false,
+diff --git a/src/update.rs b/src/update.rs
+index 854bacd..3a78f1c 100644
+--- a/src/update.rs
++++ b/src/update.rs
+@@ -3055,6 +3055,7 @@ mod tests {
+                 surface_interest: true,
+                 health_check: true,
+                 ssh_agent_registration: false,
++                isolated_sessions: false,
+             }),
+         };
+         let missing_baseline = crate::api::RuntimeStatus {
+@@ -3130,6 +3131,7 @@ mod tests {
+                     surface_interest: true,
+                     health_check: true,
+                     ssh_agent_registration: false,
++                    isolated_sessions: false,
+                 }),
+             },
+         };
+@@ -3389,6 +3391,7 @@ mod tests {
+                     surface_interest: true,
+                     health_check: true,
+                     ssh_agent_registration: false,
++                    isolated_sessions: false,
+                 }),
+             },
+         };
+diff --git a/src/workspace.rs b/src/workspace.rs
+index 8944b88..202311c 100644
+--- a/src/workspace.rs
++++ b/src/workspace.rs
+@@ -459,6 +459,37 @@ impl Workspace {
+         }
+     }
+ 
++    #[allow(clippy::too_many_arguments)]
++    pub(crate) fn create_isolated_tab(
++        &mut self,
++        rows: u16,
++        cols: u16,
++        spawned: crate::pty::backend::SpawnedPty,
++        scrollback_limit_bytes: usize,
++        theme: crate::terminal_theme::TerminalTheme,
++        appearance: Option<crate::terminal_theme::HostAppearance>,
++    ) -> std::io::Result<(usize, TerminalState, TerminalRuntime)> {
++        let active = self
++            .active_tab()
++            .ok_or_else(|| std::io::Error::other("workspace has no active tab"))?;
++        let (tab, terminal, runtime) = Tab::new_isolated(
++            self.next_public_tab_number,
++            rows,
++            cols,
++            spawned,
++            scrollback_limit_bytes,
++            theme,
++            appearance,
++            active.events.clone(),
++            active.render_notify.clone(),
++            active.render_dirty.clone(),
++        )?;
++        self.next_public_tab_number += 1;
++        self.register_new_pane_with_number(tab.root_pane, self.next_public_pane_number);
++        self.tabs.push(tab);
++        Ok((self.tabs.len() - 1, terminal, runtime))
++    }
++
+     pub fn create_tab(
+         &mut self,
+         rows: u16,
+diff --git a/src/workspace/tab.rs b/src/workspace/tab.rs
+index 79d7f94..310ef4d 100644
+--- a/src/workspace/tab.rs
++++ b/src/workspace/tab.rs
+@@ -52,6 +52,59 @@ pub struct Tab {
+ }
+ 
+ impl Tab {
++    #[allow(clippy::too_many_arguments)]
++    pub(crate) fn new_isolated(
++        number: usize,
++        rows: u16,
++        cols: u16,
++        spawned: crate::pty::backend::SpawnedPty,
++        scrollback_limit_bytes: usize,
++        theme: crate::terminal_theme::TerminalTheme,
++        appearance: Option<crate::terminal_theme::HostAppearance>,
++        events: mpsc::Sender<AppEvent>,
++        render_notify: Arc<Notify>,
++        render_dirty: Arc<RenderSignal>,
++    ) -> std::io::Result<(Self, TerminalState, TerminalRuntime)> {
++        let cwd = spawned
++            .directory
++            .clone()
++            .ok_or_else(|| std::io::Error::other("configured directory missing"))?;
++        let (layout, root_id) = TileLayout::new();
++        let runtime = TerminalRuntime::from_isolated_session(
++            root_id,
++            rows,
++            cols,
++            spawned,
++            scrollback_limit_bytes,
++            theme,
++            appearance,
++            events.clone(),
++            render_notify.clone(),
++            render_dirty.clone(),
++        )?;
++        let terminal_id = TerminalId::alloc();
++        let terminal = TerminalState::new(terminal_id.clone(), cwd);
++        let mut panes = HashMap::new();
++        panes.insert(root_id, PaneState::new(terminal_id));
++        Ok((
++            Self {
++                custom_name: None,
++                number,
++                root_pane: root_id,
++                layout,
++                panes,
++                #[cfg(test)]
++                runtimes: HashMap::new(),
++                zoomed: false,
++                events,
++                render_notify,
++                render_dirty,
++            },
++            terminal,
++            runtime,
++        ))
++    }
++
+     // Tab construction threads pane runtime geometry, host context, and render hooks.
+     #[allow(clippy::too_many_arguments)]
+     pub fn new(
+diff --git a/tests/cli/agents.rs b/tests/cli/agents.rs
+index cc5af06..ce2202e 100644
+--- a/tests/cli/agents.rs
++++ b/tests/cli/agents.rs
+@@ -1472,3 +1472,32 @@ fn agent_wait_ignores_other_panes_and_errors_when_its_pane_closes() {
+ 
+     cleanup_spawned_herdr(herdr, base);
+ }
++
++#[test]
++fn isolated_start_cli_rejects_runtime_overrides_and_duplicate_selection() {
++    let base = unique_test_dir();
++    for extra in [
++        vec!["--", "sh"],
++        vec!["--role", "integrator"],
++        vec!["--cwd", "/tmp"],
++    ] {
++        let mut args = vec![
++            "agent",
++            "start-isolated",
++            "worker",
++            "--workspace",
++            "w1",
++            "--project",
++            "ace",
++            "--role",
++            "worker",
++        ];
++        args.extend(extra);
++        let output = run_named_cli(&base.join("config"), &base.join("runtime"), &args);
++        assert_eq!(output.status.code(), Some(2));
++        assert!(
++            String::from_utf8_lossy(&output.stderr).contains("usage: herdr agent start-isolated")
++        );
++    }
++    let _ = fs::remove_dir_all(base);
++}
+diff --git a/tests/cli/surface.rs b/tests/cli/surface.rs
+index b48baf5..26b1b0c 100644
+--- a/tests/cli/surface.rs
++++ b/tests/cli/surface.rs
+@@ -514,12 +514,23 @@ fn api_schema_json_prints_bundled_schema() {
+         .get("protocol")
+         .and_then(serde_json::Value::as_u64)
+         .is_some_and(|protocol| protocol > 0));
++    let schemas = schema
++        .get("schemas")
++        .and_then(serde_json::Value::as_object)
++        .unwrap();
++    let mut names: Vec<_> = schemas.keys().map(String::as_str).collect();
++    names.sort_unstable();
+     assert_eq!(
+-        schema
+-            .get("schemas")
+-            .and_then(serde_json::Value::as_object)
+-            .map(serde_json::Map::len),
+-        Some(5)
++        names,
++        vec![
++            "error_response",
++            "event",
++            "guarded_prompt_error_response",
++            "input_drain_error_response",
++            "request",
++            "subscription_event",
++            "success_response"
++        ]
+     );
+ }
+ 

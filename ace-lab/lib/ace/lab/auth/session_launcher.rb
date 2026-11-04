@@ -99,13 +99,14 @@ module Ace
         # One framed handoff on an already authenticated launch connection.
         # The launch owner retains its descriptors and lifecycle connection;
         # SCM_RIGHTS duplicates the terminal and pinned process into Herdr.
-        def handoff(identity, terminal:, channel:, rows:, cols:)
+        def handoff(identity, terminal:, channel:, rows:, cols:, directory:)
           raise Error, "session handoff requires the root host endpoint" unless @privileged
           unless identity.is_a?(Identity) && SessionPeer::UNIT.match?(identity.unit) &&
               identity.process["pid"].is_a?(Integer) && identity.process["pid"].positive? &&
               identity.invocation_id.is_a?(String) && identity.invocation_id.match?(/\A[0-9a-f]{32}\z/) &&
               identity.invocation_id != "0" * 32 && identity.pidfd.is_a?(IO) && !identity.pidfd.closed? &&
               terminal.is_a?(IO) && !terminal.closed? && terminal.tty? && channel.is_a?(UNIXSocket) &&
+              directory.is_a?(String) && directory.match?(%r{\A/lab/[a-zA-Z0-9][a-zA-Z0-9_.-]*\z}) &&
               [rows, cols].all? { |size| size.is_a?(Integer) && size.between?(1, 65_535) }
             raise ArgumentError, "invalid authenticated terminal handoff"
           end
@@ -117,7 +118,7 @@ module Ace
           end
           payload = JSON.generate("protocol" => "ace.session-launch/v1", "unit" => identity.unit,
             "invocation" => identity.invocation_id, "pid" => identity.process.fetch("pid"),
-            "rows" => rows, "cols" => cols)
+            "rows" => rows, "cols" => cols, "directory" => directory)
           frame = [payload.bytesize].pack("N") + payload
           rights = Socket::AncillaryData.unix_rights(terminal, identity.pidfd)
           deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
