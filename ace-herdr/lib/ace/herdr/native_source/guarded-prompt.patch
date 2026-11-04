@@ -7183,3 +7183,201 @@ index 16d45ef..dd88fbf 100644
      use super::*;
      use std::io::Write;
      fn send_handles(mut stream: &UnixStream, count: usize, fragmented: bool) {
+From c17ef7290086f338dd33370ebc9304149c3fa9f4 Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 04:57:42 +0000
+Subject: [PATCH] fix: observe isolated interactive readiness before startup
+ wait completes
+
+---
+ src/api/wait.rs        | 43 ++++++++++++++++++++++++++++++++++++++++--
+ src/app/agents.rs      | 38 +++++++++++++++++++++++++++++++++++++
+ src/app/api/agents.rs  | 32 +++++++++++++++++++++++++++++++
+ src/server/headless.rs |  4 ++++
+ 4 files changed, 115 insertions(+), 2 deletions(-)
+
+diff --git a/src/api/wait.rs b/src/api/wait.rs
+index 9d366d2..53ea9cf 100644
+--- a/src/api/wait.rs
++++ b/src/api/wait.rs
+@@ -409,7 +409,10 @@ fn wait_for_resolved_agent(
+                 } if event_pane == pane_id => {
+                     if released {
+                         if let Some(status) = final_status
+-                            .filter(|status| wait.until.contains(status))
++                            .filter(|status| {
++                                wait.until.contains(status)
++                                    && !isolated_idle_requires_input(&wait.initial, *status)
++                            })
+                             .or(matched_event_status)
+                         {
+                             let mut matched = wait.initial.clone();
+@@ -432,7 +435,10 @@ fn wait_for_resolved_agent(
+                     agent_status,
+                     ..
+                 } if event_pane == pane_id => {
+-                    if wait.accept_transient_status && wait.until.contains(&agent_status) {
++                    if wait.accept_transient_status
++                        && wait.until.contains(&agent_status)
++                        && !isolated_idle_requires_input(&wait.initial, agent_status)
++                    {
+                         matched_event_status = Some(agent_status);
+                     }
+                     should_probe = true;
+@@ -562,9 +568,20 @@ fn agent_wait_matches(
+     after_state_change_seq: Option<u64>,
+ ) -> bool {
+     until.contains(&agent.agent_status)
++        && (!isolated_idle_requires_input(agent, agent.agent_status)
++            || (agent.interactive_ready && !agent.launch_pending))
+         && after_state_change_seq.is_none_or(|baseline| agent.state_change_seq > baseline)
+ }
+ 
++// Isolated admission precedes Pi's interactive settle. An idle report alone
++// cannot complete startup observation; transient idle events cannot prove it.
++fn isolated_idle_requires_input(
++    agent: &crate::api::schema::AgentInfo,
++    status: crate::api::schema::AgentStatus,
++) -> bool {
++    agent.isolated_session.is_some() && status == crate::api::schema::AgentStatus::Idle
++}
++
+ fn agent_get(
+     request_id: &str,
+     target: &str,
+@@ -832,6 +849,28 @@ fn wait_matched_response(request_id: &str, event: serde_json::Value) -> String {
+ mod tests {
+     use super::*;
+ 
++    #[test]
++    fn isolated_idle_wait_requires_interactive_settle() {
++        use crate::api::schema::{AgentInfo, AgentStatus};
++        let mut agent: AgentInfo = serde_json::from_value(serde_json::json!({
++            "terminal_id": "term_1234", "agent_status": "idle", "workspace_id": "w1",
++            "tab_id": "w1:t1", "pane_id": "w1:p1", "focused": false, "revision": 1,
++            "isolated_session": {"project": "ace", "role": "worker"},
++            "launch_pending": true, "interactive_ready": false
++        }))
++        .unwrap();
++        assert!(!agent_wait_matches(&agent, &[AgentStatus::Idle], None));
++        agent.launch_pending = false;
++        assert!(!agent_wait_matches(&agent, &[AgentStatus::Idle], None));
++        agent.interactive_ready = true;
++        assert!(agent_wait_matches(&agent, &[AgentStatus::Idle], None));
++        assert!(isolated_idle_requires_input(&agent, AgentStatus::Idle));
++        assert!(!isolated_idle_requires_input(&agent, AgentStatus::Done));
++        agent.isolated_session = None;
++        agent.interactive_ready = false;
++        assert!(agent_wait_matches(&agent, &[AgentStatus::Idle], None));
++    }
++
+     #[test]
+     fn agent_wait_probe_only_translates_agent_disappearance() {
+         let disappeared = agent_wait_probe_error(ErrorResponse {
+diff --git a/src/app/agents.rs b/src/app/agents.rs
+index 04aa0db..f7052e7 100644
+--- a/src/app/agents.rs
++++ b/src/app/agents.rs
+@@ -36,6 +36,44 @@ impl App {
+             .collect()
+     }
+ 
++    pub(crate) fn reconcile_due_managed_agents(&mut self, now: Instant) -> bool {
++        let due: Vec<_> = self
++            .state
++            .terminals
++            .iter()
++            .filter_map(|(id, terminal)| {
++                terminal
++                    .next_managed_agent_deadline()
++                    .filter(|deadline| *deadline <= now)
++                    .map(|_| id.to_string())
++            })
++            .collect();
++        let mut changed = false;
++        for target in due {
++            let Ok(resolved) = self.resolve_agent_target(&target) else {
++                continue;
++            };
++            let Some(id) = self.state.workspaces[resolved.ws_idx]
++                .terminal_id(resolved.pane_id)
++                .cloned()
++            else {
++                continue;
++            };
++            if self
++                .state
++                .terminals
++                .get_mut(&id)
++                .is_some_and(|terminal| terminal.reconcile_managed_agent_at(now, false))
++            {
++                self.state.mark_session_dirty();
++                self.schedule_session_save();
++                self.emit_pane_updated(resolved.ws_idx, resolved.pane_id);
++                changed = true;
++            }
++        }
++        changed
++    }
++
+     pub(super) fn reconcile_managed_agent_target(&mut self, target: &str) {
+         let Ok(resolved) = self.resolve_agent_target(target) else {
+             return;
+diff --git a/src/app/api/agents.rs b/src/app/api/agents.rs
+index 7e1944b..dfa7fd0 100644
+--- a/src/app/api/agents.rs
++++ b/src/app/api/agents.rs
+@@ -891,6 +891,38 @@ mod tests {
+         assert!(rx.try_recv().is_err());
+     }
+ 
++    #[tokio::test]
++    async fn isolated_startup_settle_emits_event_without_status_transition() {
++        let mut app = app_with_agent();
++        let pane_id = app.state.workspaces[0].tabs[0].root_pane;
++        let terminal_id = app.state.workspaces[0].tabs[0].panes[&pane_id]
++            .attached_terminal_id
++            .clone();
++        let terminal = app.state.terminals.get_mut(&terminal_id).unwrap();
++        let now = std::time::Instant::now();
++        terminal.begin_managed_agent(
++            "reviewer".into(),
++            Agent::OpenCode,
++            now,
++            std::time::Duration::from_secs(3),
++            std::time::Duration::from_secs(10),
++        );
++        terminal.set_detected_state(Some(Agent::OpenCode), AgentState::Idle);
++        let sequence = app.event_hub.current_sequence();
++        assert!(!app.reconcile_due_managed_agents(now));
++        assert!(app.reconcile_due_managed_agents(now + std::time::Duration::from_secs(3)));
++        assert!(app.state.terminals[&terminal_id].managed_agent_interactive_ready());
++        assert!(app
++            .event_hub
++            .events_after(sequence)
++            .iter()
++            .any(|(_, event)| matches!(
++                event.data,
++                crate::api::schema::EventData::PaneUpdated { .. }
++            )));
++        assert!(!app.reconcile_due_managed_agents(now + std::time::Duration::from_secs(4)));
++    }
++
+     #[tokio::test]
+     async fn agent_prompt_rejects_managed_agent_while_startup_is_pending() {
+         let mut app = app_with_agent();
+diff --git a/src/server/headless.rs b/src/server/headless.rs
+index 8c3d4b8..ef94112 100644
+--- a/src/server/headless.rs
++++ b/src/server/headless.rs
+@@ -448,6 +448,10 @@ impl HeadlessServer {
+             if self.should_quit.load(Ordering::Acquire) {
+                 continue;
+             }
++            if self.app.reconcile_due_managed_agents(Instant::now()) {
++                needs_render = true;
++                needs_full_render = true;
++            }
+             if self.app.expire_due_metadata(Instant::now()) {
+                 needs_render = true;
+                 needs_full_render = true;

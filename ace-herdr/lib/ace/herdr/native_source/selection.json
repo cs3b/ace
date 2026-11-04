@@ -2,10 +2,10 @@
   "schema": "ace.herdr.native-source/v1",
   "repository": "https://github.com/herdrdev/herdr.git",
   "baseline_commit": "7b116c05bfda646af39d2524c54e70c751f57ee8",
-  "source_commit": "e70ad71d36b53b866743f3c81330813502db3627",
-  "source_tree": "6f10b77e74b7d171fe289015abeb8195981e7122",
+  "source_commit": "c17ef7290086f338dd33370ebc9304149c3fa9f4",
+  "source_tree": "770307f5ec39b9acccef4b8be6144e2b73dd0fba",
   "patch_file": "guarded-prompt.patch",
-  "patch_sha256": "6dd2d19e652be04a1b98fe9f3db9753ba22181146c3732a59977931e418e97b2",
+  "patch_sha256": "b9c5112152a2d6006b9ec72c362c2ec6aa303071745947adf8bf659491e77d00",
   "cargo_lock_sha256": "bb3ab17351af496a2cc316a11c81a97f90959cd37c3d5625f2f8028c0133ffca",
   "rust_toolchain_sha256": "0d9298c075817aba62477d23dcda3534cd836b5d5cf1960bd2de54df675ceffd",
   "rust_version": "1.96.1",
@@ -15,7 +15,7 @@
   "committer": {
     "name": "Miguel",
     "email": "mc@cs3b.com",
-    "date": "2026-11-04T04:31:10+00:00"
+    "date": "2026-11-04T04:57:42+00:00"
   },
   "targets": [
     "x86_64-unknown-linux-musl",

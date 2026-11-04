@@ -9,7 +9,7 @@ module Ace
       # Narrow supervisory API. Native owns terminal identity and process
       # admission; the issuer owns the original caller's project authority.
       class SessionControl
-        METHODS = %w[agent.list agent.get agent.prompt pane.current ping agent.readiness].freeze
+        METHODS = %w[agent.list agent.get agent.prompt agent.wait pane.current ping agent.readiness].freeze
         PUBLIC_FIELDS = %w[terminal_id name agent agent_status workspace_id tab_id pane_id focused
           launch_pending interactive_ready state_change_seq completion_seq revision isolated_session].freeze
 
@@ -48,6 +48,20 @@ module Ace
           end
           agent = native(id, "agent.get", {"target" => params.fetch("target")}, identity).dig("result", "agent")
           raise Error, "session target is unavailable" unless authorized?(agent, identity)
+          if method == "agent.wait"
+            unless %w[lab-overseer project-overseer].include?(identity.role) && agent["terminal_id"] != identity.terminal_id
+              raise Error, "session cannot wait for this target"
+            end
+            terminal = agent.fetch("terminal_id")
+            reply = native(id, method, params.merge("target" => terminal), identity,
+              timeout: params.fetch("timeout_ms") / 1000.0 + 5)
+            observed = reply.dig("result", "agent")
+            unless authorized?(observed, identity) && observed["terminal_id"] == terminal &&
+                observed["isolated_session"] == agent["isolated_session"] && observed["interactive_ready"] == true
+              raise Error, "isolated target did not become ready for input"
+            end
+            return {"id" => id, "result" => {"type" => "agent_info", "agent" => project(observed)}}
+          end
           if method == "agent.readiness"
             result = @readiness.call(agent: agent, identity: identity, request_id: id)
             return {"id" => id, "result" => result.merge("type" => "agent_readiness")}
@@ -77,8 +91,8 @@ module Ace
 
         private
 
-        def native(id, method, params, identity)
-          response = @transport.call({"id" => id, "method" => method, "params" => params}, identity: identity)
+        def native(id, method, params, identity, timeout: 5)
+          response = @transport.call({"id" => id, "method" => method, "params" => params}, identity: identity, timeout: timeout)
           raise Error, "session target operation failed" if response.key?("error")
           response
         end
@@ -116,9 +130,14 @@ module Ace
           fields = case request["method"]
           when "agent.list", "ping" then []
           when "agent.get", "agent.readiness" then %w[target]
+          when "agent.wait" then %w[target timeout_ms until]
           else %w[target text]
           end
           raise Error, "invalid session control fields" unless params.keys.sort == fields
+          if request["method"] == "agent.wait" && !(params["until"] == ["idle"] &&
+              params["timeout_ms"].is_a?(Integer) && params["timeout_ms"].between?(1, 60_000))
+            raise Error, "only bounded startup observation is available"
+          end
           if params.key?("target") && !(params["target"].is_a?(String) && params["target"].match?(/\A[a-zA-Z0-9_.:-]{1,128}\z/))
             raise Error, "invalid session target"
           end

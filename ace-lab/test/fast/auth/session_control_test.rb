@@ -22,12 +22,14 @@ module Ace::Lab::Auth
 
     def respond(message, options)
       assert_same @identity, options.fetch(:identity)
+      @last_timeout = options[:timeout]
       @sent << message
       result = case message["method"]
       when "ping" then {"type" => "pong", "version" => "0.9.3", "protocol" => 22, "capabilities" => {"live_handoff" => true, "ssh_agent_registration" => true}}
       when "agent.list" then {"agents" => [@agent, @agent.merge("terminal_id" => "term_3333", "isolated_session" => {"project" => "other", "role" => "worker"}), @agent.merge("isolated_session" => nil)]}
       when "agent.get" then {"agent" => @agent}
       when "pane.process_info" then {"process_info" => {"guarded_prompt" => !@origin.nil?, "guarded_prompt_origin" => @origin}}
+      when "agent.wait" then {"agent" => (@wait_agent || @agent.merge("interactive_ready" => true))}
       when "agent.prompt" then {"agent" => @agent, "submission" => "issued"}
       end
       {"id" => message["id"], "result" => result}
@@ -88,6 +90,38 @@ module Ace::Lab::Auth
         assert_raises(Error) { call("agent.prompt", {"target" => "worker", "text" => "Run"}) }
       end
       refute @sent.any? { |request| request["method"] == "agent.prompt" }
+    end
+
+    def test_startup_wait_uses_immutable_terminal_and_bounded_transport_deadline
+      result = call("agent.wait", {"target" => "worker", "until" => ["idle"], "timeout_ms" => 60_000})
+      assert_equal "term_2222", @sent.last.dig("params", "target")
+      assert_equal 65, @last_timeout
+      assert_equal true, result.dig("result", "agent", "interactive_ready")
+      refute result.dig("result", "agent").key?("agent_session")
+    end
+
+    def test_startup_wait_rejects_completion_wait_and_unbounded_timeout_before_native_access
+      [["done"], ["working"], []].each do |states|
+        assert_raises(Error) { call("agent.wait", {"target" => "worker", "until" => states, "timeout_ms" => 100}) }
+      end
+      [0, 60_001, "100"].each do |timeout|
+        assert_raises(Error) { call("agent.wait", {"target" => "worker", "until" => ["idle"], "timeout_ms" => timeout}) }
+      end
+      assert_empty @sent
+    end
+
+    def test_startup_wait_does_not_claim_readiness_for_changed_or_noninteractive_target
+      [@agent, @agent.merge("interactive_ready" => true, "terminal_id" => "term_3333")].each do |observed|
+        @wait_agent = observed
+        assert_raises(Error) { call("agent.wait", {"target" => "worker", "until" => ["idle"], "timeout_ms" => 100}) }
+      end
+    end
+
+    def test_worker_cannot_wait_even_for_own_terminal
+      @identity.role = "worker"
+      @identity.terminal_id = "term_2222"
+      assert_raises(Error) { call("agent.wait", {"target" => "worker", "until" => ["idle"], "timeout_ms" => 100}) }
+      refute @sent.any? { |request| request["method"] == "agent.wait" }
     end
 
     def test_caller_cannot_supply_guard_wait_or_raw_command

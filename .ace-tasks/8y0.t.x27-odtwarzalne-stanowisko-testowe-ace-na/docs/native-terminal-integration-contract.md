@@ -21,7 +21,7 @@ No synthetic transcript or observer evidence was used. Positive first-turn
 and active-eyes readiness remains unproven.
 
 Current implementation work still required: route standard Overseer start and
-coworker dispatch through this isolated native path; implement authorized host
+coworker dispatch through this isolated native path; deploy and prove the implemented authorized host
 readiness; support worktree execution without runtime overrides; finish
 task/report/eyes and lease fault integration; register and run TS-MONO-003/004
 twice after clean resets with one final pinned manifest. Missing rg/fd must
@@ -30,6 +30,30 @@ fixture/start helpers still contain the earlier non-isolated launch and
 provider-auth setup and must adopt the protected runtime before acceptance.
 Historical checkpoints below are component evidence, not current runtime
 configuration or acceptance.
+
+## Startup observation integration (source, not deployed)
+
+The authenticated control endpoint now permits only supervisory `agent.wait`
+for `until: [idle]`, timeout 1–60000 ms, against an authorized other session.
+It resolves the target to its immutable terminal, preserves caller liveness,
+redacts private fields and checks interactive readiness. Worker completion must
+still use observation and end-of-turn delivery, not this startup wait.
+
+Native source `c17ef7290086f338dd33370ebc9304149c3fa9f4` closes the idle-before-ready
+race found by independent review. Isolated idle requires interactive readiness
+and no pending launch; transient or released idle cannot bypass it. The existing
+headless deadline loop reconciles managed startup and emits `PaneUpdated`, so
+settle readiness wakes the existing wait without another agent model turn.
+No new state store or polling CLI is introduced.
+
+Executed validation: endpoint/issuer/host readiness 36 tests, 181 assertions
+(report `5671044c-06c8-40bf-897d-3bb29d0a0400`); Linux native startup predicate and
+App-level settle-event transition each passed (`0839c523-09ad-446c-a19f-b7e35fe5e863`,
+`ea80a8ab-9027-4c15-a2f7-661c707710aa`); existing native wait regressions 11/11
+(`ffde9e96-4e5f-4244-a43e-36b8026b5437`); packaged source 13 tests /42 assertions
+(`390f6a67-8b93-4973-9aa5-7df9a7e22cca`). Independent review approved the correction.
+The exact mail-patch replay reproduces the source commit. These are component
+checks; standard start/dispatch and two clean scenario runs remain outstanding.
 
 ## Historical integration checkpoint: native77 / issuer80
 
