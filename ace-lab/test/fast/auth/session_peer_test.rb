@@ -74,6 +74,20 @@ module Ace
 
         def teardown = FileUtils.remove_entry(@root)
 
+        def test_isolation_properties_cross_the_real_manager_boundary
+          command = Object.new
+          values = @manager.properties
+          command.define_singleton_method(:call) do |argv, timeout:|
+            argv.drop(argv.index("org.freedesktop.systemd1.Service") + 1).map do |key|
+              JSON.generate("type" => SessionPeer::PROPERTIES.fetch(key), "data" => values.fetch(key))
+            end.join("\n")
+          end
+          manager = Ace::Runtime::Molecules::SystemdScopeManager.new(
+            slice_unit: SessionPeer::SLICE, service_unit: UNIT, command: command)
+          assert_equal values.slice(*SessionPeer::PROPERTIES.keys), manager.typed_properties(
+            unit: UNIT, interface: "Service", signatures: SessionPeer::PROPERTIES)
+        end
+
         def test_returns_os_bound_identity_and_open_lifetime_handle
           identity = @peer.authenticate(FakeSocket.new)
           assert_equal 62_000, identity.uid
