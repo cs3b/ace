@@ -38,6 +38,31 @@ class OverseerEventObservationTest < AceOverseerTestCase
     end
   end
 
+  def test_project_report_is_settled_only_by_the_lab_private_manager
+    Dir.mktmpdir do |tmp|
+      tasks = Ace::Task::Organisms::TaskManager.new(root_dir: File.join(tmp, "tasks"))
+      manager = tasks.create("Project bootstrap", status: "in-progress")
+      tasks.update(manager.id, set: {"project_task" => "8xg.t.abc"}, move_to: "_overseer")
+      step = tasks.create_subtask(manager.id, "Worker", status: "in-progress")
+      tasks.update(step.id, set: {"assignment" => "worker-1"})
+      event = {"id" => "report-1", "key" => "scoped-project-key", "revision" => "rev-1",
+        "type" => "report", "result" => "success", "task" => "8xg.t.abc", "assignment" => "worker-1",
+        "project_root" => "/lab/ace"}
+      hitl = ->(**) { {"schema" => "ace.hitl.observation/v1", "events" => [], "settled" => []} }
+      projects = ->(**) { {"events" => [event], "sources" => {"project:ace:hitl" => {"status" => "ok"}}} }
+      observer = Ace::Overseer::Molecules::EventObservation.new(hitl: hitl, task_manager: tasks,
+        local_sources: no_local_sources, project_observations: projects)
+      assert_equal [event], observer.call(owner: "overseer")["events"]
+      tasks.update(step.id, set: {"processed_report" => "report-1", "report_result" => "success"})
+      assert_equal [event], observer.call(owner: "overseer")["events"]
+      tasks.update(step.id, set: {"status" => "done"})
+      settled = observer.call(owner: "overseer")
+      assert_empty settled["events"]
+      assert_equal [event], settled["settled"]
+      assert_equal "/lab/ace", settled["settled"].first["project_root"]
+    end
+  end
+
   def test_merged_projection_carries_local_rows_and_source_health
     Dir.mktmpdir do |tmp|
       tasks = Ace::Task::Organisms::TaskManager.new(root_dir: File.join(tmp, "tasks"))

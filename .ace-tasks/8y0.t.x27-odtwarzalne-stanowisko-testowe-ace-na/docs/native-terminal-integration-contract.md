@@ -766,3 +766,48 @@ to direct adapter tests; command build/preparation tests retain project authorit
 while selecting the worktree. Targeted lab tests pass 55/296
 (df12fc13-cc5a-4dbe-a1f3-810eaa287d02). Installed native artifact worktree dispatch
 and task/report/watch adoption remain unverified.
+
+
+### Lab/project observation and bootstrap ownership
+
+Executable bootstrap tasks and their worktrees belong to the target project;
+the lab retains only its private manager and direct preparation/verification/
+confirm-start children, linked by project_root, task and assignment identities.
+The worker's project mount therefore contains its actual assignment and brief.
+The lab's installed observation uses the existing protected deployment projects
+and invokes their public `ace-overseer observe` with the same owner/scope.
+The project call cannot recurse because it is not the configured coordinator.
+Scoped keys prevent collisions; original report IDs, revisions and project_root
+remain available for owner reconciliation. No report/task copy is persisted.
+
+Child observations share one 20-second monotonic budget (rather than a fresh
+per-project timeout). Exhausted or malformed project observations return stable
+health markers; required owner health fields must be present. The existing
+private manager's accepted report identity and terminal state determine whether
+the cross-project event remains pending or settled. Before acceptance the lab
+reads original report/assignment evidence in its project, updates its private
+task via ace-task and only then acknowledges eyes. It does not invoke a local
+report processor with a task from another repository. Independent verifier
+allocation is checked through the project handoff dry-run gate and dispatched
+through the installed isolated dispatcher with role verifier.
+
+Independent review found and verified correction of the aggregate timeout.
+Full overseer: 539 tests/2469 assertions, one platform skip, zero failures
+(80876658-1758-4a8f-80a5-91ac0f771125); subsequent required-health check targeted
+10/53 passed (df58e487-ee0d-41a5-91a9-46d185d220c7). Fixture provisioning must
+supply valid local HITL routes in lab and project before the bootstrap goal;
+the controlled repair gap remains project Overseer configuration/eyes.
+This source integration still requires installed dispatch and live adoption.
+
+Native94 ARM64 build completed through ace-herdr native-source owner:
+artifact SHA256 83544723f41df791ef64b3a7ac120d2e153023c9cce37aa81d1869f72b7bcc6c,
+size28344912; provenance SHA256 ea80a30cd955db26eef85a8016f4adc2188a1ef6d09ce544adabcef44d7cd5c2;
+selection SHA256 1d6993a995ba3cf9862960952210dab44bff66b47d8ee2345b8d9337e3189805.
+Private local cache: .ace-local/lab-vm/artifacts/herdr-native94-diagnostic.
+Not deployed yet; VM remains on issuer93/native89 with the stopped coordinator93
+preserved in private evidence. Built ace-herdr0.10.1.pre.utm94 SHA256
+b276e4ad89302192e423525c27843c12f9026c98a05b5e9dd0fb317c66a9dac8 and
+ace-lab0.14.2.pre.utm94 SHA256
+2c1fe3abd7379b6cd92151ba3bee5b81e20e4398eddbd555fd1b427af6228bc7,
+source edf9663ea632302608c47078b89a6ab9b8e50534, uploaded to lab-operator home.
+No TS-MONO-003/004 registration or clean acceptance run is claimed yet.

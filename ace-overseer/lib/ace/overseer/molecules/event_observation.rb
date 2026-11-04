@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require "ace/hitl/molecules/event_observation"
 require "digest"
+require_relative "project_observations"
 require_relative "../atoms/observation_sources"
 
 module Ace
@@ -18,12 +19,13 @@ module Ace
       # identical revisions (no model turns).
       class EventObservation
         def initialize(hitl: nil, task_manager: nil, local_sources: nil, remote_sources: nil,
-          config: nil)
+          config: nil, project_observations: ProjectObservations.new)
           @hitl = hitl || Ace::Hitl::Molecules::EventObservation.new
           @tasks = task_manager || Ace::Task::Organisms::TaskManager.new
           @local_sources = local_sources || LocalSources.new(task_manager: @tasks)
           @remote_sources = remote_sources || RemoteSources.new
           @config = config || Ace::Overseer.config
+          @project_observations = project_observations
         end
 
         def call(owner:, scope: "current", limit: 500)
@@ -37,22 +39,23 @@ module Ace
 
           local = @local_sources.call
           remote = remote_projection
+          projects = @project_observations.call(owner: owner, scope: scope, limit: limit)
           managers = @tasks.list(in_folder: "all").select { |task| !task.metadata["project_task"].to_s.empty? }
 
           if projection.nil?
             # A degraded HITL source degrades only itself: the local
             # sources keep projecting and the failure is visible data.
             events = local.fetch("events") + remote.fetch("events") + [health_marker(Atoms::ObservationSources::HITL, hitl_error)]
-            sources = local.fetch("sources").merge(remote.fetch("sources")).merge(
+            sources = local.fetch("sources").merge(remote.fetch("sources")).merge(projects.fetch("sources")).merge(
               Atoms::ObservationSources::HITL => {"status" => "degraded", "error" => "#{hitl_error.class}: #{hitl_error.message}"}
             )
-            ensure_budget!(events.length, limit)
+            ensure_budget!(events.length + projects.fetch("events").length, limit)
             return {"schema" => "ace.hitl.observation/v1",
-                    "events" => wire_events(events).sort_by { |row| row["key"] },
+                    "events" => (wire_events(events) + projects.fetch("events")).sort_by { |row| row["key"] },
                     "settled" => [], "sources" => sources}
           end
 
-          settled, pending = projection.fetch("events").partition do |event|
+          settled, pending = (projection.fetch("events") + projects.fetch("events")).partition do |event|
             next false unless event["type"] == "report"
             verdict = Atoms::ReportInterpretation.evaluate(event: event, managers: managers)
             next false unless verdict[:status] == :duplicate
@@ -67,7 +70,7 @@ module Ace
           projection.merge("events" => (pending + wire_events(local.fetch("events") + remote.fetch("events")))
               .sort_by { |row| row["key"] },
             "settled" => settled,
-            "sources" => local.fetch("sources").merge(remote.fetch("sources"))
+            "sources" => local.fetch("sources").merge(remote.fetch("sources")).merge(projects.fetch("sources"))
               .merge(Atoms::ObservationSources::HITL => {"status" => "ok"}))
         end
 
