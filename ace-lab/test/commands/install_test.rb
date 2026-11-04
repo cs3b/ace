@@ -9,7 +9,7 @@ module Ace
         class InstallCommandTest < Minitest::Test
           OK_PREPARE = {
             "ok" => true, "dry_run" => false, "machine" => "lab01",
-            "accounts" => [], "directories" => [], "keys" => [], "roles" => [], "gems" => []
+            "accounts" => [], "directories" => [], "keys" => [], "roles" => [], "gems" => [], "extensions" => [], "issuer" => []
           }.freeze
 
           def ok_project(id)

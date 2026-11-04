@@ -15,7 +15,7 @@ module Ace
             runtime_verifier: ->(**) { true },
             activation_verifier: ->(**) { true },
             inactive_verifier: -> { true },
-            readiness_verifier: -> { true },
+            readiness_verifier: -> { true }, state_verifier: ->(**) { true },
             runner: ->(argv) { @commands << argv; true })
           @runtime = {ruby: "/opt/ace/ruby/bin/ruby", gem_home: "/opt/ace/gems",
                       gem_root: "/opt/ace/gems/gems/ace-lab-0.14.2"}
@@ -31,6 +31,54 @@ module Ace
           assert @commands.any? { |argv| argv.include?("daemon-reload") }
           assert @commands.any? { |argv| argv.include?("enable") && argv.include?("ace-lab-auth.socket") }
           assert @commands.any? { |argv| argv.include?("is-active") && argv.include?("ace-lab-auth-recovery.service") }
+        end
+
+        def test_current_active_installation_and_verify_do_not_mutate_units_or_sessions
+          @installer.call(**@runtime)
+          @commands.clear
+          assert_equal "current", @installer.call(**@runtime).fetch("status")
+          assert_equal "current", @installer.verify(**@runtime).fetch("status")
+          assert_empty @commands
+          assert_raises(Error) { @installer.call(**@runtime.merge(gem_root: "/opt/ace/gems/gems/ace-lab-0.99.0")) }
+          assert_empty @commands
+        end
+
+        def test_identical_stopped_deployment_can_be_activated_without_rewriting_files
+          @installer.call(**@runtime)
+          @commands.clear
+          @installer.instance_variable_set(:@state_verifier, ->(**) { :inactive })
+          assert_equal "would_activate", @installer.call(**@runtime, dry_run: true).fetch("status")
+          assert_empty @commands
+          assert_raises(Error) { @installer.verify(**@runtime) }
+          assert_equal "activated", @installer.call(**@runtime).fetch("status")
+          assert @commands.any? { |argv| argv.include?("enable") }
+          refute @commands.any? { |argv| argv.include?("stop") || argv.include?("restart") }
+        end
+
+        def test_interrupted_file_install_reloads_inactive_units_before_effective_verification
+          IssuerUnits.render(**@runtime).each { |name, contents| File.write(File.join(@dir, name), contents) }
+          @installer.instance_variable_set(:@state_verifier, ->(**) { :inactive })
+          @installer.instance_variable_set(:@activation_verifier, lambda do |**|
+            raise Error, "stale units" unless @commands.any? { |argv| argv.include?("daemon-reload") }
+          end)
+          assert_equal "would_activate", @installer.call(**@runtime, dry_run: true).fetch("status")
+          assert_empty @commands
+          assert_equal "activated", @installer.call(**@runtime).fetch("status")
+        end
+
+        def test_readiness_requires_socket_and_completed_recovery_even_without_a_running_issuer
+          states = {
+            "ace-lab-auth.socket" => "ActiveState=active\nSubState=listening\n",
+            "ace-lab-auth-recovery.service" => "ActiveState=active\nSubState=exited\nResult=success\n",
+            "ace-lab-auth.service" => "ActiveState=inactive\nSubState=dead\nResult=success\nMainPID=0\n"
+          }
+          inspector = IssuerInstaller.new(runner: ->(argv) { "Id=#{argv.last}\n#{states.fetch(argv.last)}" })
+          assert inspector.send(:verify_active_state!, ruby: @runtime[:ruby], gem_root: @runtime[:gem_root])
+          states["ace-lab-auth.socket"] = "ActiveState=inactive\nSubState=dead\n"
+          assert_raises(Error) { inspector.send(:verify_active_state!, ruby: @runtime[:ruby], gem_root: @runtime[:gem_root]) }
+          states["ace-lab-auth.socket"] = "ActiveState=active\nSubState=listening\n"
+          states["ace-lab-auth-recovery.service"] = "ActiveState=failed\nSubState=failed\nResult=exit-code\n"
+          assert_raises(Error) { inspector.send(:verify_active_state!, ruby: @runtime[:ruby], gem_root: @runtime[:gem_root]) }
         end
 
         def test_dry_run_writes_nothing_and_executes_no_systemctl

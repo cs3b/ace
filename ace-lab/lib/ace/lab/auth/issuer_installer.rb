@@ -7,7 +7,7 @@ require "ace/lab"
 require "ace/runtime/molecules/protected_socket"
 require "ace/runtime/molecules/systemd_scope_manager"
 require "ace/runtime/molecules/protected_linux"
-require_relative "../auth"
+require_relative "error"
 require_relative "issuer_units"
 require_relative "../molecules/gem_payload_permissions"
 
@@ -20,9 +20,20 @@ module Ace
       class IssuerInstaller
         SYSTEMCTL = Ace::Runtime::Molecules::SystemdScopeManager::SYSTEMCTL
 
+        def self.runtime(manifest)
+          gemset = manifest.fetch("gemset")
+          package = gemset.fetch("gems").find { |entry| entry["name"] == "ace-lab" }
+          raise Error, "session runtime must pin ace-lab" unless package
+          version = Gem::Version.new(package.fetch("version")).to_s
+          home = gemset.fetch("gem_home")
+          {ruby: RbConfig.ruby, gem_home: home, gem_root: File.join(home, "gems", "ace-lab-#{version}")}
+        rescue KeyError, ArgumentError
+          raise Error, "session issuer runtime is incomplete"
+        end
+
         def initialize(unit_dir: "/etc/systemd/system", owner_uid: 0, privileged: Process.euid.zero?,
           path_verifier: nil, runtime_verifier: nil, activation_verifier: nil, inactive_verifier: nil,
-          readiness_verifier: nil, runner: nil)
+          readiness_verifier: nil, state_verifier: nil, runner: nil)
           @unit_dir, @owner_uid, @privileged = unit_dir, owner_uid, privileged
           @path_verifier = path_verifier || lambda { |path, directory: false|
             Ace::Runtime::Molecules::ProtectedSocket.root_path!(path, directory: directory)
@@ -34,6 +45,7 @@ module Ace
           @activation_verifier = activation_verifier || method(:verify_loaded_units!)
           @inactive_verifier = inactive_verifier || method(:verify_inactive_units!)
           @readiness_verifier = readiness_verifier || method(:verify_host!)
+          @state_verifier = state_verifier || method(:verify_active_state!)
         end
 
         def call(ruby:, gem_home:, gem_root:, dry_run: false)
@@ -42,7 +54,6 @@ module Ace
           units = IssuerUnits.render(ruby: ruby, gem_home: gem_home, gem_root: gem_root)
           @path_verifier.call(@unit_dir, directory: true)
           @runtime_verifier.call(ruby: ruby, gem_home: gem_home, gem_root: gem_root)
-          @inactive_verifier.call
           missing = units.filter_map do |name, expected|
             path = File.join(@unit_dir, name)
             next name unless File.exist?(path) || File.symlink?(path)
@@ -52,7 +63,15 @@ module Ace
             end
             nil
           end
-          return {"status" => missing.empty? ? "current" : "would_install", "units" => units.keys} if dry_run
+          if missing.empty?
+            state = @state_verifier.call(ruby: ruby, gem_root: gem_root)
+            unless state == :inactive
+              @activation_verifier.call(unit_dir: @unit_dir, units: units.keys)
+              return {"status" => "current", "units" => units.keys}
+            end
+          end
+          @inactive_verifier.call
+          return {"status" => missing.empty? ? "would_activate" : "would_install", "units" => units.keys} if dry_run
 
           missing.each { |name| write_unit!(File.join(@unit_dir, name), units.fetch(name)) }
           run_systemctl!("daemon-reload")
@@ -60,12 +79,73 @@ module Ace
           run_systemctl!("enable", "--now", "--", "ace-lab-auth.socket")
           run_systemctl!("is-active", "--quiet", "--", "ace-lab-auth-recovery.service")
           run_systemctl!("is-active", "--quiet", "--", "ace-lab-auth.socket")
-          {"status" => missing.empty? ? "current" : "installed", "units" => units.keys}
+          {"status" => missing.empty? ? "activated" : "installed", "units" => units.keys}
         rescue Ace::Runtime::Error, Molecules::GemPayloadPermissions::Error, SystemCallError => e
           raise Error, "issuer installation failed (#{e.class})"
         end
 
+        # Read-only readiness shares the exact installed/runtime contract.
+        def verify(ruby:, gem_home:, gem_root:)
+          @readiness_verifier.call
+          @path_verifier.call(@unit_dir, directory: true)
+          @runtime_verifier.call(ruby: ruby, gem_home: gem_home, gem_root: gem_root)
+          units = IssuerUnits.render(ruby: ruby, gem_home: gem_home, gem_root: gem_root)
+          units.each do |name, expected|
+            path = File.join(@unit_dir, name)
+            @path_verifier.call(path, directory: false)
+            raise Error, "issuer unit '#{name}' is missing or differs" unless File.file?(path) && File.read(path) == expected
+          end
+          @activation_verifier.call(unit_dir: @unit_dir, units: units.keys)
+          if @state_verifier.call(ruby: ruby, gem_root: gem_root) == :inactive
+            raise Error, "issuer recovery and socket are inactive"
+          end
+          {"status" => "current", "units" => units.keys}
+        rescue Ace::Runtime::Error, Molecules::GemPayloadPermissions::Error, SystemCallError => e
+          raise Error, "issuer verification failed (#{e.class})"
+        end
+
         private
+
+        def verify_active_state!(ruby:, gem_root:)
+          states = %w[ace-lab-auth-recovery.service ace-lab-auth.socket ace-lab-auth.service].to_h do |name|
+            argv = [SYSTEMCTL, "--system", "--no-pager", "--no-ask-password", "show", "--all",
+              "--property=Id,LoadState,ActiveState,SubState,Result,MainPID,InvocationID", "--", name]
+            fields = @runner.call(argv).to_s.lines.to_h { |line| line.chomp.split("=", 2) }
+            raise Error, "issuer state identity differs" unless fields["Id"] == name
+            [name, [argv, fields]]
+          end
+          if states.values.all? { |_argv, fields| fields["ActiveState"] == "inactive" &&
+              (fields["Result"] == "success" || (fields["Result"].nil? && fields["LoadState"] == "not-found")) &&
+              (fields["MainPID"].nil? || fields["MainPID"] == "0") }
+            return :inactive
+          end
+          states.each do |name, (argv, fields)|
+            if name == "ace-lab-auth.service"
+              unless %w[active inactive].include?(fields["ActiveState"]) && fields["Result"] == "success"
+                raise Error, "issuer is failed or transitioning"
+              end
+              next if fields["ActiveState"] == "inactive" && fields["MainPID"] == "0"
+              pid = Integer(fields.fetch("MainPID"), 10)
+              unless fields["SubState"] == "running" && pid > 1 && fields["InvocationID"].to_s.match?(/\A[0-9a-f]{32}\z/)
+                raise Error, "running issuer identity is unavailable"
+              end
+              args = File.binread("/proc/#{pid}/cmdline").split("\0")
+              expected = [ruby, "-I#{gem_root}/lib", "#{gem_root}/libexec/issuer-request"]
+              unless args == expected && File.stat("/proc/#{pid}").uid.zero? &&
+                  File.identical?("/proc/#{pid}/exe", ruby) &&
+                  @runner.call(argv).to_s.lines.to_h { |line| line.chomp.split("=", 2) } == fields
+                raise Error, "running issuer differs from installed runtime"
+              end
+            elsif fields["ActiveState"] != "active" ||
+                (name.end_with?("recovery.service") && (fields["SubState"] != "exited" || fields["Result"] != "success")) ||
+                (name.end_with?(".socket") && fields["SubState"] != "listening")
+              raise Error, "issuer recovery or socket is not ready"
+            end
+          end
+          true
+        rescue ArgumentError, KeyError, SystemCallError
+          raise Error, "issuer active state could not be verified"
+        end
 
         def verify_host!
           Ace::Runtime::Molecules::ProtectedLinux.new.supported!

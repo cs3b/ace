@@ -59,7 +59,7 @@ module Organisms
         assert_equal "lab01", report["machine"]
         assert_equal "/etc/lab/ace-lab/install.yml", report["manifest"]
         assert_equal ["ok", "dry_run", "machine", "manifest", "accounts", "directories", "keys", "roles", "gems",
-          "extensions"], report.keys
+          "extensions", "issuer"], report.keys
         assert_equal [{"username" => "ace-worker", "status" => "exists",
                        "uid" => Process.uid, "message" => nil}], report["accounts"]
         assert_equal "created", report["directories"].first["status"]

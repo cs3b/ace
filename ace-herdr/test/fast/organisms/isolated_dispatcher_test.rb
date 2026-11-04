@@ -1,8 +1,33 @@
 # frozen_string_literal: true
 require "test_helper"
+require "open3"
+require "rbconfig"
 require "ace/herdr/organisms/isolated_dispatcher"
 
 class IsolatedDispatcherTest < Minitest::Test
+  def test_standalone_dispatch_loads_complete_lab_runtime_before_manifest_read
+    code = <<~'RUBY'
+      require "ace/herdr"
+      require "ace/herdr/organisms/isolated_dispatcher"
+      # The native CLI starts with Herdr, not the Lab test helper. The default
+      # loader must initialize Lab itself before evaluating its default path.
+      dispatcher = Ace::Herdr::Organisms::IsolatedDispatcher.new(executor: Object.new,
+        env: {"ACE_TOOLCHAIN" => "installed"})
+      begin
+        dispatcher.dispatch(label: "probe", prompt: "probe", kind: "pi",
+          workspace_id: "w1", pane: nil, cwd: "/", role: "worker")
+      rescue Ace::Herdr::ValidationError, Ace::Lab::InvalidConfigurationError
+        abort "incomplete lab runtime" unless Ace::Lab.respond_to?(:install_manifest_path) &&
+          Ace::Lab.respond_to?(:host_platform)
+        puts "configured refusal"
+      end
+    RUBY
+    out, err, status = Open3.capture3(RbConfig.ruby, "-I", $LOAD_PATH.join(File::PATH_SEPARATOR), "-e", code)
+    assert status.success?, err
+    assert_includes out, "configured refusal"
+    refute_includes err, "NoMethodError"
+  end
+
   def setup
     @calls = []
     @agent = {"terminal_id" => "term_abc", "cwd" => "/lab/ace/.ace-wt/task-1",

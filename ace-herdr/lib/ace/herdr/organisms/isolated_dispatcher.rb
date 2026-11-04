@@ -9,7 +9,7 @@ module Ace::Herdr::Organisms
     def initialize(executor:, env: ENV, loader: nil)
       @executor, @env = executor, env
       @loader = loader || lambda do
-        require "ace/lab/molecules/install_manifest_loader"
+        require "ace/lab"
         Ace::Lab::Molecules::InstallManifestLoader.load
       end
     end
