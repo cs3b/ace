@@ -3,11 +3,27 @@
 require_relative "../../test_helper"
 require "ace/lab/auth/issuer_client"
 require "timeout"
+require "open3"
 
 module Ace
   module Lab
     module Auth
       class IssuerClientTest < Minitest::Test
+        def test_client_refusal_loads_without_service_in_a_fresh_process
+          script = <<~RUBY
+            require "ace/lab/auth/issuer_client"
+            abort "unexpected service dependency" if defined?(Ace::Lab::Auth::Service)
+            begin
+              Ace::Lab::Auth::IssuerClient.new.reconcile
+            rescue Ace::Lab::Auth::Refusal
+              exit 0
+            end
+            abort "expected refusal"
+          RUBY
+          _, stderr, status = Open3.capture3(RbConfig.ruby, "-I", $LOAD_PATH.join(File::PATH_SEPARATOR), "-e", script)
+          assert status.success?, stderr
+        end
+
         def exchange(response)
           server, peer = UNIXSocket.pair
           client = IssuerClient.new

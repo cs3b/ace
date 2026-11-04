@@ -49,6 +49,8 @@ module Ace::Lab::Auth
       skip "root Linux privilege drop" unless RUBY_PLATFORM.include?("linux") && Process.euid.zero?
       uid = 62_123
       FileUtils.chown_R(uid, uid, @root)
+      File.chown(0, 0, @root)
+      File.chmod(0o711, @root)
       @identity.uid = @identity.gid = uid
       file = SessionEvidenceFile.new.open(@path, identity: @identity)
       assert_equal "evidence\n", file.read

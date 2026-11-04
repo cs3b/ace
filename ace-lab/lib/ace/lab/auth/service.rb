@@ -939,7 +939,6 @@ module Ace
         end
       end
 
-      class Refusal < Error; end
     end
   end
 end

@@ -12,6 +12,9 @@ module Ace
       # contents leave this boundary: the owner evaluator receives a read FD.
       class SessionEvidenceFile
         LIMIT = 64 * 1024 * 1024
+        # Linux O_PATH anchors traversal without requesting directory listing
+        # permission on the root-owned 0711 session runtime boundary.
+        DIRECTORY_PATH_FLAGS = 0x200000 | 0x10000 | File::NOFOLLOW
 
         def initialize(privileged: -> { Process.euid.zero? }, drop: nil, parent_guard: nil)
           @privileged = privileged
@@ -105,11 +108,11 @@ module Ace
         end
 
         def anchored_open(root, relative)
-          directory = File.open(root, File::RDONLY | File::NOFOLLOW | File::NONBLOCK)
+          directory = File.open(root, DIRECTORY_PATH_FLAGS)
           raise Error, "session runtime is not a directory" unless directory.stat.directory?
           components = relative.split("/")
           components[0...-1].each do |name|
-            next_directory = File.open("/proc/self/fd/#{directory.fileno}/#{name}", File::RDONLY | File::NOFOLLOW | File::NONBLOCK)
+            next_directory = File.open("/proc/self/fd/#{directory.fileno}/#{name}", DIRECTORY_PATH_FLAGS)
             directory.close
             directory = next_directory
             raise Error, "session evidence ancestor is not a directory" unless directory.stat.directory?
