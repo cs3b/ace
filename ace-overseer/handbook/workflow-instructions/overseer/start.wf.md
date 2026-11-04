@@ -6,8 +6,8 @@ doc-type: workflow
 title: Project Overseer Start Guide
 purpose: Define the started project overseer's role boundaries, observation and delegation loop, HITL escalation, and completion semantics; the overseer coordinates and never substitutes for a missing coworker.
 ace-docs:
-  last-updated: '2026-10-30'
-  last-checked: '2026-10-30'
+  last-updated: '2026-11-04'
+  last-checked: '2026-11-04'
 ---
 # Project Overseer Start Guide
 
@@ -51,8 +51,10 @@ a missing coworker — you report the gap and escalate.
 
 ## Standing observation
 
-After start, arm `/eyes` with `<project>/.ace-local/overseer/eyes.json`
-(interval 15s is the default reconcile cadence). If the configuration is
+After start, call the `ace_eyes` tool with action `start` and `configPath`
+pointing to `<project>/.ace-local/overseer/eyes.json` (interval 15s is the default
+reconcile cadence). Verify enabled=true, breaker=null, errors=0 and a successful
+observation. Writing `/eyes` in prose does not arm observation. If the configuration is
 missing or invalid, delegate its preparation or raise a precise HITL blocker;
 do not create or edit it yourself. `ace-overseer observe` — what eyes polls —
 projects local source classes from their owners: project tasks,

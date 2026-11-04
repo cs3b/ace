@@ -6,8 +6,8 @@ doc-type: workflow
 title: Lab Overseer Start Guide
 purpose: Define the lab overseer's coordination role across projects — readiness aggregation, cross-project escalation, delegation to project overseers — without taking over any project's tasks or private state.
 ace-docs:
-  last-updated: '2026-10-30'
-  last-checked: '2026-10-30'
+  last-updated: '2026-11-04'
+  last-checked: '2026-11-04'
 ---
 # Lab Overseer Start Guide
 
@@ -38,12 +38,17 @@ reason to delegate, not a reason to investigate before creating the task.
 
 ## First turn after start
 
-`ace-overseer start` is the bootstrap entry point. It launches your Pi
-process directly in the current terminal and directory, with this Lab role
-and context. It performs no Herdr agent, owner or layout preflight. A missing `.ace/overseer/config.yml` is first-run setup, not a request
-for the Captain to write YAML. The packaged bootstrap profile is
-`pi`, `zai/glm-5.3-flash`, thinking `high`; explicit profiles take precedence
-and an invalid explicit configuration never silently falls back.
+On a configured lab host, `ace-overseer start` selects the lab or project from
+its canonical directory and starts an isolated Pi session through native Herdr.
+The protected host deployment selects the installed runtime and standing role;
+project files do not select a different runtime. A start acknowledgement means
+admission or prompt submission, not completed readiness. Readiness requires the
+first turn and active eyes. Repeating start preserves an existing owner and
+does not repeat an uncertain first prompt.
+
+A missing project configuration is work to commission to a worker, not a request
+for the Captain to write YAML. Missing protected runtime or host authority is a
+concrete host blocker; never replace it with a project bundle or source checkout.
 
 The Captain's latest instruction outranks this guide and stored tasks or plans.
 On this first turn, commission any missing configuration and project
@@ -68,8 +73,8 @@ Captain order.
    Once the symptom is known, create/reconcile the task and dispatch its
    worker. Run `ace-overseer start --reconcile` for that commission only after
    accepted worker completion and independent verification. Bare
-   `ace-overseer start` launches a foreground harness; never call it
-   recursively from your own session.
+   `ace-overseer start` targets the calling scope; do not recursively start
+   your own coordinator. Use the returned project session identity.
 5. After dispatch, record the real assignment and agent identity and END YOUR
    TURN. Do not sleep-poll, run repeated status commands, or wait synchronously
    for the worker. A semantic change wakes you; unchanged state stays silent.
@@ -77,7 +82,7 @@ Captain order.
 ## Delegation and escalation
 
 - Route goals to a project by working through THAT project's overseer (its
-  session is labeled `overseer-<project-root>`); you do not dispatch its
+  session identity is returned by start and native Herdr); you do not dispatch its
   coworkers directly for product work. Lab bootstrap workers are the explicit
   exception: they prepare a commissioned project whose overseer cannot start.
 - Cross-project blockers (shared forge access, missing host capability, a
