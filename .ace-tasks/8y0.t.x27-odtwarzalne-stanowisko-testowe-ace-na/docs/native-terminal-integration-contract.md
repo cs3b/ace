@@ -494,3 +494,30 @@ replay matches, packaged selection tests passed 13/42 (report
 a859da19-e3a4-486a-9d05-35fd947ec849). Neither this source nor the preceding
 terminal-target delta is deployed yet. This fixes false acknowledgements only;
 the existing two attempts are not a full adoption/readiness protocol.
+
+## Host-bound terminal identity implementation
+
+Native source dfb88ce05e26cf692d5cff000818550a6bfada85 reserves a TerminalId
+before both new launch and restoration, transmits it to the root launcher,
+and adopts the same ID into TerminalState. Root launch accepts this field only
+from the authenticated host principal; dynamic session callers cannot choose
+a terminal binding. SessionUnit writes ACE_LAB_TERMINAL_ID as a fixed systemd
+environment value and preserves it through the preparation wrapper. Generic
+environment injection cannot set it. SessionPeer reads it from typed systemd
+properties, rejects duplicate/invalid values and returns it with the verified
+invocation. Terminal-free lower-level sessions have no binding and must be
+refused by the future report endpoint. No reporting permissions are enabled by
+this field alone.
+
+Independent review found no authority/lifecycle defect. Ruby verification:
+47 tests / 203 assertions (b3c1145d-3bf3-4b7b-9cd7-50f43a1635c1), followed by
+expanded schema tests 14/61 (90e06f5d-1988-4fea-9998-e0d43e5b3db4). ARM64:
+isolated filter 13/13 (2f6675e1-c846-49a6-b6e2-4a580bfe55ab), launch request
+filter 2/2 (5a0bc4db-291c-4a76-b6ba-c736e8aba58f). Exact patch replay matches;
+packaged source 13/42 (b9553dbc-9342-46bf-947b-2a8a85909cae). This paired
+change is not deployed yet. Issuer80/native77 diagnostic deployment is unchanged.
+
+Next required implementation is the authenticated restricted report endpoint,
+protected native socket selection/peer verification and live invocation check,
+then adoption ordering and actual Pi report/eyes evidence. Delegation must still
+preserve original session authority. Full TS-MONO-003/004 acceptance remains open.

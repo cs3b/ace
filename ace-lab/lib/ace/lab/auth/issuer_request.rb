@@ -162,7 +162,9 @@ module Ace
           raise ArgumentError, "invalid issuer request" unless value.is_a?(Hash)
           if value["action"] == "launch"
             fields = %w[action project role rows cols]
-            unless value.keys.sort == fields.sort && safe_string?(value["project"]) &&
+            unless (value.keys - fields - ["terminal_id"]).empty? && (fields - value.keys).empty? &&
+                (!value.key?("terminal_id") || (value["terminal_id"].is_a?(String) && SessionPeer::TERMINAL_ID.match?(value["terminal_id"]))) &&
+                safe_string?(value["project"]) &&
                 SessionUnit::ROLES.include?(value["role"]) &&
                 %w[rows cols].all? { |key| value[key].is_a?(Integer) && value[key].between?(1, 65_535) }
               raise ArgumentError, "invalid configured launch request"

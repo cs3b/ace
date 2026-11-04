@@ -78,7 +78,7 @@ module Ace
             :completed
           end
           runner = IssuerRequest.new(authenticate: ->(*) { raise "lease authentication must not select host launches" }, launch: launch)
-          request = {"action" => "launch", "project" => "ace", "role" => "worker", "rows" => 24, "cols" => 80}
+          request = {"action" => "launch", "project" => "ace", "role" => "worker", "rows" => 24, "cols" => 80, "terminal_id" => "term_abcdef"}
           @client.puts JSON.generate(request)
           assert_equal :completed, runner.call(@server, invocation: "a" * 32, supervising: -> { true })
           assert_equal request, invoked.fetch(0).fetch(:request)
@@ -86,7 +86,7 @@ module Ace
         end
 
         def test_launch_refuses_arbitrary_runtime_identity_and_dimensions
-          [{"argv" => ["/bin/sh"]}, {"uid" => 0}, {"rows" => 0}, {"cols" => 65_536}, {"role" => "root"}].each do |extra|
+          [{"terminal_id" => "w1:p1"}, {"terminal_id" => nil}, {"argv" => ["/bin/sh"]}, {"uid" => 0}, {"rows" => 0}, {"cols" => 65_536}, {"role" => "root"}].each do |extra|
             server, client = UNIXSocket.pair
             client.puts JSON.generate({"action" => "launch", "project" => "ace", "role" => "worker", "rows" => 24, "cols" => 80}.merge(extra))
             runner = IssuerRequest.new(authenticate: ->(*) { raise "invalid request reached authentication" })

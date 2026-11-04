@@ -18,6 +18,7 @@ module Ace
       class SessionPeer
         SO_PEERPIDFD = 77 # Linux >= 6.5
         UNIT = /\Aace-auth-session-([a-z][a-z0-9-]{0,19})-([0-9a-f]{16})\.service\z/
+        TERMINAL_ID = /\Aterm_[0-9a-f]{1,64}\z/
         DYNAMIC_UIDS = (61_184..65_519)
         SLICE = "ace-auth-sessions.slice"
         ISSUER_UNIT = "ace-lab-auth.service"
@@ -27,7 +28,7 @@ module Ace
                       "RemainAfterExit" => "b"}.freeze
 
         Identity = Struct.new(:uid, :gid, :role, :invocation_id, :unit, :cwd, :runtime_dir, :pidfd, :main_pidfd,
-          :main_pid, :mount_namespace, :project_root, keyword_init: true) do
+          :main_pid, :mount_namespace, :project_root, :terminal_id, keyword_init: true) do
           def close
             pidfd.close unless pidfd.closed?
             main_pidfd.close unless main_pidfd.closed?
@@ -100,6 +101,11 @@ module Ace
             raise Error, "session configured environment is ambiguous" unless entries.size == 1
             [key, entries.first.delete_prefix("#{key}=")]
           end
+          terminal_entries = environment.grep(/\AACE_LAB_TERMINAL_ID=/)
+          terminal_id = terminal_entries.first&.delete_prefix("ACE_LAB_TERMINAL_ID=")
+          if terminal_entries.size > 1 || (terminal_id && !TERMINAL_ID.match?(terminal_id))
+            raise Error, "session terminal binding is invalid or ambiguous"
+          end
           project_root = fixed.fetch("ACE_LAB_PROJECT_ROOT")
           unless fixed["ACE_TOOLCHAIN"] == "installed" && fixed["ACE_LAB_SESSION"] == "1" &&
               project_root.start_with?("/") && File.expand_path(project_root) == project_root &&
@@ -138,7 +144,7 @@ module Ace
           Identity.new(uid: peer.fetch("uid"), gid: peer.fetch("gid"), role: match[1],
             invocation_id: manager_identity.fetch("invocation_id"), unit: unit,
             cwd: cwd, runtime_dir: runtime_dir, pidfd: handle, main_pidfd: main_handle,
-            main_pid: Integer(main_pid, 10), mount_namespace: namespace, project_root: project_root).freeze
+            main_pid: Integer(main_pid, 10), mount_namespace: namespace, project_root: project_root, terminal_id: terminal_id&.freeze).freeze
         rescue Exception => error
           handle&.close unless handle&.closed?
           main_handle&.close unless main_handle&.closed?

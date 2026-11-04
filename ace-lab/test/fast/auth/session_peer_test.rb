@@ -186,6 +186,19 @@ module Ace
           end
         end
 
+        def test_terminal_binding_is_read_from_systemd_and_rejects_ambiguous_or_invalid_values
+          environment = @manager.properties.fetch("Environment")
+          environment << "ACE_LAB_TERMINAL_ID=term_abcdef12"
+          identity = @peer.authenticate(FakeSocket.new)
+          assert_equal "term_abcdef12", identity.terminal_id
+          identity.close
+          environment << "ACE_LAB_TERMINAL_ID=term_abcdef13"
+          assert_raises(Error) { @peer.authenticate(FakeSocket.new) }
+          environment.pop
+          environment[-1] = "ACE_LAB_TERMINAL_ID=w1:p1"
+          assert_raises(Error) { @peer.authenticate(FakeSocket.new) }
+        end
+
         def test_project_binding_comes_from_systemd_and_ambiguous_environment_is_refused
           identity = @peer.authenticate(FakeSocket.new)
           assert_equal "/lab/ace", identity.project_root

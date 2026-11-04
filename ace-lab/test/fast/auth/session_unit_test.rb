@@ -23,6 +23,15 @@ module Ace::Lab::Auth
       refute unit.argv.any? { |arg| arg.include?("WorkingDirectory=") }, "cwd must be selected after mount preparation"
     end
 
+    def test_host_terminal_binding_survives_preparation_and_cannot_be_injected_via_environment
+      unit = build(terminal_id: "term_abcdef12")
+      prepared = unit.with_preparation_entry(ruby: "/opt/ruby", entry: "/opt/entry")
+      assert_includes prepared.argv, "--setenv=ACE_LAB_TERMINAL_ID=term_abcdef12"
+      assert_raises(ArgumentError) { build(terminal_id: "w1:p1") }
+      assert_raises(ArgumentError) { build(terminal_id: "term_abc\n") }
+      assert_raises(ArgumentError) { build(environment: {"ACE_LAB_TERMINAL_ID" => "term_abcdef12"}) }
+    end
+
     def test_rejects_identity_and_environment_injection
       assert_raises(ArgumentError) { build(role: "root") }
       assert_raises(ArgumentError) { build(id: "../other") }

@@ -42,7 +42,7 @@ module Ace
         def test_host_principal_comes_from_peer_account_and_lifetime_is_closed
           peer = SessionLaunchPeer.new(configuration: @configuration, account: ->(uid) { Account.new(uid, uid, "mo") })
           yielded_handle = nil
-          peer.with_selection(socket, project: "ace", role: "worker") do |selection, handle|
+          peer.with_selection(socket, project: "ace", role: "worker", terminal_id: "term_abcdef") do |selection, handle|
             assert_same @selection, selection
             refute handle.closed?
             yielded_handle = handle
@@ -57,6 +57,15 @@ module Ace
           peer = SessionLaunchPeer.new(configuration: @configuration, sessions: sessions,
             account: ->(*) { raise "dynamic identity reached host lookup" })
           assert_raises(Error) { peer.with_selection(socket(uid: 62_000), project: "ace", role: "worker") { flunk } }
+          assert_empty @requests
+        end
+
+        def test_dynamic_session_cannot_supply_a_native_terminal_binding
+          peer = SessionLaunchPeer.new(configuration: @configuration,
+            account: ->(*) { flunk "host account lookup" })
+          assert_raises(Error) do
+            peer.with_selection(socket(uid: 62_000), project: "ace", role: "worker", terminal_id: "term_abcdef") { flunk }
+          end
           assert_empty @requests
         end
 

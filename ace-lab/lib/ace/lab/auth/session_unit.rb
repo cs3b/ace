@@ -13,7 +13,7 @@ module Ace
         ROLES = %w[lab-overseer project-overseer worker verifier integrator].freeze
         ENVIRONMENT = %w[PATH GEM_HOME GEM_PATH HOME LANG LC_ALL PI_CODING_AGENT_DIR].freeze
 
-        def initialize(role:, id:, command:, directory:, environment: {})
+        def initialize(role:, id:, command:, directory:, environment: {}, terminal_id: nil)
           unless ROLES.include?(role) && id.is_a?(String) && id.match?(/\A[0-9a-f]{16}\z/)
             raise ArgumentError, "invalid configured session role or id"
           end
@@ -27,6 +27,10 @@ module Ace
           unless clean?(directory) && directory.start_with?("/") && File.expand_path(directory) == directory
             raise ArgumentError, "session directory must be a canonical absolute path"
           end
+          unless terminal_id.nil? || (terminal_id.is_a?(String) && SessionPeer::TERMINAL_ID.match?(terminal_id))
+            raise ArgumentError, "invalid host terminal binding"
+          end
+          @terminal_id = terminal_id&.dup&.freeze
           @role, @id = role, id
           @directory = directory.dup.freeze
           @command = command.map(&:dup).freeze
@@ -37,7 +41,7 @@ module Ace
         def executable = @command.first.dup
 
         def with_preparation_entry(ruby:, entry:)
-          self.class.new(role: @role, id: @id, environment: @environment, directory: @directory,
+          self.class.new(role: @role, id: @id, environment: @environment, directory: @directory, terminal_id: @terminal_id,
             command: [ruby, entry, "--directory", @directory, "--", *@command])
         end
 
@@ -56,6 +60,7 @@ module Ace
           }
           environment = @environment.merge("ACE_TOOLCHAIN" => "installed", "ACE_LAB_SESSION" => "1",
             "ACE_LAB_PROJECT_ROOT" => @directory)
+          environment["ACE_LAB_TERMINAL_ID"] = @terminal_id if @terminal_id
           ["/usr/bin/systemd-run", "--quiet", "--wait", "--pipe", "--no-ask-password",
             "--expand-environment=no", "--unit=#{name}",
             *properties.map { |key, value| "--property=#{key}=#{value}" },

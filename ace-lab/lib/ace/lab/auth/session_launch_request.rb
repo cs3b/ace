@@ -21,8 +21,9 @@ module Ace
         end
 
         def call(socket, request:, invocation:, supervising:)
-          @peer.with_selection(socket, project: request.fetch("project"), role: request.fetch("role")) do |selection, caller|
-            unit = @command.build(selection: selection, id: SecureRandom.hex(8))
+          @peer.with_selection(socket, project: request.fetch("project"), role: request.fetch("role"),
+            terminal_id: request["terminal_id"]) do |selection, caller|
+            unit = @command.build(selection: selection, id: SecureRandom.hex(8), terminal_id: request["terminal_id"])
             supervising.call
             run(socket, request, invocation, unit, selection, caller)
           end

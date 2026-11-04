@@ -17,12 +17,16 @@ module Ace
           @configuration, @sessions, @account = configuration, sessions, account
         end
 
-        def with_selection(socket, project:, role:)
+        def with_selection(socket, project:, role:, terminal_id: nil)
+          unless terminal_id.nil? || (terminal_id.is_a?(String) && SessionPeer::TERMINAL_ID.match?(terminal_id))
+            raise Error, "invalid host terminal binding"
+          end
           handle = IO.for_fd(socket.getsockopt(Socket::SOL_SOCKET, SessionPeer::SO_PEERPIDFD).int, autoclose: true)
           handle.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
           raise Error, "launch caller has exited" if IO.select([handle], nil, nil, 0)
           _pid, uid, gid = socket.getsockopt(Socket::SOL_SOCKET, SO_PEERCRED).data.unpack("i!3")
           if SessionPeer::DYNAMIC_UIDS.cover?(uid)
+            raise Error, "session cannot assign a host terminal binding" if terminal_id
             session = @sessions.authenticate(socket)
             selection = @configuration.resolve(project: project, role: role, session: session)
           else

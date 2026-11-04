@@ -6663,3 +6663,191 @@ index 673225a..546289d 100644
  const OMP_EXTENSION_INSTALL_NAME: &str = "herdr-omp-agent-state.ts";
  const OMP_EXTENSION_ASSET: &str = include_str!("assets/omp/herdr-agent-state.ts");
  const OMP_INTEGRATION_VERSION: u32 = 10;
+From dfb88ce05e26cf692d5cff000818550a6bfada85 Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 03:00:59 +0000
+Subject: [PATCH] fix: bind isolated launches to reserved terminal identity
+
+---
+ src/app/api/isolated_agents.rs       |  9 +++--
+ src/persist/restore.rs               | 49 ++++++++++++++++------------
+ src/platform/linux/session_launch.rs | 32 +++++++++++++-----
+ src/platform/mod.rs                  |  1 +
+ 4 files changed, 60 insertions(+), 31 deletions(-)
+
+diff --git a/src/app/api/isolated_agents.rs b/src/app/api/isolated_agents.rs
+index 1d0ff73..4baffdf 100644
+--- a/src/app/api/isolated_agents.rs
++++ b/src/app/api/isolated_agents.rs
+@@ -49,8 +49,13 @@ impl App {
+         let events = self.event_tx.clone();
+         let terminal_id = crate::terminal::TerminalId::alloc();
+         tokio::task::spawn_blocking(move || {
+-            let result =
+-                crate::platform::spawn_isolated_session(&params.project, &params.role, rows, cols);
++            let result = crate::platform::spawn_isolated_session(
++                &params.project,
++                &params.role,
++                rows,
++                cols,
++                terminal_id.as_str(),
++            );
+             let completion = IsolatedLaunchResult {
+                 terminal_id,
+                 id,
+diff --git a/src/persist/restore.rs b/src/persist/restore.rs
+index f362ce8..2b3ef86 100644
+--- a/src/persist/restore.rs
++++ b/src/persist/restore.rs
+@@ -516,27 +516,34 @@ fn restore_tab(
+ 
+         let cwd = saved_cwd;
+         if let Some(config) = saved_pane.and_then(|pane| pane.isolated_launch.clone()) {
++            let terminal_id = TerminalId::alloc();
+             let restored = if runtime_context.resume_agents_on_restore {
+-                crate::platform::spawn_isolated_session(&config.project, &config.role, rows, cols)
+-                    .and_then(|spawned| {
+-                        let configured_cwd = spawned
+-                            .directory
+-                            .clone()
+-                            .ok_or_else(|| std::io::Error::other("configured directory missing"))?;
+-                        let runtime = TerminalRuntime::from_isolated_session(
+-                            *id,
+-                            rows,
+-                            cols,
+-                            spawned,
+-                            runtime_context.scrollback_limit_bytes,
+-                            crate::terminal_theme::TerminalTheme::default(),
+-                            None,
+-                            runtime_context.events.clone(),
+-                            runtime_context.render_notify.clone(),
+-                            runtime_context.render_dirty.clone(),
+-                        )?;
+-                        Ok((configured_cwd, runtime))
+-                    })
++                crate::platform::spawn_isolated_session(
++                    &config.project,
++                    &config.role,
++                    rows,
++                    cols,
++                    terminal_id.as_str(),
++                )
++                .and_then(|spawned| {
++                    let configured_cwd = spawned
++                        .directory
++                        .clone()
++                        .ok_or_else(|| std::io::Error::other("configured directory missing"))?;
++                    let runtime = TerminalRuntime::from_isolated_session(
++                        *id,
++                        rows,
++                        cols,
++                        spawned,
++                        runtime_context.scrollback_limit_bytes,
++                        crate::terminal_theme::TerminalTheme::default(),
++                        None,
++                        runtime_context.events.clone(),
++                        runtime_context.render_notify.clone(),
++                        runtime_context.render_dirty.clone(),
++                    )?;
++                    Ok((configured_cwd, runtime))
++                })
+             } else {
+                 Err(std::io::Error::other(
+                     "isolated session restoration is disabled",
+@@ -544,7 +551,7 @@ fn restore_tab(
+             };
+             let terminal = match restored {
+                 Ok((configured_cwd, runtime)) => {
+-                    let mut terminal = TerminalState::new(TerminalId::alloc(), configured_cwd);
++                    let mut terminal = TerminalState::new(terminal_id, configured_cwd);
+                     terminal.isolated_launch = Some(config);
+                     if let Some(name) = saved_pane.and_then(|pane| pane.agent_name.clone()) {
+                         terminal.begin_managed_agent(
+diff --git a/src/platform/linux/session_launch.rs b/src/platform/linux/session_launch.rs
+index 064ab7d..021dda4 100644
+--- a/src/platform/linux/session_launch.rs
++++ b/src/platform/linux/session_launch.rs
+@@ -10,8 +10,22 @@ use std::time::Duration;
+ 
+ const ENDPOINT: &str = "/run/lab/ace-lab-auth.sock";
+ 
+-fn request(project: &str, role: &str, rows: u16, cols: u16) -> io::Result<Vec<u8>> {
+-    if project.is_empty()
++fn request(
++    project: &str,
++    role: &str,
++    rows: u16,
++    cols: u16,
++    terminal_id: &str,
++) -> io::Result<Vec<u8>> {
++    let valid_terminal = terminal_id.strip_prefix("term_").is_some_and(|value| {
++        !value.is_empty()
++            && value.len() <= 64
++            && value
++                .bytes()
++                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
++    });
++    if !valid_terminal
++        || project.is_empty()
+         || project.len() > 512
+         || project.chars().any(char::is_control)
+         || !matches!(
+@@ -24,7 +38,7 @@ fn request(project: &str, role: &str, rows: u16, cols: u16) -> io::Result<Vec<u8
+         return Err(io::Error::other("invalid configured session launch"));
+     }
+     let mut bytes = serde_json::to_vec(&serde_json::json!({
+-        "action": "launch", "project": project, "role": role, "rows": rows, "cols": cols
++        "action": "launch", "project": project, "role": role, "rows": rows, "cols": cols, "terminal_id": terminal_id
+     }))?;
+     bytes.push(b'\n');
+     Ok(bytes)
+@@ -35,8 +49,9 @@ pub(crate) fn spawn_isolated_session(
+     role: &str,
+     rows: u16,
+     cols: u16,
++    terminal_id: &str,
+ ) -> io::Result<SpawnedPty> {
+-    let request = request(project, role, rows, cols)?;
++    let request = request(project, role, rows, cols, terminal_id)?;
+     for path in ["/", "/run", "/run/lab"] {
+         let metadata = std::fs::symlink_metadata(path)?;
+         if !metadata.is_dir() || metadata.uid() != 0 || metadata.mode() & 0o022 != 0 {
+@@ -70,12 +85,12 @@ mod tests {
+     use super::*;
+     #[test]
+     fn configured_request_contains_no_command_or_identity_override() {
+-        let bytes = request("ace", "worker", 24, 80).unwrap();
++        let bytes = request("ace", "worker", 24, 80, "term_abcdef").unwrap();
+         assert_eq!(bytes.last(), Some(&b'\n'));
+         let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+         assert_eq!(
+             value,
+-            serde_json::json!({"action":"launch", "project":"ace", "role":"worker", "rows":24, "cols":80})
++            serde_json::json!({"action":"launch", "project":"ace", "role":"worker", "rows":24, "cols":80, "terminal_id":"term_abcdef"})
+         );
+     }
+     #[test]
+@@ -87,8 +102,9 @@ mod tests {
+             ("ace", "worker", 0, 80),
+             ("ace", "worker", 24, 0),
+         ] {
+-            assert!(request(project, role, rows, cols).is_err());
++            assert!(request(project, role, rows, cols, "term_abcdef").is_err());
+         }
+-        assert!(request(&"a".repeat(513), "worker", 24, 80).is_err());
++        assert!(request("ace", "worker", 24, 80, "w1:p1").is_err());
++        assert!(request(&"a".repeat(513), "worker", 24, 80, "term_abcdef").is_err());
+     }
+ }
+diff --git a/src/platform/mod.rs b/src/platform/mod.rs
+index 13b8aee..c9e3f73 100644
+--- a/src/platform/mod.rs
++++ b/src/platform/mod.rs
+@@ -15,6 +15,7 @@ pub(crate) fn spawn_isolated_session(
+     _role: &str,
+     _rows: u16,
+     _cols: u16,
++    _terminal_id: &str,
+ ) -> std::io::Result<crate::pty::backend::SpawnedPty> {
+     Err(std::io::Error::new(
+         std::io::ErrorKind::Unsupported,

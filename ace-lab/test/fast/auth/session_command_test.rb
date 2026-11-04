@@ -15,11 +15,12 @@ module Ace::Lab::Auth
       verified = []
       builder = SessionCommand.new(verify: ->(path, **options) { verified << path },
         extensions: -> { ["--no-extensions", "--extension", "/opt/ace/extensions/wake.js"] })
-      unit = builder.build(selection: selection, id: "a" * 16)
+      unit = builder.build(selection: selection, id: "a" * 16, terminal_id: "term_abcdef")
       argv = unit.argv
       assert_equal ["/opt/node/bin/node", "/opt/pi/cli.js", "--provider", "zai", "--model", "glm-5.3",
         "--append-system-prompt", "/opt/ace/worker.md", "--no-extensions", "--extension", "/opt/ace/extensions/wake.js"],
         argv.drop(argv.index("--") + 1)
+      assert_includes argv, "--setenv=ACE_LAB_TERMINAL_ID=term_abcdef"
       assert_includes argv, "--setenv=ACE_TOOLCHAIN=installed"
       assert_includes argv, "--setenv=PI_CODING_AGENT_DIR=/run/ace-auth-aaaaaaaaaaaaaaaa/pi"
       assert_includes verified, "/etc/lab/pi-auth.json"
