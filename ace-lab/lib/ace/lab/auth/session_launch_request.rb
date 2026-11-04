@@ -23,7 +23,7 @@ module Ace
         def call(socket, request:, invocation:, supervising:)
           @peer.with_selection(socket, project: request.fetch("project"), role: request.fetch("role"),
             terminal_id: request["terminal_id"]) do |selection, caller|
-            unit = @command.build(selection: selection, id: SecureRandom.hex(8), terminal_id: request["terminal_id"])
+            unit = @command.build(selection: selection, id: SecureRandom.hex(8), terminal_id: request["terminal_id"], cwd: request["cwd"])
             supervising.call
             run(socket, request, invocation, unit, selection, caller)
           end
@@ -53,7 +53,7 @@ module Ace
               master.write("start\n")
               stage = "handoff"
               @launcher.handoff(identity, terminal: master, channel: socket,
-                rows: request.fetch("rows"), cols: request.fetch("cols"), directory: selection.path)
+                rows: request.fetch("rows"), cols: request.fetch("cols"), directory: unit.directory)
               stage = "wait"
               stopped = await_exit(socket, identity, caller)
               stage = "stop"

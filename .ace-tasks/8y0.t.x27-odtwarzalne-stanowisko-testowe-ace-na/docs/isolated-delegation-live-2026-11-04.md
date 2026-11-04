@@ -193,3 +193,37 @@ Targeted lab lifecycle tests: 15 tests, 84 assertions, zero failures/errors,
 report `aa531c52-1a58-4f47-8dd5-baad5f4daf75`. Runtime package: 306 tests,
 1242 assertions, zero failures/errors, report
 `6fed36d4-f9c4-48df-a575-50c7fbbdae8e`. These remain component evidence.
+
+
+### Candidate93: healthy eyes and confirmed external stop
+
+Candidate92 exposed an incorrect flat slice-path assumption at identify.
+Systemd places ace-auth-sessions.slice below /ace.slice/ace-auth.slice; source
+`284ff315c573705e2c1694b17ad5d017acfb1166` now derives the exact child from
+the manager's verified slice ControlGroup. Targeted tests 15/84 passed
+(`316a3237-3c40-4bb2-b0a0-649e47adcf5c`) and independent review found no issue.
+Full lab tests before that narrow path correction: 995/4640, zero failures,
+16 platform skips (`ffeec5b4-ead1-426b-8346-299411cbc0ed`).
+
+Installed diagnostic runtime /opt/ace/diagnostic/utm93/gems contains:
+- ace-lab 0.14.2.pre.utm93, SHA256 ca9e5f0fe6afc26e7ad97fc247aad4ad0c75b98e1c05445f601323e1022e6583 (source284ff315c).
+- ace-runtime 0.4.2.pre.utm92, SHA256 dfd3b4fa9d88a3fdd280c3b5ec601c049f83d7b099c4c6a493986f81c0868da6 (source918837f8a).
+- ace-overseer 0.28.2.pre.utm92, SHA256 021b23635f70fed1c95da293b864922487b31ec7557c6cf0472ca228341ef29f (source918837f8a).
+Native89 and its previously recorded provenance remain selected.
+Owner recovery confirmed the eight historical leases revoked before clearing
+failed service state and normal IssuerInstaller activation. The local HITL
+fixture is installed at /lab/.ace/hitl/config.yml.
+
+Public installed start produced terminal term_65f6caf6637224, w1:p3,
+unit ace-auth-session-lab-overseer-363e7a4047f1625f.service. Actual Pi eyes
+at 05:31:57 UTC reported enabled, errors0, breaker null, observation1 and all
+six source classes healthy. Public repeated start reused the same terminal
+without another prompt, ready:false: the required completed first turn was
+not yet proved. No worker dispatch/full acceptance is claimed.
+
+The operator exported only Pi session records (not auth.json) to the private
+local evidence/coordinator93-session.tar.gz, then stopped that exact unit.
+Systemd reports session not-found/inactive, Result=success; the singleton
+issuer remains loaded/active, Result=success, invocation
+cf073c36c666484e82a8e4091961a5f3. This reproduces and resolves the external-stop
+failure from candidate89. No clean reset E2E acceptance has begun.

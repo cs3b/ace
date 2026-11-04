@@ -30,6 +30,17 @@ module Ace::Lab::Auth
       assert_equal 60, @sent.first.last.fetch(:timeout)
     end
 
+    def test_worktree_selector_is_validated_before_native_forwarding
+      @request["params"]["cwd"] = "/lab/ace/.ace-wt/task-1"
+      File.stub(:realpath, ->(path) { path }) do
+        File.stub(:directory?, true) { @delegate.call(@request, identity: @identity) }
+      end
+      assert_equal "/lab/ace/.ace-wt/task-1", @sent.first.first.dig("params", "cwd")
+      @request["params"]["cwd"] = "/lab/other/.ace-wt/task-1"
+      assert_raises(Error) { @delegate.call(@request, identity: @identity) }
+      assert_equal 1, @sent.length
+    end
+
     def test_host_grants_cannot_replace_original_project_or_role_authority
       @request["params"]["project"] = "other"
       assert_raises(Error) { @delegate.call(@request, identity: @identity) }

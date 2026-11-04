@@ -729,3 +729,40 @@ handle initial interactive readiness before the first prompt, and preserve
 uncertain-delivery idempotency. Session callers also need a narrowly scoped
 workspace/startup-observation surface; do not use unrestricted native sockets
 or have the E2E runner dispatch the work on the overseer's behalf.
+
+
+## Execution worktree selection
+
+The existing isolated launch accepts an optional cwd selector for worker,
+verifier and integrator roles. It can select the canonical configured project
+or one canonical directory directly under that project's .ace-wt; it cannot
+change the mounted project, role, executable, extensions or environment.
+The root endpoint validates the selector both for original-session delegation
+and the native launch. SessionEntry rechecks canonicality after the private
+project view is installed. ACE_LAB_PROJECT_ROOT continues to identify the
+canonical project for grants and lease authentication. Native terminal cwd
+and persisted cwd retain the actual execution directory through restoration.
+Overseer starts remain at their configured roots.
+
+Inside an isolated session, public ace-herdr dispatch uses this route, waits
+only for input acceptance, sends one commissioning prompt and returns the
+real immutable terminal identity. It does not run a shell or wait for worker
+completion. Existing name collisions are preserved for owner reconciliation,
+never reused for an unsolicited duplicate prompt. This contract is being
+implemented and is not yet a live acceptance claim.
+
+
+Execution-worktree source verification: native private commit
+b0be31ac215bd68934caae4bb17c3eb3dd0b6be0, tree
+ ef45fe7050b4273a969e1a627838115dab44d8db, packaged mail series SHA256
+a3098df70ee9095ce7838d25c7b6aa13979be5f39275076ffb285a2e754fc2ab.
+Replay produces the exact commit/tree. ARM64 `just test-one isolated` passes
+21 tests (4ff31f06-3cc4-432e-ac0a-5adc4c0b71f7), after updating prior schema/CLI
+negative cases which treated every cwd as an unsupported override. No runtime,
+uid, executable or principal override was admitted. Full ace-herdr passes
+631 tests/2610 assertions (54289cd2-8ac3-4d0f-bf2d-68be5b5bdff1).
+Public Dispatcher routing and workspace discovery now have coverage in addition
+to direct adapter tests; command build/preparation tests retain project authority
+while selecting the worktree. Targeted lab tests pass 55/296
+(df12fc13-cc5a-4dbe-a1f3-810eaa287d02). Installed native artifact worktree dispatch
+and task/report/watch adoption remain unverified.

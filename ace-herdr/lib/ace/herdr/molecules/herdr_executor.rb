@@ -72,9 +72,11 @@ module Ace
 
         # The protected host selects the runtime from project/role. Success
         # is process admission only; first-turn and eyes readiness are separate.
-        def agent_start_isolated(name:, workspace_id:, project:, role:)
-          run!([@binary, "agent", "start-isolated", name, "--workspace", workspace_id,
-            "--project", project, "--role", role])
+        def agent_start_isolated(name:, workspace_id:, project:, role:, cwd: nil)
+          args = [@binary, "agent", "start-isolated", name, "--workspace", workspace_id,
+            "--project", project, "--role", role]
+          args += ["--cwd", cwd] if cwd
+          run!(args)
         end
 
         # Submit a prompt to the agent in a pane (push delivery). herdr

@@ -12,6 +12,23 @@ module Ace::Lab::Auth
       @configuration = SessionConfiguration.new(loader: -> { @document })
     end
 
+    def test_execution_directory_cannot_widen_project_or_relocate_overseer
+      selected = @configuration.resolve(project: "ace", role: "worker", principal: "mo")
+      assert_equal "/lab/ace", selected.execution_directory
+      worktree = "/lab/ace/.ace-wt/task-1"
+      File.stub(:realpath, ->(path) { path }) do
+        File.stub(:directory?, true) { assert_equal worktree, selected.execution_directory(worktree) }
+      end
+      ["/lab/other", "/lab/ace/.ace-wt/../other", "/lab/ace/.ace-wt/.private/deep", "/etc", 4].each do |path|
+        assert_raises(Error) { selected.execution_directory(path) }
+      end
+      File.stub(:realpath, "/lab/other") do
+        assert_raises(Error) { selected.execution_directory(worktree) }
+      end
+      overseer = SessionConfiguration::Selection.new(**selected.to_h.merge(role: "project-overseer"))
+      assert_raises(Error) { overseer.execution_directory(worktree) }
+    end
+
     def test_resolves_from_existing_host_manifest
       selected = @configuration.resolve(project: "ace", role: "worker", principal: "mo")
       assert_equal "/lab/ace", selected.path

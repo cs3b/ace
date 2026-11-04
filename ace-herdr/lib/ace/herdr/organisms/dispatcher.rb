@@ -3,6 +3,7 @@
 require "shellwords"
 require "ace/support/cli/toolchain"
 require "ace/hitl/contract"
+require_relative "isolated_dispatcher"
 
 module Ace
   module Herdr
@@ -41,12 +42,17 @@ module Ace
         # @return [Models::DispatchOutcome]
         # @raise [TargetResolutionError] workspace/pane cannot be resolved
         # @raise [ExecutorError] herdr command failures
-        def dispatch(label:, prompt:, kind: nil, workspace_id: nil, pane: nil, cwd: nil)
+        def dispatch(label:, prompt:, kind: nil, workspace_id: nil, pane: nil, cwd: nil, role: nil)
           kind ||= @default_agent_kind
           tab_created = false
 
           workspace_id = resolve_workspace(workspace_id)
           validate_token!(workspace_id, "workspace")
+          if ENV["ACE_LAB_SESSION"] == "1"
+            return IsolatedDispatcher.new(executor: @executor).dispatch(label: label, prompt: prompt,
+              kind: kind, workspace_id: workspace_id, pane: pane, cwd: cwd, role: role || "worker")
+          end
+          raise ValidationError, "--role requires an isolated lab session" if role
           unless pane
             pane = create_tab(workspace_id, label, cwd)
             tab_created = true

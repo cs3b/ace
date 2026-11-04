@@ -28,6 +28,22 @@ module Ace::Lab::Auth
       refute argv.any? { |arg| arg.include?("pi-auth.json") || arg.include?("BUNDLE_") }
     end
 
+    def test_worktree_selection_survives_command_build_and_preparation
+      builder = SessionCommand.new(verify: ->(*) {}, extensions: -> { [] })
+      cwd = "/lab/ace/.ace-wt/task-1"
+      File.stub(:realpath, ->(path) { path }) do
+        File.stub(:directory?, true) do
+          unit = builder.build(selection: selection, id: "a" * 16, cwd: cwd)
+          prepared = unit.with_preparation_entry(ruby: "/opt/ruby", entry: "/opt/entry")
+          assert_equal cwd, prepared.directory
+          assert_includes prepared.argv, "--setenv=ACE_LAB_PROJECT_ROOT=/lab/ace"
+          args = prepared.argv.drop(prepared.argv.index("--") + 1)
+          assert_equal ["/opt/ruby", "/opt/entry", "--directory", cwd, "--"], args.take(5)
+        end
+      end
+      assert_raises(Error) { builder.build(selection: selection, id: "a" * 16, cwd: "/lab/other") }
+    end
+
     def test_protocol_resolution_uses_installed_nav_outside_project_with_clean_environment
       observed = nil
       status = Object.new

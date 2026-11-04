@@ -18,7 +18,7 @@ module Ace
           @verify, @extensions, @runner = verify || method(:verify_path!), extensions, runner
         end
 
-        def build(selection:, id:, terminal_id: nil)
+        def build(selection:, id:, terminal_id: nil, cwd: nil)
           unless selection.is_a?(SessionConfiguration::Selection) && id.is_a?(String) && id.match?(/\A[0-9a-f]{16}\z/)
             raise ArgumentError, "configured session selection required"
           end
@@ -37,7 +37,8 @@ module Ace
             "LANG" => "C.UTF-8"}
           instructions = resolve_instructions(selection.instructions, selection.gem_home, environment)
           @verify.call(instructions, directory: false)
-          SessionUnit.new(role: selection.role, id: id, directory: selection.path, environment: environment, terminal_id: terminal_id,
+          SessionUnit.new(role: selection.role, id: id, directory: selection.execution_directory(cwd),
+            project_root: selection.path, environment: environment, terminal_id: terminal_id,
             command: [runtime.fetch("node"), runtime.fetch("pi"), "--provider", runtime.fetch("provider"),
               "--model", runtime.fetch("model"), "--append-system-prompt", instructions, *@extensions.call])
         rescue KeyError, Ace::Runtime::Error, Ace::Herdr::Error, SystemCallError, Timeout::Error,

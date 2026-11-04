@@ -70,6 +70,23 @@ by the number of deliveries.
 
 ## Dispatch, send, capture, wait, close
 
+In an isolated lab session (`ACE_LAB_SESSION=1`), `dispatch` uses the protected
+installed Pi launcher. Choose a configured project root or its task worktree
+with `--cwd`; `--role` selects `worker` (default), `verifier`, or `integrator`.
+The host still chooses the executable, extensions and credentials. For example:
+
+```sh
+ace-herdr dispatch --label review-task --role verifier --cwd /lab/ace/.ace-wt/task-1 --prompt-file commission.md
+```
+
+This returns the actual terminal identity after submitting the commission.
+It waits for input readiness, never for completion. Record that identity with
+the assignment and end the supervisor turn; observation handles completion.
+An existing name is a reconciliation request, not permission to repeat the
+prompt. Existing shell panes and alternative agent kinds are refused in this
+mode. `--cwd` does not widen the session's project mount or lease grants.
+
+
 ```bash
 ace-herdr dispatch --label t.123 --kind pi --prompt-file prompt.md
 ace-herdr dispatch --label review --pane p7 --cwd /Users/me/project

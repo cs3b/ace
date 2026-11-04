@@ -9,7 +9,21 @@ module Ace
       # Select launch data from the existing deployment manifest, never from
       # a project checkout or agent-supplied executable/environment fields.
       class SessionConfiguration
-        Selection = Data.define(:project, :path, :role, :instructions, :gem_home, :runtime)
+        Selection = Data.define(:project, :path, :role, :instructions, :gem_home, :runtime) do
+          # This chooses a working directory, never a wider mount or grant.
+          # The entry barrier rechecks canonicality inside the prepared view.
+          def execution_directory(cwd = nil)
+            return path if cwd.nil? || cwd == path
+            unless %w[worker verifier integrator].include?(role) && cwd.is_a?(String) &&
+                cwd.match?(%r{\A#{Regexp.escape(path)}/\.ace-wt/[a-zA-Z0-9][a-zA-Z0-9_.-]*\z}) &&
+                File.expand_path(cwd) == cwd && File.realpath(cwd) == cwd && File.directory?(cwd)
+              raise Error, "execution directory must be a canonical project worktree"
+            end
+            cwd
+          rescue SystemCallError, ArgumentError
+            raise Error, "execution worktree is unavailable"
+          end
+        end
 
         def initialize(loader: -> { Molecules::InstallManifestLoader.load })
           @loader = loader

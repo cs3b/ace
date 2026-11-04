@@ -7381,3 +7381,361 @@ index 8c3d4b8..ef94112 100644
              if self.app.expire_due_metadata(Instant::now()) {
                  needs_render = true;
                  needs_full_render = true;
+From b0be31ac215bd68934caae4bb17c3eb3dd0b6be0 Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 05:43:33 +0000
+Subject: [PATCH] feat: retain scoped execution directories for isolated
+ workers
+
+---
+ src/api/schema/agents.rs              |  2 +
+ src/api/schema/tests.rs               |  5 ++-
+ src/app/api/isolated_agents.rs        |  2 +
+ src/cli/agent.rs                      |  5 ++-
+ src/persist/restore.rs                | 57 +++++++++++++++------------
+ src/platform/linux/session_handoff.rs | 35 +++++++++++++++-
+ src/platform/linux/session_launch.rs  | 41 +++++++++++++++----
+ src/platform/mod.rs                   |  1 +
+ src/server/headless/tests/mod.rs      |  1 +
+ tests/cli/agents.rs                   |  3 +-
+ 10 files changed, 115 insertions(+), 37 deletions(-)
+
+diff --git a/src/api/schema/agents.rs b/src/api/schema/agents.rs
+index 2410447c..f362f4dd 100644
+--- a/src/api/schema/agents.rs
++++ b/src/api/schema/agents.rs
+@@ -166,6 +166,8 @@ pub enum AgentViewSortOrder {
+ #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+ #[serde(deny_unknown_fields)]
+ pub struct AgentStartIsolatedParams {
++    #[serde(default, skip_serializing_if = "Option::is_none")]
++    pub cwd: Option<String>,
+     pub name: String,
+     pub workspace_id: String,
+     pub project: String,
+diff --git a/src/api/schema/tests.rs b/src/api/schema/tests.rs
+index af5cb8dc..d967277b 100644
+--- a/src/api/schema/tests.rs
++++ b/src/api/schema/tests.rs
+@@ -1526,7 +1526,10 @@ fn isolated_start_is_a_distinct_closed_configuration_request() {
+     let request: Request = serde_json::from_value(value.clone()).unwrap();
+     assert!(matches!(request.method, Method::AgentStartIsolated(_)));
+     assert_eq!(serde_json::to_value(request).unwrap(), value);
+-    for field in ["args", "cwd", "uid", "runtime", "principal"] {
++    let mut scoped = value.clone();
++    scoped["params"]["cwd"] = serde_json::json!("/lab/ace/.ace-wt/task-1");
++    assert!(serde_json::from_value::<Request>(scoped).is_ok());
++    for field in ["args", "uid", "runtime", "principal"] {
+         let mut invalid = value.clone();
+         invalid["params"][field] = serde_json::json!("override");
+         assert!(serde_json::from_value::<Request>(invalid).is_err());
+diff --git a/src/app/api/isolated_agents.rs b/src/app/api/isolated_agents.rs
+index 4baffdfe..b81359c3 100644
+--- a/src/app/api/isolated_agents.rs
++++ b/src/app/api/isolated_agents.rs
+@@ -52,6 +52,7 @@ impl App {
+             let result = crate::platform::spawn_isolated_session(
+                 &params.project,
+                 &params.role,
++                params.cwd.as_deref(),
+                 rows,
+                 cols,
+                 terminal_id.as_str(),
+@@ -179,6 +180,7 @@ mod tests {
+     }
+     fn params() -> AgentStartIsolatedParams {
+         AgentStartIsolatedParams {
++            cwd: None,
+             name: "worker".into(),
+             workspace_id: "missing".into(),
+             project: "ace".into(),
+diff --git a/src/cli/agent.rs b/src/cli/agent.rs
+index 7c6f7d81..865a6d72 100644
+--- a/src/cli/agent.rs
++++ b/src/cli/agent.rs
+@@ -290,7 +290,7 @@ fn matched_rule_region_preview<'a>(
+ 
+ // Admission starts a protected session; it does not claim first-turn/eyes readiness.
+ fn agent_start_isolated(args: &[String]) -> std::io::Result<i32> {
+-    let usage = "usage: herdr agent start-isolated <name> --workspace ID --project ID --role ROLE";
++    let usage = "usage: herdr agent start-isolated <name> --workspace ID --project ID --role ROLE [--cwd PROJECT_WORKTREE]";
+     let Some(name) = args
+         .first()
+         .filter(|name| !name.starts_with('-') && !name.is_empty())
+@@ -301,12 +301,14 @@ fn agent_start_isolated(args: &[String]) -> std::io::Result<i32> {
+     let mut workspace = None;
+     let mut project = None;
+     let mut role = None;
++    let mut cwd = None;
+     let mut index = 1;
+     while index < args.len() {
+         let target = match args[index].as_str() {
+             "--workspace" => &mut workspace,
+             "--project" => &mut project,
+             "--role" => &mut role,
++            "--cwd" => &mut cwd,
+             _ => {
+                 eprintln!("{usage}");
+                 return Ok(2);
+@@ -332,6 +334,7 @@ fn agent_start_isolated(args: &[String]) -> std::io::Result<i32> {
+     super::print_response(&super::send_request(&Request {
+         id: "cli:agent:start-isolated".into(),
+         method: Method::AgentStartIsolated(AgentStartIsolatedParams {
++            cwd,
+             name: name.clone(),
+             workspace_id,
+             project,
+diff --git a/src/persist/restore.rs b/src/persist/restore.rs
+index 2b3ef862..7df40501 100644
+--- a/src/persist/restore.rs
++++ b/src/persist/restore.rs
+@@ -518,32 +518,37 @@ fn restore_tab(
+         if let Some(config) = saved_pane.and_then(|pane| pane.isolated_launch.clone()) {
+             let terminal_id = TerminalId::alloc();
+             let restored = if runtime_context.resume_agents_on_restore {
+-                crate::platform::spawn_isolated_session(
+-                    &config.project,
+-                    &config.role,
+-                    rows,
+-                    cols,
+-                    terminal_id.as_str(),
+-                )
+-                .and_then(|spawned| {
+-                    let configured_cwd = spawned
+-                        .directory
+-                        .clone()
+-                        .ok_or_else(|| std::io::Error::other("configured directory missing"))?;
+-                    let runtime = TerminalRuntime::from_isolated_session(
+-                        *id,
+-                        rows,
+-                        cols,
+-                        spawned,
+-                        runtime_context.scrollback_limit_bytes,
+-                        crate::terminal_theme::TerminalTheme::default(),
+-                        None,
+-                        runtime_context.events.clone(),
+-                        runtime_context.render_notify.clone(),
+-                        runtime_context.render_dirty.clone(),
+-                    )?;
+-                    Ok((configured_cwd, runtime))
+-                })
++                cwd.to_str()
++                    .ok_or_else(|| std::io::Error::other("saved execution directory is not UTF-8"))
++                    .and_then(|directory| {
++                        crate::platform::spawn_isolated_session(
++                            &config.project,
++                            &config.role,
++                            Some(directory),
++                            rows,
++                            cols,
++                            terminal_id.as_str(),
++                        )
++                    })
++                    .and_then(|spawned| {
++                        let configured_cwd = spawned
++                            .directory
++                            .clone()
++                            .ok_or_else(|| std::io::Error::other("configured directory missing"))?;
++                        let runtime = TerminalRuntime::from_isolated_session(
++                            *id,
++                            rows,
++                            cols,
++                            spawned,
++                            runtime_context.scrollback_limit_bytes,
++                            crate::terminal_theme::TerminalTheme::default(),
++                            None,
++                            runtime_context.events.clone(),
++                            runtime_context.render_notify.clone(),
++                            runtime_context.render_dirty.clone(),
++                        )?;
++                        Ok((configured_cwd, runtime))
++                    })
+             } else {
+                 Err(std::io::Error::other(
+                     "isolated session restoration is disabled",
+diff --git a/src/platform/linux/session_handoff.rs b/src/platform/linux/session_handoff.rs
+index dd88fbfa..6f25878a 100644
+--- a/src/platform/linux/session_handoff.rs
++++ b/src/platform/linux/session_handoff.rs
+@@ -45,7 +45,22 @@ fn valid_directory(directory: &std::path::Path, unit: &str) -> bool {
+                         .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+             });
+     }
+-    directory.is_absolute() && directory.parent() == Some(std::path::Path::new("/lab"))
++    let Some(path) = directory.to_str() else {
++        return false;
++    };
++    let parts: Vec<_> = path.split('/').collect();
++    let token = |part: &str| {
++        !part.is_empty()
++            && part != "."
++            && part != ".."
++            && part
++                .bytes()
++                .all(|b| b.is_ascii_alphanumeric() || b"_.-".contains(&b))
++    };
++    (parts.len() == 3 || (parts.len() == 5 && parts[3] == ".ace-wt" && token(parts[4])))
++        && parts[0].is_empty()
++        && parts[1] == "lab"
++        && token(parts[2])
+ }
+ 
+ pub(crate) fn receive(mut stream: UnixStream) -> io::Result<SessionHandoff> {
+@@ -165,6 +180,24 @@ fn receive_header(stream: &UnixStream) -> io::Result<([u8; 4], Vec<OwnedFd>)> {
+ 
+ #[cfg(test)]
+ mod tests {
++    #[test]
++    fn isolated_worktree_directory_rejects_traversal_and_foreign_roots() {
++        use std::path::Path;
++        let unit = "ace-auth-session-worker-1234567890abcdef.service";
++        assert!(super::valid_directory(
++            Path::new("/lab/ace/.ace-wt/task-1"),
++            unit
++        ));
++        for path in [
++            "/lab/ace/.ace-wt/..",
++            "/lab/ace/../other",
++            "/tmp/ace",
++            "/lab/ace/.ace-wt/a/b",
++            "/lab//.ace-wt/a",
++        ] {
++            assert!(!super::valid_directory(Path::new(path), unit), "{path}");
++        }
++    }
+     #[test]
+     fn isolated_coordinator_directory_requires_exact_lab_unit_role() {
+         use std::path::Path;
+diff --git a/src/platform/linux/session_launch.rs b/src/platform/linux/session_launch.rs
+index 021dda46..46e63482 100644
+--- a/src/platform/linux/session_launch.rs
++++ b/src/platform/linux/session_launch.rs
+@@ -13,6 +13,7 @@ const ENDPOINT: &str = "/run/lab/ace-lab-auth.sock";
+ fn request(
+     project: &str,
+     role: &str,
++    cwd: Option<&str>,
+     rows: u16,
+     cols: u16,
+     terminal_id: &str,
+@@ -37,9 +38,18 @@ fn request(
+     {
+         return Err(io::Error::other("invalid configured session launch"));
+     }
+-    let mut bytes = serde_json::to_vec(&serde_json::json!({
++    if cwd.is_some_and(|path| {
++        path.is_empty() || path.len() > 4096 || path.chars().any(char::is_control)
++    }) {
++        return Err(io::Error::other("invalid configured execution directory"));
++    }
++    let mut value = serde_json::json!({
+         "action": "launch", "project": project, "role": role, "rows": rows, "cols": cols, "terminal_id": terminal_id
+-    }))?;
++    });
++    if let Some(path) = cwd {
++        value["cwd"] = path.into();
++    }
++    let mut bytes = serde_json::to_vec(&value)?;
+     bytes.push(b'\n');
+     Ok(bytes)
+ }
+@@ -47,11 +57,12 @@ fn request(
+ pub(crate) fn spawn_isolated_session(
+     project: &str,
+     role: &str,
++    cwd: Option<&str>,
+     rows: u16,
+     cols: u16,
+     terminal_id: &str,
+ ) -> io::Result<SpawnedPty> {
+-    let request = request(project, role, rows, cols, terminal_id)?;
++    let request = request(project, role, cwd, rows, cols, terminal_id)?;
+     for path in ["/", "/run", "/run/lab"] {
+         let metadata = std::fs::symlink_metadata(path)?;
+         if !metadata.is_dir() || metadata.uid() != 0 || metadata.mode() & 0o022 != 0 {
+@@ -85,7 +96,7 @@ mod tests {
+     use super::*;
+     #[test]
+     fn configured_request_contains_no_command_or_identity_override() {
+-        let bytes = request("ace", "worker", 24, 80, "term_abcdef").unwrap();
++        let bytes = request("ace", "worker", None, 24, 80, "term_abcdef").unwrap();
+         assert_eq!(bytes.last(), Some(&b'\n'));
+         let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+         assert_eq!(
+@@ -94,6 +105,22 @@ mod tests {
+         );
+     }
+     #[test]
++    fn isolated_execution_directory_is_a_selector_not_a_command_override() {
++        let bytes = request(
++            "ace",
++            "worker",
++            Some("/lab/ace/.ace-wt/task-1"),
++            24,
++            80,
++            "term_abcdef",
++        )
++        .unwrap();
++        let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
++        assert_eq!(value["cwd"], "/lab/ace/.ace-wt/task-1");
++        assert!(value.get("argv").is_none());
++        assert!(request("ace", "worker", Some("/lab/ace\n"), 24, 80, "term_abcdef").is_err());
++    }
++    #[test]
+     fn invalid_request_is_rejected_before_connecting() {
+         for (project, role, rows, cols) in [
+             ("", "worker", 24, 80),
+@@ -102,9 +129,9 @@ mod tests {
+             ("ace", "worker", 0, 80),
+             ("ace", "worker", 24, 0),
+         ] {
+-            assert!(request(project, role, rows, cols, "term_abcdef").is_err());
++            assert!(request(project, role, None, rows, cols, "term_abcdef").is_err());
+         }
+-        assert!(request("ace", "worker", 24, 80, "w1:p1").is_err());
+-        assert!(request(&"a".repeat(513), "worker", 24, 80, "term_abcdef").is_err());
++        assert!(request("ace", "worker", None, 24, 80, "w1:p1").is_err());
++        assert!(request(&"a".repeat(513), "worker", None, 24, 80, "term_abcdef").is_err());
+     }
+ }
+diff --git a/src/platform/mod.rs b/src/platform/mod.rs
+index c9e3f739..7834a2b6 100644
+--- a/src/platform/mod.rs
++++ b/src/platform/mod.rs
+@@ -13,6 +13,7 @@ pub(crate) fn supports_isolated_sessions() -> bool {
+ pub(crate) fn spawn_isolated_session(
+     _project: &str,
+     _role: &str,
++    _cwd: Option<&str>,
+     _rows: u16,
+     _cols: u16,
+     _terminal_id: &str,
+diff --git a/src/server/headless/tests/mod.rs b/src/server/headless/tests/mod.rs
+index 77ca94f6..20175865 100644
+--- a/src/server/headless/tests/mod.rs
++++ b/src/server/headless/tests/mod.rs
+@@ -7851,6 +7851,7 @@ async fn headless_isolated_start_reaches_deferred_dispatcher() {
+             id: "isolated-dispatch".into(),
+             method: api::schema::Method::AgentStartIsolated(
+                 api::schema::AgentStartIsolatedParams {
++                    cwd: None,
+                     name: "worker".into(),
+                     workspace_id: "999999".into(),
+                     project: "ace".into(),
+diff --git a/tests/cli/agents.rs b/tests/cli/agents.rs
+index ce2202e2..f73327cb 100644
+--- a/tests/cli/agents.rs
++++ b/tests/cli/agents.rs
+@@ -1479,7 +1479,8 @@ fn isolated_start_cli_rejects_runtime_overrides_and_duplicate_selection() {
+     for extra in [
+         vec!["--", "sh"],
+         vec!["--role", "integrator"],
+-        vec!["--cwd", "/tmp"],
++        vec!["--command", "sh"],
++        vec!["--cwd", "/lab/ace", "--cwd", "/lab/ace"],
+     ] {
+         let mut args = vec![
+             "agent",
+-- 
+2.54.0 (Apple Git-157)
+

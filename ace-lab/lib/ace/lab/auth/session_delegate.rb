@@ -18,7 +18,9 @@ module Ace
           unless request.is_a?(Hash) && request.keys.sort == %w[id method params] && request["method"] == METHOD &&
               request["id"].is_a?(String) && request["id"].bytesize.between?(1, 512) &&
               !request["id"].match?(/[[:cntrl:]]/) && params.is_a?(Hash) &&
-              params.keys.sort == %w[name project role workspace_id] &&
+              (params.keys - %w[name project role workspace_id cwd]).empty? &&
+              (%w[name project role workspace_id] - params.keys).empty? &&
+              (!params.key?("cwd") || (params["cwd"].is_a?(String) && params["cwd"].bytesize.between?(1, 4096) && !params["cwd"].match?(/[[:cntrl:]]/))) &&
               params["name"].is_a?(String) && params["name"].match?(/\A[a-z][a-z0-9_-]{0,31}\z/) &&
               %w[project workspace_id].all? { |key| params[key].is_a?(String) && params[key].match?(/\A[a-zA-Z0-9_.:-]{1,128}\z/) } &&
               SessionUnit::ROLES.include?(params["role"])
@@ -36,6 +38,7 @@ module Ace
           message = {"id" => request.fetch("id"), "method" => METHOD, "params" => {
             "name" => params.fetch("name"), "workspace_id" => params.fetch("workspace_id"),
             "project" => selection.project, "role" => selection.role}}
+          message["params"]["cwd"] = selection.execution_directory(params["cwd"]) if params.key?("cwd")
           @transport.call(message, identity: identity, timeout: 60)
         end
       end
