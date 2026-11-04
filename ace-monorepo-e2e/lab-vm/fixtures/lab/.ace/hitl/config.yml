@@ -1,0 +1,10 @@
+hitl:
+  machine: utm-e2e
+  default_recipient: captain
+  recipients:
+    overseer:
+      machine: utm-e2e
+      folder: .ace-local/hitl
+    captain:
+      machine: utm-e2e
+      folder: .ace-local/hitl
