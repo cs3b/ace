@@ -220,3 +220,26 @@ review passed with no actionable findings. Tests include actual flock exclusion,
 stable inode reuse, separate invocation keys, a dead-session recheck while the
 lock is held, and exact cleanup selection. The native close endpoint and a live
 issuance/close race remain unverified; this does not claim full-cycle acceptance.
+
+## Configured launch dispatch in the singleton issuer
+
+The issuer connection now accepts a closed `launch` request containing only
+`project`, `role`, `rows`, and `cols` (plus `action`). Host accounts are resolved
+from SO_PEERCRED with a live SO_PEERPIDFD; DynamicUser callers must pass the
+existing SessionPeer authentication and SessionConfiguration delegation policy.
+A caller cannot supply argv, environment, UID, runtime paths or principal.
+
+SessionLaunchRequest owns a PTY and the systemd transport. It selects the
+protected Pi command, acknowledges issuer supervision, starts the gated unit,
+prepares credentials and project mounts, releases the barrier and sends the
+existing framed handoff. Natural exit, authenticated stop, caller exit and
+channel loss all require whole-unit stop followed by existing-store session
+lease cleanup before a confirmed terminal outcome. A lost client after
+confirmed cleanup is a local refusal, not an issuer-fatal cleanup failure.
+Independent review found and closed that distinction; a regression covers it.
+
+Verification: targeted issuer/launch/peer tests 27/103; complete ace-lab suite
+927 tests, 4230 assertions, zero failures/errors, 13 skips. These tests are
+not evidence of native pane integration or actual Pi launch. The native
+client/backend/pane route, scoped session communication, first-turn/eyes
+readiness and installed configured endpoint probe remain outstanding.

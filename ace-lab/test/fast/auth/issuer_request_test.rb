@@ -70,6 +70,34 @@ module Ace
           assert_equal :refused, thread.value
         end
 
+        def test_launch_dispatch_requires_closed_schema_and_supervision_without_using_lease_identity
+          invoked = []
+          launch = Object.new
+          launch.define_singleton_method(:call) do |_socket, **args|
+            invoked << args
+            :completed
+          end
+          runner = IssuerRequest.new(authenticate: ->(*) { raise "lease authentication must not select host launches" }, launch: launch)
+          request = {"action" => "launch", "project" => "ace", "role" => "worker", "rows" => 24, "cols" => 80}
+          @client.puts JSON.generate(request)
+          assert_equal :completed, runner.call(@server, invocation: "a" * 32, supervising: -> { true })
+          assert_equal request, invoked.fetch(0).fetch(:request)
+          assert_equal "a" * 32, invoked.fetch(0).fetch(:invocation)
+        end
+
+        def test_launch_refuses_arbitrary_runtime_identity_and_dimensions
+          [{"argv" => ["/bin/sh"]}, {"uid" => 0}, {"rows" => 0}, {"cols" => 65_536}, {"role" => "root"}].each do |extra|
+            server, client = UNIXSocket.pair
+            client.puts JSON.generate({"action" => "launch", "project" => "ace", "role" => "worker", "rows" => 24, "cols" => 80}.merge(extra))
+            runner = IssuerRequest.new(authenticate: ->(*) { raise "invalid request reached authentication" })
+            assert_equal :refused, runner.call(server, invocation: "a" * 32, supervising: -> { true })
+            refute JSON.parse(client.gets).fetch("ok")
+          ensure
+            server&.close unless server&.closed?
+            client&.close unless client&.closed?
+          end
+        end
+
         def test_unknown_issuance_failure_stops_issuer_even_without_a_returned_lease
           @service.define_singleton_method(:request) { |**| raise UnresolvedIssuanceError, "recovery required" }
           thread = Thread.new { @runner.call(@server, invocation: "a" * 32, supervising: -> { true }) }

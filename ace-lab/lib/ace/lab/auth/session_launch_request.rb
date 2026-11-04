@@ -1,0 +1,134 @@
+# frozen_string_literal: true
+
+require "pty"
+require "io/console"
+require "securerandom"
+require_relative "session_launch_peer"
+require_relative "session_command"
+require_relative "session_preparation"
+require_relative "session_project_mount"
+
+module Ace
+  module Lab
+    module Auth
+      # Runs in one supervised issuer child. It owns the unit, PTY and
+      # lifecycle channel until whole-unit stop and lease cleanup complete.
+      class SessionLaunchRequest
+        def initialize(peer: SessionLaunchPeer.new, command: SessionCommand.new,
+          launcher: SessionLauncher.new, preparation: SessionPreparation.new,
+          mount: SessionProjectMount.new, service: -> { Service.new })
+          @peer, @command, @launcher, @preparation, @mount, @service = peer, command, launcher, preparation, mount, service
+        end
+
+        def call(socket, request:, invocation:, supervising:)
+          @peer.with_selection(socket, project: request.fetch("project"), role: request.fetch("role")) do |selection, caller|
+            unit = @command.build(selection: selection, id: SecureRandom.hex(8))
+            supervising.call
+            run(socket, request, invocation, unit, selection, caller)
+          end
+        end
+
+        private
+
+        def run(socket, request, invocation, unit, selection, caller)
+          launched = identity = nil
+          contained = cleaned = false
+          PTY.open do |master, slave|
+            slave.winsize = [request.fetch("rows"), request.fetch("cols")]
+            slave.echo = false
+            begin
+              launched = @launcher.start(unit: unit, terminal: slave)
+              identity = identify(launched)
+              @preparation.call(identity: identity, selection: selection)
+              @mount.call(identity: identity, project: selection.path)
+              raise Error, "launch caller exited during preparation" if IO.select([caller], nil, nil, 0)
+              # Release only after all private mounts and credentials exist.
+              master.write("start\n")
+              @launcher.handoff(identity, terminal: master, channel: socket,
+                rows: request.fetch("rows"), cols: request.fetch("cols"))
+              stopped = await_exit(socket, identity, caller)
+              @launcher.stop(identity)
+              contained = true
+              result = reap(launched.transport_pid)
+              launched = nil
+              @service.call.revoke_session(issuer_invocation: invocation, unit: identity.unit,
+                invocation: identity.invocation_id)
+              cleaned = true
+              exit_code = stopped ? 143 : result.exitstatus || 128 + result.termsig.to_i
+              wire = Ace::Runtime::Molecules::ProtectedSocket
+              wire.write(socket, {"unit" => identity.unit, "invocation" => identity.invocation_id,
+                "exit_code" => [exit_code, 255].min, "cleanup_confirmed" => true}, deadline: wire.deadline, limit: 1024)
+              :completed
+            ensure
+              # Failure after spawn must either prove containment or fail the
+              # handler. IssuerServer then stops admission; BindsTo contains
+              # all session units before issuer recovery runs.
+              if identity && !contained
+                @launcher.stop(identity)
+                contained = true
+              end
+              if identity && contained && !cleaned
+                @service.call.revoke_session(issuer_invocation: invocation, unit: identity.unit,
+                  invocation: identity.invocation_id)
+                cleaned = true
+              end
+              reap(launched.transport_pid) if launched && contained
+              identity&.pidfd&.close
+              raise Error, "session launch containment is unconfirmed" if launched && !contained
+            end
+          end
+        rescue StandardError
+          # A lost terminal/client must not kill unrelated sessions once
+          # this unit and its grants are confirmed closed.
+          contained && cleaned ? :refused : :cleanup_failed
+        end
+
+        def identify(launch)
+          deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 10
+          loop do
+            begin
+              return @launcher.identify(launch)
+            rescue Error
+              raise if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+              sleep 0.05
+            end
+          end
+        end
+
+        def reap(pid)
+          deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 15
+          loop do
+            result = Process.waitpid2(pid, Process::WNOHANG)
+            return result.last if result
+            raise Error, "session transport termination is unconfirmed" if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+            sleep 0.02
+          end
+        end
+
+        def await_exit(socket, identity, caller)
+          pending = +""
+          deadline = nil
+          loop do
+            timeout = deadline && deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+            raise Error, "session control request deadline expired" if timeout && !timeout.positive?
+            ready = IO.select([identity.pidfd, caller, socket], nil, nil, timeout)
+            raise Error, "session control request deadline expired" unless ready
+            return false if ready.first.include?(identity.pidfd)
+            return true if ready.first.include?(caller)
+            bytes = socket.read_nonblock(1025, exception: false)
+            return true if bytes.nil?
+            next if bytes == :wait_readable
+            deadline ||= Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+            pending << bytes
+            raise Error, "session control request exceeds limit" if pending.bytesize > 1024
+            next unless pending.include?("\n")
+            value = JSON.parse(pending, create_additions: false, allow_duplicate_key: false, max_nesting: 2)
+            expected = {"action" => "stop", "unit" => identity.unit, "invocation" => identity.invocation_id}
+            raise Error, "session control identity differs" unless value == expected && pending.end_with?("\n")
+            return true
+          end
+        end
+      end
+    end
+  end
+end

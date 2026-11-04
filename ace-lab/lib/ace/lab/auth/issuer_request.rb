@@ -7,6 +7,7 @@ require "ace/lab"
 require_relative "../auth"
 require_relative "session_peer"
 require_relative "session_lifetime"
+require_relative "session_launch_request"
 
 module Ace
   module Lab
@@ -20,11 +21,12 @@ module Ace
         REQUIRED = %w[action profile role task assignment repos].freeze
         PUBLIC_LEASE_FIELDS = %w[id profile role task assignment repos use_until provider_expiry state_detail].freeze
 
-        def initialize(authenticate: ->(socket) { SessionPeer.new.authenticate(socket) },
+        def initialize(authenticate: ->(socket) { SessionPeer.new.authenticate(socket) }, launch: SessionLaunchRequest.new,
           service_factory: ->(identity, invocation) {
             Service.new(session: identity, issuer_invocation: invocation, supervised: true)
           })
           @authenticate, @service_factory = authenticate, service_factory
+          @launch = launch
         end
 
         def call(socket, invocation:, allow_request: true, supervising: nil)
@@ -32,8 +34,14 @@ module Ace
           unless invocation.is_a?(String) && invocation.match?(/\A[0-9a-f]{32}\z/) && invocation != "0" * 32
             raise ArgumentError, "invalid issuer invocation"
           end
-          identity = @authenticate.call(socket)
           request = read_request(socket)
+          if request["action"] == "launch"
+            unless allow_request && supervising.respond_to?(:call)
+              raise Refusal, "issuer session supervision is unavailable"
+            end
+            return @launch.call(socket, request: request, invocation: invocation, supervising: supervising)
+          end
+          identity = @authenticate.call(socket)
           if request["action"] == "request" && !allow_request
             raise Refusal, "issuer lease supervision capacity is exhausted"
           end
@@ -152,6 +160,15 @@ module Ace
           end
           value = JSON.parse(bytes, create_additions: false, allow_duplicate_key: false, max_nesting: 5)
           raise ArgumentError, "invalid issuer request" unless value.is_a?(Hash)
+          if value["action"] == "launch"
+            fields = %w[action project role rows cols]
+            unless value.keys.sort == fields.sort && safe_string?(value["project"]) &&
+                SessionUnit::ROLES.include?(value["role"]) &&
+                %w[rows cols].all? { |key| value[key].is_a?(Integer) && value[key].between?(1, 65_535) }
+              raise ArgumentError, "invalid configured launch request"
+            end
+            return value
+          end
           if value["action"] != "request"
             fields = {"status" => %w[action lease], "revoke" => %w[action lease], "exec" => %w[action lease argv]}[value["action"]]
             valid = fields && (value.keys - fields).empty? &&
