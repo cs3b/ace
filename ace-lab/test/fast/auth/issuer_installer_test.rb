@@ -53,7 +53,12 @@ module Ace
 
             name = argv.last
             fragment = name
-            "Id=#{name}\nLoadState=loaded\nFragmentPath=#{File.join(@dir, fragment)}\nDropInPaths=\nNeedDaemonReload=no\n"
+            policy = case name
+            when "ace-lab-auth.service" then "User=root\nType=simple\nKillMode=control-group\n"
+            when "ace-lab-auth-recovery.service" then "User=root\nType=oneshot\nRemainAfterExit=yes\n"
+            else "Accept=no\n"
+            end
+            "Id=#{name}\nLoadState=loaded\nFragmentPath=#{File.join(@dir, fragment)}\nDropInPaths=\nNeedDaemonReload=no\n#{policy}"
           end
           installer = IssuerInstaller.new(unit_dir: @dir, owner_uid: Process.uid, privileged: true,
             path_verifier: ->(_path, directory: false) { true }, runtime_verifier: ->(**) { true },
@@ -140,13 +145,35 @@ module Ace
           assert_empty Dir.children(@dir)
         end
 
-        def test_incomplete_production_readiness_blocks_dry_run_and_install_without_writes
+        def test_unsupported_host_blocks_dry_run_and_install_without_writes
           installer = IssuerInstaller.new(unit_dir: @dir, owner_uid: Process.uid, privileged: true)
-          [true, false].each do |dry_run|
-            error = assert_raises(Error) { installer.call(**@runtime, dry_run: dry_run) }
-            assert_match(/verification are incomplete/, error.message)
+          platform = Object.new
+          def platform.supported!
+            raise Ace::Runtime::RuntimeUnavailableError, "missing kernel policy"
+          end
+          Ace::Runtime::Molecules::ProtectedLinux.stub(:new, platform) do
+            [true, false].each do |dry_run|
+              error = assert_raises(Error) { installer.call(**@runtime, dry_run: dry_run) }
+              assert_match(/installation failed/, error.message)
+            end
           end
           assert_empty Dir.children(@dir)
+        end
+
+        def test_accept_yes_is_refused_before_socket_activation
+          runner = lambda do |argv|
+            @commands << argv
+            name = argv.last
+            "Id=#{name}\nLoadState=loaded\nFragmentPath=#{File.join(@dir, name)}\nDropInPaths=\nNeedDaemonReload=no\nAccept=yes\n"
+          end
+          installer = IssuerInstaller.new(unit_dir: @dir, owner_uid: Process.uid, privileged: true,
+            path_verifier: ->(_path, directory: false) { true }, runtime_verifier: ->(**) { true },
+            inactive_verifier: -> { true }, readiness_verifier: -> { true }, runner: runner)
+          error = assert_raises(Error) do
+            installer.send(:verify_loaded_units!, unit_dir: @dir, units: ["ace-lab-auth.socket"])
+          end
+          assert_match(/unsafe lifecycle policy/, error.message)
+          refute @commands.any? { |argv| argv.include?("enable") }
         end
       end
     end

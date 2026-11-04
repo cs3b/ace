@@ -6,6 +6,7 @@ require "rbconfig"
 require "ace/lab"
 require "ace/runtime/molecules/protected_socket"
 require "ace/runtime/molecules/systemd_scope_manager"
+require "ace/runtime/molecules/protected_linux"
 require_relative "../auth"
 require_relative "issuer_units"
 require_relative "../molecules/gem_payload_permissions"
@@ -32,9 +33,7 @@ module Ace
           }
           @activation_verifier = activation_verifier || method(:verify_loaded_units!)
           @inactive_verifier = inactive_verifier || method(:verify_inactive_units!)
-          @readiness_verifier = readiness_verifier || lambda {
-            raise Error, "issuer installation blocked: shared-library and service-instance verification are incomplete"
-          }
+          @readiness_verifier = readiness_verifier || method(:verify_host!)
         end
 
         def call(ruby:, gem_home:, gem_root:, dry_run: false)
@@ -67,6 +66,10 @@ module Ace
         end
 
         private
+
+        def verify_host!
+          Ace::Runtime::Molecules::ProtectedLinux.new.supported!
+        end
 
         def verify_runtime!(ruby:, gem_home:, gem_root:)
           @path_verifier.call(ruby, directory: false)
@@ -182,12 +185,25 @@ module Ace
           units.each do |name|
             query_name = name
             argv = [SYSTEMCTL, "--system", "--no-pager", "--no-ask-password", "show", "--all",
-                    "--property=Id,LoadState,FragmentPath,DropInPaths,NeedDaemonReload", "--", query_name]
+                    "--property=Id,LoadState,FragmentPath,DropInPaths,NeedDaemonReload,User,Type,KillMode,RemainAfterExit,Accept", "--", query_name]
             output = @runner.call(argv)
             fields = output.to_s.lines.to_h { |line| line.chomp.split("=", 2) }
             unless fields["Id"] == query_name && fields["LoadState"] == "loaded" &&
                 fields["FragmentPath"] == File.join(unit_dir, name) && fields["DropInPaths"] == "" && fields["NeedDaemonReload"] == "no"
               raise Error, "loaded issuer unit '#{name}' differs or has overrides"
+            end
+            expected = case name
+            when "ace-lab-auth.service"
+              {"User" => "root", "Type" => "simple", "KillMode" => "control-group"}
+            when "ace-lab-auth-recovery.service"
+              {"User" => "root", "Type" => "oneshot", "RemainAfterExit" => "yes"}
+            when "ace-lab-auth.socket"
+              {"Accept" => "no"}
+            else
+              raise Error, "unexpected issuer unit"
+            end
+            unless expected.all? { |key, value| fields[key] == value }
+              raise Error, "effective issuer unit '#{name}' has an unsafe lifecycle policy"
             end
           end
         rescue ArgumentError
