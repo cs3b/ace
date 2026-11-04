@@ -114,3 +114,31 @@ lease SessionPeer authentication unchanged; retain terminal/pidfd/lifecycle in
 that supervised handler; connect native SpawnedPty and Child to it. Host operator
 and delegated-session authorization must be explicit in SessionConfiguration.
 Do not expose the ordinary mo-owned Herdr control socket to DynamicUsers.
+
+## Native Child lifecycle adapter
+
+Selected native source now includes `platform/linux/session_child.rs`:
+`ec8d6b4a7643227ad3066eb740b8886e83d8483e`, tree
+`97aea9aa90b3188dee59436d84b5728a59b43c13`. The internal Child adapter reads
+a bounded launcher termination response, matches unit/invocation, requires
+cleanup confirmation, preserves exit code, and reports lost channels as errors.
+Its cloned ChildKiller sends an invocation-bound stop request rather than a PID
+signal. It clears handshake nonblocking/read-timeout settings; try_wait uses
+MSG_DONTWAIT independently. Partial replies remain nonblocking.
+
+Native UTM `just test-one session_child` passed 4 tests (3931 filtered), nextest
+`f7305b23-67bd-4d7b-b1bc-31f927a271af`. This follows independent static review
+and correction of inherited handshake settings. Packaging verification passed
+20 tests / 88 assertions. Replaying the mail patch reproduces exact source and
+tree. The native compiler correctly reports this adapter as unused: backend
+handoff and pane lifecycle selection are still outstanding. No release binary
+or full-cycle acceptance has been produced from this source.
+
+Wire contract for this internal lifecycle channel: newline-delimited JSON,
+maximum 1024 bytes for the terminal response. Stop request contains action=stop,
+unit and invocation. Terminal response contains exactly unit, invocation,
+exit_code (0..255), cleanup_confirmed (true required for a confirmed result).
+The authenticated launch handler must retain natural completion separately;
+SessionLauncher.stop cannot inspect a unit already garbage-collected after
+natural exit. Authentication and PTY/pidfd association precede constructing
+SessionChild; the constructor does not establish authority.

@@ -3595,3 +3595,282 @@ index 2a44e8f..898ec0b 100644
 +        assert!(capture_pinned_child(pid, descriptor).is_err());
 +    }
 +}
+
+From ec8d6b4a7643227ad3066eb740b8886e83d8483e Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 01:56:03 +0100
+Subject: [PATCH] feat: track isolated process completion through launcher
+ lifecycle
+
+---
+ src/platform/linux.rs               |   2 +
+ src/platform/linux/session_child.rs | 247 ++++++++++++++++++++++++++++
+ 2 files changed, 249 insertions(+)
+ create mode 100644 src/platform/linux/session_child.rs
+
+diff --git a/src/platform/linux.rs b/src/platform/linux.rs
+index 9edf05b..ed22cd0 100644
+--- a/src/platform/linux.rs
++++ b/src/platform/linux.rs
+@@ -26,6 +26,8 @@ pub(crate) use super::unix_common::{
+ #[cfg(test)]
+ mod config_file_tests;
+ 
++mod session_child;
++
+ mod guarded_origin;
+ pub(crate) use guarded_origin::capture_guarded_child;
+ 
+diff --git a/src/platform/linux/session_child.rs b/src/platform/linux/session_child.rs
+new file mode 100644
+index 0000000..b82a58d
+--- /dev/null
++++ b/src/platform/linux/session_child.rs
+@@ -0,0 +1,247 @@
++//! Lifecycle adapter for a process owned by the authenticated system launcher.
++//! This process is not a child of Herdr; waitpid and numeric PID signals are
++//! therefore not valid lifecycle operations.
++use portable_pty::{Child, ChildKiller, ExitStatus};
++use serde::Deserialize;
++use std::io::{self, Read, Write};
++use std::os::fd::AsRawFd;
++use std::os::unix::net::UnixStream;
++use std::sync::{Arc, Mutex};
++use std::time::Duration;
++
++#[derive(Debug, Clone)]
++struct SessionKiller {
++    stream: Arc<Mutex<UnixStream>>,
++    request: Arc<Vec<u8>>,
++}
++impl ChildKiller for SessionKiller {
++    fn kill(&mut self) -> io::Result<()> {
++        self.stream
++            .lock()
++            .map_err(|_| io::Error::other("session control lock poisoned"))?
++            .write_all(&self.request)
++    }
++    fn clone_killer(&self) -> Box<dyn ChildKiller + Send + Sync> {
++        Box::new(self.clone())
++    }
++}
++
++#[derive(Debug, Deserialize)]
++#[serde(deny_unknown_fields)]
++struct Termination {
++    unit: String,
++    invocation: String,
++    exit_code: u8,
++    cleanup_confirmed: bool,
++}
++
++#[derive(Debug)]
++pub(crate) struct SessionChild {
++    pid: u32,
++    unit: String,
++    invocation: String,
++    stream: UnixStream,
++    killer: SessionKiller,
++    pending: Vec<u8>,
++    outcome: Option<Result<ExitStatus, String>>,
++}
++impl SessionChild {
++    // Called only after authenticating the launcher and validating the PTY,
++    // pidfd and process identity as a single handoff.
++    pub(crate) fn new(
++        pid: u32,
++        unit: String,
++        invocation: String,
++        stream: UnixStream,
++    ) -> io::Result<Self> {
++        if pid == 0
++            || !unit.starts_with("ace-auth-session-")
++            || !unit.ends_with(".service")
++            || !unit
++                .bytes()
++                .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'.')
++            || unit.len() > 128
++            || invocation.len() != 32
++            || !invocation
++                .bytes()
++                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
++            || invocation.bytes().all(|b| b == b'0')
++        {
++            return Err(io::Error::other("invalid authenticated session identity"));
++        }
++        stream.set_nonblocking(false)?;
++        stream.set_read_timeout(None)?;
++        stream.set_write_timeout(Some(Duration::from_secs(5)))?;
++        let mut request = serde_json::to_vec(
++            &serde_json::json!({"action":"stop", "unit":unit, "invocation":invocation}),
++        )?;
++        request.push(b'\n');
++        let killer = SessionKiller {
++            stream: Arc::new(Mutex::new(stream.try_clone()?)),
++            request: Arc::new(request),
++        };
++        Ok(Self {
++            pid,
++            unit,
++            invocation,
++            stream,
++            killer,
++            pending: Vec::new(),
++            outcome: None,
++        })
++    }
++
++    fn read_outcome(&mut self, blocking: bool) -> io::Result<Option<ExitStatus>> {
++        while self.outcome.is_none() {
++            let mut bytes = [0u8; 1025];
++            let read = if blocking {
++                self.stream.read(&mut bytes)
++            } else {
++                let n = unsafe {
++                    libc::recv(
++                        self.stream.as_raw_fd(),
++                        bytes.as_mut_ptr().cast(),
++                        bytes.len(),
++                        libc::MSG_DONTWAIT,
++                    )
++                };
++                if n < 0 {
++                    Err(io::Error::last_os_error())
++                } else {
++                    Ok(n as usize)
++                }
++            };
++            match read {
++                Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
++                Err(error) if error.kind() == io::ErrorKind::WouldBlock => return Ok(None),
++                Err(_) | Ok(0) => {
++                    self.outcome = Some(Err("session termination channel lost".into()))
++                }
++                Ok(count) => {
++                    self.pending.extend_from_slice(&bytes[..count]);
++                    if self.pending.len() > 1024 {
++                        self.outcome = Some(Err("oversized session termination".into()));
++                    } else if let Some(end) = self.pending.iter().position(|b| *b == b'\n') {
++                        let parsed = serde_json::from_slice::<Termination>(&self.pending[..end]);
++                        self.outcome = Some(match parsed {
++                            Ok(value)
++                                if end + 1 == self.pending.len()
++                                    && value.unit == self.unit
++                                    && value.invocation == self.invocation
++                                    && value.cleanup_confirmed =>
++                            {
++                                Ok(ExitStatus::with_exit_code(value.exit_code.into()))
++                            }
++                            _ => Err("unconfirmed session termination".into()),
++                        });
++                    }
++                }
++            }
++        }
++        match self.outcome.as_ref().unwrap() {
++            Ok(status) => Ok(Some(status.clone())),
++            Err(message) => Err(io::Error::other(message.clone())),
++        }
++    }
++}
++impl ChildKiller for SessionChild {
++    fn kill(&mut self) -> io::Result<()> {
++        self.killer.kill()
++    }
++    fn clone_killer(&self) -> Box<dyn ChildKiller + Send + Sync> {
++        self.killer.clone_killer()
++    }
++}
++impl Child for SessionChild {
++    fn process_id(&self) -> Option<u32> {
++        Some(self.pid)
++    }
++    fn try_wait(&mut self) -> io::Result<Option<ExitStatus>> {
++        self.read_outcome(false)
++    }
++    fn wait(&mut self) -> io::Result<ExitStatus> {
++        self.read_outcome(true)?
++            .ok_or_else(|| io::Error::other("session termination unavailable"))
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    fn pair() -> (SessionChild, UnixStream) {
++        let (client, server) = UnixStream::pair().unwrap();
++        (
++            SessionChild::new(
++                42,
++                "ace-auth-session-worker-1234567890abcdef.service".into(),
++                "a".repeat(32),
++                client,
++            )
++            .unwrap(),
++            server,
++        )
++    }
++    fn completion(invocation: &str, cleanup: bool) -> Vec<u8> {
++        let mut data = serde_json::to_vec(&serde_json::json!({"unit":"ace-auth-session-worker-1234567890abcdef.service", "invocation":invocation, "exit_code":0, "cleanup_confirmed":cleanup})).unwrap();
++        data.push(b'\n');
++        data
++    }
++    #[test]
++    fn lifecycle_clears_handshake_settings_and_bounds_terminal_message() {
++        let (client, mut server) = UnixStream::pair().unwrap();
++        client.set_nonblocking(true).unwrap();
++        client
++            .set_read_timeout(Some(Duration::from_millis(1)))
++            .unwrap();
++        let mut child = SessionChild::new(
++            42,
++            "ace-auth-session-worker-1234567890abcdef.service".into(),
++            "a".repeat(32),
++            client,
++        )
++        .unwrap();
++        assert_eq!(child.stream.read_timeout().unwrap(), None);
++        let flags = unsafe { libc::fcntl(child.stream.as_raw_fd(), libc::F_GETFL) };
++        assert!(flags >= 0);
++        assert_eq!(flags & libc::O_NONBLOCK, 0);
++        server.write_all(&[b'x'; 1025]).unwrap();
++        assert!(child.wait().is_err());
++    }
++
++    #[test]
++    fn fragmented_reply_is_nonblocking_until_confirmed_and_repeatable() {
++        let (mut child, mut server) = pair();
++        assert_eq!(child.process_id(), Some(42));
++        assert!(child.try_wait().unwrap().is_none());
++        let data = completion(&"a".repeat(32), true);
++        server.write_all(&data[..12]).unwrap();
++        assert!(child.try_wait().unwrap().is_none());
++        server.write_all(&data[12..]).unwrap();
++        assert!(child.wait().unwrap().success());
++        assert!(child.try_wait().unwrap().unwrap().success());
++    }
++    #[test]
++    fn lost_channel_wrong_invocation_and_failed_cleanup_never_succeed() {
++        let (mut child, server) = pair();
++        drop(server);
++        assert!(child.wait().is_err());
++        assert!(child.try_wait().is_err());
++        for (invocation, cleanup) in [("b".repeat(32), true), ("a".repeat(32), false)] {
++            let (mut child, mut server) = pair();
++            server.write_all(&completion(&invocation, cleanup)).unwrap();
++            assert!(child.wait().is_err());
++        }
++    }
++    #[test]
++    fn cloned_killer_uses_launcher_identity_instead_of_signalling_pid() {
++        let (child, mut server) = pair();
++        let mut killer = child.clone_killer();
++        killer.kill().unwrap();
++        let mut bytes = [0; 512];
++        let count = server.read(&mut bytes).unwrap();
++        let request: serde_json::Value = serde_json::from_slice(&bytes[..count]).unwrap();
++        assert_eq!(request["action"], "stop");
++        assert_eq!(request["invocation"], "a".repeat(32));
++        assert_eq!(request["unit"], child.unit);
++    }
++}
