@@ -6,7 +6,7 @@ module Ace::Lab::Auth
   class SessionProjectMountTest < Minitest::Test
     def test_invalid_project_never_reaches_mount_runner
       mount = SessionProjectMount.new(runner: ->(*) { flunk "mount executed" })
-      identity = SessionLauncher::Identity.new(unit: "ace-auth-session-worker-#{'a' * 16}.service", invocation_id: "id", process: {}, pidfd: nil)
+      identity = SessionLauncher::Identity.new(unit: "ace-auth-session-worker-#{'a' * 16}.service", invocation_id: "id", process: {}, pidfd: nil, cgroup: {handle: nil})
       Process.stub(:euid, 0) do
         ["/lab", "/lab/../etc", "/lab/ace/child", "/etc", nil].each do |path|
           assert_raises(Error) { mount.call(identity: identity, project: path) }
@@ -23,7 +23,7 @@ module Ace::Lab::Auth
         %w[worker verifier integrator project-overseer lab-overseer].each do |role|
           reached = false
           identity = SessionLauncher::Identity.new(unit: "ace-auth-session-#{role}-#{'a' * 16}.service",
-            invocation_id: "id", process: {}, pidfd: nil)
+            invocation_id: "id", process: {}, pidfd: nil, cgroup: {handle: nil})
           assert_raises(Error) { mount.call(identity: identity, project: "/lab") }
           assert_equal role == "lab-overseer", reached
         end
@@ -46,7 +46,7 @@ module Ace::Lab::Auth
       source.define_singleton_method(:close) { true }
       namespace = File.open(File::NULL)
       identity = SessionLauncher::Identity.new(unit: "ace-auth-session-lab-overseer-#{'a' * 16}.service",
-        invocation_id: "b" * 32, process: {"pid" => 123, "uid" => 62000, "gid" => 62000}, pidfd: namespace)
+        invocation_id: "b" * 32, process: {"pid" => 123, "uid" => 62000, "gid" => 62000}, pidfd: namespace, cgroup: {handle: namespace})
       mount = SessionProjectMount.new(platform: platform, runner: ->(argv, **) { commands << argv })
       Process.stub(:euid, 0) do
         SessionNamespace.stub(:capture, namespace) do

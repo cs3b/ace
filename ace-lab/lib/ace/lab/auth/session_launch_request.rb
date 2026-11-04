@@ -75,18 +75,21 @@ module Ace
               # Failure after spawn must either prove containment or fail the
               # handler. IssuerServer then stops admission; BindsTo contains
               # all session units before issuer recovery runs.
-              if identity && !contained
-                @launcher.stop(identity)
-                contained = true
+              begin
+                if identity && !contained
+                  @launcher.stop(identity)
+                  contained = true
+                end
+                if identity && contained && !cleaned
+                  @service.call.revoke_session(issuer_invocation: invocation, unit: identity.unit,
+                    invocation: identity.invocation_id)
+                  cleaned = true
+                end
+                reap(launched.transport_pid) if launched && contained
+                raise Error, "session launch containment is unconfirmed" if launched && !contained
+              ensure
+                identity&.close
               end
-              if identity && contained && !cleaned
-                @service.call.revoke_session(issuer_invocation: invocation, unit: identity.unit,
-                  invocation: identity.invocation_id)
-                cleaned = true
-              end
-              reap(launched.transport_pid) if launched && contained
-              identity&.pidfd&.close
-              raise Error, "session launch containment is unconfirmed" if launched && !contained
             end
           end
         rescue StandardError => error

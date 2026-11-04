@@ -5,6 +5,7 @@ require "rbconfig"
 require "socket"
 require "json"
 require "ace/runtime/molecules/protected_socket"
+require "ace/runtime/molecules/cgroup_observation"
 
 module Ace
   module Lab
@@ -14,12 +15,17 @@ module Ace
       # until systemd lifecycle verification and terminal handoff complete.
       class SessionLauncher
         Launch = Data.define(:unit, :transport_pid)
-        Identity = Data.define(:unit, :invocation_id, :process, :pidfd)
+        Identity = Data.define(:unit, :invocation_id, :process, :pidfd, :cgroup) do
+          def close
+            pidfd.close unless pidfd.closed?
+            cgroup.fetch(:handle).close unless cgroup.fetch(:handle).closed?
+          end
+        end
         ENTRY = File.expand_path("../../../../libexec/session-entry", __dir__).freeze
 
         def initialize(privileged: Process.euid.zero?, platform: Ace::Runtime::Molecules::ProtectedLinux.new,
-          verify_path: nil, spawn: Process.method(:spawn), manager_factory: nil)
-          @privileged, @platform, @spawn = privileged, platform, spawn
+          cgroups: Ace::Runtime::Molecules::CgroupObservation.new, verify_path: nil, spawn: Process.method(:spawn), manager_factory: nil)
+          @privileged, @platform, @spawn, @cgroups = privileged, platform, spawn, cgroups
           @verify_path = verify_path || Ace::Runtime::Molecules::ProtectedSocket.method(:root_path!)
           @manager_factory = manager_factory || lambda { |unit|
             Ace::Runtime::Molecules::SystemdScopeManager.new(slice_unit: SessionPeer::SLICE, service_unit: unit)
@@ -46,21 +52,28 @@ module Ace
             raise Error, "session process is not an isolated dynamic identity"
           end
           handle = @platform.pin(process)
+          cgroup_path = state.fetch("ControlGroup")
+          unless cgroup_path == "/#{SessionPeer::SLICE}/#{launch.unit}"
+            raise Error, "session cgroup is outside its configured slice"
+          end
+          cgroup = @cgroups.pin(Ace::Runtime::Molecules::CgroupObservation::ROOT + cgroup_path)
+          @cgroups.member!(process, pinned: cgroup, kernel: @platform)
           binding = manager.unit_for_pidfd(handle: handle)
           after = manager.inspect_units.fetch("service")
           unless binding["unit"] == launch.unit && binding["invocation_id"] == state["InvocationID"] &&
               after["InvocationID"] == state["InvocationID"] && after["MainPID"] == pid &&
-              after["ActiveState"] == "active" && !@platform.exited?(handle)
+              after["ActiveState"] == "active" && after["ControlGroup"] == cgroup_path && !@platform.exited?(handle)
             raise Error, "session process changed during terminal handoff"
           end
           identity = Identity.new(unit: launch.unit, invocation_id: binding.fetch("invocation_id"),
-            process: process.freeze, pidfd: handle)
-          handle = nil
+            process: process.freeze, pidfd: handle, cgroup: cgroup)
+          handle = cgroup = nil
           identity
         rescue Ace::Runtime::Error, SystemCallError, IOError, KeyError, ArgumentError => error
           raise Error, "session identity is unavailable (#{error.class})"
         ensure
           handle&.close
+          cgroup&.fetch(:handle)&.close
         end
 
         # Only the trusted launch owner retains this identity. Unit names are
@@ -73,6 +86,10 @@ module Ace
               identity.invocation_id != "0" * 32 && identity.pidfd.is_a?(IO) && !identity.pidfd.closed?
             raise ArgumentError, "authenticated session identity required"
           end
+          # An operator or systemd may already have stopped and collected the
+          # transient unit. Only retirement of the pinned original cgroup AND
+          # process exit can confirm that case; absence of unit metadata cannot.
+          return true if @platform.exited?(identity.pidfd) && @cgroups.retired?(identity.cgroup)
           manager = @manager_factory.call(identity.unit)
           before = manager.inspect_units.fetch("service")
           unless before["InvocationID"] == identity.invocation_id
@@ -93,6 +110,9 @@ module Ace
           end
           true
         rescue Ace::Runtime::Error, SystemCallError, IOError, KeyError => error
+          # Collection can race the first observation or StopUnit itself.
+          # Retry only the original retained objects, never the missing name.
+          return true if @platform.exited?(identity.pidfd) && @cgroups.retired?(identity.cgroup)
           raise Error, "session stop is unconfirmed (#{error.class})"
         end
 

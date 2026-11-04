@@ -5,6 +5,29 @@ require "pty"
 
 module Ace::Lab::Auth
   class SessionLauncherTest < Minitest::Test
+    class Cgroups
+      attr_accessor :retired
+      attr_reader :handles
+      def initialize
+        @retired = false
+        @handles = []
+      end
+      def pin(path)
+        @handles << File.open(File::NULL)
+        {handle: @handles.last, identity: {"path" => path}}
+      end
+      def member!(*, **) = true
+      def retired?(_) = retired
+    end
+
+    def setup
+      @cgroups = Cgroups.new
+    end
+
+    def teardown
+      @cgroups.handles.each { |handle| handle.close unless handle.closed? }
+    end
+
     def test_launch_passes_terminal_and_discards_ambient_environment
       observed = nil
       verified = []
@@ -49,7 +72,7 @@ module Ace::Lab::Auth
       platform.define_singleton_method(:exited?) { |_| false }
       manager = Object.new
       manager.define_singleton_method(:unit_for_pidfd) { |handle:| {"unit" => unit, "invocation_id" => invocation} }
-      launcher = SessionLauncher.new(privileged: true, platform: platform, manager_factory: ->(_) { manager })
+      launcher = SessionLauncher.new(privileged: true, platform: platform, cgroups: @cgroups, manager_factory: ->(_) { manager })
       # Socket activation wraps fd 3 as Socket; accept therefore returns
       # Socket, not UNIXSocket. Exercise the production descriptor class.
       sender, receiver = Socket.pair(Socket::AF_UNIX, Socket::SOCK_STREAM, 0)
@@ -57,7 +80,7 @@ module Ace::Lab::Auth
       PTY.open do |master, slave|
         File.open(File::NULL) do |handle|
           identity = SessionLauncher::Identity.new(unit: unit, invocation_id: invocation,
-            process: {"pid" => 456}, pidfd: handle)
+            process: {"pid" => 456}, pidfd: handle, cgroup: {handle: handle})
           assert_raises(ArgumentError) { launcher.handoff(identity, terminal: master, channel: sender, directory: directory, rows: 0, cols: 80) }
           if role == "worker"
             assert_raises(ArgumentError) { launcher.handoff(identity, terminal: master, channel: sender, directory: "/lab", rows: 24, cols: 80) }
@@ -101,9 +124,9 @@ module Ace::Lab::Auth
       end
       platform = Object.new
       platform.define_singleton_method(:exited?) { |_| exited }
-      launcher = SessionLauncher.new(privileged: true, platform: platform, manager_factory: ->(_) { manager })
+      launcher = SessionLauncher.new(privileged: true, platform: platform, cgroups: @cgroups, manager_factory: ->(_) { manager })
       File.open(File::NULL) do |handle|
-        identity = SessionLauncher::Identity.new(unit: unit, invocation_id: invocation, process: {}, pidfd: handle)
+        identity = SessionLauncher::Identity.new(unit: unit, invocation_id: invocation, process: {}, pidfd: handle, cgroup: {handle: handle})
         assert_raises(Error) { launcher.stop(identity) }
         assert_equal 1, stopped
         exited = true
@@ -116,6 +139,50 @@ module Ace::Lab::Auth
       end
     end
 
+    def test_collected_unit_requires_both_retired_pinned_group_and_exited_process
+      exited = false
+      platform = Object.new
+      platform.define_singleton_method(:exited?) { |_| exited }
+      inspections = 0
+      manager = Object.new
+      manager.define_singleton_method(:inspect_units) do
+        inspections += 1
+        raise Ace::Runtime::RuntimeUnavailableError, "unit collected"
+      end
+      launcher = SessionLauncher.new(privileged: true, platform: platform,
+        cgroups: @cgroups, manager_factory: ->(_) { manager })
+      File.open(File::NULL) do |handle|
+        identity = SessionLauncher::Identity.new(unit: "ace-auth-session-worker-1234567890abcdef.service",
+          invocation_id: "a" * 32, process: {}, pidfd: handle, cgroup: {handle: handle})
+        assert_raises(Error) { launcher.stop(identity) }
+        exited = true
+        assert_raises(Error) { launcher.stop(identity) }
+        @cgroups.retired = true
+        assert launcher.stop(identity)
+        assert_equal 2, inspections, "a retired original group must not stop a replacement unit"
+        exited = false
+        assert_raises(Error) { launcher.stop(identity) }
+      end
+    end
+
+    def test_collection_racing_the_initial_observation_rechecks_original_group
+      platform = Object.new
+      platform.define_singleton_method(:exited?) { |_| true }
+      cgroups = @cgroups
+      manager = Object.new
+      manager.define_singleton_method(:inspect_units) do
+        cgroups.retired = true
+        raise Ace::Runtime::RuntimeUnavailableError, "unit collected after initial observation"
+      end
+      launcher = SessionLauncher.new(privileged: true, platform: platform,
+        cgroups: @cgroups, manager_factory: ->(_) { manager })
+      File.open(File::NULL) do |handle|
+        identity = SessionLauncher::Identity.new(unit: "ace-auth-session-worker-1234567890abcdef.service",
+          invocation_id: "a" * 32, process: {}, pidfd: handle, cgroup: {handle: handle})
+        assert launcher.stop(identity)
+      end
+    end
+
     def test_stop_rejects_unprivileged_caller_and_unbound_handle
       assert_raises(Error) { SessionLauncher.new(privileged: false).stop(nil) }
       assert_raises(ArgumentError) { SessionLauncher.new(privileged: true).stop(nil) }
@@ -123,7 +190,7 @@ module Ace::Lab::Auth
 
     def test_identity_uses_service_pid_and_rejects_replaced_invocation
       unit = "ace-auth-session-worker-1234567890abcdef.service"
-      state = {"ActiveState" => "active", "MainPID" => "456", "InvocationID" => "a" * 32}
+      state = {"ActiveState" => "active", "MainPID" => "456", "InvocationID" => "a" * 32, "ControlGroup" => "/#{SessionPeer::SLICE}/#{unit}"}
       manager = Object.new
       manager.define_singleton_method(:inspect_units) { {"service" => state.dup} }
       manager.define_singleton_method(:unit_for_pidfd) { |handle:| {"unit" => unit, "invocation_id" => "a" * 32} }
@@ -132,7 +199,7 @@ module Ace::Lab::Auth
       handles = []
       platform.define_singleton_method(:pin) { |_identity| handles << File.open(File::NULL); handles.last }
       platform.define_singleton_method(:exited?) { |_handle| false }
-      launcher = SessionLauncher.new(privileged: true, platform: platform, manager_factory: ->(_) { manager })
+      launcher = SessionLauncher.new(privileged: true, platform: platform, cgroups: @cgroups, manager_factory: ->(_) { manager })
       launch = SessionLauncher::Launch.new(unit: unit, transport_pid: 123)
       identity = launcher.identify(launch)
       assert_equal 456, identity.process.fetch("pid")

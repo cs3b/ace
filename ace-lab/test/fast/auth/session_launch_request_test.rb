@@ -29,7 +29,7 @@ module Ace
 
           def identify(launch)
             @events << :identify
-            SessionLauncher::Identity.new(unit: launch.unit, invocation_id: "b" * 32, process: {}, pidfd: @reader)
+            SessionLauncher::Identity.new(unit: launch.unit, invocation_id: "b" * 32, process: {}, pidfd: @reader, cgroup: {handle: @reader})
           end
 
           def handoff(*)
@@ -119,7 +119,7 @@ module Ace
 
         def test_lifecycle_control_rejects_another_invocation
           main, keep_main = IO.pipe
-          identity = SessionLauncher::Identity.new(unit: @unit.name, invocation_id: "b" * 32, process: {}, pidfd: main)
+          identity = SessionLauncher::Identity.new(unit: @unit.name, invocation_id: "b" * 32, process: {}, pidfd: main, cgroup: {handle: main})
           @client.puts JSON.generate("action" => "stop", "unit" => @unit.name, "invocation" => "c" * 32)
           assert_raises(Error) { @handler.send(:await_exit, @server, identity, @caller) }
         ensure

@@ -167,3 +167,29 @@ fixture file is committed and uploaded as `/home/lab-operator/lab-hitl-config.ym
 (SHA256 `0cc13bc40042bfa6acc1ac73ea8759891b364b0844b93341f209b759fa18175e`),
 but not installed at /lab yet. This is not an external access blocker; product
 work can continue. No clean E2E run has begun.
+
+
+### Original-cgroup retirement correction
+
+SessionLauncher now pins the service cgroup before terminal handoff, verifies
+process membership and unchanged systemd binding, and retains that descriptor
+alongside the MainPID pidfd. Whole-group retirement is observed by the runtime
+owner from the original descriptor's procfs path ending in ` (deleted)` on the
+verified host cgroup-v2 mount. Linux permits removal only without live members
+or child groups (kernel cgroup-v2 documentation, Organizing Processes and
+Threads). The real VM probe retained the descriptor across rmdir: readlink
+changed to the deleted path while stat.nlink remained 2. Link count is therefore
+not used as a termination signal.
+
+Stop accepts an already collected unit only when both original process exit
+and original group retirement are proved. It repeats that proof if metadata
+lookup/StopUnit races collection. Missing metadata alone never succeeds; no
+replacement unit is stopped. All retained handles close even when containment
+or revocation fails. Independent review found the collection race in the first
+revision; the regression and correction passed re-review with no further
+findings. Live launcher stop validation remains pending.
+
+Targeted lab lifecycle tests: 15 tests, 84 assertions, zero failures/errors,
+report `aa531c52-1a58-4f47-8dd5-baad5f4daf75`. Runtime package: 306 tests,
+1242 assertions, zero failures/errors, report
+`6fed36d4-f9c4-48df-a575-50c7fbbdae8e`. These remain component evidence.

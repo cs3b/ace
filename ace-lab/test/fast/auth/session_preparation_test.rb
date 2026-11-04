@@ -13,7 +13,7 @@ module Ace::Lab::Auth
       Dir.mkdir(@runtime, 0o711)
       @handle = File.open(File::NULL)
       @identity = SessionLauncher::Identity.new(unit: "ace-auth-session-worker-0123456789abcdef.service",
-        invocation_id: "a" * 32, process: {"pid" => Process.pid, "uid" => Process.uid, "gid" => Process.gid}, pidfd: @handle)
+        invocation_id: "a" * 32, process: {"pid" => Process.pid, "uid" => Process.uid, "gid" => Process.gid}, pidfd: @handle, cgroup: {handle: @handle})
       @selection = SessionConfiguration::Selection.new(project: "ace", path: "/lab/ace", role: "worker",
         instructions: "/opt/worker.md", gem_home: "/opt/gems", runtime: {"credentials" => @source, "provider" => "zai"})
       @platform = Object.new
