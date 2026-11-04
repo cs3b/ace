@@ -657,3 +657,31 @@ passed 971 tests/4509 assertions, 16 platform skips; final changed paths were
 then retested in the affected suite. Independent review found no remaining
 scoped issue. A fresh built-artifact coordinator mount/start probe is next;
 standard start adoption, positive eyes readiness and full E2E are still open.
+
+## Operator readiness for standard start
+
+A host `ace-overseer start` needs readiness without opening DynamicUser files.
+Add one closed issuer action `readiness` with `project`, `role` and immutable
+`terminal_id`. It is host-only: DynamicUsers keep the existing session-scoped
+`agent.readiness` path. The existing SessionLaunchPeer authenticates host
+socket credentials and pins its pidfd; the existing SessionConfiguration
+requires the role account and explicit scope grant before any native lookup.
+The native target must match the selected project/role. Reuse SessionReadiness
+for independent target authentication and owner evaluation. Native transport
+checks the host caller pidfd around each I/O; it never treats a host caller as
+a session or permits arbitrary methods. No source fallback and no new state.
+
+Operator-readiness source integration is implemented: HostReadiness uses the
+existing host peer/scope grant, exact native selection and SessionReadiness.
+IssuerRequest validates the closed action before dispatch; DynamicUsers are
+refused on this route. SessionNativeTransport distinguishes a pinned host
+caller from authenticated session identity and checks its lifetime around I/O.
+IssuerClient validates target, role and boolean readiness. Tests 44/216 pass
+(report `a2d91f8f-fb0b-4beb-a1e7-0d9556f5fb8e`); independent review found no
+scoped security/dataflow issue. This endpoint is not installed on candidate88
+yet and still requires a built-artifact host probe. Next standard-start work
+must select protected scope/runtime, converge on actual native session identity,
+handle initial interactive readiness before the first prompt, and preserve
+uncertain-delivery idempotency. Session callers also need a narrowly scoped
+workspace/startup-observation surface; do not use unrestricted native sockets
+or have the E2E runner dispatch the work on the overseer's behalf.

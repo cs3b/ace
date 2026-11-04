@@ -11,6 +11,7 @@ require_relative "session_launch_request"
 require_relative "session_report"
 require_relative "session_delegate"
 require_relative "session_control"
+require_relative "host_readiness"
 
 module Ace
   module Lab
@@ -24,12 +25,13 @@ module Ace
         REQUIRED = %w[action profile role task assignment repos].freeze
         PUBLIC_LEASE_FIELDS = %w[id profile role task assignment repos use_until provider_expiry state_detail].freeze
 
-        def initialize(authenticate: ->(socket) { SessionPeer.new.authenticate(socket) }, launch: SessionLaunchRequest.new, reports: SessionReport.new, delegate: SessionDelegate.new, control: SessionControl.new,
+        def initialize(authenticate: ->(socket) { SessionPeer.new.authenticate(socket) }, launch: SessionLaunchRequest.new, reports: SessionReport.new, delegate: SessionDelegate.new, control: SessionControl.new, host_readiness: HostReadiness.new,
           service_factory: ->(identity, invocation) {
             Service.new(session: identity, issuer_invocation: invocation, supervised: true)
           })
           @authenticate, @service_factory = authenticate, service_factory
           @launch, @reports, @delegate, @control = launch, reports, delegate, control
+          @host_readiness = host_readiness
         end
 
         def call(socket, invocation:, allow_request: true, supervising: nil)
@@ -38,6 +40,10 @@ module Ace
             raise ArgumentError, "invalid issuer invocation"
           end
           request = read_request(socket)
+          if request["action"] == "readiness"
+            reply(socket, "ok" => true, "result" => @host_readiness.call(socket, request: request))
+            return :completed
+          end
           if request["action"] == "launch"
             unless allow_request && supervising.respond_to?(:call)
               raise Refusal, "issuer session supervision is unavailable"
@@ -174,6 +180,10 @@ module Ace
           end
           value = JSON.parse(bytes, create_additions: false, allow_duplicate_key: false, max_nesting: 5)
           raise ArgumentError, "invalid issuer request" unless value.is_a?(Hash)
+          if value["action"] == "readiness"
+            HostReadiness.validate!(value)
+            return value
+          end
           if value.key?("method")
             validator = if value["method"] == SessionDelegate::METHOD
               SessionDelegate

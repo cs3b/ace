@@ -10,6 +10,7 @@ module Ace
       # Internal transport for authorized operations only. Its callers own
       # the closed operation schemas; this is never exposed as a raw proxy.
       class SessionNativeTransport
+        HostCaller = Data.define(:pidfd)
         SO_PEERCRED = 17
         def initialize(loader: -> { Molecules::InstallManifestLoader.load }, account: Etc.method(:getpwnam),
           manager: ->(unit) { Ace::Runtime::Molecules::SystemdScopeManager.new(slice_unit: SessionPeer::SLICE, service_unit: unit) })
@@ -47,6 +48,13 @@ module Ace
         private
 
         def live!(identity)
+          if identity.is_a?(HostCaller)
+            handle = identity.pidfd
+            unless handle.is_a?(IO) && !handle.closed? && !IO.select([handle], nil, nil, 0)
+              raise Error, "calling host operator is no longer live"
+            end
+            return true
+          end
           handles = [identity.pidfd, identity.main_pidfd]
           unless handles.all? { |handle| handle.is_a?(IO) && !handle.closed? } && !IO.select(handles, nil, nil, 0) &&
               @manager.call(identity.unit).unit_for_pidfd(handle: identity.main_pidfd) ==

@@ -50,6 +50,15 @@ module Ace
           raise Error, "issuer readiness transport is unavailable or invalid"
         end
 
+        def host_readiness(terminal_id:, project:, role:)
+          result = exchange({"action" => "readiness", "terminal_id" => terminal_id, "project" => project, "role" => role})
+          unless result.is_a?(Hash) && result["terminal_id"] == terminal_id && result["role"] == role &&
+              [true, false].include?(result["ready"])
+            raise Error, "issuer returned invalid operator readiness"
+          end
+          result
+        end
+
         def reconcile
           raise Refusal, "reconciliation requires the host operator"
         end

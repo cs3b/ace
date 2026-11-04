@@ -51,6 +51,15 @@ module Ace
           assert_equal "request", message["action"]
         end
 
+        def test_operator_readiness_sends_closed_scope_and_requires_matching_target
+          response = {"ok" => true, "result" => {"ready" => false, "terminal_id" => "term_1234", "role" => "project-overseer"}}
+          result, message = exchange(response) { |client| client.host_readiness(terminal_id: "term_1234", project: "ace", role: "project-overseer") }
+          refute result.fetch("ready")
+          assert_equal({"action" => "readiness", "terminal_id" => "term_1234", "project" => "ace", "role" => "project-overseer"}, message)
+          response["result"]["terminal_id"] = "term_foreign"
+          assert_raises(Error) { exchange(response) { |client| client.host_readiness(terminal_id: "term_1234", project: "ace", role: "project-overseer") } }
+        end
+
         def test_readiness_sends_only_target_and_requires_native_boolean_acknowledgement
           response = {"id" => "ace-lab:readiness", "result" => {"type" => "agent_readiness", "ready" => true}}
           result, message = exchange(response) { |client| client.readiness(target: "term_1234") }

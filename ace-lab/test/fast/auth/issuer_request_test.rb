@@ -145,6 +145,24 @@ module Ace
           assert_equal "a" * 32, invoked.fetch(0).fetch(:invocation)
         end
 
+        def test_operator_readiness_routes_through_host_auth_without_lease_or_session_admission
+          invoked = []
+          handler = Object.new
+          handler.define_singleton_method(:call) do |socket, request:|
+            invoked << request
+            {"ready" => false, "terminal_id" => request.fetch("terminal_id")}
+          end
+          runner = IssuerRequest.new(authenticate: ->(*) { flunk "session authentication selected" },
+            service_factory: ->(*) { flunk "lease store selected" }, host_readiness: handler)
+          request = {"action" => "readiness", "project" => "ace", "role" => "project-overseer", "terminal_id" => "term_1234"}
+          @client.puts JSON.generate(request)
+          assert_equal :completed, runner.call(@server, invocation: "a" * 32)
+          assert_equal [request], invoked
+          response = JSON.parse(@client.gets)
+          assert response.fetch("ok")
+          refute response.fetch("result").fetch("ready")
+        end
+
         def test_launch_refuses_arbitrary_runtime_identity_and_dimensions
           [{"terminal_id" => "w1:p1"}, {"terminal_id" => nil}, {"argv" => ["/bin/sh"]}, {"uid" => 0}, {"rows" => 0}, {"cols" => 65_536}, {"role" => "root"}].each do |extra|
             server, client = UNIXSocket.pair
