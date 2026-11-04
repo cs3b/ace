@@ -547,3 +547,36 @@ b615-4d04-be64-889a6bd17e3a); environment/command/report 12/91 (e1d05c3a-3eb5-
 identity and systemd boundaries; they do not prove Linux peer authentication.
 Build and install the paired native/issuer candidate, configure its protected
 Herdr endpoint, and exercise actual Pi reports before claiming live readiness.
+
+## Live authenticated reporting on candidate81
+
+Parent 9c1789b03f7b84318ddc17400b703ecdf84ac3c5 produced ace-lab
+0.14.2.pre.utm81 (SHA-256 7876da32e8eead8f620b1921c6ddc1df8be0cdd04bdfbbe3952cc1eae8eb2fee)
+and ace-herdr 0.10.1.pre.utm81 (93caff5f85802c15d59a5d49629c4f8ef3cdd0eaeab83075f5a4f50a71e80b59).
+The self-contained /opt/ace/diagnostic/utm81/gems installation passed the default
+IssuerInstaller checks. Protected manifest now selects this same worker runtime
+and mo-owned /run/lab/herdr81/herdr.sock. Prior manifest and units are backed up.
+
+Owner build of native dfb88ce05e26cf692d5cff000818550a6bfada85 completed:
+artifact 54388175ba9aafaecff11bd7a415793b15262d6b7e38f34e6acc8a1d3336220e,
+provenance b528a9f33fadec3c007bddc63a4a52574bc13b2035fef01204dd349f7c138a9f,
+selection 4733d42c378686f9e31988a0b954ed03d8f0d4413db8a19f95d123d17b048055.
+Native81 is root-installed; its integration install projected Pi integration v10
+to the protected extension directory. The mo-owned diagnostic native server is
+ace-e2e-herdr81.service, invocation e03c97ec018e403ab074624deb704bf5.
+
+Actual native start worker81 created terminal term_65f6abb255f8e2 / w1:p2.
+Authenticated reports populated its Pi session reference under private unit
+ace-auth-faeb0983982a33da. A diagnostic prompt asking role/reporting responsibilities
+completed without file edits or commands. Native agent.list then reported
+interactive_ready=true, agent_status=done, completion_seq=3, state_change_seq=3.
+The diagnostic command waited only for idle and timed out because native maps
+completion to done. That timeout is not a stalled model; no duplicate prompt
+was sent. Terminal evidence confirms eyes off pending:0. First turn and scoped
+report delivery are proven; eyes and autonomous delegation remain unaccepted.
+Pi still downloads rg/fd, which final runtime pinning must eliminate.
+
+Broader auth verification selected 30 actual test files: 288 tests, 1170
+assertions, zero failures/errors, 9 skipped; report e24b02c5-6a6f-4630-927c-01a2203bbf3c.
+The preceding attempt supplied a directory as a file and ran zero tests; it is
+not verification. This diagnostic deployment is not either clean E2E run.
