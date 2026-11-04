@@ -10,7 +10,7 @@ module Ace
       # admission; the issuer owns the original caller's project authority.
       class SessionControl
         METHODS = %w[agent.list agent.get agent.prompt agent.wait pane.current ping agent.readiness].freeze
-        PUBLIC_FIELDS = %w[terminal_id name agent agent_status workspace_id tab_id pane_id focused
+        PUBLIC_FIELDS = %w[terminal_id name agent agent_status workspace_id tab_id pane_id focused cwd
           launch_pending interactive_ready state_change_seq completion_seq revision isolated_session].freeze
 
         def initialize(configuration: SessionConfiguration.new, transport: SessionNativeTransport.new, readiness: SessionReadiness.new)

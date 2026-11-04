@@ -54,9 +54,13 @@ a missing coworker — you report the gap and escalate.
 After start, call the `ace_eyes` tool with action `start` and `configPath`
 pointing to `<project>/.ace-local/overseer/eyes.json` (interval 15s is the default
 reconcile cadence). Verify enabled=true, breaker=null, errors=0 and a successful
-observation. Writing `/eyes` in prose does not arm observation. If the configuration is
-missing or invalid, delegate its preparation or raise a precise HITL blocker;
-do not create or edit it yourself. `ace-overseer observe` — what eyes polls —
+observation with every required source healthy. A degraded source blocks
+new dispatch: record its returned error through the existing task/HITL owner
+and end the turn. If that owner is also unavailable, report its failure and
+end the turn. Do not investigate implementation or host transport yourself.
+Writing `/eyes` in prose does not arm observation. If the configuration is
+missing or invalid, record or escalate that precise blocker and end the turn;
+do not dispatch work without observation or create/edit the configuration yourself. `ace-overseer observe` — what eyes polls —
 projects local source classes from their owners: project tasks,
 private `_overseer` tasks, worktrees, coworker availability (existing run
 identifiers, never pane names), assignment progress, configured project

@@ -67,6 +67,13 @@ module Ace::Lab::Auth
       assert_equal %w[agent_status focused isolated_session name terminal_id], agents.first.keys.sort
     end
 
+    def test_authorized_inventory_preserves_project_cwd_but_not_private_session_path
+      @agent["cwd"] = "/lab/ace"
+      agent = call("agent.list").dig("result", "agents").first
+      assert_equal "/lab/ace", agent["cwd"]
+      refute agent.key?("agent_session")
+    end
+
     def test_prompt_is_bound_to_resolved_terminal_and_captured_runtime
       result = call("agent.prompt", {"target" => "worker", "text" => "Complete your assignment"})
       assert_equal "issued", result.dig("result", "submission")

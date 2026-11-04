@@ -1,35 +1,27 @@
 # Native terminal integration contract
 
-## Current live integration state (2026-11-04, candidate88)
+## Current diagnostic state (2026-11-04, candidate89 / overseer90)
 
-The diagnostic VM runs native `e70ad71d36b53b866743f3c81330813502db3627`
-(SHA256 `7128db42600b7cc110214719389b7877aced28210abb1651c0af69a77413640e`)
-with ace-herdr `0.10.1.pre.utm87`, ace-lab `0.14.2.pre.utm88` and ace-overseer
-`0.28.2.pre.utm84` from root-owned `/opt/ace/diagnostic/utm88/gems`.
-This diagnostic set is not an acceptance manifest.
+The installed standard-start path is now proven through native Herdr and a real
+DynamicUser coordinator. Public start returned started/ready:false; repeat start
+reused the exact terminal and authenticated host readiness returned false.
+The actual Pi first turn armed eyes but exposed two degraded sources: the old
+project_sessions tab lookup and missing fixture HITL recipient. It then violated
+the supervisory boundary by investigating host/transport details. This is a
+failed diagnostic attempt, not acceptance. The exact session was exported and
+stopped. Runtime `/opt/ace/diagnostic/utm89/gems` remains installed; native89
+continues running. Full artifact identities and evidence are recorded in
+`isolated-delegation-live-2026-11-04.md`.
 
-Real model-driven isolated delegation and guarded prompt delivery were proven
-on candidate83. Candidate86 proved actual authenticated project readiness,
-including private read-only evidence FD and installed owner evaluation, with
-expected `ready: false` while eyes were deliberately off. Candidate88 now
-also launches the lab coordinator in `/lab` through native Herdr and a real
-DynamicUser mount namespace. Its actual Pi readiness query returned
-`ready: false`, terminal `term_65f6bfa1dffeb3`, invocation
-`fce7223b384e43a39776f42415fe3102`, root `/lab`, role `lab-overseer`.
-The staging mount propagation fix was required for the live coordinator mount.
-No synthetic transcript or observer evidence was used. Positive first-turn
-and active-eyes readiness remains unproven.
-
-Current implementation work still required: deploy and prove the standard
-Overseer start integration, route coworker dispatch through this isolated native path; deploy and prove the implemented authorized host
-readiness; support worktree execution without runtime overrides; finish
-task/report/eyes and lease fault integration; register and run TS-MONO-003/004
-twice after clean resets with one final pinned manifest. Missing rg/fd must
-be supplied by that installation instead of downloaded per session. Existing
-fixture/start helpers still contain the earlier non-isolated launch and
-provider-auth setup and must adopt the protected runtime before acceptance.
-Historical checkpoints below are component evidence, not current runtime
-configuration or acceptance.
+Current corrections switch isolated project observation to authorized native
+role/project inventory, supply the local HITL fixture, and make the first-turn
+blocking condition explicit. They require a fresh installed probe. Still required:
+positive first-turn/eyes readiness and role compliance; isolated coworker dispatch
+and worktree execution; task/report/eyes and lease fault integration; TS-MONO-003/004
+registration and two clean runs of one final pinned manifest. Existing fixture
+runtime/start helpers still need the protected deployment path; rg/fd must be
+supplied by that installation instead of downloaded per session. Historical
+checkpoints below are component evidence, not complete acceptance.
 
 ## Startup observation integration (source, not deployed)
 

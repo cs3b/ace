@@ -65,8 +65,12 @@ Captain order.
    its complete task → worker → observation → verification → start procedure.
 3. Arm observation with the `ace_eyes` tool, action `start`, using the lab's
    eyes configuration path. Check enabled=true, breaker=null, errors=0 and
-   a successful observation before dispatch. A missing tool/configuration is
-   a readiness gap. Writing `/eyes` in prose does not arm observation.
+   a successful observation with every required source healthy before dispatch.
+   A missing tool/configuration or degraded source is a blocking readiness gap.
+   Record the returned error through the existing task/HITL owner and end this
+   turn; if that owner is unavailable, report its failure and end the turn.
+   Do not inspect host files or probe transport to find the cause yourself.
+   Writing `/eyes` in prose does not arm observation.
 4. For a preparation commission, read existing readiness/session state; use
    a startup dry run only if needed to establish an otherwise unknown status.
    Do not investigate its implementation or reproduce the failure yourself.

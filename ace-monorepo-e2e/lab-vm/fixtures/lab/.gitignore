@@ -1,5 +1,6 @@
 /.ace-local/
-/.ace/hitl/
+/.ace/hitl/*
+!/.ace/hitl/config.yml
 /.ace-tasks/_overseer/
 /.ace-wt/
 /ace/

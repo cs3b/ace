@@ -87,3 +87,50 @@ Reference for the established propagation semantics: https://kernel.org/doc/html
 Built ace-lab `0.14.2.pre.utm88` from `84b17c2c91e206785a03f440cbbdb1c9d8dbf553`, SHA256 `9a736509b1e47b4e39cb2a03655f745e80124319d79f7de637f33cdeaaf856fe`. Installed into the separate root-owned `/opt/ace/diagnostic/utm88/gems` closure and installed the singleton units through normal IssuerInstaller checks. Native remains verified native87, endpoint `/run/lab/herdr87/herdr.sock`.
 
 `herdr agent start-isolated lab-overseer88 --workspace w1 --project lab --role lab-overseer` succeeded: terminal `term_65f6bfa1dffeb3`, pane `w1:p2`, cwd `/lab`. Subsequent native observation reported actual Pi `interactive_ready: true`. Its single operator-requested component readiness query through installed IssuerClient returned `ready: false`, invocation `fce7223b384e43a39776f42415fe3102`, root `/lab`, role `lab-overseer`. Eyes was intentionally not armed. This confirms the full native coordinator mount/handoff and authenticated negative-readiness path, not autonomous bootstrap, positive eyes readiness or E2E acceptance. The staging-propagation correction received independent review without actionable findings. Task remains in progress.
+
+
+## Standard start on candidate89 / overseer90
+
+Source integration `fc108d8470b232fd5d314cf3dd2282393a1a0870`; standing-guide
+correction `88048afca1cb762623bc06a1c4092d0c98045fa0`. Installed root runtime
+`/opt/ace/diagnostic/utm89/gems` contains ace-lab 0.14.2.pre.utm89
+(SHA256 `7274151de8bbeb43b5a532f5d7a8af86c3678373085a95c90f6978ae3ee76f4c`),
+ace-herdr 0.10.1.pre.utm89
+(`93da249d2bdbb37032a6428dcfe8a40b674b2702c8af202219645360572b59e3`),
+ace-overseer 0.28.2.pre.utm90
+(`425ddd7c1c97f1df092a4d55ad8eb215870809c37eccb5f676f9fc36c70207ed`).
+This is a mixed diagnostic candidate, not a final acceptance manifest.
+Native source `c17ef7290086f338dd33370ebc9304149c3fa9f4`, artifact
+`1c4c8f0e197a68b00da08a63c32e938c8a90a6169a92af4c68d382ad5573b709`,
+provenance `a39e20d0069d8907224af6bab3b55ed97898d57454c2b5b154f992e82400bf0a`,
+selection `38179efff7d26782a3d8941f712fb7c64eab09d2b4df1f471e0b1058b456659c`.
+Native service ace-e2e-herdr89 invocation `7427b22ce6874bc2bf6231b88cf97ca5`.
+
+The actual public installed `ace-overseer start --scope lab --format json`,
+run as mo from /lab, created workspace w1 and isolated coordinator
+`term_65f6c6843de5f2` (w1:p2), unit
+ace-auth-session-lab-overseer-3f48f3c7db2ab7f1.service, invocation
+`a5d7aba9123f4611b3c64f4096088f6f`. It submitted the first prompt exactly once
+and returned started/ready:false. Real Pi entered working state and called
+ace_eyes. Repeating the public command reused the same terminal, returned
+ready:false via the host authenticated evaluator, and submitted no new prompt.
+
+This attempt FAILED full readiness and role acceptance. Eyes was enabled but
+project_sessions was degraded because its old observer called forbidden
+`herdr tab list`; HITL was degraded because the lab fixture lacked recipient
+overseer. The coordinator then investigated host directories/transport instead
+of ending the blocked turn. No positive eyes readiness is claimed. The session
+was exported locally without auth.json and its exact unit stopped; no retry was
+started. Evidence: `.ace-local/lab-vm/evidence/coordinator89-session.tar.gz`.
+
+Product fix now uses authorized native project/role inventory and canonical
+cwd in ProjectSessions; no tab fallback. Fixture supplies local HITL aliases.
+The canonical first-turn contract explicitly ends the turn on degraded source
+or unavailable blocker owner, without host/implementation diagnostics. These
+corrections still require a new installed probe; instruction changes alone do
+not prove role compliance.
+
+Before these corrections, full package checks passed: overseer 533 tests,
+2442 assertions, one platform skip (`b478396e-2d9e-4bfe-a07a-4786c803f568`);
+lab 992 tests, 4631 assertions, 16 platform skips
+(`c09176a7-2c2a-4002-b1ad-54a53d35fe0e`). Both had zero failures/errors.
