@@ -40,12 +40,17 @@ module Ace
           end
           wire = Ace::Runtime::Molecules::ProtectedSocket
           wire.root_path!(File.dirname(project), directory: true, owner: stat.uid)
-          %w[/usr/bin/nsenter /bin/mount /bin/mkdir].each { |path| wire.root_path!(File.realpath(path)) }
+          %w[/usr/bin/nsenter /bin/mount /bin/mkdir /bin/umount /bin/rmdir].each { |path| wire.root_path!(File.realpath(path)) }
           uid, gid = identity.process.values_at("uid", "gid")
           unless SessionPeer::DYNAMIC_UIDS.cover?(uid) && uid == gid
             raise Error, "session mapping identity is invalid"
           end
           @platform.live!(identity.process)
+          staging = "/run/ace-auth-#{SessionPeer::UNIT.match(identity.unit)[2]}/project-source"
+          @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mkdir",
+            "--mode=0700", "--", staging], namespace: namespace, source: source)
+          @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mount",
+            "--bind", project, staging], namespace: namespace, source: source)
           # The source descriptor was opened before covering /lab. Expose
           # exactly the assigned project, not sibling projects or old lab
           # paths. This tmpfs exists only in the pinned session namespace.
@@ -56,7 +61,11 @@ module Ace
             "--mode=0755", "--", project], namespace: namespace, source: source)
           @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mount",
             "--bind", "-o", "X-mount.idmap=u:#{stat.uid}:#{uid}:1 g:#{stat.gid}:#{gid}:1",
-            "/proc/self/fd/4", project], namespace: namespace, source: source)
+            staging, project], namespace: namespace, source: source)
+          @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/umount",
+            "--", staging], namespace: namespace, source: source)
+          @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/rmdir",
+            "--", staging], namespace: namespace, source: source)
           # ProtectSystem=strict makes the inherited project mount read-only.
           # Relax only this private bind mount after applying the identity map.
           @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mount",
