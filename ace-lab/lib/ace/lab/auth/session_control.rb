@@ -8,7 +8,7 @@ module Ace
       # Narrow supervisory API. Native owns terminal identity and process
       # admission; the issuer owns the original caller's project authority.
       class SessionControl
-        METHODS = %w[agent.list agent.get agent.prompt].freeze
+        METHODS = %w[agent.list agent.get agent.prompt pane.current].freeze
         PUBLIC_FIELDS = %w[terminal_id name agent agent_status workspace_id tab_id pane_id
           launch_pending interactive_ready state_change_seq completion_seq revision isolated_session].freeze
 
@@ -19,6 +19,18 @@ module Ace
         def call(request, identity:)
           self.class.validate!(request)
           id, method, params = request.values_at("id", "method", "params")
+          if method == "pane.current"
+            caller = params["caller_pane_id"]
+            unless identity.terminal_id && (caller.nil? || caller == identity.terminal_id)
+              raise Error, "session current pane differs from its binding"
+            end
+            agent = native(id, "agent.get", {"target" => identity.terminal_id}, identity).dig("result", "agent")
+            unless authorized?(agent, identity) && agent["terminal_id"] == identity.terminal_id
+              raise Error, "session current pane is unavailable"
+            end
+            return {"id" => id, "result" => {"type" => "pane_current",
+              "pane" => project(agent).merge("cwd" => identity.project_root)}}
+          end
           if method == "agent.list"
             result = native(id, method, {}, identity).fetch("result")
             agents = result.fetch("agents").select { |agent| authorized?(agent, identity) }
@@ -79,6 +91,14 @@ module Ace
             raise Error, "invalid session control envelope"
           end
           params = request.fetch("params")
+          if request["method"] == "pane.current"
+            unless (params.keys - ["caller_pane_id"]).empty? &&
+                (params["caller_pane_id"].nil? || (params["caller_pane_id"].is_a?(String) &&
+                  SessionPeer::TERMINAL_ID.match?(params["caller_pane_id"])))
+              raise Error, "invalid current pane request"
+            end
+            return true
+          end
           fields = case request["method"]
           when "agent.list" then []
           when "agent.get" then %w[target]

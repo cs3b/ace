@@ -36,6 +36,18 @@ module Ace::Lab::Auth
       @control.call({"id" => "control", "method" => method, "params" => params}, identity: @identity)
     end
 
+    def test_current_pane_uses_only_authenticated_terminal_and_project_root
+      @identity.terminal_id = "term_2222"
+      pane = call("pane.current", {"caller_pane_id" => "term_2222"}).dig("result", "pane")
+      assert_equal "/lab/ace", pane["cwd"]
+      assert_equal "term_2222", @sent.last.dig("params", "target")
+      refute pane.key?("agent_session")
+      assert_raises(Error) { call("pane.current", {"caller_pane_id" => "term_3333"}) }
+      assert_equal 1, @sent.size
+      @agent["terminal_id"] = "term_3333"
+      assert_raises(Error) { call("pane.current") }
+    end
+
     def test_list_filters_foreign_and_nonisolated_agents_and_private_metadata
       agents = call("agent.list").dig("result", "agents")
       assert_equal 1, agents.size
