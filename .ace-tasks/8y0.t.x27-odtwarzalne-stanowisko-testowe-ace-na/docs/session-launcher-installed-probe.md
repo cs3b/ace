@@ -84,3 +84,30 @@ temporary source bind under the existing session runtime directory before
 covering /lab, then removes that bind and mountpoint before release. This
 does not add persisted project or lease state. Isolation of other assignments
 and worktrees inside the selected project remains unfinished.
+
+## Private parent relocation regression
+
+Independent launcher review identified that masking only `_overseer` allowed
+a worker to rename its writable `.ace-tasks` parent. A subsequent session could
+then see the original private subtree under the relocated name. The launcher
+now self-binds `.ace-tasks` before masking the private child and before releasing
+the preparation barrier. The parent is a mountpoint and cannot be renamed by
+the session.
+
+Artifact ace-lab 0.14.2.pre.utm64, source
+`e6d0d828775331b4de51b36d5412e426b6d98edb`, SHA-256
+`ecbffd0283b8010ab28225676f4c964d1b8bfacbdba11496b2f57a56c11d4259`,
+was installed into `/opt/ace/diagnostic/utm64/gems`. The probe actually attempted
+the parent rename and required EBUSY, not an arbitrary failure. It passed,
+along with private-file denial, sibling-project hiding, preparation barrier,
+and a successful write with backing UID 1001. Unit
+`ace-auth-session-worker-f887905e5e11a078.service`, invocation
+`0d15ec36663e4fb4bfccc9895720dfc3`, session UID 64447; probe exit 0.
+
+Independent reviewer `review_session_launcher` closed the finding after
+reviewing this delta and the kernel probe evidence; no new actionable finding
+in that delta. Package verification: 892 tests, 4042 assertions, zero failures
+or errors, 13 skipped; targeted mount tests: 3 tests, 9 assertions, all passed.
+This remains component evidence. Native terminal handoff, same-project session
+privacy, production readiness, TS-MONO-003/004 and two clean full cycles are
+still outstanding; task remains in progress.
