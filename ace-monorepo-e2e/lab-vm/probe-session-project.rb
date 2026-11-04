@@ -21,6 +21,7 @@ unit = Ace::Lab::Auth::SessionUnit.new(role: "worker", id: SecureRandom.hex(8),
 launcher = Ace::Lab::Auth::SessionLauncher.new
 launch = identity = nil
 completed = false
+transport_reaped = false
 PTY.open do |master, slave|
   begin
     launch = launcher.start(unit: unit, terminal: slave)
@@ -46,6 +47,17 @@ PTY.open do |master, slave|
     stat = File.stat(output)
     raise "backing ownership changed" unless [stat.uid, stat.gid] == [account.uid, account.gid]
     raise "unexpected worker result" unless File.read(output) == "worker completed"
+    deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+    loop do
+      ended = Process.waitpid2(launch.transport_pid, Process::WNOHANG)
+      if ended
+        transport_reaped = true
+        raise "session command failed" unless ended.last.success?
+        break
+      end
+      raise "session termination unconfirmed" if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+      sleep 0.05
+    end
     puts JSON.generate(unit: identity.unit, invocation: identity.invocation_id,
       session_uid: identity.process.fetch("uid"), backing_uid: stat.uid, barrier: "passed", write: "passed")
     completed = true
@@ -59,7 +71,7 @@ PTY.open do |master, slave|
     raise
   ensure
     identity&.pidfd&.close
-    if launch
+    if launch && !transport_reaped
       raise "session stop failed" unless system("/usr/bin/systemctl", "stop", unit.name)
       Process.waitpid(launch.transport_pid)
     end

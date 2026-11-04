@@ -24,3 +24,26 @@ The probe closed its pidfd, stopped the unit and reaped the transport. Exit 0.
 This verifies the packaged launch/identity boundary against real systemd. It
 does not prove project mounts, native Herdr handoff, Pi readiness, leases or
 the autonomous E2E cycle. Those acceptance criteria remain open.
+
+## Preparation barrier and project write
+
+Follow-up built artifact: ace-lab 0.14.2.pre.utm60 from
+`5eedf3ce478157851639d9852283a9ae9b236fad`, SHA-256
+`b2b62fded82d3b816d9d1c68161222a3e26949b374096dd2b645a156346dd410`.
+Installed separately under `/opt/ace/diagnostic/utm60/gems`.
+
+`lab-vm/probe-session-project.rb` passed on the same VM with exit 0:
+unit `ace-auth-session-worker-cac32c96f5fdbf5c.service`, invocation
+`8c9090c85fdd436c991cbae75b3358d6`, session UID 64920, backing owner UID
+1001 (`mo`). No worker result existed before mount preparation or before the
+release signal; after release, the worker wrote the expected result, preserving
+the project's ownership. The systemd-run transport exited successfully and was
+reaped; the successful probe removed its temporary project.
+
+This run follows a real EROFS failure in utm59: ProtectSystem=strict made the
+inherited bind read-only. The product now remounts only the mapped project bind
+writable in the private namespace. The first utm60 run confirmed the write but
+the probe incorrectly tried to stop an already-finished, unloaded unit; the
+probe now confirms transport completion before cleanup. Earlier failure
+directories remain preserved for diagnosis. Private-state masking and Herdr
+integration are still required before this can run a real worker safely.
