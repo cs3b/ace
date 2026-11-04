@@ -39,8 +39,9 @@ module Ace
         def initialize(platform: Ace::Runtime::Molecules::ProtectedLinux.new,
           manager_factory: ->(unit) { Ace::Runtime::Molecules::SystemdScopeManager.new(slice_unit: SLICE, service_unit: unit) },
           proc_root: "/proc", runtime_root: "/run", etc_root: "/etc", owner_uid: 0, account_lookup: ->(uid) { Etc.getpwuid(uid) },
-          namespace_factory: nil, namespace_matcher: nil)
+          namespace_factory: nil, namespace_matcher: nil, privileged: -> { Process.euid.zero? })
           @platform, @manager_factory = platform, manager_factory
+          @privileged = privileged
           @proc_root, @runtime_root, @owner_uid, @account_lookup = proc_root, runtime_root, owner_uid, account_lookup
           @etc_root = etc_root
           @namespace_factory = namespace_factory || ->(pid) { SessionNamespace.capture(pid, proc_root: @proc_root) }
@@ -56,7 +57,42 @@ module Ace
           handle.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
           raise Error, "session peer has exited" if @platform.exited?(handle)
 
-          peer = @platform.peer(socket)
+          authenticate_process_handle(handle, @platform.peer(socket))
+        rescue Exception => error
+          handle&.close unless handle&.closed?
+          if error.is_a?(Ace::Runtime::Error) || error.is_a?(SystemCallError) || error.is_a?(IOError) || error.is_a?(ArgumentError)
+            raise Error, "session identity could not be verified (#{error.class})"
+          end
+          raise
+        end
+
+        # Internal root-side observation of a native guarded child. It uses
+        # exactly the socket authentication policy below; UID alone never
+        # establishes a target session. The caller owns all returned handles.
+        def authenticate_process(expected)
+          raise Error, "target session observation requires root" unless @privileged.call
+          @platform.supported!
+          unless expected.is_a?(Hash) && expected["pid"].is_a?(Integer) && expected["pid"].positive?
+            raise Error, "target process identity is unavailable"
+          end
+          observed = @platform.capture(expected.fetch("pid"))
+          raise Error, "target process incarnation differs" unless @platform.same?(expected, observed)
+          handle = @platform.pin(observed)
+          identity = authenticate_process_handle(handle, observed)
+          unless identity.main_pid == observed.fetch("pid")
+            identity.close
+            raise Error, "target is not the session main process"
+          end
+          identity
+        rescue Exception => error
+          handle&.close unless handle&.closed?
+          if error.is_a?(Ace::Runtime::Error) || error.is_a?(SystemCallError) || error.is_a?(IOError) || error.is_a?(ArgumentError)
+            raise Error, "target session identity could not be verified (#{error.class})"
+          end
+          raise
+        end
+
+        def authenticate_process_handle(handle, peer)
           unless DYNAMIC_UIDS.cover?(peer.fetch("uid")) && peer.fetch("gid") == peer.fetch("uid") &&
               peer.fetch("groups").all? { |group| group == peer.fetch("gid") }
             raise Error, "session requires a dedicated dynamic uid and gid"
@@ -154,6 +190,8 @@ module Ace
           end
           raise
         end
+
+        private :authenticate_process_handle
 
         # The same runtime-directory owner serves authenticated lease calls
         # and pre-exec preparation. Claim it before adding HOME/Pi contents;

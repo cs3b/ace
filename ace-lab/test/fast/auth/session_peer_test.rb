@@ -19,6 +19,7 @@ module Ace
           def peer(_socket) = {"pid" => 123, "uid" => 62_000, "gid" => 62_000, "groups" => groups || [62_000]}
           def capture(pid) = {"pid" => pid, "uid" => main_uid || 62_000, "gid" => 62_000, "groups" => groups || [62_000]}
           def pin(_identity) = (@main_handle = File.open(File::NULL))
+          def same?(left, right) = left == right
           def live!(_peer) = true
           def exited?(handle) = !!exited || (handle == @main_handle && !!main_exited)
         end
@@ -69,7 +70,7 @@ module Ace
             proc_root: @proc, runtime_root: @runtime, etc_root: @etc, owner_uid: Process.uid,
             account_lookup: ->(_uid) { Account.new("ace-worker", 62_000, 62_000) },
             namespace_factory: ->(_pid) { @captured_namespace = File.open(File::NULL) },
-            namespace_matcher: ->(_namespace, _pid) { @namespace_matches })
+            namespace_matcher: ->(_namespace, _pid) { @namespace_matches }, privileged: -> { true })
         end
 
         def teardown = FileUtils.remove_entry(@root)
@@ -86,6 +87,30 @@ module Ace
             slice_unit: SessionPeer::SLICE, service_unit: UNIT, command: command)
           assert_equal values.slice(*SessionPeer::PROPERTIES.keys), manager.typed_properties(
             unit: UNIT, interface: "Service", signatures: SessionPeer::PROPERTIES)
+        end
+
+        def test_root_target_observation_reuses_complete_session_policy
+          expected = @platform.capture(123)
+          identity = @peer.authenticate_process(expected)
+          assert_equal UNIT, identity.unit
+          assert_equal INVOCATION, identity.invocation_id
+          assert_equal 123, identity.main_pid
+          identity.close
+          @manager.properties["Delegate"] = true
+          assert_raises(Error) { @peer.authenticate_process(expected) }
+        end
+
+        def test_target_observation_rejects_changed_process_and_nonmain_child
+          expected = @platform.capture(123)
+          assert_raises(Error) { @peer.authenticate_process(expected.merge("uid" => 62_001)) }
+          @manager.main_pid = "124"
+          assert_raises(Error) { @peer.authenticate_process(expected) }
+          assert @captured_namespace.closed?
+        end
+
+        def test_target_observation_is_not_available_to_an_unprivileged_caller
+          peer = SessionPeer.new(privileged: -> { false })
+          assert_raises(Error) { peer.authenticate_process(@platform.capture(123)) }
         end
 
         def test_returns_os_bound_identity_and_open_lifetime_handle
