@@ -7045,3 +7045,65 @@ index bcd5d25..fc456bb 100644
  #[serde(deny_unknown_fields)]
  pub struct IsolatedSessionConfig {
      pub project: String,
+From 9bc62225f7c2049d34f7b7287901555852b80cf4 Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 04:17:44 +0000
+Subject: [PATCH] fix: resolve agent queries by immutable terminal identity
+
+---
+ src/app/terminal_targets.rs | 35 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
+
+diff --git a/src/app/terminal_targets.rs b/src/app/terminal_targets.rs
+index 658eeaa..003c30c 100644
+--- a/src/app/terminal_targets.rs
++++ b/src/app/terminal_targets.rs
+@@ -93,6 +93,16 @@ impl App {
+         &self,
+         target: &str,
+     ) -> Result<TerminalTarget, TerminalTargetError> {
++        if target.starts_with("term_") {
++            let resolved = self.resolve_guarded_agent_target(target)?;
++            return if self.target_is_agent(&resolved) {
++                Ok(resolved)
++            } else {
++                Err(TerminalTargetError::NotFound {
++                    target: target.into(),
++                })
++            };
++        }
+         if let Some((ws_idx, pane_id)) = self.parse_current_public_pane_id(target) {
+             if let Some(resolved) = self
+                 .terminal_target_for_pane(ws_idx, pane_id)
+@@ -225,6 +235,31 @@ mod tests {
+         )
+     }
+ 
++    #[test]
++    fn isolated_agent_target_is_exact_terminal_without_name_fallback() {
++        let mut app = test_app();
++        app.state = AppState::test_with_adversarial_identity_state();
++        let targets = app.terminal_targets();
++        let first = &targets[0];
++        app.state
++            .terminals
++            .get_mut(first.terminal_id.as_str())
++            .unwrap()
++            .set_agent_name("term_missing".into());
++        assert_eq!(
++            app.resolve_agent_target(&first.terminal_id).unwrap(),
++            *first
++        );
++        assert!(matches!(
++            app.resolve_agent_target("term_missing"),
++            Err(TerminalTargetError::NotFound { .. })
++        ));
++        assert!(matches!(
++            app.resolve_agent_target(&targets[1].terminal_id),
++            Err(TerminalTargetError::NotFound { .. })
++        ));
++    }
++
+     #[test]
+     fn named_targets_follow_terminal_identity_after_pane_and_tab_reordering() {
+         let mut app = test_app();
