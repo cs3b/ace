@@ -4,6 +4,7 @@
 # Installed-artifact component probe, not the autonomous E2E verdict.
 require "ace/lab/auth/session_launcher"
 require "ace/lab/auth/session_project_mount"
+require "ace/lab/auth/session_preparation"
 require "pty"
 require "etc"
 require "securerandom"
@@ -52,9 +53,20 @@ if forgejo
   assert json.loads(status.stdout)['state'] == 'revoked'
 PYTHON
 end
-unit = Ace::Lab::Auth::SessionUnit.new(role: "worker", id: SecureRandom.hex(8), directory: project,
+session_id = SecureRandom.hex(8)
+model_source_dir = "/run/ace-e2e-model-#{session_id}"
+Dir.mkdir(model_source_dir, 0o700)
+model_source = File.join(model_source_dir, "auth.json")
+File.write(model_source, JSON.generate("fixture" => {"key" => "ephemeral"}, "other" => {"key" => "excluded"}), mode: "wx", perm: 0o600)
+privacy_check += "import json, os\nassert json.load(open(os.environ['PI_CODING_AGENT_DIR'] + '/auth.json')) == {'fixture': {'key': 'ephemeral'}}\n"
+privacy_check += "try:\n    open(#{model_source.inspect}).read()\nexcept PermissionError:\n    pass\nelse:\n    raise RuntimeError('host model source was readable')\n"
+selection = Ace::Lab::Auth::SessionConfiguration::Selection.new(project: File.basename(project), path: project,
+  role: "worker", instructions: "/unused-in-component-probe", gem_home: ENV.fetch("GEM_HOME"),
+  runtime: {"credentials" => model_source, "provider" => "fixture"})
+unit = Ace::Lab::Auth::SessionUnit.new(role: "worker", id: session_id, directory: project,
   command: [File.realpath("/usr/bin/python3"), "-c", "exec(#{privacy_check.inspect}); open('result', 'w').write('worker completed')"],
-  environment: {"GEM_HOME" => ENV.fetch("GEM_HOME"), "GEM_PATH" => ENV.fetch("GEM_PATH")})
+  environment: {"GEM_HOME" => ENV.fetch("GEM_HOME"), "GEM_PATH" => ENV.fetch("GEM_PATH"),
+    "HOME" => "/run/ace-auth-#{session_id}/home", "PI_CODING_AGENT_DIR" => "/run/ace-auth-#{session_id}/pi"})
 launcher = Ace::Lab::Auth::SessionLauncher.new
 launch = identity = nil
 completed = false
@@ -73,6 +85,7 @@ PTY.open do |master, slave|
       end
     end
     raise "worker ran before preparation" if File.exist?(output)
+    Ace::Lab::Auth::SessionPreparation.new.call(identity: identity, selection: selection)
     Ace::Lab::Auth::SessionProjectMount.new.call(identity: identity, project: project)
     raise "worker ran before release" if File.exist?(output)
     master.write("start\n")
@@ -89,6 +102,8 @@ PTY.open do |master, slave|
     stat = File.stat(output)
     raise "backing ownership changed" unless [stat.uid, stat.gid] == [account.uid, account.gid]
     raise "unexpected worker result" unless File.read(output) == "worker completed"
+    raise "session main did not exit" unless IO.select([identity.pidfd], nil, nil, 5)
+    launcher.stop(identity)
     deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
     loop do
       ended = Process.waitpid2(launch.transport_pid, Process::WNOHANG)
@@ -102,7 +117,7 @@ PTY.open do |master, slave|
     end
     puts JSON.generate(unit: identity.unit, invocation: identity.invocation_id,
       session_uid: identity.process.fetch("uid"), backing_uid: stat.uid, barrier: "passed", write: "passed",
-      private_task_open: "denied", private_task_parent_rename: "denied", other_project: "hidden", forgejo_lease_cycle: !!forgejo)
+      private_task_open: "denied", private_task_parent_rename: "denied", other_project: "hidden", private_model_credentials: "passed", forgejo_lease_cycle: !!forgejo)
     completed = true
   rescue StandardError
     begin
@@ -119,6 +134,8 @@ PTY.open do |master, slave|
       Process.waitpid(launch.transport_pid)
     end
     if completed
+      File.unlink(model_source)
+      Dir.rmdir(model_source_dir)
       File.unlink(output)
       File.unlink(sentinel)
       Dir.rmdir(private_tasks)

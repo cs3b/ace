@@ -20,7 +20,7 @@ end
 begin
   raise "usage: lab-vm-build-gem PACKAGE FULL_COMMIT VERSION" unless ARGV.length == 3
   package, commit, version = ARGV
-  namespace = {"ace-coworker" => "coworker", "ace-wake" => "wake", "ace-lab" => "lab", "ace-herdr" => "herdr", "ace-git-forgejo" => "git/forgejo",
+  namespace = {"ace-runtime" => "runtime", "ace-coworker" => "coworker", "ace-wake" => "wake", "ace-lab" => "lab", "ace-herdr" => "herdr", "ace-git-forgejo" => "git/forgejo",
     "ace-overseer" => "overseer", "ace-handbook-integration-pi" => "handbook/integration/pi"}
     .fetch(package) { raise "unsupported local gem" }
   raise "full commit SHA required" unless commit.match?(/\A[0-9a-f]{40}\z/)

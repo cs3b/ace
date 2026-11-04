@@ -131,3 +131,33 @@ Barrier, relative project write, private-task/parent denial, sibling isolation
 and public Forgejo lease cycle all passed. This deliberately used the unchanged
 utm68 diagnostic issuer and dependency closure; it is not a single-manifest
 acceptance run or a native Herdr launch. Successful temporary state was cleaned.
+
+## Retained lifecycle and current singleton issuer
+
+Installed ace-lab `0.14.2.pre.utm72` from
+`41a925afaab70f3e01a2ea0afe4b6b506e993515` (SHA-256
+`6605b556c4ae166efe0c1aa8674a94fc0f891f38a66333ce0bd5870e2e47c2a1`)
+retains naturally exited units until the launch owner stops them. The installed
+natural-exit probe passed for invocation `af0d5fdccc3a42f9824cd72e393345b4`.
+Stopping the issuer also stopped its bound session and removed its cgroup
+(invocation `fee57f81dc214f309d521c597107a09f`).
+
+The first public lease probe after switching the singleton issuer to utm72
+failed closed: SessionPeer requested RemainAfterExit, but the real runtime
+adapter rejected that property. Earlier fake-manager tests missed the package
+boundary. Fix `ba7c3a809529e8d474fee6fe5d25ead775c4e516` adds the typed boolean
+and exercises the actual adapter from SessionPeer tests (14 tests/33 assertions;
+runtime manager 15/147, all passing).
+
+Built ace-runtime `0.4.2.pre.utm73`, SHA-256
+`ad00b1ad5b92408bf5e17949ff3139beaa8080df319983bef269a41a1625ca01`,
+installed into the same diagnostic utm72 gem home and restarted the issuer.
+The public Forgejo probe then passed with GEM_HOME and GEM_PATH pointing only
+to that root-owned closure: unit
+`ace-auth-session-worker-7517882a0ba2e5cb.service`, invocation
+`cba37f49ed0f4460ac2d20c41b288284`, session UID 65186, backing UID 1001.
+It proves prepared private provider credentials, sibling/private-task hiding,
+relative project writes, public request/exec/status with confirmed revocation,
+and explicit retained-unit stop. This is component evidence, not full native
+Herdr/Pi launch or autonomous E2E acceptance. The failed project was preserved
+at `/lab/e2e-launch-8d1b67b6cb8493ba` for diagnosis.
