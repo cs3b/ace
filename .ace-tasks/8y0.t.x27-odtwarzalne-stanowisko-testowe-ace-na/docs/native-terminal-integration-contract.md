@@ -88,3 +88,29 @@ handoff; native Child/backend adapter and managed-agent start path; mounted
 project access; session-local communication; actual issuer readiness; complete
 TS-MONO-003/004 and two identical clean runs. No full-cycle criterion is met by
 the terminal/component probes alone.
+
+## Authenticated stop validation
+
+SessionLauncher now stops the retained single-use systemd unit only after
+checking its invocation and, while live, its pidfd binding. The systemd stop
+job must succeed and the retained pidfd must confirm process exit. The first
+live probe exposed that transient units are garbage-collected immediately
+after stopping: post-stop property lookup incorrectly rejected a successful
+stop. The implementation no longer requires that vanished unit to persist.
+
+Installed diagnostic artifact `ace-lab 0.14.2.pre.utm71`, source
+`b992f84c0b34ff46c6a60b8d9d7471daa80d12af`, SHA-256
+`32a506bd5e0b1ccc9f142f91f62345009cde50fee925ac5f1d711f900773454e`,
+passed the live UTM stop probe. Unit
+`ace-auth-session-worker-7cde6bffa67539c1.service`, invocation
+`41773156385448dd86b7293a4fe37b06`, returned confirmed_stop=true.
+Five launcher tests / 23 assertions pass. This verifies a gated service stop,
+not yet native Herdr pane shutdown or Pi readiness. The root launch owner must
+keep unit names single-use; this is not an arbitrary unit-stop public API.
+
+Independent integration review identifies the next complete cut: dispatch an
+authenticated host launch handler under the existing IssuerServer, leaving
+lease SessionPeer authentication unchanged; retain terminal/pidfd/lifecycle in
+that supervised handler; connect native SpawnedPty and Child to it. Host operator
+and delegated-session authorization must be explicit in SessionConfiguration.
+Do not expose the ordinary mo-owned Herdr control socket to DynamicUsers.
