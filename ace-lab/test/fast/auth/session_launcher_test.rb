@@ -190,9 +190,9 @@ module Ace::Lab::Auth
 
     def test_identity_uses_service_pid_and_rejects_replaced_invocation
       unit = "ace-auth-session-worker-1234567890abcdef.service"
-      state = {"ActiveState" => "active", "MainPID" => "456", "InvocationID" => "a" * 32, "ControlGroup" => "/#{SessionPeer::SLICE}/#{unit}"}
+      state = {"ActiveState" => "active", "MainPID" => "456", "InvocationID" => "a" * 32, "ControlGroup" => "/ace.slice/ace-auth.slice/#{SessionPeer::SLICE}/#{unit}"}
       manager = Object.new
-      manager.define_singleton_method(:inspect_units) { {"service" => state.dup} }
+      manager.define_singleton_method(:inspect_units) { {"service" => state.dup, "slice" => {"ControlGroup" => "/ace.slice/ace-auth.slice/#{SessionPeer::SLICE}"}} }
       manager.define_singleton_method(:unit_for_pidfd) { |handle:| {"unit" => unit, "invocation_id" => "a" * 32} }
       platform = Object.new
       platform.define_singleton_method(:capture) { |pid| {"pid" => pid, "uid" => 62000, "gid" => 62000, "groups" => []} }

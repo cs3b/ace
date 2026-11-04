@@ -41,7 +41,8 @@ module Ace
             raise ArgumentError, "invalid session launch"
           end
           manager = @manager_factory.call(launch.unit)
-          state = manager.inspect_units.fetch("service")
+          units = manager.inspect_units
+          state = units.fetch("service")
           pid = state.fetch("MainPID")
           unless state["ActiveState"] == "active" && pid.is_a?(String) && pid.match?(/\A[1-9][0-9]*\z/)
             raise Error, "session process has not started"
@@ -53,7 +54,7 @@ module Ace
           end
           handle = @platform.pin(process)
           cgroup_path = state.fetch("ControlGroup")
-          unless cgroup_path == "/#{SessionPeer::SLICE}/#{launch.unit}"
+          unless cgroup_path == "#{units.fetch("slice").fetch("ControlGroup")}/#{launch.unit}"
             raise Error, "session cgroup is outside its configured slice"
           end
           cgroup = @cgroups.pin(Ace::Runtime::Molecules::CgroupObservation::ROOT + cgroup_path)
