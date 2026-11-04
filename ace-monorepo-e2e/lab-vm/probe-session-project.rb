@@ -52,8 +52,8 @@ if forgejo
   assert json.loads(status.stdout)['state'] == 'revoked'
 PYTHON
 end
-unit = Ace::Lab::Auth::SessionUnit.new(role: "worker", id: SecureRandom.hex(8),
-  command: [File.realpath("/usr/bin/python3"), "-c", "exec(#{privacy_check.inspect}); open(#{output.inspect}, 'w').write('worker completed')"],
+unit = Ace::Lab::Auth::SessionUnit.new(role: "worker", id: SecureRandom.hex(8), directory: project,
+  command: [File.realpath("/usr/bin/python3"), "-c", "exec(#{privacy_check.inspect}); open('result', 'w').write('worker completed')"],
   environment: {"GEM_HOME" => ENV.fetch("GEM_HOME"), "GEM_PATH" => ENV.fetch("GEM_PATH")})
 launcher = Ace::Lab::Auth::SessionLauncher.new
 launch = identity = nil

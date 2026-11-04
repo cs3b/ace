@@ -13,7 +13,7 @@ module Ace
         ROLES = %w[lab-overseer project-overseer worker verifier integrator].freeze
         ENVIRONMENT = %w[PATH GEM_HOME GEM_PATH HOME LANG LC_ALL PI_CODING_AGENT_DIR].freeze
 
-        def initialize(role:, id:, command:, environment: {})
+        def initialize(role:, id:, command:, directory:, environment: {})
           unless ROLES.include?(role) && id.is_a?(String) && id.match?(/\A[0-9a-f]{16}\z/)
             raise ArgumentError, "invalid configured session role or id"
           end
@@ -24,7 +24,11 @@ module Ace
           unless environment.is_a?(Hash) && environment.all? { |key, value| ENVIRONMENT.include?(key) && clean?(value) }
             raise ArgumentError, "session environment is not allowlisted"
           end
+          unless clean?(directory) && directory.start_with?("/") && File.expand_path(directory) == directory
+            raise ArgumentError, "session directory must be a canonical absolute path"
+          end
           @role, @id = role, id
+          @directory = directory.dup.freeze
           @command = command.map(&:dup).freeze
           @environment = environment.transform_values(&:dup).freeze
         end
@@ -33,8 +37,8 @@ module Ace
         def executable = @command.first.dup
 
         def with_preparation_entry(ruby:, entry:)
-          self.class.new(role: @role, id: @id, environment: @environment,
-            command: [ruby, entry, "--", *@command])
+          self.class.new(role: @role, id: @id, environment: @environment, directory: @directory,
+            command: [ruby, entry, "--directory", @directory, "--", *@command])
         end
 
         def argv

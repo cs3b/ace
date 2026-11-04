@@ -13,7 +13,7 @@ module Ace::Lab::Auth
       launcher = SessionLauncher.new(privileged: true, platform: platform,
         verify_path: ->(path) { verified << path },
         spawn: ->(*args, **options) { observed = [args, options]; 123 })
-      unit = SessionUnit.new(role: "worker", id: "1234567890abcdef", command: ["/opt/ace/bin/pi"])
+      unit = SessionUnit.new(role: "worker", id: "1234567890abcdef", command: ["/opt/ace/bin/pi"], directory: "/lab/ace")
       PTY.open do |master, slave|
         result = launcher.start(unit: unit, terminal: slave)
         assert_equal unit.name, result.unit
