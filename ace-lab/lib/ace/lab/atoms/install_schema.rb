@@ -88,7 +88,7 @@ module Ace
           def normalize_session_runtime(raw)
             return nil if raw.nil?
             keys = %w[node pi path provider model credentials]
-            unless raw.is_a?(Hash) && raw.keys.sort == keys.sort
+            unless raw.is_a?(Hash) && (raw.keys - keys - ["herdr"]).empty? && (keys - raw.keys).empty?
               raise_invalid "session_runtime requires exactly node, pi, path, provider, model and credentials"
             end
             %w[node pi credentials].each do |key|
@@ -106,6 +106,15 @@ module Ace
             %w[provider model].each do |key|
               unless raw[key].is_a?(String) && raw[key].match?(%r{\A[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}\z})
                 raise_invalid "session_runtime #{key} is invalid"
+              end
+            end
+            if raw.key?("herdr")
+              endpoint = raw["herdr"]
+              unless endpoint.is_a?(Hash) && endpoint.keys.sort == %w[account socket] &&
+                  endpoint["account"].is_a?(String) && endpoint["account"].match?(/\A[a-z_][a-z0-9_-]*\z/) &&
+                  endpoint["socket"].is_a?(String) && endpoint["socket"].start_with?("/") &&
+                  File.expand_path(endpoint["socket"]) == endpoint["socket"] && !endpoint["socket"].match?(/[[:cntrl:]]/)
+                raise_invalid "session_runtime herdr requires an account and canonical socket path"
               end
             end
             raw.transform_values { |value| value.is_a?(Array) ? value.map(&:dup) : value.dup }

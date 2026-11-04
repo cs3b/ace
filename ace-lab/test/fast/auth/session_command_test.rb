@@ -8,7 +8,8 @@ module Ace::Lab::Auth
       SessionConfiguration::Selection.new(project: "ace", path: "/lab/ace", role: "worker",
         instructions: instructions, gem_home: "/opt/ace/gems",
         runtime: {"node" => "/opt/node/bin/node", "pi" => "/opt/pi/cli.js", "path" => ["/usr/bin"],
-          "provider" => "zai", "model" => "glm-5.3", "credentials" => "/etc/lab/pi-auth.json"})
+          "provider" => "zai", "model" => "glm-5.3", "credentials" => "/etc/lab/pi-auth.json",
+          "herdr" => {"account" => "mo", "socket" => "/run/lab/herdr.sock"}})
     end
 
     def test_command_uses_only_installed_runtime_and_protected_extensions

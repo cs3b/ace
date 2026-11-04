@@ -70,6 +70,23 @@ module Ace
           assert_equal :refused, thread.value
         end
 
+        def test_native_report_dispatch_authenticates_the_session_and_preserves_acknowledgement
+          identity = Struct.new(:closed) { def close = self.closed = true }.new(false)
+          report = {"id" => "r1", "method" => "pane.report_agent", "params" => {
+            "pane_id" => "term_abcdef", "agent" => "pi", "source" => "herdr:pi", "seq" => 1, "state" => "idle"}}
+          reports = Object.new
+          reports.define_singleton_method(:call) do |request, identity:|
+            raise "identity absent" unless identity
+            {"id" => request["id"], "result" => {"type" => "ok"}}
+          end
+          runner = IssuerRequest.new(authenticate: ->(_) { identity }, reports: reports,
+            service_factory: ->(*) { raise "report must not use lease store" })
+          @client.puts JSON.generate(report)
+          assert_equal :completed, runner.call(@server, invocation: "a" * 32)
+          assert_equal({"id" => "r1", "result" => {"type" => "ok"}}, JSON.parse(@client.gets))
+          assert identity.closed
+        end
+
         def test_launch_dispatch_requires_closed_schema_and_supervision_without_using_lease_identity
           invoked = []
           launch = Object.new

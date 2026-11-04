@@ -23,6 +23,9 @@ module Ace
             raise ArgumentError, "configured session selection required"
           end
           runtime = selection.runtime
+          if terminal_id && !runtime["herdr"].is_a?(Hash)
+            raise Error, "configured native reporting endpoint is unavailable"
+          end
           @verify.call(runtime.fetch("node"), directory: false, executable: true)
           @verify.call(runtime.fetch("pi"), directory: false)
           @verify.call(runtime.fetch("credentials"), directory: false, secret: true)

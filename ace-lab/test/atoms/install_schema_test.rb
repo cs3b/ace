@@ -24,10 +24,13 @@ module Atoms
         "path" => ["/usr/bin", "/bin"], "provider" => "zai", "model" => "glm-5.3",
         "credentials" => "/etc/lab/pi-auth.json"}
       assert_equal runtime, normalize(manifest("session_runtime" => runtime))["session_runtime"]
+      endpoint = {"account" => "mo", "socket" => "/run/lab/herdr.sock"}
+      assert_equal endpoint, normalize(manifest("session_runtime" => runtime.merge("herdr" => endpoint)))["session_runtime"]["herdr"]
       assert_nil normalize(manifest)["session_runtime"]
       [{"node" => "node"}, {"pi" => "/opt/../tmp/pi"}, {"path" => ["/tmp:/usr/bin"]},
         {"path" => ["/bin", "/bin"]}, {"provider" => "--override"}, {"command" => ["sh"]},
-        {"credentials" => "/etc/lab/key\n"}].each do |change|
+        {"credentials" => "/etc/lab/key\n"}, {"herdr" => {"account" => "mo", "socket" => "relative"}},
+        {"herdr" => {"account" => "mo", "socket" => "/run/herdr.sock", "command" => "sh"}}].each do |change|
         assert_raises(Ace::Lab::InvalidConfigurationError) do
           normalize(manifest("session_runtime" => runtime.merge(change)))
         end

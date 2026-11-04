@@ -8,6 +8,7 @@ require_relative "../auth"
 require_relative "session_peer"
 require_relative "session_lifetime"
 require_relative "session_launch_request"
+require_relative "session_report"
 
 module Ace
   module Lab
@@ -21,12 +22,12 @@ module Ace
         REQUIRED = %w[action profile role task assignment repos].freeze
         PUBLIC_LEASE_FIELDS = %w[id profile role task assignment repos use_until provider_expiry state_detail].freeze
 
-        def initialize(authenticate: ->(socket) { SessionPeer.new.authenticate(socket) }, launch: SessionLaunchRequest.new,
+        def initialize(authenticate: ->(socket) { SessionPeer.new.authenticate(socket) }, launch: SessionLaunchRequest.new, reports: SessionReport.new,
           service_factory: ->(identity, invocation) {
             Service.new(session: identity, issuer_invocation: invocation, supervised: true)
           })
           @authenticate, @service_factory = authenticate, service_factory
-          @launch = launch
+          @launch, @reports = launch, reports
         end
 
         def call(socket, invocation:, allow_request: true, supervising: nil)
@@ -42,6 +43,10 @@ module Ace
             return @launch.call(socket, request: request, invocation: invocation, supervising: supervising)
           end
           identity = @authenticate.call(socket)
+          if request.key?("method")
+            reply(socket, @reports.call(request, identity: identity))
+            return :completed
+          end
           if request["action"] == "request" && !allow_request
             raise Refusal, "issuer lease supervision capacity is exhausted"
           end
@@ -160,6 +165,10 @@ module Ace
           end
           value = JSON.parse(bytes, create_additions: false, allow_duplicate_key: false, max_nesting: 5)
           raise ArgumentError, "invalid issuer request" unless value.is_a?(Hash)
+          if value.key?("method")
+            SessionReport.validate!(value)
+            return value
+          end
           if value["action"] == "launch"
             fields = %w[action project role rows cols]
             unless (value.keys - fields - ["terminal_id"]).empty? && (fields - value.keys).empty? &&

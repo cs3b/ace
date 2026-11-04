@@ -27,6 +27,10 @@ module Ace::Lab::Auth
       unit = build(terminal_id: "term_abcdef12")
       prepared = unit.with_preparation_entry(ruby: "/opt/ruby", entry: "/opt/entry")
       assert_includes prepared.argv, "--setenv=ACE_LAB_TERMINAL_ID=term_abcdef12"
+      assert_includes prepared.argv, "--setenv=HERDR_ENV=1"
+      assert_includes prepared.argv, "--setenv=HERDR_PANE_ID=term_abcdef12"
+      assert_includes prepared.argv, "--setenv=HERDR_SOCKET_PATH=#{IssuerClient::SOCKET}"
+      assert_raises(ArgumentError) { build(environment: {"HERDR_SOCKET_PATH" => "/tmp/native.sock"}) }
       assert_raises(ArgumentError) { build(terminal_id: "w1:p1") }
       assert_raises(ArgumentError) { build(terminal_id: "term_abc\n") }
       assert_raises(ArgumentError) { build(environment: {"ACE_LAB_TERMINAL_ID" => "term_abcdef12"}) }

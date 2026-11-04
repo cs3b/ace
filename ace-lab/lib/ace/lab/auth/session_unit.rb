@@ -2,6 +2,7 @@
 
 require_relative "error"
 require_relative "session_peer"
+require_relative "issuer_client"
 
 module Ace
   module Lab
@@ -60,7 +61,10 @@ module Ace
           }
           environment = @environment.merge("ACE_TOOLCHAIN" => "installed", "ACE_LAB_SESSION" => "1",
             "ACE_LAB_PROJECT_ROOT" => @directory)
-          environment["ACE_LAB_TERMINAL_ID"] = @terminal_id if @terminal_id
+          if @terminal_id
+            environment.merge!("ACE_LAB_TERMINAL_ID" => @terminal_id, "HERDR_ENV" => "1",
+              "HERDR_PANE_ID" => @terminal_id, "HERDR_SOCKET_PATH" => IssuerClient::SOCKET)
+          end
           ["/usr/bin/systemd-run", "--quiet", "--wait", "--pipe", "--no-ask-password",
             "--expand-environment=no", "--unit=#{name}",
             *properties.map { |key, value| "--property=#{key}=#{value}" },

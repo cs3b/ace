@@ -521,3 +521,29 @@ Next required implementation is the authenticated restricted report endpoint,
 protected native socket selection/peer verification and live invocation check,
 then adoption ordering and actual Pi report/eyes evidence. Delegation must still
 preserve original session authority. Full TS-MONO-003/004 acceptance remains open.
+
+## Restricted report endpoint implementation
+
+IssuerRequest now authenticates native-shaped report requests through SessionPeer
+and forwards only pane.report_agent and pane.report_agent_session via SessionReport.
+The terminal must match its systemd binding; source/agent are fixed to herdr:pi/pi,
+sequence and text fields are bounded, resume_argv and unknown fields are refused.
+Session paths must be canonical under that session's private pi/sessions directory.
+This is lexical metadata validation, not symlink containment: the native host must
+not open/execute these paths as authority without separate validation.
+
+The optional protected session_runtime.herdr selection contains exactly account
+and socket. Forwarding verifies account-owned socket ancestry, inode continuity,
+connected peer UID/GID, live caller/main pidfds and the systemd invocation before
+and after I/O. Native errors are relayed as errors, not successful delivery.
+No lease/state registry participates. Unit environment points Pi only at the
+issuer socket with its bound terminal ID. A terminal-bound SessionCommand refuses
+missing endpoint configuration. Ordinary environment overrides cannot change it.
+
+Independent review found no blocker in the bridge; live adoption/delivery remains
+unverified. Tests: endpoint/schema/issuer 63 tests / 402 assertions (770b4b33-
+b615-4d04-be64-889a6bd17e3a); environment/command/report 12/91 (e1d05c3a-3eb5-
+426f-9441-438d76b83c3c). Transport tests use real socketpairs with simulated kernel
+identity and systemd boundaries; they do not prove Linux peer authentication.
+Build and install the paired native/issuer candidate, configure its protected
+Herdr endpoint, and exercise actual Pi reports before claiming live readiness.
