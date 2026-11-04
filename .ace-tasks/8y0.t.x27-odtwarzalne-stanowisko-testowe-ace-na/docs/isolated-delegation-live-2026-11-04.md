@@ -134,3 +134,36 @@ Before these corrections, full package checks passed: overseer 533 tests,
 2442 assertions, one platform skip (`b478396e-2d9e-4bfe-a07a-4786c803f568`);
 lab 992 tests, 4631 assertions, 16 platform skips
 (`c09176a7-2c2a-4002-b1ad-54a53d35fe0e`). Both had zero failures/errors.
+
+
+### Candidate91 upgrade stopped by a verified lifecycle defect
+
+Corrections committed at `ea7bbf5c3790ce0833bc9b66d923703e4edc13f3`.
+Built and staged (not activated) ace-lab 0.14.2.pre.utm91 SHA256
+`1996c31cc523d99caa5e38d4ac9f8925d63ecf3b434a625cd4c8a3b77bc0a886` and
+ace-overseer 0.28.2.pre.utm91 SHA256
+`d9f9c6588557dd8e96c3d920942ea4596ea9af5b1c101b3ee10733ef3e94166a`
+in `/opt/ace/diagnostic/utm91/gems` (native/herdr89 reused).
+
+Upgrade reached IssuerInstaller and refused because ace-lab-auth.service was
+failed. Its journal identifies session_launch_failed at stage stop,
+contained:false/cleaned:false after the operator stopped the exact coordinator
+unit. Issuer ExecStopPost subsequently reported leases:[], but the failed
+service status is deliberately not bypassed. SessionLauncher.stop currently
+requires inspect_units with the original InvocationID even when an external
+StopUnit has already garbage-collected the transient unit; inspect_units itself
+requires LoadState=loaded. The original MainPID pidfd alone is insufficient
+whole-cgroup proof, so do not simply treat that exception as success.
+
+Current VM state: native89 runs; no coordinator from this attempt remains.
+Issuer/socket/recovery unit files were moved by the upgrade to
+`/opt/ace/diagnostic/utm91/previous-units` before installer refusal. Systemd shows
+issuer LoadState=not-found/ActiveState=failed, socket and recovery not-found/
+inactive. The protected manifest still selects utm89. Do not rerun the whole
+upgrade script: it assumes the old unit files still exist. Correct the lifecycle
+proof, recover the outstanding failed deployment through the normal installer,
+then switch the protected manifest and run the new candidate. The local HITL
+fixture file is committed and uploaded as `/home/lab-operator/lab-hitl-config.yml`
+(SHA256 `0cc13bc40042bfa6acc1ac73ea8759891b364b0844b93341f209b759fa18175e`),
+but not installed at /lab yet. This is not an external access blocker; product
+work can continue. No clean E2E run has begun.
