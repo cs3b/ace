@@ -32,7 +32,8 @@ module Ace
                            "NoNewPrivileges" => true, "CapabilityBoundingSet" => 0,
                            "KillMode" => "control-group", "Delegate" => false,
                            "RuntimeDirectory" => ["ace-auth-0123456789abcdef"],
-                           "RuntimeDirectoryPreserve" => "no", "Environment" => ["ACE_TOOLCHAIN=installed",
+                           "RuntimeDirectoryPreserve" => "no", "RemainAfterExit" => true,
+                           "BindsTo" => [SessionPeer::ISSUER_UNIT], "After" => [SessionPeer::ISSUER_UNIT], "Environment" => ["ACE_TOOLCHAIN=installed",
                              "ACE_LAB_SESSION=1", "ACE_LAB_PROJECT_ROOT=/lab/ace"]}
           end
           def unit_for_pidfd(handle:) = {"unit" => UNIT, "invocation_id" => invocation}

@@ -20,9 +20,11 @@ module Ace
         UNIT = /\Aace-auth-session-([a-z][a-z0-9-]{0,19})-([0-9a-f]{16})\.service\z/
         DYNAMIC_UIDS = (61_184..65_519)
         SLICE = "ace-auth-sessions.slice"
+        ISSUER_UNIT = "ace-lab-auth.service"
         PROPERTIES = {"User" => "s", "DynamicUser" => "b", "NoNewPrivileges" => "b",
                       "CapabilityBoundingSet" => "t", "KillMode" => "s", "Delegate" => "b",
-                      "RuntimeDirectory" => "as", "RuntimeDirectoryPreserve" => "s", "Environment" => "as"}.freeze
+                      "RuntimeDirectory" => "as", "RuntimeDirectoryPreserve" => "s", "Environment" => "as",
+                      "RemainAfterExit" => "b"}.freeze
 
         Identity = Struct.new(:uid, :gid, :role, :invocation_id, :unit, :cwd, :runtime_dir, :pidfd, :main_pidfd,
           :main_pid, :mount_namespace, :project_root, keyword_init: true) do
@@ -88,6 +90,10 @@ module Ace
             raise Error, "session main process invocation differs"
           end
           properties = manager.typed_properties(unit: unit, interface: "Service", signatures: PROPERTIES)
+          dependencies = manager.typed_properties(unit: unit, interface: "Unit", signatures: {"BindsTo" => "as", "After" => "as"})
+          unless Array(dependencies["BindsTo"]).include?(ISSUER_UNIT) && Array(dependencies["After"]).include?(ISSUER_UNIT)
+            raise Error, "session is not bound to the issuer lifecycle"
+          end
           environment = properties.fetch("Environment", [])
           fixed = %w[ACE_TOOLCHAIN ACE_LAB_SESSION ACE_LAB_PROJECT_ROOT].to_h do |key|
             entries = environment.grep(/\A#{key}=/)
@@ -111,7 +117,7 @@ module Ace
               properties["DynamicUser"] == true && properties["NoNewPrivileges"] == true &&
               properties["CapabilityBoundingSet"] == 0 && properties["KillMode"] == "control-group" &&
               properties["Delegate"] == false && properties["RuntimeDirectory"] == [directory_name] &&
-              properties["RuntimeDirectoryPreserve"] == "no"
+              properties["RuntimeDirectoryPreserve"] == "no" && properties["RemainAfterExit"] == true
             raise Error, "session systemd isolation policy differs"
           end
           namespace = @namespace_factory.call(Integer(main_pid, 10))

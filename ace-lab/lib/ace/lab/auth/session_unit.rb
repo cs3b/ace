@@ -44,12 +44,13 @@ module Ace
         def argv
           properties = {
             "Type" => "exec", "Slice" => SessionPeer::SLICE,
+            "RemainAfterExit" => "yes", "BindsTo" => SessionPeer::ISSUER_UNIT, "After" => SessionPeer::ISSUER_UNIT,
             "DynamicUser" => "yes", "NoNewPrivileges" => "yes",
             "CapabilityBoundingSet" => "", "AmbientCapabilities" => "",
             "PrivateMounts" => "yes", "PrivateTmp" => "yes",
             "ProtectSystem" => "strict", "ProtectHome" => "yes",
             "ProtectControlGroups" => "yes", "Delegate" => "no",
-            "KillMode" => "control-group", "SendSIGKILL" => "yes",
+            "KillMode" => "control-group", "SendSIGKILL" => "yes", "TimeoutStopSec" => "10s",
             "RuntimeDirectory" => "ace-auth-#{@id}", "RuntimeDirectoryMode" => "0700",
             "RuntimeDirectoryPreserve" => "no", "UMask" => "0077"
           }

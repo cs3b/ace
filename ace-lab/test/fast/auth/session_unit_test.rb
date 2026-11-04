@@ -12,6 +12,7 @@ module Ace::Lab::Auth
       unit = build
       assert SessionPeer::UNIT.match?(unit.name)
       %w[DynamicUser=yes NoNewPrivileges=yes CapabilityBoundingSet= Delegate=no KillMode=control-group
+        RemainAfterExit=yes BindsTo=ace-lab-auth.service After=ace-lab-auth.service TimeoutStopSec=10s
         RuntimeDirectory=ace-auth-1234567890abcdef RuntimeDirectoryPreserve=no].each do |property|
         assert_includes unit.argv, "--property=#{property}"
       end
