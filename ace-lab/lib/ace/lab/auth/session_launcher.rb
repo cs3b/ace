@@ -108,7 +108,8 @@ module Ace
               terminal.is_a?(IO) && !terminal.closed? && terminal.tty? &&
               channel.is_a?(BasicSocket) && !channel.closed? && channel.local_address.unix? &&
               channel.local_address.socktype == Socket::SOCK_STREAM &&
-              directory.is_a?(String) && directory.match?(%r{\A/lab/[a-zA-Z0-9][a-zA-Z0-9_.-]*\z}) &&
+              directory.is_a?(String) && (directory.match?(%r{\A/lab/[a-zA-Z0-9][a-zA-Z0-9_.-]*\z}) ||
+                (directory == "/lab" && SessionPeer::UNIT.match(identity.unit)[1] == "lab-overseer")) &&
               [rows, cols].all? { |size| size.is_a?(Integer) && size.between?(1, 65_535) }
             raise ArgumentError, "invalid authenticated terminal handoff"
           end

@@ -622,3 +622,34 @@ For isolated callers, `EyesReadiness` uses the existing issuer socket with a clo
 `ace-lab` opens the bounded session file under the target UID and passes a read-only FD to a bounded, clean-environment installed `ace-overseer/libexec/eyes-ready` subprocess. This keeps interpretation in ace-overseer without a reverse gem dependency. Its existing branch reconstruction, exact first-turn prompt, process birth/UID, foreground membership, required sources and freshness checks remain authoritative. The response carries only a readiness boolean, terminal/invocation and project root/role. Missing evaluator, failed authentication, changed invocation or malformed response are failures, never source fallbacks. The local direct evaluator remains for ordinary non-isolated operation, not as fallback after an isolated error.
 
 Live deployment 83 confirmed actual native foreground membership and `/proc` controlling TTY: Pi PID 116498, pgrp/session/tpgid 116498, tty_nr 34819. No synthetic foreground evidence was added. This integration still needs a built-artifact live run; it does not close the E2E acceptance criteria. Host-operator readiness and the protected coordinator-root contract remain part of standard-start integration.
+
+## Standard-start scope selection contract
+
+The existing protected installation manifest gains an optional `coordinator`
+entry with exactly `id` and canonical absolute `path`. It is deployment
+configuration, not a topology registry or project. Its ID and root cannot
+collide with a configured project; existing grants may reference this ID.
+Only the host principal assigned the `lab-overseer` role and explicitly
+granted that coordinator ID can launch it. An isolated session cannot launch
+another lab coordinator, and no worker/verifier/integrator can select the lab
+root. Project roles continue selecting only configured projects. The same
+scope resolver binds readiness to the protected root; project checkout data
+cannot select a runtime or expand scope. This is the next integration slice,
+not evidence that standard start already adopts it.
+
+Implemented coordinator selection remains unaccepted live. Schema limits the
+coordinator root to `/lab` or `/lab/<name>`, matching mount support. Mounting
+`/lab` is restricted to lab-overseer; its source still requires nonroot owner,
+while `/` is verified root-owned. The existing staging/idmap path binds over
+the prepared `/lab` mountpoint without attempting to create it again. Ruby
+and native terminal handoff both permit `/lab` only for an exact lab-overseer
+unit. Review caught the ancestor-owner and handoff restrictions before the
+live attempt; both are corrected with mount-path and real PTY/SCM regressions.
+Native source `e70ad71d36b53b866743f3c81330813502db3627` replays exactly.
+Linux isolated tests 17/17 (`fb2a8d8a-4c06-4a26-8079-9d167106c176`), handoff
+3/3 (`7ded981a-a490-42ef-83e9-e456594828fc`), Ruby affected tests 69/494 and
+native-source 13/42 pass. Full ace-lab before the final mount/handoff correction
+passed 971 tests/4509 assertions, 16 platform skips; final changed paths were
+then retested in the affected suite. Independent review found no remaining
+scoped issue. A fresh built-artifact coordinator mount/start probe is next;
+standard start adoption, positive eyes readiness and full E2E are still open.

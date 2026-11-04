@@ -28,8 +28,10 @@ module Ace::Lab::Auth
       evaluator.define_singleton_method(:call) { |context, file:| owner.evaluate(context, file) }
       transport = Object.new
       transport.define_singleton_method(:call) { |request, identity:| owner.native(request, identity) }
+      @document = {"projects" => [{"id" => "ace", "path" => "/lab/ace"}],
+        "coordinator" => {"id" => "lab", "path" => "/lab"}}
       @readiness = SessionReadiness.new(peer: peer, reader: reader, evaluator: evaluator, transport: transport,
-        loader: -> { {"projects" => [{"id" => "ace", "path" => "/lab/ace"}]} })
+        loader: -> { @document })
     end
 
     def teardown
@@ -91,6 +93,23 @@ module Ace::Lab::Auth
       assert_raises(Error) { call }
       assert_nil @file
       assert_empty @contexts
+    end
+
+    def test_lab_readiness_binds_to_coordinator_instead_of_a_project
+      @target.role = "lab-overseer"
+      @target.project_root = "/lab"
+      @agent["isolated_session"] = {"project" => "lab", "role" => "lab-overseer"}
+      result = call
+      assert result.fetch("ready")
+      assert_equal "/lab", result.fetch("root")
+      assert_equal "lab-overseer", @contexts.first.fetch("role")
+    end
+
+    def test_lab_role_cannot_attest_a_project_scope
+      @target.role = "lab-overseer"
+      @agent["isolated_session"]["role"] = "lab-overseer"
+      assert_raises(Error) { call }
+      assert_nil @file
     end
 
     def test_target_exit_after_open_cannot_produce_ready

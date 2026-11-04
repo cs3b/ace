@@ -7107,3 +7107,79 @@ index 658eeaa..003c30c 100644
      #[test]
      fn named_targets_follow_terminal_identity_after_pane_and_tab_reordering() {
          let mut app = test_app();
+From e70ad71d36b53b866743f3c81330813502db3627 Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 04:31:10 +0000
+Subject: [PATCH] fix: permit configured lab coordinator terminal handoff
+
+---
+ src/platform/linux/session_handoff.rs | 42 +++++++++++++++++++++++++--
+ 1 file changed, 39 insertions(+), 3 deletions(-)
+
+diff --git a/src/platform/linux/session_handoff.rs b/src/platform/linux/session_handoff.rs
+index 16d45ef..dd88fbf 100644
+--- a/src/platform/linux/session_handoff.rs
++++ b/src/platform/linux/session_handoff.rs
+@@ -33,6 +33,21 @@ pub(crate) struct SessionHandoff {
+     pub cols: u16,
+ }
+ 
++fn valid_directory(directory: &std::path::Path, unit: &str) -> bool {
++    if directory == std::path::Path::new("/lab") {
++        return unit
++            .strip_prefix("ace-auth-session-lab-overseer-")
++            .and_then(|tail| tail.strip_suffix(".service"))
++            .is_some_and(|id| {
++                id.len() == 16
++                    && id
++                        .bytes()
++                        .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
++            });
++    }
++    directory.is_absolute() && directory.parent() == Some(std::path::Path::new("/lab"))
++}
++
+ pub(crate) fn receive(mut stream: UnixStream) -> io::Result<SessionHandoff> {
+     let mut peer: libc::ucred = unsafe { std::mem::zeroed() };
+     let mut length = std::mem::size_of_val(&peer) as libc::socklen_t;
+@@ -66,9 +81,7 @@ pub(crate) fn receive(mut stream: UnixStream) -> io::Result<SessionHandoff> {
+     if metadata.protocol != "ace.session-launch/v1" || metadata.rows == 0 || metadata.cols == 0 {
+         return Err(io::Error::other("invalid session terminal metadata"));
+     }
+-    if !metadata.directory.is_absolute()
+-        || metadata.directory.parent() != Some(std::path::Path::new("/lab"))
+-    {
++    if !valid_directory(&metadata.directory, &metadata.unit) {
+         return Err(io::Error::other("invalid configured session directory"));
+     }
+     let pidfd = handles.pop().unwrap();
+@@ -152,6 +165,29 @@ fn receive_header(stream: &UnixStream) -> io::Result<([u8; 4], Vec<OwnedFd>)> {
+ 
+ #[cfg(test)]
+ mod tests {
++    #[test]
++    fn isolated_coordinator_directory_requires_exact_lab_unit_role() {
++        use std::path::Path;
++        assert!(super::valid_directory(
++            Path::new("/lab"),
++            "ace-auth-session-lab-overseer-1234567890abcdef.service"
++        ));
++        for unit in [
++            "ace-auth-session-worker-1234567890abcdef.service",
++            "ace-auth-session-project-overseer-1234567890abcdef.service",
++            "ace-auth-session-lab-overseer-not-an-id.service",
++        ] {
++            assert!(!super::valid_directory(Path::new("/lab"), unit));
++        }
++        assert!(super::valid_directory(
++            Path::new("/lab/ace"),
++            "ace-auth-session-worker-1234567890abcdef.service"
++        ));
++        assert!(!super::valid_directory(
++            Path::new("/etc"),
++            "ace-auth-session-lab-overseer-1234567890abcdef.service"
++        ));
++    }
+     use super::*;
+     use std::io::Write;
+     fn send_handles(mut stream: &UnixStream, count: usize, fragmented: bool) {

@@ -55,6 +55,23 @@ module Atoms
       assert_equal "wfi://assign/work", result["roles"].first["instructions"]
     end
 
+    def test_coordinator_is_a_distinct_grantable_scope
+      coordinator = {"id" => "lab", "path" => "/lab"}
+      document = manifest("coordinator" => coordinator, "projects" => [{"id" => "ace", "path" => "/lab/ace"}],
+        "grants" => {"ace-worker" => ["lab", "ace"]})
+      result = normalize(document)
+      assert_equal coordinator, result["coordinator"]
+      assert_equal ["ace"], result["projects"].map { |entry| entry["id"] }
+      assert_equal %w[lab ace], result["grants"]["ace-worker"]
+      [{"id" => "ace"}, {"path" => "/lab/ace"}, {"path" => "/"}, {"path" => "/lab/../lab"},
+        {"path" => "/lab\n"}, {"path" => "/etc"}, {"path" => "/lab/ace/nested"},
+        {"command" => "sh"}, {"id" => ""}].each do |change|
+        assert_raises(Ace::Lab::InvalidConfigurationError) do
+          normalize(document.merge("coordinator" => coordinator.merge(change)))
+        end
+      end
+    end
+
     def test_darwin_platform_defaults_home_under_users
       result = normalize(manifest, platform: "darwin")
 

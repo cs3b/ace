@@ -3,6 +3,7 @@ require_relative "session_peer"
 require_relative "session_evidence_file"
 require_relative "session_eyes_evaluator"
 require_relative "session_native_transport"
+require_relative "session_configuration"
 
 module Ace
   module Lab
@@ -23,7 +24,7 @@ module Ace
           terminal = agent.fetch("terminal_id")
           origin = origin_for(terminal, identity, request_id)
           target = @peer.authenticate_process(origin.fetch("child"))
-          project = @loader.call.fetch("projects").find { |entry| entry["id"] == selection.fetch("project") }
+          project = SessionConfiguration.scope(@loader.call, project: selection.fetch("project"), role: selection.fetch("role"))
           unless project && target.terminal_id == terminal && target.role == selection.fetch("role") &&
               target.project_root == project.fetch("path")
             raise Error, "target session does not match native project or role"

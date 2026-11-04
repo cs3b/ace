@@ -15,7 +15,7 @@ module Ace
         SCHEMA_VERSION = 1
         TOP_LEVEL_KEYS =
           %w[schema_version machine accounts directories keys roles projects grants
-             adapters tools gemset session_runtime].freeze
+             adapters tools gemset session_runtime coordinator].freeze
         ENTRY_KEYS = {
           "accounts" => %w[username role create home],
           "directories" => %w[path owner mode],
@@ -66,6 +66,7 @@ module Ace
             accounts = normalize_accounts(document["accounts"], os)
             usernames = accounts.map { |account| account["username"] }
             projects = normalize_projects(document["projects"])
+            coordinator = normalize_coordinator(document["coordinator"], projects)
 
             {
               "schema_version" => SCHEMA_VERSION,
@@ -75,7 +76,8 @@ module Ace
               "keys" => normalize_keys(document["keys"], accounts),
               "roles" => normalize_roles(document["roles"], usernames),
               "projects" => projects,
-              "grants" => normalize_grants(document["grants"], projects.map { |p| p["id"] }),
+              "coordinator" => coordinator,
+              "grants" => normalize_grants(document["grants"], projects.map { |p| p["id"] } + [coordinator&.fetch("id")].compact),
               "adapters" => normalize_adapters(document["adapters"]),
               "tools" => normalize_tools(document["tools"]),
               "gemset" => normalize_gemset(document["gemset"], accounts.map { |a| a["username"] }),
@@ -84,6 +86,20 @@ module Ace
           end
 
           private
+
+          def normalize_coordinator(raw, projects)
+            return nil if raw.nil?
+            unless raw.is_a?(Hash) && raw.keys.sort == %w[id path] &&
+                raw["id"].is_a?(String) && ROLE_ID_PATTERN.match?(raw["id"]) &&
+                raw["path"].is_a?(String) && raw["path"].match?(%r{\A/lab(?:/[a-zA-Z0-9][a-zA-Z0-9_.-]*)?\z}) &&
+                File.expand_path(raw["path"]) == raw["path"] && !raw["path"].match?(/[[:cntrl:]]/)
+              raise_invalid "coordinator requires an id and canonical absolute path"
+            end
+            if projects.any? { |project| project["id"] == raw["id"] || project["path"] == raw["path"] }
+              raise_invalid "coordinator must be distinct from projects"
+            end
+            raw.transform_values(&:dup)
+          end
 
           def normalize_session_runtime(raw)
             return nil if raw.nil?

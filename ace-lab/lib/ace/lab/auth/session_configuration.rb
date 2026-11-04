@@ -15,13 +15,22 @@ module Ace
           @loader = loader
         end
 
+        def self.scope(document, project:, role:)
+          if role == "lab-overseer"
+            coordinator = document["coordinator"]
+            coordinator if coordinator.is_a?(Hash) && coordinator["id"] == project
+          else
+            document.fetch("projects").find { |entry| entry["id"] == project }
+          end
+        end
+
         # principal is supplied by the host's authenticated peer, not JSON.
         def resolve(project:, role:, principal: nil, session: nil)
           document = @loader.call
           unless SessionUnit::ROLES.include?(role)
             raise Error, "session role is not supported"
           end
-          selected_project = document.fetch("projects").find { |entry| entry["id"] == project }
+          selected_project = self.class.scope(document, project: project, role: role)
           selected_role = document.fetch("roles").find { |entry| entry["id"] == role }
           authorized = if session
             raise Error, "session delegation cannot supply a host principal" unless principal.nil?

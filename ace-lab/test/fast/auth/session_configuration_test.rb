@@ -19,6 +19,23 @@ module Ace::Lab::Auth
       assert_equal "/opt/ace/runtime/gems", selected.gem_home
     end
 
+    def test_only_granted_host_can_launch_coordinator_in_its_distinct_root
+      @document["coordinator"] = {"id" => "lab", "path" => "/lab"}
+      @document["roles"] << {"id" => "lab-overseer", "account" => "mo", "instructions" => "wfi://overseer/lab-start"}
+      assert_raises(Error) { @configuration.resolve(project: "lab", role: "lab-overseer", principal: "mo") }
+      @document["grants"]["mo"] << "lab"
+      selected = @configuration.resolve(project: "lab", role: "lab-overseer", principal: "mo")
+      assert_equal "/lab", selected.path
+      assert_equal "wfi://overseer/lab-start", selected.instructions
+      assert_raises(Error) { @configuration.resolve(project: "lab", role: "worker", principal: "mo") }
+      assert_raises(Error) { @configuration.resolve(project: "ace", role: "lab-overseer", principal: "mo") }
+      @document["grants"]["session:lab-overseer"] = %w[lab ace]
+      caller = SessionPeer::Identity.new(role: "lab-overseer", project_root: "/lab")
+      assert_raises(Error) { @configuration.resolve(project: "lab", role: "lab-overseer", session: caller) }
+      assert_raises(Error) { @configuration.resolve(project: "lab", role: "worker", session: caller) }
+      assert_equal "/lab/ace", @configuration.resolve(project: "ace", role: "worker", session: caller).path
+    end
+
     def test_refuses_cross_principal_unknown_role_and_unknown_project
       [{principal: "other"}, {role: "integrator"}, {project: "other"}].each do |override|
         arguments = {project: "ace", role: "worker", principal: "mo"}.merge(override)

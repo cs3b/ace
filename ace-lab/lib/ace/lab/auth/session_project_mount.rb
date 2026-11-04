@@ -16,16 +16,17 @@ module Ace
 
         def call(identity:, project:)
           raise Error, "project mount requires root" unless Process.euid.zero?
+          role = identity.is_a?(SessionLauncher::Identity) && SessionPeer::UNIT.match(identity.unit.to_s)&.captures&.first
+          raise Error, "session role is unavailable" unless SessionUnit::ROLES.include?(role)
           unless identity.is_a?(SessionLauncher::Identity) && project.is_a?(String) &&
-              project.match?(%r{\A/lab/[a-zA-Z0-9][a-zA-Z0-9_.-]*\z})
+              (project.match?(%r{\A/lab/[a-zA-Z0-9][a-zA-Z0-9_.-]*\z}) ||
+                (role == "lab-overseer" && project == "/lab"))
             raise Error, "invalid configured session project"
           end
           @platform.live!(identity.process)
           raise Error, "session has exited" if @platform.exited?(identity.pidfd)
           namespace = SessionNamespace.capture(identity.process.fetch("pid"))
           source = File.open(project, File::RDONLY | File::NOFOLLOW)
-          role = SessionPeer::UNIT.match(identity.unit)&.captures&.first
-          raise Error, "session role is unavailable" unless SessionUnit::ROLES.include?(role)
           private_tasks = File.join(project, ".ace-tasks", "_overseer")
           hide_private_tasks = %w[worker verifier integrator].include?(role)
           if hide_private_tasks
@@ -39,7 +40,7 @@ module Ace
             raise Error, "project ownership is not suitable for session mapping"
           end
           wire = Ace::Runtime::Molecules::ProtectedSocket
-          wire.root_path!(File.dirname(project), directory: true, owner: stat.uid)
+          wire.root_path!(File.dirname(project), directory: true, owner: project == "/lab" ? 0 : stat.uid)
           %w[/usr/bin/nsenter /bin/mount /bin/mkdir /bin/umount /bin/rmdir].each { |path| wire.root_path!(File.realpath(path)) }
           uid, gid = identity.process.values_at("uid", "gid")
           unless SessionPeer::DYNAMIC_UIDS.cover?(uid) && uid == gid
@@ -57,8 +58,10 @@ module Ace
           @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mount",
             "-t", "tmpfs", "-o", "nosuid,nodev,mode=0755,size=1m", "none", "/lab"],
             namespace: namespace, source: source)
-          @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mkdir",
-            "--mode=0755", "--", project], namespace: namespace, source: source)
+          unless project == "/lab"
+            @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mkdir",
+              "--mode=0755", "--", project], namespace: namespace, source: source)
+          end
           @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mount",
             "--bind", "-o", "X-mount.idmap=u:#{stat.uid}:#{uid}:1 g:#{stat.gid}:#{gid}:1",
             staging, project], namespace: namespace, source: source)

@@ -34,7 +34,15 @@ module Ace::Lab::Auth
     end
 
     def test_handoff_transfers_both_handles_with_exact_identity
-      unit = "ace-auth-session-worker-1234567890abcdef.service"
+      assert_handoff(role: "worker", directory: "/lab/ace")
+    end
+
+    def test_coordinator_handoff_transfers_root_only_for_lab_role
+      assert_handoff(role: "lab-overseer", directory: "/lab")
+    end
+
+    def assert_handoff(role:, directory:)
+      unit = "ace-auth-session-#{role}-1234567890abcdef.service"
       invocation = "a" * 32
       platform = Object.new
       platform.define_singleton_method(:live!) { |_| true }
@@ -50,8 +58,11 @@ module Ace::Lab::Auth
         File.open(File::NULL) do |handle|
           identity = SessionLauncher::Identity.new(unit: unit, invocation_id: invocation,
             process: {"pid" => 456}, pidfd: handle)
-          assert_raises(ArgumentError) { launcher.handoff(identity, terminal: master, channel: sender, directory: "/lab/ace", rows: 0, cols: 80) }
-          assert launcher.handoff(identity, terminal: master, channel: sender, directory: "/lab/ace", rows: 24, cols: 80)
+          assert_raises(ArgumentError) { launcher.handoff(identity, terminal: master, channel: sender, directory: directory, rows: 0, cols: 80) }
+          if role == "worker"
+            assert_raises(ArgumentError) { launcher.handoff(identity, terminal: master, channel: sender, directory: "/lab", rows: 24, cols: 80) }
+          end
+          assert launcher.handoff(identity, terminal: master, channel: sender, directory: directory, rows: 24, cols: 80)
           header, _, flags, *controls = receiver.recvmsg(4, 0, 4096, scm_rights: true)
           assert_equal 0, flags & Socket::MSG_CTRUNC
           assert_equal 1, controls.size
@@ -61,11 +72,11 @@ module Ace::Lab::Auth
           assert_equal handle.stat.rdev, received.last.stat.rdev
           payload = JSON.parse(receiver.read(header.unpack1("N")))
           assert_equal({"protocol" => "ace.session-launch/v1", "unit" => unit,
-            "invocation" => invocation, "pid" => 456, "rows" => 24, "cols" => 80, "directory" => "/lab/ace"}, payload)
+            "invocation" => invocation, "pid" => 456, "rows" => 24, "cols" => 80, "directory" => directory}, payload)
           refute master.closed?
           refute handle.closed?
           manager.define_singleton_method(:unit_for_pidfd) { |handle:| {"unit" => unit, "invocation_id" => "b" * 32} }
-          assert_raises(Error) { launcher.handoff(identity, terminal: master, channel: sender, directory: "/lab/ace", rows: 24, cols: 80) }
+          assert_raises(Error) { launcher.handoff(identity, terminal: master, channel: sender, directory: directory, rows: 24, cols: 80) }
           assert_nil IO.select([receiver], nil, nil, 0)
         end
       end
