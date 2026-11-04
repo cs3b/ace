@@ -46,6 +46,29 @@ class ProjectObservationsTest < AceOverseerTestCase
     refute_equal first, observe
   end
 
+  def test_real_child_receives_complete_environment_without_source_injection
+    executable = File.join(@root, "observe-fixture")
+    File.write(executable, "#!#{RbConfig.ruby}\n" + <<~RUBY)
+      require "json"
+      abort "lost runtime" unless ENV["ACE_TOOLCHAIN"] == "installed" && ENV["HOME"] == "/isolated/home"
+      abort "source injection" if ENV.key?("RUBYOPT") || ENV.key?("BUNDLE_GEMFILE")
+      puts #{JSON.generate(@rows).inspect}
+    RUBY
+    File.chmod(0o755, executable)
+    env = {"ACE_TOOLCHAIN" => "installed", "HOME" => "/isolated/home", "RUBYOPT" => "-rmissing",
+      "BUNDLE_GEMFILE" => "/checkout/Gemfile"}
+    Ace::Lab.stub(:install_manifest_path, @manifest) do
+      Ace::Support::Cli::Toolchain.stub(:executable, executable) do
+        Ace::Support::Cli::Toolchain.stub(:child_environment, {"RUBYOPT" => nil, "BUNDLE_GEMFILE" => nil}) do
+          result = Ace::Overseer::Molecules::ProjectObservations.new(root: @root, env: env,
+            loader: -> { @document }).call(owner: "overseer", scope: "all", limit: 500)
+          assert_equal "ok", result.dig("sources", "project:ace", "status")
+          assert_equal "report-id", result.fetch("events").first.fetch("id")
+        end
+      end
+    end
+  end
+
   def test_project_observation_does_not_recurse_into_lab
     assert_equal({"events" => [], "sources" => {}}, observe(root: @project))
     assert_empty @calls

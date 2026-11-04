@@ -34,7 +34,7 @@ module Ace::Overseer::Molecules
           raise Timeout::Error, "project observation budget exhausted" unless remaining.positive?
           result = @runner.call([Ace::Support::Cli::Toolchain.executable("ace-overseer"), "observe",
             "--owner", owner, "--scope", scope, "--limit", limit.to_s],
-            environment: Ace::Support::Cli::Toolchain.child_environment,
+            environment: @env.to_h.merge(Ace::Support::Cli::Toolchain.child_environment).compact,
             chdir: root, timeout_s: remaining, output_limit: 2_097_152, cleanup_group: true)
           raise Ace::Overseer::Error, "project observation failed" unless result.status.success? && !result.oversized
           value = JSON.parse(result.stdout)
