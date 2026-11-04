@@ -19,6 +19,21 @@ module Atoms
       }.merge(overrides)
     end
 
+    def test_session_runtime_is_explicit_and_rejects_ambient_or_unknown_fields
+      runtime = {"node" => "/opt/node/bin/node", "pi" => "/opt/pi/cli.js",
+        "path" => ["/usr/bin", "/bin"], "provider" => "zai", "model" => "glm-5.3",
+        "credentials" => "/etc/lab/pi-auth.json"}
+      assert_equal runtime, normalize(manifest("session_runtime" => runtime))["session_runtime"]
+      assert_nil normalize(manifest)["session_runtime"]
+      [{"node" => "node"}, {"pi" => "/opt/../tmp/pi"}, {"path" => ["/tmp:/usr/bin"]},
+        {"path" => ["/bin", "/bin"]}, {"provider" => "--override"}, {"command" => ["sh"]},
+        {"credentials" => "/etc/lab/key\n"}].each do |change|
+        assert_raises(Ace::Lab::InvalidConfigurationError) do
+          normalize(manifest("session_runtime" => runtime.merge(change)))
+        end
+      end
+    end
+
     def test_full_manifest_normalizes_with_defaults
       result = normalize(manifest)
 

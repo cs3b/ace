@@ -15,7 +15,7 @@ module Ace
         SCHEMA_VERSION = 1
         TOP_LEVEL_KEYS =
           %w[schema_version machine accounts directories keys roles projects grants
-             adapters tools gemset].freeze
+             adapters tools gemset session_runtime].freeze
         ENTRY_KEYS = {
           "accounts" => %w[username role create home],
           "directories" => %w[path owner mode],
@@ -78,11 +78,38 @@ module Ace
               "grants" => normalize_grants(document["grants"], projects.map { |p| p["id"] }),
               "adapters" => normalize_adapters(document["adapters"]),
               "tools" => normalize_tools(document["tools"]),
-              "gemset" => normalize_gemset(document["gemset"], accounts.map { |a| a["username"] })
+              "gemset" => normalize_gemset(document["gemset"], accounts.map { |a| a["username"] }),
+              "session_runtime" => normalize_session_runtime(document["session_runtime"])
             }
           end
 
           private
+
+          def normalize_session_runtime(raw)
+            return nil if raw.nil?
+            keys = %w[node pi path provider model credentials]
+            unless raw.is_a?(Hash) && raw.keys.sort == keys.sort
+              raise_invalid "session_runtime requires exactly node, pi, path, provider, model and credentials"
+            end
+            %w[node pi credentials].each do |key|
+              path = raw[key]
+              unless path.is_a?(String) && path.start_with?("/") && File.expand_path(path) == path && !path.match?(/[[:cntrl:]]/)
+                raise_invalid "session_runtime #{key} must be a canonical absolute path"
+              end
+            end
+            paths = raw["path"]
+            unless paths.is_a?(Array) && !paths.empty? && paths.uniq == paths && paths.all? { |path|
+              path.is_a?(String) && path.start_with?("/") && File.expand_path(path) == path && !path.match?(/[[:cntrl:]:]/)
+            }
+              raise_invalid "session_runtime path must contain unique canonical absolute directories"
+            end
+            %w[provider model].each do |key|
+              unless raw[key].is_a?(String) && raw[key].match?(%r{\A[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}\z})
+                raise_invalid "session_runtime #{key} is invalid"
+              end
+            end
+            raw.transform_values { |value| value.is_a?(Array) ? value.map(&:dup) : value.dup }
+          end
 
           def raise_invalid(reason)
             raise Ace::Lab::InvalidConfigurationError,

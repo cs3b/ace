@@ -180,7 +180,23 @@ gemset:                      # optional (gad.2): target runtime + required gem s
     - gem: ace-wake          # must be declared in gems above
       path: /opt/lab/pi-agent/extensions  # root-controlled operational directory
       account: lab-overseer  # must be a declared account (the loading executor)
+session_runtime:            # required by the isolated Pi launcher
+  node: /opt/ace/node/bin/node
+  pi: /opt/ace/pi/node_modules/@mariozechner/pi-coding-agent/dist/cli.js
+  path: [/usr/bin]     # additional root-controlled executable directories
+  provider: zai
+  model: glm-5.3
+  credentials: /etc/lab/ace-lab/pi-auth.json # root-owned 0600; no inline secrets
 ```
+
+`session_runtime` selects the installed Linux Pi command; it does not install
+Node, Pi or model credentials. The launcher requires their protected paths to
+exist. Ruby and the selected gem bin directory are prepended to the declared
+PATH. Each session receives its own HOME and Pi directory under its systemd
+runtime directory. Standing instructions come from the selected role: protocol
+references resolve through installed `ace-nav`, outside the project checkout.
+The resulting file and extensions must remain host-controlled. Missing runtime
+configuration is a launch readiness failure, never a checkout fallback.
 
 Statuses: accounts `created|exists|would_create|failed`; directories
 `created|exists|mode_fixed|would_create|would_fix_mode|failed`; keys

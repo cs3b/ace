@@ -7,7 +7,8 @@ module Ace::Lab::Auth
     def setup
       @document = {"projects" => [{"id" => "ace", "path" => "/lab/ace"}],
         "roles" => [{"id" => "worker", "account" => "mo", "instructions" => "wfi://task/work"}],
-        "grants" => {"mo" => ["ace"]}, "gemset" => {"gem_home" => "/opt/ace/runtime/gems"}}
+        "grants" => {"mo" => ["ace"]}, "gemset" => {"gem_home" => "/opt/ace/runtime/gems"},
+        "session_runtime" => {"node" => "/opt/node", "pi" => "/opt/pi.js"}}
       @configuration = SessionConfiguration.new(loader: -> { @document })
     end
 

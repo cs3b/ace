@@ -9,7 +9,7 @@ module Ace
       # Select launch data from the existing deployment manifest, never from
       # a project checkout or agent-supplied executable/environment fields.
       class SessionConfiguration
-        Selection = Data.define(:project, :path, :role, :instructions, :gem_home)
+        Selection = Data.define(:project, :path, :role, :instructions, :gem_home, :runtime)
 
         def initialize(loader: -> { Molecules::InstallManifestLoader.load })
           @loader = loader
@@ -31,8 +31,10 @@ module Ace
           unless gem_home.is_a?(String) && gem_home.start_with?("/") && File.expand_path(gem_home) == gem_home
             raise Error, "session installed runtime is not configured"
           end
+          runtime = document.fetch("session_runtime")
+          raise Error, "session Pi runtime is not configured" unless runtime.is_a?(Hash)
           Selection.new(project: project, path: selected_project.fetch("path"), role: role,
-            instructions: selected_role.fetch("instructions"), gem_home: gem_home)
+            instructions: selected_role.fetch("instructions"), gem_home: gem_home, runtime: runtime)
         rescue KeyError, NoMethodError
           raise Error, "session deployment configuration is incomplete"
         end

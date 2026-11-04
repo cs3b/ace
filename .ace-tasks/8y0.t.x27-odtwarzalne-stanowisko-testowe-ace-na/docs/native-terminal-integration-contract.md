@@ -165,3 +165,21 @@ PTY/process association still belong to the configured launch handler, which
 is not wired yet. The new receiver still has no production caller. Next complete
 cut remains IssuerServer launch dispatch, configured Pi preparation, native
 SpawnedPty selection and pane shutdown through SessionChild.
+
+## Configured Pi launch inputs
+
+The existing protected install manifest now owns `session_runtime`: canonical
+Node executable, Pi entry file, additional PATH directories, provider, model,
+and credential-source path. No secret value is accepted in this configuration.
+SessionConfiguration requires this section for a launch selection. SessionCommand
+uses that selection to build fixed Pi argv, a clean installed gem environment
+and session-local HOME/PI_CODING_AGENT_DIR. Role protocol references resolve
+through installed ace-nav with cwd=/ and no inherited environment. Protected
+extensions reuse ace-herdr's InstalledPiExtensions policy; ace-lab now declares
+the ace-herdr dependency rather than duplicating that owner.
+
+The command builder does not yet prepare directories or copy credentials.
+Those operations and host/session caller authentication belong to the supervised
+launch handler before releasing SessionEntry. No arbitrary argv/environment
+will be accepted by that handler. Runtime readiness and two clean E2E runs
+remain outstanding.
