@@ -6518,3 +6518,148 @@ index 5ca1830..039e127 100644
      #[test]
      fn pane_input_set_changes_only_the_target_pane() {
          let (mut app, public_pane_id) = app_with_test_workspace();
+From e884a1608d316d322a673c5905d8b67d8a51bf53 Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 02:57:12 +0000
+Subject: [PATCH] fix: validate Pi report acknowledgements before accepting
+ delivery
+
+---
+ .../assets/herdr-agent-state.test.ts          | 28 +++++++++++++------
+ .../assets/pi/herdr-agent-state.ts            | 17 +++++++++--
+ src/integration/mod.rs                        |  2 +-
+ 3 files changed, 35 insertions(+), 12 deletions(-)
+
+diff --git a/src/integration/assets/herdr-agent-state.test.ts b/src/integration/assets/herdr-agent-state.test.ts
+index abfeb0e..7657c2c 100644
+--- a/src/integration/assets/herdr-agent-state.test.ts
++++ b/src/integration/assets/herdr-agent-state.test.ts
+@@ -119,8 +119,9 @@ async function startRecordingServer(name: string): Promise<unknown[]> {
+       if (newline === -1) {
+         return;
+       }
+-      requests.push(JSON.parse(input.slice(0, newline)));
+-      socket.end("{}\n");
++      const request = JSON.parse(input.slice(0, newline));
++      requests.push(request);
++      socket.end(JSON.stringify({ id: request.id, result: { type: "ok" } }) + "\n");
+     });
+   });
+   server = recordingServer;
+@@ -424,10 +425,10 @@ test("Pi waits for a replacement session report before publishing state", async
+       const request = JSON.parse(input.slice(0, newline));
+       requests.push(request);
+       if (isRecord(request) && request.method === "pane.report_agent_session") {
+-        acknowledgeSessionReport = () => socket.end("{}\n");
++        acknowledgeSessionReport = () => socket.end(JSON.stringify({ id: request.id, result: { type: "ok" } }) + "\n");
+         return;
+       }
+-      socket.end("{}\n");
++      socket.end(JSON.stringify({ id: request.id, result: { type: "ok" } }) + "\n");
+     });
+   });
+   server = recordingServer;
+@@ -481,7 +482,7 @@ test("Pi waits for a replacement session report before publishing state", async
+   ]);
+ });
+ 
+-async function startDroppedFirstResponseServer(name: string) {
++async function startDroppedFirstResponseServer(name: string, firstResponse = "unanswered") {
+   const recordingSocketPath = join(tmpdir(), `herdr-${name}-${process.pid}.sock`);
+   socketPath = recordingSocketPath;
+   await rm(recordingSocketPath, { force: true });
+@@ -503,10 +504,16 @@ async function startDroppedFirstResponseServer(name: string) {
+       const request = JSON.parse(input.slice(0, newline));
+       attemptedRequests.push(request);
+       if (connectionNumber === 1) {
++        if (firstResponse === "error") socket.end(JSON.stringify({id: request.id, error: {code: "pane_not_found"}}) + "\n");
++        if (firstResponse === "wrong-id") socket.end(JSON.stringify({id: "unrelated", result: {type: "ok"}}) + "\n");
++        if (firstResponse === "malformed") socket.end("not-json\n");
++        if (firstResponse === "oversized") socket.end("x".repeat(65_537) + "\n");
+         return;
+       }
+       deliveredRequests.push(request);
+-      socket.end("{}\n");
++      const response = JSON.stringify({ id: request.id, result: { type: "ok" } }) + "\n";
++      socket.write(response.slice(0, 5));
++      setTimeout(() => socket.end(response.slice(5)), 5);
+     });
+   });
+   server = recordingServer;
+@@ -592,9 +599,10 @@ test("Oh My Pi keeps working when a turn ends with a scheduled continuation", as
+   expect(requestStates(requests)).toEqual(["idle", "working", "idle"]);
+ });
+ 
+-test("Pi retries working state after an unanswered socket attempt", async () => {
++for (const firstResponse of ["unanswered", "error", "wrong-id", "malformed", "oversized"]) {
++test(`Pi retries working state after ${firstResponse} acknowledgement`, async () => {
+   const { attemptedRequests, deliveredRequests, connectionCount } =
+-    await startDroppedFirstResponseServer("pi-retry");
++    await startDroppedFirstResponseServer("pi-retry", firstResponse);
+   const { handlers, pi } = createExtensionHarness();
+ 
+   const { default: install } = await importFresh("./pi/herdr-agent-state.ts");
+@@ -629,12 +637,14 @@ test("Pi retries working state after an unanswered socket attempt", async () =>
+     await Bun.sleep(5);
+   }
+ 
+-  expect(connectionCount()).toBeGreaterThanOrEqual(2);
++  expect(connectionCount()).toBe(2);
+   expect(attemptedRequests.length).toBeGreaterThanOrEqual(2);
+   expect(attemptedRequests[1]).toEqual(attemptedRequests[0]);
+   expect(reportedWorking()).toBe(true);
+ });
+ 
++}
++
+ function completionHandlers(handlers: Map<string, Handler>): string[] {
+   return ["agent_end", "agent_settled"].filter((event) => handlers.has(event));
+ }
+diff --git a/src/integration/assets/pi/herdr-agent-state.ts b/src/integration/assets/pi/herdr-agent-state.ts
+index 276c964..0c0970a 100644
+--- a/src/integration/assets/pi/herdr-agent-state.ts
++++ b/src/integration/assets/pi/herdr-agent-state.ts
+@@ -2,7 +2,7 @@
+ // managed by herdr; reinstalling or updating the integration overwrites this file.
+ // add custom hooks/plugins beside this file instead of editing it.
+ // HERDR_INTEGRATION_ID=pi
+-// HERDR_INTEGRATION_VERSION=9
++// HERDR_INTEGRATION_VERSION=10
+ // @ts-nocheck
+ 
+ import net from "node:net";
+@@ -40,7 +40,20 @@ function sendRequestAttempt(request: unknown, timeoutMs: number): Promise<boolea
+     const socket = net.createConnection(socketEndpoint!);
+     socket.on("error", () => finish(false));
+     socket.on("connect", () => socket.write(`${JSON.stringify(request)}\n`));
+-    socket.on("data", () => finish(true));
++    let reply = Buffer.alloc(0);
++    socket.on("data", (chunk) => {
++      reply = Buffer.concat([reply, chunk]);
++      if (reply.length > 65_536) return finish(false);
++      const newline = reply.indexOf(10);
++      if (newline === -1) return;
++      try {
++        const response = JSON.parse(reply.subarray(0, newline).toString("utf8"));
++        finish(newline === reply.length - 1 && response?.id === (request as any)?.id &&
++          response?.result != null && !Object.hasOwn(response, "error"));
++      } catch {
++        finish(false);
++      }
++    });
+     socket.on("end", () => finish(false));
+     timeout = setTimeout(() => finish(false), timeoutMs);
+     timeout.unref?.();
+diff --git a/src/integration/mod.rs b/src/integration/mod.rs
+index 673225a..546289d 100644
+--- a/src/integration/mod.rs
++++ b/src/integration/mod.rs
+@@ -35,7 +35,7 @@ pub(crate) const EXPERIMENTAL_INTEGRATION_TARGET_LABELS: &[&str] = &["letta"];
+ 
+ const PI_EXTENSION_INSTALL_NAME: &str = "herdr-agent-state.ts";
+ const PI_EXTENSION_ASSET: &str = include_str!("assets/pi/herdr-agent-state.ts");
+-const PI_INTEGRATION_VERSION: u32 = 9;
++const PI_INTEGRATION_VERSION: u32 = 10;
+ const OMP_EXTENSION_INSTALL_NAME: &str = "herdr-omp-agent-state.ts";
+ const OMP_EXTENSION_ASSET: &str = include_str!("assets/omp/herdr-agent-state.ts");
+ const OMP_INTEGRATION_VERSION: u32 = 10;

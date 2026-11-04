@@ -73,7 +73,7 @@ The remaining bridge must enforce all of these together:
   explicit namespace-safe treatment, not automatic host resume.
 - Handle reports before native adoption: either retain the launch barrier until
   adoption acknowledgement, or explicitly retry missing-terminal reports.
-  The current extension treating any response bytes as success is insufficient.
+  Acknowledgement parsing now rejects error responses, but adoption ordering remains unconnected.
 - Delegated launches keep the original authenticated session authority. Do not
   forward ordinary start as the host account, which would erase role/project
   restrictions. Native owns terminal reservation/adoption, issuer owns authorization.
@@ -479,3 +479,18 @@ installed; previous units are preserved in utm74/previous-units. The guest
 manifest has not yet been configured with session roles/model runtime, and
 no live configured Pi launch has been attempted. Acceptance manifest remains
 unchanged. All of this is component evidence only.
+
+## Report acknowledgement correction
+
+Native source e884a1608d316d322a673c5905d8b67d8a51bf53 (tree
+3b9bc960ca483470d00fa7a68657aa0b6677e35a) raises the managed Pi integration
+version to 10. Delivery now requires bounded, newline-framed JSON with matching
+request ID, non-null result and no error. Wrong-ID, error, malformed, oversized
+and unanswered replies retry the same request; successful fragmented replies
+are accepted. Independent review found no blocker and requested the added
+fragmentation/oversize tests. Integration-assets recipe passed 59 tests on ARM64;
+version detection passed nextest 8122e317-591c-4deb-b197-fae6135804e4. Exact mail
+replay matches, packaged selection tests passed 13/42 (report
+a859da19-e3a4-486a-9d05-35fd947ec849). Neither this source nor the preceding
+terminal-target delta is deployed yet. This fixes false acknowledgements only;
+the existing two attempts are not a full adoption/readiness protocol.
