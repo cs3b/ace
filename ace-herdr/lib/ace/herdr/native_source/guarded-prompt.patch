@@ -6239,3 +6239,36 @@ index b48baf5..26b1b0c 100644
      );
  }
  
+From a90bc55ad5b26ff95e145499b2bda02a4cf941fa Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 03:22:46 +0100
+Subject: [PATCH] fix(linux): handle musl ancillary length ABI
+
+---
+ src/platform/linux/session_handoff.rs | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/platform/linux/session_handoff.rs b/src/platform/linux/session_handoff.rs
+index 1758f1d..16d45ef 100644
+--- a/src/platform/linux/session_handoff.rs
++++ b/src/platform/linux/session_handoff.rs
+@@ -103,7 +103,9 @@ fn receive_header(stream: &UnixStream) -> io::Result<([u8; 4], Vec<OwnedFd>)> {
+         message.msg_iov = &mut iov;
+         message.msg_iovlen = 1;
+         message.msg_control = control.as_mut_ptr().cast();
+-        message.msg_controllen = std::mem::size_of_val(&control);
++        // musl uses socklen_t here while glibc uses size_t. The fixed
++        // ancillary buffer fits either ABI.
++        message.msg_controllen = std::mem::size_of_val(&control) as _;
+         let count =
+             unsafe { libc::recvmsg(stream.as_raw_fd(), &mut message, libc::MSG_CMSG_CLOEXEC) };
+         if count < 0 {
+@@ -116,7 +118,7 @@ fn receive_header(stream: &UnixStream) -> io::Result<([u8; 4], Vec<OwnedFd>)> {
+         let mut controls = 0;
+         let mut unexpected = false;
+         unsafe {
+-            let end = control.as_ptr() as usize + message.msg_controllen;
++            let end = control.as_ptr() as usize + message.msg_controllen as usize;
+             let mut cmsg = libc::CMSG_FIRSTHDR(&message);
+             while !cmsg.is_null() {
+                 controls += 1;

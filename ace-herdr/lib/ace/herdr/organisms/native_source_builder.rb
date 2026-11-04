@@ -167,7 +167,14 @@ module Ace
         def run(argv, chdir: nil, environment: @environment, timeout_s: 60)
           result = @runner.call(argv, environment: environment, chdir: chdir, timeout_s: timeout_s)
           unless result.status.success? && !result.oversized
-            raise Molecules::NativeSource::Error, "native build command failed or exceeded output bound"
+            # The build runs with a closed toolchain environment and no secrets.
+            # Keep compiler diagnostics bounded, but do not discard the reason
+            # needed to repair a failed build before retrying it.
+            detail = result.stderr.to_s.dup.force_encoding(Encoding::UTF_8).scrub
+              .gsub(/\e\[[0-9;]*[A-Za-z]/, "")
+            detail = detail.byteslice(-8192, 8192).scrub("") if detail.bytesize > 8192
+            raise Molecules::NativeSource::Error,
+              "native build command failed (#{File.basename(argv.first)}, output_limit=#{result.oversized}): #{detail.strip}"
           end
           result.stdout
         end

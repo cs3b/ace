@@ -6,7 +6,7 @@ require "open3"
 class NativeSourceBuilderTest < Minitest::Test
   Source = Ace::Herdr::Molecules::NativeSource
   Builder = Ace::Herdr::Organisms::NativeSourceBuilder
-  Result = Struct.new(:stdout, :status, :oversized, keyword_init: true)
+  Result = Struct.new(:stdout, :stderr, :status, :oversized, keyword_init: true)
   Status = Struct.new(:ok) { def success? = ok }
 
   # Source-only fixture: no run/spawn/PTY owner or product entry point is invoked.
@@ -159,6 +159,31 @@ class NativeSourceBuilderTest < Minitest::Test
     File.unlink(File.join(@tools, "musl-gcc"))
     assert_raises(Source::Error) { build }
     refute Dir.exist?(output)
+  end
+
+  def test_failed_command_keeps_bounded_compiler_reason_without_claiming_artifact
+    original = @runner
+    @runner = lambda do |argv, **options|
+      if argv[1] == "build"
+        Result.new(stdout: "", stderr: "x" * 20_000 + "\nlinker: missing target library", status: Status.new(false), oversized: false)
+      else
+        original.call(argv, **options)
+      end
+    end
+    error = assert_raises(Source::Error) { build }
+    assert_includes error.message, "linker: missing target library"
+    assert_operator error.message.bytesize, :<, 8500
+    refute File.exist?(File.join(output, "provenance.json"))
+  end
+
+  def test_failed_command_bounds_invalid_utf8_and_multibyte_boundaries
+    ["\xff".b * 10_000, "€" * 10_000].each do |bytes|
+      @runner = ->(*) { Result.new(stdout: "", stderr: bytes + "END", status: Status.new(false), oversized: false) }
+      error = assert_raises(Source::Error) { builder.send(:run, ["cargo"], environment: {}) }
+      assert error.message.valid_encoding?
+      assert_operator error.message.bytesize, :<, 8500
+      assert error.message.end_with?("END")
+    end
   end
 
   def test_compiler_tool_changed_after_invocation_refuses_success

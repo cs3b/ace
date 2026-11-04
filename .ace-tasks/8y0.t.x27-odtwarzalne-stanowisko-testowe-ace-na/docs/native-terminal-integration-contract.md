@@ -42,6 +42,52 @@ identical-manifest runs. Installed diagnostic issuer74 still uses the old
 handoff without `directory`, so it cannot be used with this native receiver.
 None of these component results establishes full-cycle acceptance.
 
+## Installed diagnostic candidate and artifact build
+
+Parent source `d23c484a847c9e0480ef743b8713d71bda857a23` produced:
+
+- ace-lab 0.14.2.pre.utm75: SHA-256 `6df2a56aada161decc1ff51e45ea18d3c8758f17a7835fd4921da61a919db735`.
+- ace-herdr 0.10.1.pre.utm75: SHA-256 `333acb0dc1743229792b82671679b2062a0756894a6ce23138b4bbd5991ee4dd`.
+
+Both were installed into the self-contained root-owned diagnostic gem home
+`/opt/ace/diagnostic/utm75/gems`. Default IssuerInstaller reported installed;
+previous units and installation manifest are preserved under utm75. The
+configured worker command resolves installed standing instructions and protected
+extensions successfully. Credential preparation uses a root0600 source; values
+were not printed. Debian's `/bin` symlink was removed from the fixture PATH in
+favor of canonical `/usr/bin`, without weakening protected-path checks.
+
+The native owner build failed for the actual aarch64-musl target: libc's
+`msghdr.msg_controllen` is u32 under musl but usize under glibc. Its fixed ancillary
+buffer now converts explicitly at this ABI boundary. The failed owner-build
+output is retained under `/home/lab-operator/herdr-native75-build`; a diagnostic
+`just build` there is not a releasable artifact or a provenance receipt. After
+verification the corrected native source must be pinned and rebuilt by the owner.
+Corrected native source `a90bc55ad5b26ff95e145499b2bda02a4cf941fa`, tree
+`28b917f9bab93dabd6db7ae3e8d349a4fa62fdb0`, reproduces exactly by mail replay.
+GNU handoff tests 2/2 passed (`90e78cdd-e7bd-4d1b-b77b-a7f83275cea3`);
+the diagnostic musl release build passed in 85 seconds. Owner rebuild remains
+required for its final artifact and provenance.
+
+The builder also now reports a bounded UTF-8 compiler reason instead of dropping
+stderr. Independent review closed the invalid-byte expansion issue; tests cover
+both invalid UTF-8 and partial multibyte boundaries (9 tests / 59 assertions).
+
+## Remaining session communication contract
+
+The first scoped communication increment is self-reporting through the existing
+issuer: only `pane.report_agent` and `pane.report_agent_session`, using an
+immutable root-selected systemd mapping. Native terminal identity must be reserved
+before launch or registered while the entry barrier is still held. Model-supplied
+pane/workspace values are not that mapping. A report does not itself prove eyes
+or readiness.
+
+Delegated start must retain the original authenticated SessionPeer through the
+actual root launch and native adoption. Relaying it as an ordinary host
+`agent.start_isolated` would reconnect as mo and become a confused deputy.
+Herdr reserves/adopts terminals; issuer authenticates and launches; configuration
+owns project/role grants; LeaseStore owns leases. This boundary is not yet wired.
+
 ## Historical component evidence
 
 Scope: the accepted isolated launcher integration, not a second terminal
