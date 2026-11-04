@@ -87,6 +87,25 @@ module Ace
           assert identity.closed
         end
 
+        def test_isolated_delegation_uses_original_authenticated_session
+          identity = Struct.new(:closed) { def close = self.closed = true }.new(false)
+          request = {"id" => "d1", "method" => "agent.start_isolated", "params" => {
+            "name" => "assignment-a", "workspace_id" => "w1", "project" => "ace", "role" => "worker"}}
+          observed = []
+          delegate = Object.new
+          delegate.define_singleton_method(:call) do |message, identity:|
+            observed << [message, identity]
+            {"id" => message["id"], "result" => {"type" => "agent_isolated_started"}}
+          end
+          runner = IssuerRequest.new(authenticate: ->(_) { identity }, delegate: delegate,
+            service_factory: ->(*) { raise "delegation must not use lease store" })
+          @client.puts JSON.generate(request)
+          assert_equal :completed, runner.call(@server, invocation: "a" * 32)
+          assert_equal [[request, identity]], observed
+          assert_equal "agent_isolated_started", JSON.parse(@client.gets).dig("result", "type")
+          assert identity.closed
+        end
+
         def test_launch_dispatch_requires_closed_schema_and_supervision_without_using_lease_identity
           invoked = []
           launch = Object.new

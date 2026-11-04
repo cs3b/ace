@@ -26,7 +26,7 @@ module Ace::Lab::Auth
       endpoint = {"account" => "mo", "socket" => "/run/lab/herdr.sock"}
       reporter = SessionReport.new(loader: -> { {"session_runtime" => {"herdr" => endpoint}} },
         account: ->(_) { Struct.new(:uid, :gid).new(1001, 1001) }, manager: ->(_) { manager })
-      connector = ->(_path, &block) { block.call(client) }
+      connector = ->(_path, **_options, &block) { block.call(client) }
       wire.stub(:root_path!, true) do
         wire.stub(:socket_identity, [1, 2, 1001]) do
           wire.stub(:connect, connector) do

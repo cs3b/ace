@@ -74,9 +74,10 @@ The remaining bridge must enforce all of these together:
 - Handle reports before native adoption: either retain the launch barrier until
   adoption acknowledgement, or explicitly retry missing-terminal reports.
   Acknowledgement parsing now rejects error responses, but adoption ordering remains unconnected.
-- Delegated launches keep the original authenticated session authority. Do not
-  forward ordinary start as the host account, which would erase role/project
-  restrictions. Native owns terminal reservation/adoption, issuer owns authorization.
+- Delegated launches are authorized against the original authenticated session
+  before forwarding. Issuer reconstructs the exact approved project/role request;
+  native owns terminal reservation/adoption. The subsequent host authorization is
+  an additional restriction, never a substitute for the original session policy.
 
 No new persisted registry is required. Session reports remain self-reports;
 first-turn plus active eyes remains a separate readiness condition.
@@ -566,7 +567,7 @@ to the protected extension directory. The mo-owned diagnostic native server is
 ace-e2e-herdr81.service, invocation e03c97ec018e403ab074624deb704bf5.
 
 Actual native start worker81 created terminal term_65f6abb255f8e2 / w1:p2.
-Authenticated reports populated its Pi session reference under private unit
+Authenticated reports populated its Pi session reference under private runtime
 ace-auth-faeb0983982a33da. A diagnostic prompt asking role/reporting responsibilities
 completed without file edits or commands. Native agent.list then reported
 interactive_ready=true, agent_status=done, completion_seq=3, state_change_seq=3.

@@ -9,6 +9,7 @@ require_relative "session_peer"
 require_relative "session_lifetime"
 require_relative "session_launch_request"
 require_relative "session_report"
+require_relative "session_delegate"
 
 module Ace
   module Lab
@@ -22,12 +23,12 @@ module Ace
         REQUIRED = %w[action profile role task assignment repos].freeze
         PUBLIC_LEASE_FIELDS = %w[id profile role task assignment repos use_until provider_expiry state_detail].freeze
 
-        def initialize(authenticate: ->(socket) { SessionPeer.new.authenticate(socket) }, launch: SessionLaunchRequest.new, reports: SessionReport.new,
+        def initialize(authenticate: ->(socket) { SessionPeer.new.authenticate(socket) }, launch: SessionLaunchRequest.new, reports: SessionReport.new, delegate: SessionDelegate.new,
           service_factory: ->(identity, invocation) {
             Service.new(session: identity, issuer_invocation: invocation, supervised: true)
           })
           @authenticate, @service_factory = authenticate, service_factory
-          @launch, @reports = launch, reports
+          @launch, @reports, @delegate = launch, reports, delegate
         end
 
         def call(socket, invocation:, allow_request: true, supervising: nil)
@@ -44,7 +45,8 @@ module Ace
           end
           identity = @authenticate.call(socket)
           if request.key?("method")
-            reply(socket, @reports.call(request, identity: identity))
+            handler = request["method"] == SessionDelegate::METHOD ? @delegate : @reports
+            reply(socket, handler.call(request, identity: identity))
             return :completed
           end
           if request["action"] == "request" && !allow_request
@@ -166,7 +168,8 @@ module Ace
           value = JSON.parse(bytes, create_additions: false, allow_duplicate_key: false, max_nesting: 5)
           raise ArgumentError, "invalid issuer request" unless value.is_a?(Hash)
           if value.key?("method")
-            SessionReport.validate!(value)
+            validator = value["method"] == SessionDelegate::METHOD ? SessionDelegate : SessionReport
+            validator.validate!(value)
             return value
           end
           if value["action"] == "launch"

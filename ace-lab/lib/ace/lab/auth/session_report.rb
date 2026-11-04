@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "session_peer"
+require_relative "session_native_transport"
 require_relative "../molecules/install_manifest_loader"
 require "ace/runtime/molecules/protected_socket"
 require "etc"
@@ -11,55 +12,16 @@ module Ace
       # Projects an authenticated session's report onto its root-bound terminal.
       # This is not a general Herdr API proxy and never grants resume commands.
       class SessionReport
-        SO_PEERCRED = 17 # Linux socket peer credentials.
         METHODS = %w[pane.report_agent pane.report_agent_session].freeze
         COMMON = %w[pane_id agent source seq agent_session_id agent_session_path].freeze
 
-        def initialize(loader: -> { Molecules::InstallManifestLoader.load }, account: Etc.method(:getpwnam),
-          manager: ->(unit) { Ace::Runtime::Molecules::SystemdScopeManager.new(slice_unit: SessionPeer::SLICE, service_unit: unit) })
-          @loader, @account, @manager = loader, account, manager
+        def initialize(**options)
+          @transport = SessionNativeTransport.new(**options)
         end
 
         def call(request, identity:)
-          message = self.class.project(request, identity: identity)
-          endpoint = @loader.call.fetch("session_runtime").fetch("herdr")
-          account = @account.call(endpoint.fetch("account"))
-          raise Error, "native report account must be a non-session host account" if account.uid.zero? || SessionPeer::DYNAMIC_UIDS.cover?(account.uid)
-          path = endpoint.fetch("socket")
-          wire = Ace::Runtime::Molecules::ProtectedSocket
-          wire.root_path!(path, owner: account.uid)
-          before = wire.socket_identity(path)
-          wire.connect(path) do |socket|
-            _, uid, gid = socket.getsockopt(Socket::SOL_SOCKET, SO_PEERCRED).data.unpack("i!3")
-            unless uid == account.uid && gid == account.gid && wire.socket_identity(path) == before
-              raise Error, "native report endpoint identity changed"
-            end
-            live!(identity)
-            wire.write(socket, message, deadline: wire.deadline)
-            response = wire.read(wire::Ingress.new(socket), deadline: wire.deadline)
-            live!(identity)
-            unless response.is_a?(Hash) && response["id"] == message["id"] &&
-                ((response.key?("result") && !response.key?("error")) || (response.key?("error") && !response.key?("result")))
-              raise Error, "native report acknowledgement differs"
-            end
-            response
-          end
-        rescue KeyError, ArgumentError, SystemCallError, IOError, SecurityError, Ace::Runtime::Error
-          raise Error, "authenticated session reporting is unavailable"
+          @transport.call(self.class.project(request, identity: identity), identity: identity)
         end
-
-        private
-
-        def live!(identity)
-          handles = [identity.pidfd, identity.main_pidfd]
-          unless handles.all? { |handle| handle.is_a?(IO) && !handle.closed? } && !IO.select(handles, nil, nil, 0) &&
-              @manager.call(identity.unit).unit_for_pidfd(handle: identity.main_pidfd) ==
-                {"unit" => identity.unit, "invocation_id" => identity.invocation_id}
-            raise Error, "reporting session invocation is no longer live"
-          end
-        end
-
-        public
 
         def self.validate!(request)
           unless request.is_a?(Hash) && request.keys.sort == %w[id method params] &&
