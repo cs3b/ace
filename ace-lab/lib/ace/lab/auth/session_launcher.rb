@@ -61,6 +61,39 @@ module Ace
           handle&.close
         end
 
+        # Only the trusted launch owner retains this identity. Unit names are
+        # random, single-use and never exposed as an arbitrary stop endpoint.
+        # Stop the whole systemd cgroup, not the transport or a recycled PID.
+        def stop(identity)
+          raise Error, "session stop requires the root host endpoint" unless @privileged
+          unless identity.is_a?(Identity) && SessionPeer::UNIT.match?(identity.unit) &&
+              identity.invocation_id.is_a?(String) && identity.invocation_id.match?(/\A[0-9a-f]{32}\z/) &&
+              identity.invocation_id != "0" * 32 && identity.pidfd.is_a?(IO) && !identity.pidfd.closed?
+            raise ArgumentError, "authenticated session identity required"
+          end
+          manager = @manager_factory.call(identity.unit)
+          before = manager.inspect_units.fetch("service")
+          unless before["InvocationID"] == identity.invocation_id
+            raise Error, "session invocation changed before stop"
+          end
+          unless @platform.exited?(identity.pidfd)
+            binding = manager.unit_for_pidfd(handle: identity.pidfd)
+            unless binding == {"unit" => identity.unit, "invocation_id" => identity.invocation_id}
+              raise Error, "session process binding changed before stop"
+            end
+          end
+          manager.stop_service
+          after = manager.inspect_units.fetch("service")
+          unless after["InvocationID"] == identity.invocation_id &&
+              %w[inactive failed].include?(after["ActiveState"]) && after["MainPID"] == "0" &&
+              @platform.exited?(identity.pidfd)
+            raise Error, "session termination was not confirmed"
+          end
+          true
+        rescue Ace::Runtime::Error, SystemCallError, IOError, KeyError => error
+          raise Error, "session stop is unconfirmed (#{error.class})"
+        end
+
         def start(unit:, terminal:)
           raise Error, "session launch requires the root host endpoint" unless @privileged
           raise ArgumentError, "configured session unit required" unless unit.is_a?(SessionUnit)

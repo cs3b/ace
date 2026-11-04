@@ -33,6 +33,41 @@ module Ace::Lab::Auth
       assert_raises(Error) { launcher.start(unit: nil, terminal: nil) }
     end
 
+    def test_stop_uses_verified_unit_and_requires_confirmed_process_exit
+      unit = "ace-auth-session-worker-1234567890abcdef.service"
+      invocation = "a" * 32
+      state = {"ActiveState" => "active", "MainPID" => "456", "InvocationID" => invocation}
+      stopped = 0
+      exited = false
+      manager = Object.new
+      manager.define_singleton_method(:inspect_units) { {"service" => state.dup} }
+      manager.define_singleton_method(:unit_for_pidfd) { |handle:| {"unit" => unit, "invocation_id" => invocation} }
+      manager.define_singleton_method(:stop_service) do
+        stopped += 1
+        state.merge!("ActiveState" => "inactive", "MainPID" => "0")
+      end
+      platform = Object.new
+      platform.define_singleton_method(:exited?) { |_| exited }
+      launcher = SessionLauncher.new(privileged: true, platform: platform, manager_factory: ->(_) { manager })
+      File.open(File::NULL) do |handle|
+        identity = SessionLauncher::Identity.new(unit: unit, invocation_id: invocation, process: {}, pidfd: handle)
+        assert_raises(Error) { launcher.stop(identity) }
+        assert_equal 1, stopped
+        exited = true
+        assert launcher.stop(identity)
+        assert_equal 2, stopped
+        state["InvocationID"] = "b" * 32
+        assert_raises(Error) { launcher.stop(identity) }
+        assert_equal 2, stopped
+        refute handle.closed?
+      end
+    end
+
+    def test_stop_rejects_unprivileged_caller_and_unbound_handle
+      assert_raises(Error) { SessionLauncher.new(privileged: false).stop(nil) }
+      assert_raises(ArgumentError) { SessionLauncher.new(privileged: true).stop(nil) }
+    end
+
     def test_identity_uses_service_pid_and_rejects_replaced_invocation
       unit = "ace-auth-session-worker-1234567890abcdef.service"
       state = {"ActiveState" => "active", "MainPID" => "456", "InvocationID" => "a" * 32}
