@@ -3874,3 +3874,244 @@ index 0000000..b82a58d
 +        assert_eq!(request["unit"], child.unit);
 +    }
 +}
+
+From 8ba0cc36639448ff2223f7893caf22d05ec38ae8 Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 02:02:10 +0100
+Subject: [PATCH] feat: receive authenticated session terminal handoff
+
+---
+ src/platform/linux.rs                 |   1 +
+ src/platform/linux/session_handoff.rs | 211 ++++++++++++++++++++++++++
+ 2 files changed, 212 insertions(+)
+ create mode 100644 src/platform/linux/session_handoff.rs
+
+diff --git a/src/platform/linux.rs b/src/platform/linux.rs
+index ed22cd0..13b136a 100644
+--- a/src/platform/linux.rs
++++ b/src/platform/linux.rs
+@@ -27,6 +27,7 @@ pub(crate) use super::unix_common::{
+ mod config_file_tests;
+ 
+ mod session_child;
++mod session_handoff;
+ 
+ mod guarded_origin;
+ pub(crate) use guarded_origin::capture_guarded_child;
+diff --git a/src/platform/linux/session_handoff.rs b/src/platform/linux/session_handoff.rs
+new file mode 100644
+index 0000000..dae56c2
+--- /dev/null
++++ b/src/platform/linux/session_handoff.rs
+@@ -0,0 +1,211 @@
++//! Receive the terminal and pinned process from the root launch owner.
++use super::{guarded_origin::capture_pinned_child, session_child::SessionChild};
++use crate::platform::guarded_prompt::GuardedChildOrigin;
++use serde::Deserialize;
++use std::{
++    io::{self, Read},
++    os::{
++        fd::{AsRawFd, FromRawFd, OwnedFd},
++        unix::net::UnixStream,
++    },
++    sync::Arc,
++    time::Duration,
++};
++
++#[derive(Deserialize)]
++#[serde(deny_unknown_fields)]
++struct Metadata {
++    protocol: String,
++    unit: String,
++    invocation: String,
++    pid: u32,
++    rows: u16,
++    cols: u16,
++}
++
++pub(crate) struct SessionHandoff {
++    pub master: OwnedFd,
++    pub origin: Arc<GuardedChildOrigin>,
++    pub child: SessionChild,
++    pub rows: u16,
++    pub cols: u16,
++}
++
++pub(crate) fn receive(mut stream: UnixStream) -> io::Result<SessionHandoff> {
++    let mut peer: libc::ucred = unsafe { std::mem::zeroed() };
++    let mut length = std::mem::size_of_val(&peer) as libc::socklen_t;
++    if unsafe {
++        libc::getsockopt(
++            stream.as_raw_fd(),
++            libc::SOL_SOCKET,
++            libc::SO_PEERCRED,
++            (&mut peer as *mut libc::ucred).cast(),
++            &mut length,
++        )
++    } != 0
++    {
++        return Err(io::Error::last_os_error());
++    }
++    if length as usize != std::mem::size_of_val(&peer) || peer.uid != 0 {
++        return Err(io::Error::other("session launcher is not root"));
++    }
++    stream.set_nonblocking(false)?;
++    stream.set_read_timeout(Some(Duration::from_secs(5)))?;
++    let (header, mut handles) = receive_header(&stream)?;
++    let size = u32::from_be_bytes(header) as usize;
++    if !(1..=1024).contains(&size) {
++        return Err(io::Error::other("invalid session handoff length"));
++    }
++    let mut bytes = vec![0; size];
++    stream.read_exact(&mut bytes)?;
++    let metadata: Metadata = serde_json::from_slice(&bytes)?;
++    if metadata.protocol != "ace.session-launch/v1" || metadata.rows == 0 || metadata.cols == 0 {
++        return Err(io::Error::other("invalid session terminal metadata"));
++    }
++    let pidfd = handles.pop().unwrap();
++    let master = handles.pop().unwrap();
++    let mut terminal_number: libc::c_uint = 0;
++    if unsafe { libc::ioctl(master.as_raw_fd(), libc::TIOCGPTN, &mut terminal_number) } != 0 {
++        return Err(io::Error::other("launcher did not supply a PTY master"));
++    }
++    let origin = capture_pinned_child(metadata.pid, pidfd)?;
++    let child = SessionChild::new(metadata.pid, metadata.unit, metadata.invocation, stream)?;
++    Ok(SessionHandoff {
++        master,
++        origin,
++        child,
++        rows: metadata.rows,
++        cols: metadata.cols,
++    })
++}
++
++fn receive_header(stream: &UnixStream) -> io::Result<([u8; 4], Vec<OwnedFd>)> {
++    let mut header = [0u8; 4];
++    let mut filled = 0;
++    let mut handles = Vec::new();
++    while filled < header.len() {
++        let mut control = [0usize; 8]; // aligned, enough to detect extra handles
++        let mut iov = libc::iovec {
++            iov_base: header[filled..].as_mut_ptr().cast(),
++            iov_len: header.len() - filled,
++        };
++        let mut message: libc::msghdr = unsafe { std::mem::zeroed() };
++        message.msg_iov = &mut iov;
++        message.msg_iovlen = 1;
++        message.msg_control = control.as_mut_ptr().cast();
++        message.msg_controllen = std::mem::size_of_val(&control);
++        let count =
++            unsafe { libc::recvmsg(stream.as_raw_fd(), &mut message, libc::MSG_CMSG_CLOEXEC) };
++        if count < 0 {
++            let error = io::Error::last_os_error();
++            if error.kind() == io::ErrorKind::Interrupted {
++                continue;
++            }
++            return Err(error);
++        }
++        let mut controls = 0;
++        let mut unexpected = false;
++        unsafe {
++            let end = control.as_ptr() as usize + message.msg_controllen;
++            let mut cmsg = libc::CMSG_FIRSTHDR(&message);
++            while !cmsg.is_null() {
++                controls += 1;
++                if (*cmsg).cmsg_level == libc::SOL_SOCKET && (*cmsg).cmsg_type == libc::SCM_RIGHTS {
++                    let data = libc::CMSG_DATA(cmsg);
++                    let size = ((*cmsg).cmsg_len as usize)
++                        .saturating_sub(libc::CMSG_LEN(0) as usize)
++                        .min(end.saturating_sub(data as usize));
++                    for index in 0..size / std::mem::size_of::<libc::c_int>() {
++                        let fd = std::ptr::read_unaligned(data.cast::<libc::c_int>().add(index));
++                        handles.push(OwnedFd::from_raw_fd(fd));
++                    }
++                } else {
++                    unexpected = true;
++                }
++                cmsg = libc::CMSG_NXTHDR(&message, cmsg);
++            }
++        }
++        if count == 0
++            || message.msg_flags & (libc::MSG_CTRUNC | libc::MSG_TRUNC) != 0
++            || unexpected
++            || (filled == 0 && (controls != 1 || handles.len() != 2))
++            || (filled != 0 && controls != 0)
++        {
++            return Err(io::Error::other("invalid session handoff descriptors"));
++        }
++        filled += count as usize;
++    }
++    Ok((header, handles))
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use std::io::Write;
++    fn send_handles(mut stream: &UnixStream, count: usize, fragmented: bool) {
++        let file = std::fs::File::open("/dev/null").unwrap();
++        let fds = vec![file.as_raw_fd(); count];
++        let mut header = [0u8, 0, 0, 17];
++        let mut iov = libc::iovec {
++            iov_base: header.as_mut_ptr().cast(),
++            iov_len: if fragmented { 1 } else { header.len() },
++        };
++        let needed =
++            unsafe { libc::CMSG_SPACE((count * std::mem::size_of::<libc::c_int>()) as u32) }
++                as usize;
++        let mut control = vec![0usize; needed.div_ceil(std::mem::size_of::<usize>())];
++        let mut message: libc::msghdr = unsafe { std::mem::zeroed() };
++        message.msg_iov = &mut iov;
++        message.msg_iovlen = 1;
++        message.msg_control = control.as_mut_ptr().cast();
++        unsafe {
++            let bytes = (count * std::mem::size_of::<libc::c_int>()) as u32;
++            message.msg_controllen = libc::CMSG_SPACE(bytes) as usize;
++            let cmsg = libc::CMSG_FIRSTHDR(&message);
++            (*cmsg).cmsg_level = libc::SOL_SOCKET;
++            (*cmsg).cmsg_type = libc::SCM_RIGHTS;
++            (*cmsg).cmsg_len = libc::CMSG_LEN(bytes) as usize;
++            std::ptr::copy_nonoverlapping(
++                fds.as_ptr().cast::<u8>(),
++                libc::CMSG_DATA(cmsg),
++                bytes as usize,
++            );
++            assert_eq!(
++                libc::sendmsg(stream.as_raw_fd(), &message, 0),
++                if fragmented { 1 } else { 4 }
++            );
++        }
++        if fragmented {
++            stream.write_all(&header[1..]).unwrap();
++        }
++    }
++    #[test]
++    fn exact_pair_is_cloexec_and_wrong_counts_are_refused() {
++        let (client, server) = UnixStream::pair().unwrap();
++        send_handles(&server, 2, true);
++        let (header, handles) = receive_header(&client).unwrap();
++        assert_eq!(u32::from_be_bytes(header), 17);
++        assert_eq!(handles.len(), 2);
++        for handle in handles {
++            let flags = unsafe { libc::fcntl(handle.as_raw_fd(), libc::F_GETFD) };
++            assert_eq!(flags & libc::FD_CLOEXEC, libc::FD_CLOEXEC);
++        }
++        for count in [1, 3, 20] {
++            let (client, server) = UnixStream::pair().unwrap();
++            send_handles(&server, count, false);
++            let before = std::fs::read_dir("/proc/self/fd").unwrap().count();
++            assert!(receive_header(&client).is_err());
++            assert_eq!(std::fs::read_dir("/proc/self/fd").unwrap().count(), before);
++        }
++    }
++    #[test]
++    fn missing_rights_and_non_root_peer_are_refused() {
++        let (client, mut server) = UnixStream::pair().unwrap();
++        server.write_all(&[0, 0, 0, 1]).unwrap();
++        assert!(receive_header(&client).is_err());
++        if unsafe { libc::geteuid() } != 0 {
++            let (client, _server) = UnixStream::pair().unwrap();
++            assert!(receive(client).is_err());
++        }
++    }
++}

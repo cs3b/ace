@@ -2,6 +2,8 @@
 
 require_relative "session_unit"
 require "rbconfig"
+require "socket"
+require "json"
 require "ace/runtime/molecules/protected_socket"
 
 module Ace
@@ -92,6 +94,51 @@ module Ace
           true
         rescue Ace::Runtime::Error, SystemCallError, IOError, KeyError => error
           raise Error, "session stop is unconfirmed (#{error.class})"
+        end
+
+        # One framed handoff on an already authenticated launch connection.
+        # The launch owner retains its descriptors and lifecycle connection;
+        # SCM_RIGHTS duplicates the terminal and pinned process into Herdr.
+        def handoff(identity, terminal:, channel:, rows:, cols:)
+          raise Error, "session handoff requires the root host endpoint" unless @privileged
+          unless identity.is_a?(Identity) && SessionPeer::UNIT.match?(identity.unit) &&
+              identity.process["pid"].is_a?(Integer) && identity.process["pid"].positive? &&
+              identity.invocation_id.is_a?(String) && identity.invocation_id.match?(/\A[0-9a-f]{32}\z/) &&
+              identity.invocation_id != "0" * 32 && identity.pidfd.is_a?(IO) && !identity.pidfd.closed? &&
+              terminal.is_a?(IO) && !terminal.closed? && terminal.tty? && channel.is_a?(UNIXSocket) &&
+              [rows, cols].all? { |size| size.is_a?(Integer) && size.between?(1, 65_535) }
+            raise ArgumentError, "invalid authenticated terminal handoff"
+          end
+          @platform.live!(identity.process)
+          raise Error, "session exited before handoff" if @platform.exited?(identity.pidfd)
+          expected = {"unit" => identity.unit, "invocation_id" => identity.invocation_id}
+          unless @manager_factory.call(identity.unit).unit_for_pidfd(handle: identity.pidfd) == expected
+            raise Error, "session binding changed before handoff"
+          end
+          payload = JSON.generate("protocol" => "ace.session-launch/v1", "unit" => identity.unit,
+            "invocation" => identity.invocation_id, "pid" => identity.process.fetch("pid"),
+            "rows" => rows, "cols" => cols)
+          frame = [payload.bytesize].pack("N") + payload
+          rights = Socket::AncillaryData.unix_rights(terminal, identity.pidfd)
+          deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+          sent = 0
+          while sent < frame.bytesize
+            remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+            unless remaining.positive? && IO.select(nil, [channel], nil, remaining)
+              raise Error, "session handoff deadline expired"
+            end
+            count = if sent.zero?
+              channel.sendmsg_nonblock(frame, 0, nil, rights, exception: false)
+            else
+              channel.write_nonblock(frame.byteslice(sent..), exception: false)
+            end
+            next if count == :wait_writable
+            raise Error, "session handoff channel closed" unless count.is_a?(Integer) && count.positive?
+            sent += count
+          end
+          true
+        rescue Ace::Runtime::Error, SystemCallError, IOError, KeyError => error
+          raise Error, "session terminal handoff failed (#{error.class})"
         end
 
         def start(unit:, terminal:)

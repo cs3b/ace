@@ -33,6 +33,46 @@ module Ace::Lab::Auth
       assert_raises(Error) { launcher.start(unit: nil, terminal: nil) }
     end
 
+    def test_handoff_transfers_both_handles_with_exact_identity
+      unit = "ace-auth-session-worker-1234567890abcdef.service"
+      invocation = "a" * 32
+      platform = Object.new
+      platform.define_singleton_method(:live!) { |_| true }
+      platform.define_singleton_method(:exited?) { |_| false }
+      manager = Object.new
+      manager.define_singleton_method(:unit_for_pidfd) { |handle:| {"unit" => unit, "invocation_id" => invocation} }
+      launcher = SessionLauncher.new(privileged: true, platform: platform, manager_factory: ->(_) { manager })
+      sender, receiver = UNIXSocket.pair
+      received = []
+      PTY.open do |master, slave|
+        File.open(File::NULL) do |handle|
+          identity = SessionLauncher::Identity.new(unit: unit, invocation_id: invocation,
+            process: {"pid" => 456}, pidfd: handle)
+          assert_raises(ArgumentError) { launcher.handoff(identity, terminal: master, channel: sender, rows: 0, cols: 80) }
+          assert launcher.handoff(identity, terminal: master, channel: sender, rows: 24, cols: 80)
+          header, _, flags, *controls = receiver.recvmsg(4, 0, 4096, scm_rights: true)
+          assert_equal 0, flags & Socket::MSG_CTRUNC
+          assert_equal 1, controls.size
+          received = controls.first.unix_rights
+          assert_equal 2, received.size
+          assert received.first.tty?
+          assert_equal handle.stat.rdev, received.last.stat.rdev
+          payload = JSON.parse(receiver.read(header.unpack1("N")))
+          assert_equal({"protocol" => "ace.session-launch/v1", "unit" => unit,
+            "invocation" => invocation, "pid" => 456, "rows" => 24, "cols" => 80}, payload)
+          refute master.closed?
+          refute handle.closed?
+          manager.define_singleton_method(:unit_for_pidfd) { |handle:| {"unit" => unit, "invocation_id" => "b" * 32} }
+          assert_raises(Error) { launcher.handoff(identity, terminal: master, channel: sender, rows: 24, cols: 80) }
+          assert_nil IO.select([receiver], nil, nil, 0)
+        end
+      end
+    ensure
+      received&.each(&:close)
+      sender&.close
+      receiver&.close
+    end
+
     def test_stop_uses_verified_unit_and_requires_confirmed_process_exit
       unit = "ace-auth-session-worker-1234567890abcdef.service"
       invocation = "a" * 32

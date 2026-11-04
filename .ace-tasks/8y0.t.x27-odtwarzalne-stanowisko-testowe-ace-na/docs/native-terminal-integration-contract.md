@@ -142,3 +142,26 @@ The authenticated launch handler must retain natural completion separately;
 SessionLauncher.stop cannot inspect a unit already garbage-collected after
 natural exit. Authentication and PTY/pidfd association precede constructing
 SessionChild; the constructor does not establish authority.
+
+## Terminal descriptor handoff
+
+SessionLauncher.handoff sends BE32 payload length followed by JSON metadata
+(protocol=ace.session-launch/v1, unit, invocation, pid, rows, cols), with exactly
+two SCM_RIGHTS descriptors on the first bytes: PTY master then pidfd. It checks
+root execution, live identity and current unit binding before sending; handles
+remain owned by the launch supervisor. Six sender tests / 35 assertions pass.
+
+Native source `8ba0cc36639448ff2223f7893caf22d05ec38ae8` receives this handoff
+through platform/linux/session_handoff.rs. It requires a root socket peer,
+bounded metadata, exactly two CLOEXEC rights, PTY-master ioctl, and a matching
+live pidfd. The lifecycle stream then belongs to SessionChild. UTM ARM64 tests
+passed (2, 3935 filtered), nextest e416b0a2-9f71-40d4-91bc-cb11e6824ec2: missing,
+extra and truncated rights are refused; rejected rights do not leak; a fragmented
+header with a valid pair preserves both handles and CLOEXEC. Independent review
+found no actionable FD/framing flaw. Exact packaged source/tree replay passed.
+
+These are transport tests, not a native agent launch. Caller authorization and
+PTY/process association still belong to the configured launch handler, which
+is not wired yet. The new receiver still has no production caller. Next complete
+cut remains IssuerServer launch dispatch, configured Pi preparation, native
+SpawnedPty selection and pane shutdown through SessionChild.
