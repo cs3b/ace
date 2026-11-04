@@ -581,3 +581,9 @@ Broader auth verification selected 30 actual test files: 288 tests, 1170
 assertions, zero failures/errors, 9 skipped; report e24b02c5-6a6f-4630-927c-01a2203bbf3c.
 The preceding attempt supplied a directory as a file and ran zero tests; it is
 not verification. This diagnostic deployment is not either clean E2E run.
+
+### Scoped native supervision (2026-11-04)
+
+The existing issuer accepts closed `agent.list`, `agent.get` and `agent.prompt` requests from authenticated sessions. Native `AgentInfo.isolated_session` projects the server-selected project and role; report payloads cannot set it. The issuer filters list/get through the original session’s project/role grants (workers can inspect only their bound terminal) and returns status identifiers, never transcript paths, titles or arbitrary metadata.
+
+Prompts are overseer-only. The issuer resolves the immutable terminal, obtains native guarded process origin, requires a DynamicUser process, and submits with `expected_origin`. Native rejects a changed incarnation before PTY write. `pane.process_info` resolves terminal IDs exactly, without agent-name or recycled-alias fallback. No raw keys, shell commands, caller origin, or wait loop are exposed through this endpoint. These are component checks, not full scenario acceptance.

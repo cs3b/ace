@@ -87,6 +87,20 @@ module Ace
           assert identity.closed
         end
 
+        def test_scoped_native_control_reaches_authenticated_handler
+          control = Object.new
+          expected = @identity
+          control.define_singleton_method(:call) do |request, identity:|
+            raise "wrong identity" unless identity.equal?(expected)
+            {"id" => request.fetch("id"), "result" => {"type" => "agent_list", "agents" => []}}
+          end
+          runner = IssuerRequest.new(authenticate: ->(_) { @identity }, control: control,
+            service_factory: ->(*) { raise "control must not use lease store" })
+          @client.puts JSON.generate("id" => "list", "method" => "agent.list", "params" => {})
+          assert_equal :completed, runner.call(@server, invocation: "a" * 32)
+          assert_equal [], JSON.parse(@client.gets).dig("result", "agents")
+        end
+
         def test_isolated_delegation_uses_original_authenticated_session
           identity = Struct.new(:closed) { def close = self.closed = true }.new(false)
           request = {"id" => "d1", "method" => "agent.start_isolated", "params" => {

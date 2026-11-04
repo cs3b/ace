@@ -6851,3 +6851,197 @@ index 13b8aee..c9e3f73 100644
  ) -> std::io::Result<crate::pty::backend::SpawnedPty> {
      Err(std::io::Error::new(
          std::io::ErrorKind::Unsupported,
+From 9010381bc6f1ffd31018694fbe999b0a81fe414b Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 03:31:07 +0000
+Subject: [PATCH] Expose isolated launch selection and resolve exact process
+ targets
+
+---
+ docs/next/api/herdr-api.schema.json | 27 ++++++++++++++++++++++
+ src/api/schema/agents.rs            |  3 +++
+ src/app/agents.rs                   |  1 +
+ src/app/api/agents.rs               | 32 ++++++++++++++++++++++++++
+ src/app/api/panes.rs                | 35 ++++++++++++++++++++++++++++-
+ src/terminal/state.rs               |  4 +++-
+ 6 files changed, 100 insertions(+), 2 deletions(-)
+
+diff --git a/docs/next/api/herdr-api.schema.json b/docs/next/api/herdr-api.schema.json
+index cd5105a..4611c3d 100644
+--- a/docs/next/api/herdr-api.schema.json
++++ b/docs/next/api/herdr-api.schema.json
+@@ -6838,6 +6838,17 @@
+             "interactive_ready": {
+               "type": "boolean"
+             },
++            "isolated_session": {
++              "anyOf": [
++                {
++                  "$ref": "#/schemas/success_response/$defs/IsolatedSessionConfig"
++                },
++                {
++                  "type": "null"
++                }
++              ],
++              "description": "Server-selected launch configuration; never supplied by agent reports."
++            },
+             "launch_pending": {
+               "type": "boolean"
+             },
+@@ -7988,6 +7999,22 @@
+           ],
+           "type": "object"
+         },
++        "IsolatedSessionConfig": {
++          "additionalProperties": false,
++          "properties": {
++            "project": {
++              "type": "string"
++            },
++            "role": {
++              "type": "string"
++            }
++          },
++          "required": [
++            "project",
++            "role"
++          ],
++          "type": "object"
++        },
+         "LayoutDescription": {
+           "properties": {
+             "focused_pane_id": {
+diff --git a/src/api/schema/agents.rs b/src/api/schema/agents.rs
+index 7944c70..2410447 100644
+--- a/src/api/schema/agents.rs
++++ b/src/api/schema/agents.rs
+@@ -221,6 +221,9 @@ impl AgentPromptParams {
+ 
+ #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+ pub struct AgentInfo {
++    /// Server-selected launch configuration; never supplied by agent reports.
++    #[serde(default, skip_serializing_if = "Option::is_none")]
++    pub isolated_session: Option<crate::terminal::state::IsolatedSessionConfig>,
+     pub terminal_id: String,
+     #[serde(default, skip_serializing_if = "Option::is_none")]
+     pub name: Option<String>,
+diff --git a/src/app/agents.rs b/src/app/agents.rs
+index 50db9cb..04aa0db 100644
+--- a/src/app/agents.rs
++++ b/src/app/agents.rs
+@@ -376,6 +376,7 @@ impl App {
+         }
+         let pane = self.pane_info(ws_idx, pane_id)?;
+         Some(crate::api::schema::AgentInfo {
++            isolated_session: terminal.isolated_launch.clone(),
+             terminal_id: pane.terminal_id,
+             name: terminal.agent_name.clone(),
+             agent: pane.agent,
+diff --git a/src/app/api/agents.rs b/src/app/api/agents.rs
+index b93d37b..7e1944b 100644
+--- a/src/app/api/agents.rs
++++ b/src/app/api/agents.rs
+@@ -926,6 +926,38 @@ mod tests {
+         assert!(rx.try_recv().is_err());
+     }
+ 
++    #[test]
++    fn isolated_agent_info_uses_server_launch_config() {
++        let mut app = app_with_agent();
++        let pane_id = app.state.workspaces[0].tabs[0].root_pane;
++        let terminal_id = app.state.workspaces[0].tabs[0].panes[&pane_id]
++            .attached_terminal_id
++            .clone();
++        app.state
++            .terminals
++            .get_mut(&terminal_id)
++            .unwrap()
++            .set_detected_state(Some(Agent::Pi), AgentState::Idle);
++        assert!(app
++            .agent_info(0, pane_id)
++            .unwrap()
++            .isolated_session
++            .is_none());
++        let selection = crate::terminal::state::IsolatedSessionConfig {
++            project: "ace".into(),
++            role: "worker".into(),
++        };
++        app.state
++            .terminals
++            .get_mut(&terminal_id)
++            .unwrap()
++            .isolated_launch = Some(selection.clone());
++        assert_eq!(
++            app.agent_info(0, pane_id).unwrap().isolated_session,
++            Some(selection)
++        );
++    }
++
+     #[test]
+     fn agent_focus_marks_already_focused_done_agent_seen() {
+         let mut app = app_with_agent();
+diff --git a/src/app/api/panes.rs b/src/app/api/panes.rs
+index 039e127..c5e4601 100644
+--- a/src/app/api/panes.rs
++++ b/src/app/api/panes.rs
+@@ -521,7 +521,11 @@ impl App {
+         id: String,
+         params: PaneProcessInfoParams,
+     ) -> String {
+-        let Some((ws_idx, pane_id)) = self.resolve_optional_pane(params.pane_id.as_deref()) else {
++        let target = match params.pane_id.as_deref() {
++            Some(target) => self.resolve_report_pane(target),
++            None => self.resolve_optional_pane(None),
++        };
++        let Some((ws_idx, pane_id)) = target else {
+             return encode_error(id, "pane_not_found", "pane not found");
+         };
+         let Some((runtime, _workspace_id)) = self.lookup_runtime(ws_idx, pane_id) else {
+@@ -2354,6 +2358,35 @@ mod tests {
+         (app, public_pane_id)
+     }
+ 
++    #[tokio::test]
++    async fn isolated_process_info_resolves_exact_terminal_without_alias_fallback() {
++        let (mut app, _) = app_with_test_workspace();
++        let pane = app.state.workspaces[0].tabs[0].root_pane;
++        let terminal = app.state.workspaces[0].terminal_id(pane).unwrap().clone();
++        let (runtime, _rx) = crate::terminal::TerminalRuntime::test_with_channel(80, 24);
++        app.state.insert_test_runtime(pane, runtime);
++        let response = app.handle_pane_process_info(
++            "process".into(),
++            PaneProcessInfoParams {
++                pane_id: Some(terminal.to_string()),
++            },
++        );
++        serde_json::from_str::<SuccessResponse>(&response).unwrap();
++        app.state
++            .public_pane_id_aliases
++            .insert("term_missing".into(), pane);
++        let response = app.handle_pane_process_info(
++            "missing".into(),
++            PaneProcessInfoParams {
++                pane_id: Some("term_missing".into()),
++            },
++        );
++        assert!(serde_json::from_str::<serde_json::Value>(&response)
++            .unwrap()
++            .get("error")
++            .is_some());
++    }
++
+     #[test]
+     fn isolated_report_target_is_exact_and_never_falls_back_to_an_alias() {
+         let (mut app, public_pane_id) = app_with_test_workspace();
+diff --git a/src/terminal/state.rs b/src/terminal/state.rs
+index bcd5d25..fc456bb 100644
+--- a/src/terminal/state.rs
++++ b/src/terminal/state.rs
+@@ -1,4 +1,6 @@
+-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
++#[derive(
++    Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
++)]
+ #[serde(deny_unknown_fields)]
+ pub struct IsolatedSessionConfig {
+     pub project: String,

@@ -10,6 +10,7 @@ require_relative "session_lifetime"
 require_relative "session_launch_request"
 require_relative "session_report"
 require_relative "session_delegate"
+require_relative "session_control"
 
 module Ace
   module Lab
@@ -23,12 +24,12 @@ module Ace
         REQUIRED = %w[action profile role task assignment repos].freeze
         PUBLIC_LEASE_FIELDS = %w[id profile role task assignment repos use_until provider_expiry state_detail].freeze
 
-        def initialize(authenticate: ->(socket) { SessionPeer.new.authenticate(socket) }, launch: SessionLaunchRequest.new, reports: SessionReport.new, delegate: SessionDelegate.new,
+        def initialize(authenticate: ->(socket) { SessionPeer.new.authenticate(socket) }, launch: SessionLaunchRequest.new, reports: SessionReport.new, delegate: SessionDelegate.new, control: SessionControl.new,
           service_factory: ->(identity, invocation) {
             Service.new(session: identity, issuer_invocation: invocation, supervised: true)
           })
           @authenticate, @service_factory = authenticate, service_factory
-          @launch, @reports, @delegate = launch, reports, delegate
+          @launch, @reports, @delegate, @control = launch, reports, delegate, control
         end
 
         def call(socket, invocation:, allow_request: true, supervising: nil)
@@ -45,7 +46,13 @@ module Ace
           end
           identity = @authenticate.call(socket)
           if request.key?("method")
-            handler = request["method"] == SessionDelegate::METHOD ? @delegate : @reports
+            handler = if request["method"] == SessionDelegate::METHOD
+              @delegate
+            elsif SessionControl::METHODS.include?(request["method"])
+              @control
+            else
+              @reports
+            end
             reply(socket, handler.call(request, identity: identity))
             return :completed
           end
@@ -168,7 +175,13 @@ module Ace
           value = JSON.parse(bytes, create_additions: false, allow_duplicate_key: false, max_nesting: 5)
           raise ArgumentError, "invalid issuer request" unless value.is_a?(Hash)
           if value.key?("method")
-            validator = value["method"] == SessionDelegate::METHOD ? SessionDelegate : SessionReport
+            validator = if value["method"] == SessionDelegate::METHOD
+              SessionDelegate
+            elsif SessionControl::METHODS.include?(value["method"])
+              SessionControl
+            else
+              SessionReport
+            end
             validator.validate!(value)
             return value
           end
