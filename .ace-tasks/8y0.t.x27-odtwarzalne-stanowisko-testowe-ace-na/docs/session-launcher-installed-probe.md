@@ -64,3 +64,23 @@ The successful temporary project was removed after transport completion.
 This proves the selected `_overseer` path is masked, not that every alternate
 path, other project, assignment or session directory is isolated. Complete
 session filesystem isolation and native Herdr integration remain open.
+
+## Assigned-project-only view
+
+Artifact ace-lab 0.14.2.pre.utm63 from
+`8a00bac22834ba94bc07e7f5a2a12b12ff5c6109`, SHA-256
+`690e5380cb55a4e9f3ecb919edad5b0d426b04d6041607f4802096f00cdce8fd`,
+passed the same installed-artifact probe with the sibling-project assertion.
+Unit `ace-auth-session-worker-3e252f48a9bcd041.service`, invocation
+`0cd61606a7ac4164a269b9471aa58e39`, session UID 63155, backing UID 1001.
+Barrier and write passed; actual private-task open was denied; actual open of
+the sibling-project sentinel raised FileNotFoundError. Exit 0, successful
+transport reaped and temporary projects removed.
+
+The failed utm62 probe exposed loss of the bind source after covering /lab.
+Resolving /proc/self/fd/4 through mount's canonicalization selected the newly
+empty path; --no-canonicalize did not resolve the failure. utm63 retains a
+temporary source bind under the existing session runtime directory before
+covering /lab, then removes that bind and mountpoint before release. This
+does not add persisted project or lease state. Isolation of other assignments
+and worktrees inside the selected project remains unfinished.
