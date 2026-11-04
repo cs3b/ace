@@ -105,7 +105,9 @@ module Ace
               identity.process["pid"].is_a?(Integer) && identity.process["pid"].positive? &&
               identity.invocation_id.is_a?(String) && identity.invocation_id.match?(/\A[0-9a-f]{32}\z/) &&
               identity.invocation_id != "0" * 32 && identity.pidfd.is_a?(IO) && !identity.pidfd.closed? &&
-              terminal.is_a?(IO) && !terminal.closed? && terminal.tty? && channel.is_a?(UNIXSocket) &&
+              terminal.is_a?(IO) && !terminal.closed? && terminal.tty? &&
+              channel.is_a?(BasicSocket) && !channel.closed? && channel.local_address.unix? &&
+              channel.local_address.socktype == Socket::SOCK_STREAM &&
               directory.is_a?(String) && directory.match?(%r{\A/lab/[a-zA-Z0-9][a-zA-Z0-9_.-]*\z}) &&
               [rows, cols].all? { |size| size.is_a?(Integer) && size.between?(1, 65_535) }
             raise ArgumentError, "invalid authenticated terminal handoff"

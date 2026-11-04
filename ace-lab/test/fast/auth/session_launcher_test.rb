@@ -42,7 +42,9 @@ module Ace::Lab::Auth
       manager = Object.new
       manager.define_singleton_method(:unit_for_pidfd) { |handle:| {"unit" => unit, "invocation_id" => invocation} }
       launcher = SessionLauncher.new(privileged: true, platform: platform, manager_factory: ->(_) { manager })
-      sender, receiver = UNIXSocket.pair
+      # Socket activation wraps fd 3 as Socket; accept therefore returns
+      # Socket, not UNIXSocket. Exercise the production descriptor class.
+      sender, receiver = Socket.pair(Socket::AF_UNIX, Socket::SOCK_STREAM, 0)
       received = []
       PTY.open do |master, slave|
         File.open(File::NULL) do |handle|
