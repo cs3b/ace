@@ -14,9 +14,17 @@ account = Etc.getpwnam("mo")
 project = "/lab/e2e-launch-#{SecureRandom.hex(8)}"
 Dir.mkdir(project, 0o755)
 File.chown(account.uid, account.gid, project)
+tasks = File.join(project, ".ace-tasks")
+private_tasks = File.join(tasks, "_overseer")
+Dir.mkdir(tasks, 0o755)
+Dir.mkdir(private_tasks, 0o755)
+File.chown(account.uid, account.gid, tasks, private_tasks)
+sentinel = File.join(private_tasks, "private-sentinel")
+File.write(sentinel, "must remain private")
+File.chown(account.uid, account.gid, sentinel)
 output = File.join(project, "result")
 unit = Ace::Lab::Auth::SessionUnit.new(role: "worker", id: SecureRandom.hex(8),
-  command: [File.realpath("/usr/bin/python3"), "-c", "open(#{output.inspect}, 'w').write('worker completed')"],
+  command: [File.realpath("/usr/bin/python3"), "-c", "import os; assert not os.access(#{sentinel.inspect}, os.R_OK); open(#{output.inspect}, 'w').write('worker completed')"],
   environment: {"GEM_HOME" => ENV.fetch("GEM_HOME"), "GEM_PATH" => ENV.fetch("GEM_PATH")})
 launcher = Ace::Lab::Auth::SessionLauncher.new
 launch = identity = nil
@@ -77,6 +85,9 @@ PTY.open do |master, slave|
     end
     if completed
       File.unlink(output)
+      File.unlink(sentinel)
+      Dir.rmdir(private_tasks)
+      Dir.rmdir(tasks)
       Dir.rmdir(project)
     else
       warn "diagnostic project preserved: #{project}"

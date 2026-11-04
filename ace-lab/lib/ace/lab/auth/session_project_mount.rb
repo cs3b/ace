@@ -24,6 +24,16 @@ module Ace
           raise Error, "session has exited" if @platform.exited?(identity.pidfd)
           namespace = SessionNamespace.capture(identity.process.fetch("pid"))
           source = File.open(project, File::RDONLY | File::NOFOLLOW)
+          role = SessionPeer::UNIT.match(identity.unit)&.captures&.first
+          raise Error, "session role is unavailable" unless SessionUnit::ROLES.include?(role)
+          private_tasks = File.join(project, ".ace-tasks", "_overseer")
+          hide_private_tasks = %w[worker verifier integrator].include?(role)
+          if hide_private_tasks
+            [File.dirname(private_tasks), private_tasks].each do |path|
+              entry = File.lstat(path)
+              raise Error, "private task directory must be prepared before session start" unless entry.directory? && !entry.symlink?
+            end
+          end
           stat = source.stat
           unless stat.directory? && stat.uid.positive? && stat.gid.positive? && (stat.mode & 0o022).zero?
             raise Error, "project ownership is not suitable for session mapping"
@@ -43,6 +53,11 @@ module Ace
           # Relax only this private bind mount after applying the identity map.
           @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mount",
             "-o", "remount,bind,rw", "--", project], namespace: namespace, source: source)
+          if hide_private_tasks
+            @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mount",
+              "-t", "tmpfs", "-o", "ro,nosuid,nodev,noexec,mode=000,size=4k", "none", private_tasks],
+              namespace: namespace, source: source)
+          end
           @platform.live!(identity.process)
           unless SessionNamespace.matches?(namespace, identity.process.fetch("pid"))
             raise Error, "session namespace changed during project preparation"
