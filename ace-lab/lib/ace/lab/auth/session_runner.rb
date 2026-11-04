@@ -4,6 +4,7 @@ require "etc"
 require "fiddle"
 require_relative "error"
 require_relative "session_namespace"
+require_relative "session_privileges"
 
 module Ace
   module Lab
@@ -78,7 +79,7 @@ module Ace
                 Process.groups = []
                 # A process moved to a systemd cgroup does not inherit that
                 # unit's process credentials. Set this on the child itself.
-                restrict_privilege_escalation!
+                SessionPrivileges.restrict!
                 Process::GID.change_privilege(@account.gid)
                 Process::UID.change_privilege(@account.uid)
                 Dir.chdir(@cwd)
@@ -223,19 +224,7 @@ module Ace
           raise ArgumentError, "session execution requires Linux pidfd signal support"
         end
 
-        def restrict_privilege_escalation!
-          raise ArgumentError, "session execution requires Linux" unless RUBY_PLATFORM.include?("linux")
-          prctl = Fiddle::Function.new(Fiddle::Handle::DEFAULT["prctl"],
-            [Fiddle::TYPE_INT, Fiddle::TYPE_LONG, Fiddle::TYPE_LONG, Fiddle::TYPE_LONG, Fiddle::TYPE_LONG], Fiddle::TYPE_INT)
-          last_capability = Integer(File.read("/proc/sys/kernel/cap_last_cap").strip, 10)
-          raise ArgumentError, "invalid capability range" unless last_capability.between?(0, 255)
-          (0..last_capability).each do |capability|
-            raise ArgumentError, "cannot restrict session capabilities" unless prctl.call(24, capability, 0, 0, 0).zero? # PR_CAPBSET_DROP
-          end
-          raise ArgumentError, "cannot restrict session privileges" unless prctl.call(38, 1, 0, 0, 0).zero? # PR_SET_NO_NEW_PRIVS
-        rescue Fiddle::DLError
-          raise ArgumentError, "cannot restrict session privileges"
-        end
+
       end
     end
   end

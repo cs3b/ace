@@ -39,8 +39,9 @@ module Ace
         end
 
         def initialize(executor: nil, identity: LinuxIdentity.new,
-          clock: -> { (Time.now.to_f * 1000).to_i })
-          @executor, @identity, @clock = executor, identity, clock
+          clock: -> { (Time.now.to_f * 1000).to_i },
+          file_opener: ->(path) { File.open(path, File::RDONLY | File::NOFOLLOW | File::NONBLOCK) })
+          @executor, @identity, @clock, @file_opener = executor, identity, clock, file_opener
         end
 
         def ready?(pane:, root:, prompt:, required_sources:)
@@ -49,7 +50,7 @@ module Ace
           before = pane_binding(executor, pane)
           return false unless before
           path = before.fetch("path")
-          file = File.open(path, File::RDONLY | File::NOFOLLOW | File::NONBLOCK)
+          file = @file_opener.call(path)
           stat = file.stat
           return false unless stat.file? && stat.size.between?(1, MAX_BYTES)
           content = file.read(MAX_BYTES + 1)

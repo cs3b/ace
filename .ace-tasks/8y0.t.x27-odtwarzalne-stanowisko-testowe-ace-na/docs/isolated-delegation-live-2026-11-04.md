@@ -47,3 +47,13 @@ This proves delegated native launch and guarded delivery between real isolated P
 2. Wire standard project/lab start and coworker dispatch to this launch path. Resolve lab coordinator root separately from project topology; preserve worktree execution scope without changing the configured runtime or mount authority.
 3. Finish role/configuration mapping, real task/assignment/report/eyes loop and local Forgejo role leases. Provide pinned rg/fd instead of Pi downloading session-local binaries.
 4. Register and execute TS-MONO-003/004 only through those real product paths, then run both scenarios twice with a clean reset and identical final manifest.
+
+## Readiness prerequisite — private descriptor reader
+
+Subsequent source work adds root-only `SessionPeer.authenticate_process` using the same full systemd policy as socket authentication, exact native process birth comparison and MainPID equality. Review found no actionable flaw; 41 peer/launch-peer/issuer tests passed (135 assertions).
+
+`SessionEvidenceFile` is a fixed non-executing fork which drops groups/capabilities/UID/GID, re-arms Linux parent-death protection after credential changes, closes unrelated application descriptors without flushing inherited buffers, opens the private session path through no-follow directory descriptors and transfers one read-only regular bounded file descriptor. Its caller must authenticate and recheck target lifetime before/after; the reader itself does not replace those checks. Privilege restriction is shared with SessionRunner. EyesSessionEvidence now accepts an injected opener and retains its existing evidence validation, with no fallback after injected opener failure.
+
+The new reader's four tests ran through installed ace-test on the diagnostic Linux VM against a separate development test package: **4 tests, 14 assertions, zero failures/errors, no skips**, report `86e2e328-20db-405b-9e7a-4c1cb6783c42`. These include actual root-to-session UID drop and refusal of a root-owned private file, read-only FD transfer, and symlink/FIFO refusal. The test checkout is not the agents' operational runtime. Early failed probes exposed descriptor cleanup against RubyVM-reserved FDs and inherited-output buffer flushing; both were corrected before the passing run. Independent review reported no blocking issue in the reader slice.
+
+The bounded installed ace-overseer evaluator subprocess and authenticated readiness endpoint are **not yet connected**. The deployed operational runtime remains candidate 83; these reader changes have not been substituted into its installed gems.

@@ -54,6 +54,24 @@ class EyesSessionEvidenceTest < Minitest::Test
     assert ready?
   end
 
+  def test_injected_descriptor_keeps_validation_and_never_falls_back_to_path_open
+    opened = File.open(@path, File::RDONLY)
+    requested = []
+    @reader = Ace::Overseer::Molecules::EyesSessionEvidence.new(executor: @executor,
+      identity: @identity, clock: -> { 20_000 }, file_opener: ->(path) { requested << path; opened.dup })
+    assert ready?
+    assert_equal [@path], requested
+    refute opened.closed?
+    @identity.value = @process.merge("started_at" => "linux:#{@uuid}:999")
+    refute ready?
+    @identity.value = @process
+    @reader = Ace::Overseer::Molecules::EyesSessionEvidence.new(executor: @executor,
+      identity: @identity, file_opener: ->(_) { raise Errno::EACCES })
+    refute ready?
+  ensure
+    opened&.close
+  end
+
   def test_rejects_replaced_process_or_missing_foreground_agent
     @identity.value = @process.merge("started_at" => "linux:#{@uuid}:999")
     refute ready?
