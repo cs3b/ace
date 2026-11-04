@@ -45,6 +45,15 @@ module Ace
             Dir.mkdir(path, 0o700)
             File.chown(uid, gid, path)
           end
+          # The project is task data; its Pi settings/packages must not
+          # become runtime inputs or block unattended startup on a dialog.
+          File.open(File.join(root, "pi", "settings.json"),
+            File::WRONLY | File::CREAT | File::EXCL | File::NOFOLLOW, 0o600) do |file|
+            file.write(JSON.generate("defaultProjectTrust" => "never"))
+            file.flush
+            file.fsync
+            file.chown(uid, gid)
+          end
           File.open(File.join(root, "pi", "auth.json"), File::WRONLY | File::CREAT | File::EXCL | File::NOFOLLOW, 0o400) do |file|
             file.write(JSON.generate(provider => credentials.fetch(provider)))
             file.flush

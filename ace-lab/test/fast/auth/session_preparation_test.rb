@@ -37,6 +37,9 @@ module Ace::Lab::Auth
       assert_equal({"zai" => {"key" => "fixture"}}, JSON.parse(File.read(path)))
       assert_equal 0o400, File.stat(path).mode & 0o777
       assert_equal Process.uid, File.stat(path).uid
+      settings = File.join(@runtime, "pi", "settings.json")
+      assert_equal({"defaultProjectTrust" => "never"}, JSON.parse(File.read(settings)))
+      assert_equal 0o600, File.stat(settings).mode & 0o777
       %w[home pi].each { |name| assert_equal 0o700, File.stat(File.join(@runtime, name)).mode & 0o777 }
       assert_raises(Error) { builder.call(identity: @identity, selection: @selection) }
       assert_equal({"zai" => {"key" => "fixture"}}, JSON.parse(File.read(path)))
