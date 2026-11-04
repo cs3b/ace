@@ -62,6 +62,9 @@ module Ace::Lab::Auth
         end
       end
       assert_includes guards, ["/", {directory: true, owner: 0}]
+      private_index = commands.index { |argv| argv.include?("--make-private") }
+      cover_index = commands.index { |argv| argv.include?("tmpfs") && argv.last == "/lab" }
+      assert private_index && cover_index && private_index < cover_index
       refute commands.any? { |argv| argv.include?("/bin/mkdir") && argv.last == "/lab" }
       assert commands.any? { |argv| argv.include?("X-mount.idmap=u:1000:62000:1 g:1000:62000:1") && argv.last == "/lab" }
     ensure

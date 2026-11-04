@@ -52,6 +52,11 @@ module Ace
             "--mode=0700", "--", staging], namespace: namespace, source: source)
           @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mount",
             "--bind", project, staging], namespace: namespace, source: source)
+          # systemd's private namespace may retain shared/slave mounts.
+          # Detach this staging peer before covering the original /lab:
+          # otherwise that tmpfs propagates over our pinned source too.
+          @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mount",
+            "--make-private", staging], namespace: namespace, source: source)
           # The source descriptor was opened before covering /lab. Expose
           # exactly the assigned project, not sibling projects or old lab
           # paths. This tmpfs exists only in the pinned session namespace.
