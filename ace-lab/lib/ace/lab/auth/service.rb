@@ -114,6 +114,7 @@ module Ace
         # project config grants nothing.
         def request(profile_name:, role:, task:, assignment:, repos: [],
           ttl_minutes: nil)
+          issuance_started = false
           unless [profile_name, role, task, assignment].all? { |value| value.is_a?(String) && value.valid_encoding? && !value.strip.empty? }
             raise Refusal.new("profile, role, task and assignment must be non-empty strings")
           end
@@ -238,6 +239,7 @@ module Ace
               token_ref: token_ref, session_uid: @session_uid, session_id: @session_id,
               session_unit: @session_unit, issuer_invocation: @issuer_invocation)
 
+            issuance_started = true
             begin
               granted = issue.issue(profile: profile, lease: lease)
             rescue Providers::RefusedError => e
@@ -245,6 +247,7 @@ module Ace
                 record["state"] = "revoked"
                 record["cleanup"] = {"result" => "not-issued", "at" => Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")}
               end
+              issuance_started = false
               raise Refusal.new("provider refused: #{e.message}")
             rescue Providers::TransientError, Providers::OutcomeUnknownError => e
               @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
@@ -303,6 +306,14 @@ module Ace
             # reference-vs-value distinction, never the token itself.
             @store.load(lease["id"]).merge("state_detail" => "issued")
           end
+        rescue StandardError
+          # A failed request may already have a remote grant even though no
+          # lease was returned to the handler. Stop the singleton so its
+          # canonical recovery handles the preparing/revoke-pending record.
+          if @session_uid && @supervised && issuance_started
+            raise UnresolvedIssuanceError, "session issuance requires issuer recovery"
+          end
+          raise
         end
 
         # --- status --------------------------------------------------------

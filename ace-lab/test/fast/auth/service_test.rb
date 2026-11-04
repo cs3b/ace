@@ -450,6 +450,32 @@ module Ace
           end
         end
 
+        def test_supervised_session_handoff_failure_requires_issuer_recovery_after_remote_issue
+          skip "requires a non-root account for the fake peer" if Process.uid.zero?
+          document = YAML.safe_load(@document)
+          document["auth"]["profiles"]["developer"]["principals"] = ["session:worker"]
+          isolated = Process.stub(:euid, 0) do
+            Molecules::GrantResolver.stub(:read_verified, YAML.dump(document)) do
+              Service.new(session: session_identity, issuer_invocation: "b" * 32, supervised: true)
+            end
+          end
+          handoff = Object.new
+          def handoff.prepare! = true
+          def handoff.deliver(*) = raise(IOError, "disk unavailable")
+          attachment = isolated.instance_variable_get(:@session_attachment)
+          attachment.stub(:verify_session!, true) do
+            CredentialHandoff.stub(:new, handoff) do
+              assert_raises(UnresolvedIssuanceError) do
+                isolated.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+              end
+            end
+          end
+          assert_equal 1, @fake.issued.size, "failure must occur after remote issuance"
+          record = isolated.store.all.fetch(0)
+          assert_equal "revoke-pending", record.fetch("state")
+          assert_equal "b" * 32, record.fetch("issuer_invocation")
+        end
+
         def test_session_cannot_claim_a_different_role_in_profile
           skip "requires a non-root account for the fake peer" if Process.uid.zero?
 

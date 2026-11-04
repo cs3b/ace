@@ -70,6 +70,17 @@ module Ace
           assert_equal :refused, thread.value
         end
 
+        def test_unknown_issuance_failure_stops_issuer_even_without_a_returned_lease
+          @service.define_singleton_method(:request) { |**| raise UnresolvedIssuanceError, "recovery required" }
+          thread = Thread.new { @runner.call(@server, invocation: "a" * 32, supervising: -> { true }) }
+          @client.puts JSON.generate("action" => "request", "profile" => "forge", "role" => "worker",
+            "task" => "t", "assignment" => "a", "repos" => ["o/r"])
+          response = JSON.parse(@client.gets)
+          refute response.fetch("ok")
+          assert_equal "issuer recovery is required", response.fetch("error")
+          assert_equal :cleanup_failed, thread.value
+        end
+
         def test_rejects_unknown_request_fields_before_issuance
           thread = Thread.new { @runner.call(@server, invocation: "a" * 32, supervising: -> { true }) }
           @client.write(JSON.generate("action" => "request", "profile" => "forge", "uid" => 0) + "\n")

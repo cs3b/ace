@@ -75,6 +75,9 @@ module Ace
               end
             end
           end
+        rescue UnresolvedIssuanceError
+          refuse(socket, "issuer recovery is required")
+          :cleanup_failed
         rescue Refusal => e
           refuse(socket, e.message)
           lease ? :cleanup_failed : :refused
