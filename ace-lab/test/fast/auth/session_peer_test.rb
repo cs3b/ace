@@ -32,7 +32,8 @@ module Ace
                            "NoNewPrivileges" => true, "CapabilityBoundingSet" => 0,
                            "KillMode" => "control-group", "Delegate" => false,
                            "RuntimeDirectory" => ["ace-auth-0123456789abcdef"],
-                           "RuntimeDirectoryPreserve" => "no"}
+                           "RuntimeDirectoryPreserve" => "no", "Environment" => ["ACE_TOOLCHAIN=installed",
+                             "ACE_LAB_SESSION=1", "ACE_LAB_PROJECT_ROOT=/lab/ace"]}
           end
           def unit_for_pidfd(handle:) = {"unit" => UNIT, "invocation_id" => invocation}
           def inspect_units = {"service" => {"ActiveState" => "active", "ControlGroup" => GROUP,
@@ -168,6 +169,16 @@ module Ace
             File.write(File.join(path + ".old", "unexpected"), "x")
             refute @peer.send(:empty_directory?, directory)
           end
+        end
+
+        def test_project_binding_comes_from_systemd_and_ambiguous_environment_is_refused
+          identity = @peer.authenticate(FakeSocket.new)
+          assert_equal "/lab/ace", identity.project_root
+          identity.close
+          @manager.properties["Environment"] << "ACE_LAB_PROJECT_ROOT=/lab/other"
+          assert_raises(Error) { @peer.authenticate(FakeSocket.new) }
+          @manager.properties["Environment"] = ["ACE_TOOLCHAIN=auto", "ACE_LAB_SESSION=1", "ACE_LAB_PROJECT_ROOT=/lab/ace"]
+          assert_raises(Error) { @peer.authenticate(FakeSocket.new) }
         end
       end
     end

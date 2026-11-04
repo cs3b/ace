@@ -22,10 +22,10 @@ module Ace
         SLICE = "ace-auth-sessions.slice"
         PROPERTIES = {"User" => "s", "DynamicUser" => "b", "NoNewPrivileges" => "b",
                       "CapabilityBoundingSet" => "t", "KillMode" => "s", "Delegate" => "b",
-                      "RuntimeDirectory" => "as", "RuntimeDirectoryPreserve" => "s"}.freeze
+                      "RuntimeDirectory" => "as", "RuntimeDirectoryPreserve" => "s", "Environment" => "as"}.freeze
 
         Identity = Struct.new(:uid, :gid, :role, :invocation_id, :unit, :cwd, :runtime_dir, :pidfd, :main_pidfd,
-          :main_pid, :mount_namespace, keyword_init: true) do
+          :main_pid, :mount_namespace, :project_root, keyword_init: true) do
           def close
             pidfd.close unless pidfd.closed?
             main_pidfd.close unless main_pidfd.closed?
@@ -88,6 +88,18 @@ module Ace
             raise Error, "session main process invocation differs"
           end
           properties = manager.typed_properties(unit: unit, interface: "Service", signatures: PROPERTIES)
+          environment = properties.fetch("Environment", [])
+          fixed = %w[ACE_TOOLCHAIN ACE_LAB_SESSION ACE_LAB_PROJECT_ROOT].to_h do |key|
+            entries = environment.grep(/\A#{key}=/)
+            raise Error, "session configured environment is ambiguous" unless entries.size == 1
+            [key, entries.first.delete_prefix("#{key}=")]
+          end
+          project_root = fixed.fetch("ACE_LAB_PROJECT_ROOT")
+          unless fixed["ACE_TOOLCHAIN"] == "installed" && fixed["ACE_LAB_SESSION"] == "1" &&
+              project_root.start_with?("/") && File.expand_path(project_root) == project_root &&
+              !project_root.match?(/[[:cntrl:]]/)
+            raise Error, "session configured project or runtime differs"
+          end
           begin
             account = @account_lookup.call(peer.fetch("uid"))
           rescue ArgumentError
@@ -120,7 +132,7 @@ module Ace
           Identity.new(uid: peer.fetch("uid"), gid: peer.fetch("gid"), role: match[1],
             invocation_id: manager_identity.fetch("invocation_id"), unit: unit,
             cwd: cwd, runtime_dir: runtime_dir, pidfd: handle, main_pidfd: main_handle,
-            main_pid: Integer(main_pid, 10), mount_namespace: namespace).freeze
+            main_pid: Integer(main_pid, 10), mount_namespace: namespace, project_root: project_root).freeze
         rescue Exception => error
           handle&.close unless handle&.closed?
           main_handle&.close unless main_handle&.closed?
@@ -129,6 +141,27 @@ module Ace
             raise Error, "session identity could not be verified (#{error.class})"
           end
           raise
+        end
+
+        # The same runtime-directory owner serves authenticated lease calls
+        # and pre-exec preparation. Claim it before adding HOME/Pi contents;
+        # otherwise the first lease would rightly reject a nonempty directory
+        # still owned by the DynamicUser.
+        def prepare_runtime(identity)
+          raise Error, "session preparation requires root" unless Process.euid.zero?
+          unless identity.is_a?(SessionLauncher::Identity) && UNIT.match?(identity.unit) &&
+              DYNAMIC_UIDS.cover?(identity.process["uid"]) && identity.process["gid"] == identity.process["uid"]
+            raise Error, "session preparation requires a verified launch identity"
+          end
+          @platform.live!(identity.process)
+          binding = @manager_factory.call(identity.unit).unit_for_pidfd(handle: identity.pidfd)
+          unless !@platform.exited?(identity.pidfd) &&
+              binding == {"unit" => identity.unit, "invocation_id" => identity.invocation_id}
+            raise Error, "session preparation identity changed"
+          end
+          path = File.join(@runtime_root, "ace-auth-#{UNIT.match(identity.unit)[2]}")
+          claim_runtime_directory!(path, identity.process)
+          path
         end
 
         private

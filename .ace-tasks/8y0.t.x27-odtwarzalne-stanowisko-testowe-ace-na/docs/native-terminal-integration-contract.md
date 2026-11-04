@@ -183,3 +183,30 @@ Those operations and host/session caller authentication belong to the supervised
 launch handler before releasing SessionEntry. No arbitrary argv/environment
 will be accepted by that handler. Runtime readiness and two clean E2E runs
 remain outstanding.
+
+## Delegation authority and private Pi preparation
+
+SessionUnit fixes ACE_LAB_PROJECT_ROOT from its configured initial directory.
+SessionPeer reads that value, installed mode and the session marker from typed
+systemd Environment properties, rejects ambiguity, and carries project_root in
+its authenticated identity. It never derives authority from the running agent's
+environment or cwd. SessionConfiguration requires explicit session-role grants;
+project-overseer can start worker/verifier/integrator only within that project,
+lab-overseer can additionally start project-overseer for granted projects, and
+executors cannot launch new sessions.
+
+SessionPreparation reuses SessionPeer's runtime-directory claim before adding
+private HOME and Pi directories. It checks root0600 bounded JSON credentials,
+copies only the selected provider into a DynamicUser-owned0700 Pi directory,
+and creates auth.json0400 before the entry barrier is released. Independent
+review found no actionable authority or credential-exposure flaw in this scope.
+Targeted tests: 23 tests / 94 assertions pass. Installed guest preparation and
+actual endpoint wiring are not yet validated.
+
+Confirmed integration requirement: session-close cannot simply snapshot leases
+after main PID exit. An authenticated request can be waiting in provider or
+correlation work before creating its record. The existing LeaseStore must
+serialize issuance finalization and exact-session cleanup by (unit, invocation),
+with a liveness recheck inside the lock. Preserve session→correlation→record lock
+order, and never replace live lock files. Full cgroup containment must precede
+cleanup success; main pidfd death alone is insufficient.

@@ -169,6 +169,10 @@ projects:                    # optional (consumed by ace-lab install)
 grants:                      # optional: trusted-tier principal grants
   ace-overseer:              # principal → declared project ids
     - atlas
+  session:lab-overseer:       # explicit delegation grants for authenticated sessions
+    - atlas
+  session:project-overseer:
+    - atlas
 gemset:                      # optional (gad.2): target runtime + required gem set
   gem_home: /opt/lab/gems    # absolute; converged as GEM_HOME and GEM_PATH
   gems:                      # exact versions, unique names
@@ -197,6 +201,13 @@ runtime directory. Standing instructions come from the selected role: protocol
 references resolve through installed `ace-nav`, outside the project checkout.
 The resulting file and extensions must remain host-controlled. Missing runtime
 configuration is a launch readiness failure, never a checkout fallback.
+
+A project Overseer may delegate worker, verifier and integrator sessions only
+for its systemd-bound project and explicit `session:project-overseer` grants.
+A lab Overseer may also start project Overseers for its explicitly granted
+projects. Worker sessions cannot delegate new sessions. These checks use the
+root-owned unit configuration, not an agent-provided environment variable or
+current directory.
 
 Statuses: accounts `created|exists|would_create|failed`; directories
 `created|exists|mode_fixed|would_create|would_fix_mode|failed`; keys

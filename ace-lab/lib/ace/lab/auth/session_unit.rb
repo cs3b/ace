@@ -53,7 +53,8 @@ module Ace
             "RuntimeDirectory" => "ace-auth-#{@id}", "RuntimeDirectoryMode" => "0700",
             "RuntimeDirectoryPreserve" => "no", "UMask" => "0077"
           }
-          environment = @environment.merge("ACE_TOOLCHAIN" => "installed", "ACE_LAB_SESSION" => "1")
+          environment = @environment.merge("ACE_TOOLCHAIN" => "installed", "ACE_LAB_SESSION" => "1",
+            "ACE_LAB_PROJECT_ROOT" => @directory)
           ["/usr/bin/systemd-run", "--quiet", "--wait", "--pipe", "--no-ask-password",
             "--expand-environment=no", "--unit=#{name}",
             *properties.map { |key, value| "--property=#{key}=#{value}" },

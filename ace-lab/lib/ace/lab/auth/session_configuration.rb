@@ -16,15 +16,31 @@ module Ace
         end
 
         # principal is supplied by the host's authenticated peer, not JSON.
-        def resolve(project:, role:, principal:)
+        def resolve(project:, role:, principal: nil, session: nil)
           document = @loader.call
           unless SessionUnit::ROLES.include?(role)
             raise Error, "session role is not supported"
           end
           selected_project = document.fetch("projects").find { |entry| entry["id"] == project }
           selected_role = document.fetch("roles").find { |entry| entry["id"] == role }
-          unless selected_project && selected_role && selected_role["account"] == principal &&
+          authorized = if session
+            raise Error, "session delegation cannot supply a host principal" unless principal.nil?
+            unless session.is_a?(SessionPeer::Identity)
+              raise Error, "session delegation requires authenticated identity"
+            end
+            allowed_roles = case session.role
+            when "lab-overseer" then %w[project-overseer worker verifier integrator]
+            when "project-overseer" then %w[worker verifier integrator]
+            else []
+            end
+            allowed_roles.include?(role) && selected_project &&
+              (session.role == "lab-overseer" || selected_project["path"] == session.project_root) &&
+              Array(document.fetch("grants")["session:#{session.role}"]).include?(project)
+          else
+            principal.is_a?(String) && selected_role && selected_role["account"] == principal &&
               Array(document.fetch("grants")[principal]).include?(project)
+          end
+          unless selected_project && selected_role && authorized
             raise Error, "session project or role is not granted to this principal"
           end
           gem_home = document.fetch("gemset").fetch("gem_home")

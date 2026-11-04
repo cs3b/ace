@@ -17,6 +17,7 @@ module Ace::Lab::Auth
       end
       assert_includes unit.argv, "--setenv=ACE_TOOLCHAIN=installed"
       assert_includes unit.argv, "--setenv=ACE_LAB_SESSION=1"
+      assert_includes unit.argv, "--setenv=ACE_LAB_PROJECT_ROOT=/lab/ace"
       assert_equal ["--", "/opt/ace/bin/pi"], unit.argv.last(2)
       refute unit.argv.any? { |arg| arg.include?("WorkingDirectory=") }, "cwd must be selected after mount preparation"
     end
@@ -28,6 +29,7 @@ module Ace::Lab::Auth
       assert_raises(ArgumentError) { build(directory: "../project") }
       assert_raises(ArgumentError) { build(directory: "/lab/../etc") }
       assert_raises(ArgumentError) { build(environment: {"ACE_TOOLCHAIN" => "auto"}) }
+      assert_raises(ArgumentError) { build(environment: {"ACE_LAB_PROJECT_ROOT" => "/lab/other"}) }
       assert_raises(ArgumentError) { build(environment: {"LD_PRELOAD" => "/tmp/inject.so"}) }
     end
   end
