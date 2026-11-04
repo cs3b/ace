@@ -9,7 +9,7 @@ module Ace::Lab::Auth
       document = {"projects" => [{"id" => "ace", "path" => "/lab/ace"}, {"id" => "other", "path" => "/lab/other"}],
         "roles" => [{"id" => "worker", "instructions" => "wfi://coworker/worker"}],
         "grants" => {"session:project-overseer" => %w[ace other]}, "gemset" => {"gem_home" => "/opt/ace/gems"}, "session_runtime" => {}}
-      @agent = {"terminal_id" => "term_2222", "name" => "worker", "agent_status" => "idle",
+      @agent = {"terminal_id" => "term_2222", "name" => "worker", "agent_status" => "idle", "focused" => false,
         "isolated_session" => {"project" => "ace", "role" => "worker"},
         "agent_session" => {"value" => "/private/transcript"}, "tokens" => {"secret" => "private"}, "title" => "private text"}
       @origin = {"terminal_id" => "term_2222", "runtime_incarnation" => "fixed", "child" => {"uid" => 62000}}
@@ -62,7 +62,7 @@ module Ace::Lab::Auth
     def test_list_filters_foreign_and_nonisolated_agents_and_private_metadata
       agents = call("agent.list").dig("result", "agents")
       assert_equal 1, agents.size
-      assert_equal %w[agent_status isolated_session name terminal_id], agents.first.keys.sort
+      assert_equal %w[agent_status focused isolated_session name terminal_id], agents.first.keys.sort
     end
 
     def test_prompt_is_bound_to_resolved_terminal_and_captured_runtime
