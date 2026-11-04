@@ -82,8 +82,13 @@ module Ace
         end
 
         def test_preparation_failure_stops_gated_process_and_cleans_without_handoff
-          @mount.define_singleton_method(:call) { |**| raise Error, "mount failed" }
-          assert_equal :refused, run_session
+          @mount.define_singleton_method(:call) { |**| raise Error, "credential-secret-must-not-escape" }
+          output, diagnostic = capture_io { assert_equal :refused, run_session }
+          assert_empty output
+          assert_equal({"event" => "session_launch_failed", "stage" => "mount",
+            "error_class" => "Ace::Lab::Auth::Error", "contained" => true, "cleaned" => true},
+            JSON.parse(diagnostic))
+          refute_includes diagnostic, "credential-secret-must-not-escape"
           assert_includes @events, :stop
           refute_includes @events, :handoff
           assert_equal :revoke, @events.last.first

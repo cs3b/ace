@@ -33,27 +33,38 @@ module Ace
         def run(socket, request, invocation, unit, selection, caller)
           launched = identity = nil
           contained = cleaned = false
+          stage = "terminal"
           PTY.open do |master, slave|
             slave.winsize = [request.fetch("rows"), request.fetch("cols")]
             slave.echo = false
             begin
+              stage = "start"
               launched = @launcher.start(unit: unit, terminal: slave)
+              stage = "identify"
               identity = identify(launched)
+              stage = "prepare"
               @preparation.call(identity: identity, selection: selection)
+              stage = "mount"
               @mount.call(identity: identity, project: selection.path)
+              stage = "release"
               raise Error, "launch caller exited during preparation" if IO.select([caller], nil, nil, 0)
               # Release only after all private mounts and credentials exist.
               master.write("start\n")
+              stage = "handoff"
               @launcher.handoff(identity, terminal: master, channel: socket,
                 rows: request.fetch("rows"), cols: request.fetch("cols"), directory: selection.path)
+              stage = "wait"
               stopped = await_exit(socket, identity, caller)
+              stage = "stop"
               @launcher.stop(identity)
               contained = true
               result = reap(launched.transport_pid)
               launched = nil
+              stage = "revoke"
               @service.call.revoke_session(issuer_invocation: invocation, unit: identity.unit,
                 invocation: identity.invocation_id)
               cleaned = true
+              stage = "reply"
               exit_code = stopped ? 143 : result.exitstatus || 128 + result.termsig.to_i
               wire = Ace::Runtime::Molecules::ProtectedSocket
               wire.write(socket, {"unit" => identity.unit, "invocation" => identity.invocation_id,
@@ -77,7 +88,11 @@ module Ace
               raise Error, "session launch containment is unconfirmed" if launched && !contained
             end
           end
-        rescue StandardError
+        rescue StandardError => error
+          # Never log exception text: parser/provider failures can contain
+          # credential bytes. Fixed stages identify the failing boundary.
+          warn JSON.generate(event: "session_launch_failed", stage: stage,
+            error_class: error.class.name, contained: contained, cleaned: cleaned)
           # A lost terminal/client must not kill unrelated sessions once
           # this unit and its grants are confirmed closed.
           contained && cleaned ? :refused : :cleanup_failed
