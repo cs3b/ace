@@ -98,13 +98,13 @@ module Ace
             end
           end
         rescue UnresolvedIssuanceError
-          refuse(socket, "issuer recovery is required")
+          refuse(socket, "issuer recovery is required", request: request)
           :cleanup_failed
         rescue Refusal => e
-          refuse(socket, e.message)
+          refuse(socket, e.message, request: request)
           lease ? :cleanup_failed : :refused
         rescue Error, Ace::Runtime::Error, ArgumentError, KeyError, JSON::ParserError, SystemCallError, IOError
-          refuse(socket, "issuer request could not be completed")
+          refuse(socket, "issuer request could not be completed", request: request)
           lease ? :cleanup_failed : :refused
         ensure
           socket.close unless socket.closed?
@@ -228,8 +228,13 @@ module Ace
           transport.write(socket, value, deadline: transport.deadline, limit: transport::LIMIT)
         end
 
-        def refuse(socket, reason)
-          reply(socket, "ok" => false, "error" => reason) unless socket.closed?
+        def refuse(socket, reason, request: nil)
+          response = if request.is_a?(Hash) && request.key?("method")
+            {"id" => request.fetch("id"), "error" => {"code" => "session_control_refused", "message" => reason}}
+          else
+            {"ok" => false, "error" => reason}
+          end
+          reply(socket, response) unless socket.closed?
           :refused
         rescue SystemCallError, IOError, Ace::Runtime::Error
           :refused

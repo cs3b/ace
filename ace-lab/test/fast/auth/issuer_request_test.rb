@@ -87,6 +87,16 @@ module Ace
           assert identity.closed
         end
 
+        def test_native_control_refusal_uses_native_error_envelope
+          runner = IssuerRequest.new(authenticate: ->(_) { raise Error, "invalid session" })
+          @client.puts JSON.generate("id" => "native-ping", "method" => "ping", "params" => {})
+          assert_equal :refused, runner.call(@server, invocation: "a" * 32)
+          response = JSON.parse(@client.gets)
+          assert_equal "native-ping", response["id"]
+          assert_equal "session_control_refused", response.dig("error", "code")
+          refute response.key?("ok")
+        end
+
         def test_scoped_native_control_reaches_authenticated_handler
           control = Object.new
           expected = @identity

@@ -8,7 +8,7 @@ module Ace
       # Narrow supervisory API. Native owns terminal identity and process
       # admission; the issuer owns the original caller's project authority.
       class SessionControl
-        METHODS = %w[agent.list agent.get agent.prompt pane.current].freeze
+        METHODS = %w[agent.list agent.get agent.prompt pane.current ping].freeze
         PUBLIC_FIELDS = %w[terminal_id name agent agent_status workspace_id tab_id pane_id
           launch_pending interactive_ready state_change_seq completion_seq revision isolated_session].freeze
 
@@ -19,6 +19,15 @@ module Ace
         def call(request, identity:)
           self.class.validate!(request)
           id, method, params = request.values_at("id", "method", "params")
+          if method == "ping"
+            result = native(id, "ping", {}, identity).fetch("result")
+            unless result["type"] == "pong" && result["version"].is_a?(String) && result["protocol"].is_a?(Integer)
+              raise Error, "native protocol identity is unavailable"
+            end
+            return {"id" => id, "result" => {"type" => "pong", "version" => result["version"],
+              "protocol" => result["protocol"], "capabilities" => {"live_handoff" => false,
+                "isolated_sessions" => %w[lab-overseer project-overseer].include?(identity.role)}}}
+          end
           if method == "pane.current"
             caller = params["caller_pane_id"]
             unless identity.terminal_id && (caller.nil? || caller == identity.terminal_id)
@@ -100,7 +109,7 @@ module Ace
             return true
           end
           fields = case request["method"]
-          when "agent.list" then []
+          when "agent.list", "ping" then []
           when "agent.get" then %w[target]
           else %w[target text]
           end

@@ -24,6 +24,7 @@ module Ace::Lab::Auth
       assert_same @identity, options.fetch(:identity)
       @sent << message
       result = case message["method"]
+      when "ping" then {"type" => "pong", "version" => "0.9.3", "protocol" => 22, "capabilities" => {"live_handoff" => true, "ssh_agent_registration" => true}}
       when "agent.list" then {"agents" => [@agent, @agent.merge("terminal_id" => "term_3333", "isolated_session" => {"project" => "other", "role" => "worker"}), @agent.merge("isolated_session" => nil)]}
       when "agent.get" then {"agent" => @agent}
       when "pane.process_info" then {"process_info" => {"guarded_prompt" => !@origin.nil?, "guarded_prompt_origin" => @origin}}
@@ -34,6 +35,16 @@ module Ace::Lab::Auth
 
     def call(method, params = {})
       @control.call({"id" => "control", "method" => method, "params" => params}, identity: @identity)
+    end
+
+    def test_native_cli_handshake_preserves_protocol_without_advertising_host_controls
+      result = call("ping").fetch("result")
+      assert_equal 22, result["protocol"]
+      assert_equal "0.9.3", result["version"]
+      assert_equal({"live_handoff" => false, "isolated_sessions" => true}, result["capabilities"])
+      @identity.role = "worker"
+      refute call("ping").dig("result", "capabilities", "isolated_sessions")
+      assert_raises(Error) { call("ping", {"extra" => true}) }
     end
 
     def test_current_pane_uses_only_authenticated_terminal_and_project_root
