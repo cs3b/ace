@@ -6434,3 +6434,87 @@ index 310ef4d..d4e8c68 100644
          let terminal = TerminalState::new(terminal_id.clone(), cwd);
          let mut panes = HashMap::new();
          panes.insert(root_id, PaneState::new(terminal_id));
+From 6d6fd9e29c4a412dd0dabfa1e70415584ad1207e Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 02:54:00 +0000
+Subject: [PATCH] fix: resolve isolated agent reports by exact terminal
+ identity
+
+---
+ src/app/api/panes.rs | 44 ++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 42 insertions(+), 2 deletions(-)
+
+diff --git a/src/app/api/panes.rs b/src/app/api/panes.rs
+index 5ca1830..039e127 100644
+--- a/src/app/api/panes.rs
++++ b/src/app/api/panes.rs
+@@ -1554,12 +1554,24 @@ impl App {
+         )
+     }
+ 
++    // Root-bound isolated sessions report the immutable terminal identity.
++    // Keep this exact: a missing terminal must never resolve as an agent name
++    // or a recycled pane alias. Ordinary pane reports retain their API.
++    fn resolve_report_pane(&self, target: &str) -> Option<(usize, PaneId)> {
++        if target.starts_with("term_") {
++            self.state.terminals.get(target)?;
++            let resolved = self.resolve_guarded_agent_target(target).ok()?;
++            return Some((resolved.ws_idx, resolved.pane_id));
++        }
++        self.parse_pane_id(target)
++    }
++
+     pub(super) fn handle_pane_report_agent(
+         &mut self,
+         id: String,
+         params: PaneReportAgentParams,
+     ) -> String {
+-        let Some((ws_idx, pane_id)) = self.parse_pane_id(&params.pane_id) else {
++        let Some((ws_idx, pane_id)) = self.resolve_report_pane(&params.pane_id) else {
+             return pane_not_found(id, &params.pane_id);
+         };
+         let Some(agent_label) = normalize_reported_agent_label(&params.agent) else {
+@@ -1604,7 +1616,7 @@ impl App {
+         id: String,
+         params: PaneReportAgentSessionParams,
+     ) -> String {
+-        let Some((ws_idx, pane_id)) = self.parse_pane_id(&params.pane_id) else {
++        let Some((ws_idx, pane_id)) = self.resolve_report_pane(&params.pane_id) else {
+             return pane_not_found(id, &params.pane_id);
+         };
+         let Some(agent_label) = normalize_reported_agent_label(&params.agent) else {
+@@ -2342,6 +2354,34 @@ mod tests {
+         (app, public_pane_id)
+     }
+ 
++    #[test]
++    fn isolated_report_target_is_exact_and_never_falls_back_to_an_alias() {
++        let (mut app, public_pane_id) = app_with_test_workspace();
++        let pane = app.state.workspaces[0].tabs[0].root_pane;
++        let terminal = app.state.workspaces[0].terminal_id(pane).unwrap().clone();
++        assert_eq!(app.resolve_report_pane(terminal.as_str()), Some((0, pane)));
++        assert_eq!(app.resolve_report_pane(&public_pane_id), Some((0, pane)));
++        let state_response = app.handle_pane_report_agent("state".into(), serde_json::from_value(
++            serde_json::json!({"pane_id": terminal.as_str(), "agent": "pi", "source": "herdr:pi", "state": "working", "seq": 1})
++        ).unwrap());
++        serde_json::from_str::<SuccessResponse>(&state_response).unwrap();
++        let session_response = app.handle_pane_report_agent_session("session".into(), serde_json::from_value(
++            serde_json::json!({"pane_id": terminal.as_str(), "agent": "pi", "source": "herdr:pi", "agent_session_id": "isolated-session", "seq": 2})
++        ).unwrap());
++        serde_json::from_str::<SuccessResponse>(&session_response).unwrap();
++        app.state
++            .terminals
++            .get_mut(&terminal)
++            .unwrap()
++            .set_agent_name("term_missing".into());
++        app.state
++            .public_pane_id_aliases
++            .insert("term_missing".into(), pane);
++        assert_eq!(app.resolve_report_pane("term_missing"), None);
++        app.state.terminals.remove(&terminal);
++        assert_eq!(app.resolve_report_pane(terminal.as_str()), None);
++    }
++
+     #[test]
+     fn pane_input_set_changes_only_the_target_pane() {
+         let (mut app, public_pane_id) = app_with_test_workspace();

@@ -44,6 +44,43 @@ visible Pi startup are proven; first-turn/eyes readiness, authenticated scoped
 reporting, delegation routing, TS-MONO-003/004 and two clean identical-manifest
 runs are still unaccepted. Existing historical probes below do not close them.
 
+## Scoped reporting implementation contract
+
+Native report handlers now accept exact terminal IDs using the existing guarded
+terminal resolver. Missing terminals cannot fall back to a name or pane alias;
+the terminal must still exist in AppState. The latter was caught by an executed
+regression before completion. The test exercises both real report handlers,
+spoofed names/aliases and removed terminal state. ARM64 regression passed
+(nextest 1d819e26-8b6c-4c9a-b749-e0028ca7e241); existing report-agent filter
+3/3 passed (3ceaf953-e223-4bbf-8a9c-c7fc101c4edb). Independent review approved
+the exact-resolution approach. Native source is now
+6d6fd9e29c4a412dd0dabfa1e70415584ad1207e, tree
+4908ae9416e27b3f156a7187f8cdb78e43237576; mail replay reproduces it exactly.
+Packaged-source verification: 13 tests / 42 assertions, report
+cf4a5333-dcfd-4072-a44d-f7f2b41cc2d9. This new native source is not deployed yet.
+
+The remaining bridge must enforce all of these together:
+
+- Only an authenticated host launch may provide the native reserved terminal ID;
+  a dynamic session cannot select another terminal binding.
+- Store the binding in root-created systemd unit Environment; SessionPeer reads
+  exactly one value and verifies the live invocation before each forwarded report.
+- Select native socket and expected account from protected installation config;
+  verify path ownership and connected peer identity. Never accept a socket from
+  an agent request or expose the unrestricted native socket to DynamicUsers.
+- Permit only own state/session reports. Fix agent=pi and integration source;
+  reject resume_argv and unneeded execution-bearing fields. Session paths require
+  explicit namespace-safe treatment, not automatic host resume.
+- Handle reports before native adoption: either retain the launch barrier until
+  adoption acknowledgement, or explicitly retry missing-terminal reports.
+  The current extension treating any response bytes as success is insufficient.
+- Delegated launches keep the original authenticated session authority. Do not
+  forward ordinary start as the host account, which would erase role/project
+  restrictions. Native owns terminal reservation/adoption, issuer owns authorization.
+
+No new persisted registry is required. Session reports remain self-reports;
+first-turn plus active eyes remains a separate readiness condition.
+
 ## Prior integration state (2026-11-04)
 
 This section supersedes the historical progress entries below. Native
