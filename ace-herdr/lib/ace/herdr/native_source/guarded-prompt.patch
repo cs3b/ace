@@ -6272,3 +6272,165 @@ index 1758f1d..16d45ef 100644
              let mut cmsg = libc::CMSG_FIRSTHDR(&message);
              while !cmsg.is_null() {
                  controls += 1;
+From 91026fe397b4e2f6b4c1566a006706f83c2a3fe4 Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 03:30:46 +0100
+Subject: [PATCH] fix: dispatch isolated headless starts and reserve terminal
+ identity
+
+---
+ src/app/api/isolated_agents.rs   |  5 +++++
+ src/events.rs                    |  1 +
+ src/server/headless.rs           |  4 +++-
+ src/server/headless/tests/mod.rs | 31 +++++++++++++++++++++++++++++++
+ src/workspace.rs                 |  2 ++
+ src/workspace/tab.rs             |  2 +-
+ 6 files changed, 43 insertions(+), 2 deletions(-)
+
+diff --git a/src/app/api/isolated_agents.rs b/src/app/api/isolated_agents.rs
+index 6c74c8a..1d0ff73 100644
+--- a/src/app/api/isolated_agents.rs
++++ b/src/app/api/isolated_agents.rs
+@@ -47,10 +47,12 @@ impl App {
+         self.isolated_launches.insert(params.name.clone());
+         let (rows, cols) = self.state.estimate_pane_size();
+         let events = self.event_tx.clone();
++        let terminal_id = crate::terminal::TerminalId::alloc();
+         tokio::task::spawn_blocking(move || {
+             let result =
+                 crate::platform::spawn_isolated_session(&params.project, &params.role, rows, cols);
+             let completion = IsolatedLaunchResult {
++                terminal_id,
+                 id,
+                 params,
+                 rows,
+@@ -66,6 +68,7 @@ impl App {
+ 
+     pub(super) fn finish_isolated_agent_launch(&mut self, result: IsolatedLaunchResult) {
+         let IsolatedLaunchResult {
++            terminal_id,
+             id,
+             params,
+             rows,
+@@ -107,6 +110,7 @@ impl App {
+             return;
+         }
+         let created = self.state.workspaces[ws_idx].create_isolated_tab(
++            terminal_id,
+             rows,
+             cols,
+             spawned,
+@@ -196,6 +200,7 @@ mod tests {
+         let (tx, rx) = std::sync::mpsc::channel();
+         let before = app.state.terminals.len();
+         app.finish_isolated_agent_launch(IsolatedLaunchResult {
++            terminal_id: crate::terminal::TerminalId::alloc(),
+             id: "test".into(),
+             params: params(),
+             rows: 24,
+diff --git a/src/events.rs b/src/events.rs
+index 30d1e33..bef1465 100644
+--- a/src/events.rs
++++ b/src/events.rs
+@@ -226,6 +226,7 @@ pub enum AppEvent {
+ }
+ 
+ pub struct IsolatedLaunchResult {
++    pub(crate) terminal_id: crate::terminal::TerminalId,
+     pub(crate) id: String,
+     pub(crate) params: crate::api::schema::AgentStartIsolatedParams,
+     pub(crate) rows: u16,
+diff --git a/src/server/headless.rs b/src/server/headless.rs
+index 9bb0328..8c3d4b8 100644
+--- a/src/server/headless.rs
++++ b/src/server/headless.rs
+@@ -2959,7 +2959,9 @@ impl HeadlessServer {
+         let alt_screen_read_spec = self.alt_screen_read_spec(&msg.request);
+         if matches!(
+             &msg.request.method,
+-            api::schema::Method::AgentPrompt(_) | api::schema::Method::TerminalInhibitInput(_)
++            api::schema::Method::AgentPrompt(_)
++                | api::schema::Method::TerminalInhibitInput(_)
++                | api::schema::Method::AgentStartIsolated(_)
+         ) {
+             let deferred_changed = self
+                 .app
+diff --git a/src/server/headless/tests/mod.rs b/src/server/headless/tests/mod.rs
+index 92a0f1c..77ca94f 100644
+--- a/src/server/headless/tests/mod.rs
++++ b/src/server/headless/tests/mod.rs
+@@ -7841,3 +7841,34 @@ fn no_handle_internal_event_bypass_in_module() {
+         bypass_lines.join("\n  ")
+     );
+ }
++
++#[tokio::test]
++async fn headless_isolated_start_reaches_deferred_dispatcher() {
++    let mut server = test_headless_server();
++    let (respond_to, response_rx) = std::sync::mpsc::channel();
++    server.handle_api_request_with_shutdown_check(api::ApiRequestMessage {
++        request: api::schema::Request {
++            id: "isolated-dispatch".into(),
++            method: api::schema::Method::AgentStartIsolated(
++                api::schema::AgentStartIsolatedParams {
++                    name: "worker".into(),
++                    workspace_id: "999999".into(),
++                    project: "ace".into(),
++                    role: "worker".into(),
++                },
++            ),
++        },
++        respond_to,
++        response_write_complete: None,
++    });
++    let reply: serde_json::Value =
++        serde_json::from_str(&response_rx.recv_timeout(Duration::from_secs(1)).unwrap()).unwrap();
++    let expected = if crate::platform::supports_isolated_sessions() {
++        "workspace_not_found"
++    } else {
++        "unsupported"
++    };
++    assert_eq!(reply["error"]["code"], expected);
++    assert!(server.app.isolated_launches.is_empty());
++    shutdown_test_runtimes(&mut server);
++}
+diff --git a/src/workspace.rs b/src/workspace.rs
+index 202311c..3ae6aff 100644
+--- a/src/workspace.rs
++++ b/src/workspace.rs
+@@ -462,6 +462,7 @@ impl Workspace {
+     #[allow(clippy::too_many_arguments)]
+     pub(crate) fn create_isolated_tab(
+         &mut self,
++        terminal_id: TerminalId,
+         rows: u16,
+         cols: u16,
+         spawned: crate::pty::backend::SpawnedPty,
+@@ -473,6 +474,7 @@ impl Workspace {
+             .active_tab()
+             .ok_or_else(|| std::io::Error::other("workspace has no active tab"))?;
+         let (tab, terminal, runtime) = Tab::new_isolated(
++            terminal_id,
+             self.next_public_tab_number,
+             rows,
+             cols,
+diff --git a/src/workspace/tab.rs b/src/workspace/tab.rs
+index 310ef4d..d4e8c68 100644
+--- a/src/workspace/tab.rs
++++ b/src/workspace/tab.rs
+@@ -54,6 +54,7 @@ pub struct Tab {
+ impl Tab {
+     #[allow(clippy::too_many_arguments)]
+     pub(crate) fn new_isolated(
++        terminal_id: TerminalId,
+         number: usize,
+         rows: u16,
+         cols: u16,
+@@ -82,7 +83,6 @@ impl Tab {
+             render_notify.clone(),
+             render_dirty.clone(),
+         )?;
+-        let terminal_id = TerminalId::alloc();
+         let terminal = TerminalState::new(terminal_id.clone(), cwd);
+         let mut panes = HashMap::new();
+         panes.insert(root_id, PaneState::new(terminal_id));

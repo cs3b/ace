@@ -73,6 +73,30 @@ The builder also now reports a bounded UTF-8 compiler reason instead of dropping
 stderr. Independent review closed the invalid-byte expansion issue; tests cover
 both invalid UTF-8 and partial multibyte boundaries (9 tests / 59 assertions).
 
+## First actual native launch attempt
+
+The owner build of native source a90bc55 completed with artifact SHA-256
+`2ef6b0156e5036e6abc53f8e96d71519cc659bc259057cbdfacdbbd16b6f8b31`,
+provenance `22518de5155a27d31a083289aa02e8fe56b6f1e48c148bb678981b8dfc2d48a8`
+and selection `4366ad989dc46c753d162edff8c56a45347898a0d56a9e9425366726a7bf9ef1`.
+It is installed root-owned at `/opt/ace/diagnostic/native76/herdr`, with a
+separate mo-owned server `ace-e2e-herdr76.service` and private socket
+`/run/lab/herdr76/herdr.sock`. Its workspace w1 points at `/lab/ace`.
+
+Real `agent start-isolated worker76 --workspace w1 --project ace --role worker`
+returned `deferred_launch_required`: headless dispatch omitted the new method.
+No isolated worker was admitted in this attempt. The dispatcher now routes the
+method to deferred admission. A headless server regression exercises this route,
+not only the App handler. TerminalId is reserved before launch and retained
+through adoption, without inserting premature terminal state.
+
+Independent review approved the correction. ARM64 isolated filter 12/12 passed,
+nextest `9d4f3cfe-66c1-479a-8f1e-06a796b97a38`. Corrected source
+`91026fe397b4e2f6b4c1566a006706f83c2a3fe4`, tree
+`e35a0ed911dfd544aa6a60017a70bc40ba3ef4b9`, reproduces by exact patch replay.
+The installed native76 remains the observed failing candidate until replaced
+by a freshly built artifact. Terminal reservation is not yet an issuer mapping.
+
 ## Remaining session communication contract
 
 The first scoped communication increment is self-reporting through the existing
