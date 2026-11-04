@@ -111,3 +111,23 @@ or errors, 13 skipped; targeted mount tests: 3 tests, 9 assertions, all passed.
 This remains component evidence. Native terminal handoff, same-project session
 privacy, production readiness, TS-MONO-003/004 and two clean full cycles are
 still outstanding; task remains in progress.
+
+## Directory selection after preparation
+
+The internal SessionUnit contract now requires a configured canonical directory.
+SessionEntry resolves and enters it only after the preparation barrier; it does
+not use systemd WorkingDirectory, which could preserve a pre-mount directory
+inode. Missing or symlink-redirected directories refuse execution. Deterministic
+tests: 10 tests, 60 assertions, all passed, including a directory created only
+after the entry starts waiting for preparation.
+
+Artifact ace-lab 0.14.2.pre.utm69, source
+`c745b09696cde76d741cc23f7339ebb9a477dcb8`, SHA-256
+`621f35dec8b108ddb704ffa6bdbd6548e3c62ae8cda8ffdcc9207acf0126fa7f`,
+passed the installed `--forgejo` probe using a relative result-file write in
+the prepared project. Unit `ace-auth-session-worker-0233415104126ed0.service`,
+invocation `cce200968fc147afa2e2af210eea5aa7`, UID 61667, backing UID 1001.
+Barrier, relative project write, private-task/parent denial, sibling isolation
+and public Forgejo lease cycle all passed. This deliberately used the unchanged
+utm68 diagnostic issuer and dependency closure; it is not a single-manifest
+acceptance run or a native Herdr launch. Successful temporary state was cleaned.

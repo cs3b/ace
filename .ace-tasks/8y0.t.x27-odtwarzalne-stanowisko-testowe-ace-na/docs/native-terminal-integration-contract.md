@@ -49,13 +49,12 @@ continue to resolve allowed projects/roles from the protected installation
 configuration. Do not substitute an unprivileged shell proxy PID for the
 systemd session identity.
 
-Native Linux origin preparation now has a working-tree change in
+Native Linux origin preparation was implemented in
 `.ace-local/herdr-integration-source/src/platform/linux/guarded_origin.rs`:
 consume a supplied OwnedFd, verify its kernel pidfd type and exact live PID,
 then establish the existing guarded identity from kernel observations. The
 ordinary spawn capture shares that implementation. Tests cover a correct live
-handle, wrong descriptor, mismatched PID and exited process. This has not yet
-been promoted into the selected source patch or accepted as tested. Native
+handle, wrong descriptor, mismatched PID and exited process. Native
 validation sources are staged on the diagnostic VM under
 `/home/lab-operator/herdr-validation`; Rust 1.96.1 is installed for the build
 owner. Native runtime artifact and acceptance manifest are unchanged.
@@ -71,9 +70,18 @@ Validation tooling installed on the diagnostic VM: just 1.59.0 and
 cargo-nextest 0.9.151, built with their locked dependency sets under the
 unprivileged build owner. Rustfmt/clippy match Rust 1.96.1. After correcting the
 formatter's two layout differences, the native `cargo fmt --check && just
-test-one guarded_origin` command started in `herdr-validation`. Its cold
-Rust/Zig build is in progress, not a passing test result. Continue observing
-that same run before replacing or rerunning it.
+test-one guarded_origin` command passed: 3 tests, 3928 intentionally filtered.
+The broader `just test-one guarded` then passed 33 tests, 3898 filtered. This
+compiled the actual native crate and its 17 test binaries on ARM64. Four
+existing irrefutable-pattern warnings refer to unchanged pane.rs code.
+
+Selected native source is now `ef3089b24e6f3839d8331926edc295f3b6921dfe`,
+tree `986592607a29d2f3ffb48458d3b2832a7251a859`. Replaying the packaged mail
+patch from the pinned baseline reproduced both exact hashes. Packaging tests
+pass (20 tests, 88 assertions) after updating the expected reviewed-source pin.
+The release manifest and deployed native binary still select the previous
+artifact; the new source must be built through the owner procedure as part of
+the complete native integration candidate.
 
 Outstanding implementation: configured launch operation and descriptor
 handoff; native Child/backend adapter and managed-agent start path; mounted

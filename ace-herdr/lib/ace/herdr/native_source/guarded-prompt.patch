@@ -3491,3 +3491,107 @@ index 9171340..a971ef6 100644
      pub fn queue_user_input_submission(
          &self,
          text: Bytes,
+
+From ef3089b24e6f3839d8331926edc295f3b6921dfe Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 01:42:50 +0100
+Subject: [PATCH] feat: accept pinned process identity from trusted launchers
+
+---
+ src/platform/linux/guarded_origin.rs | 75 +++++++++++++++++++++++++++-
+ 1 file changed, 73 insertions(+), 2 deletions(-)
+
+diff --git a/src/platform/linux/guarded_origin.rs b/src/platform/linux/guarded_origin.rs
+index 2a44e8f..898ec0b 100644
+--- a/src/platform/linux/guarded_origin.rs
++++ b/src/platform/linux/guarded_origin.rs
+@@ -69,12 +69,41 @@ fn runtime_incarnation() -> io::Result<String> {
+ }
+ 
+ pub(crate) fn capture_guarded_child(pid: u32) -> io::Result<Arc<GuardedChildOrigin>> {
+-    let before = identity(pid)?;
+     let raw = unsafe { libc::syscall(libc::SYS_pidfd_open, pid as libc::pid_t, 0) };
+     if raw < 0 {
+         return Err(io::Error::last_os_error());
+     }
+-    let handle = LinuxChildHandle(unsafe { OwnedFd::from_raw_fd(raw as i32) });
++    capture_pinned_child(pid, unsafe { OwnedFd::from_raw_fd(raw as i32) })
++}
++
++/// Consume the launcher's process handle without reopening a PID. The caller
++/// authenticates the launcher connection; this boundary verifies the received
++/// descriptor against the kernel before using any supplied PID for observation.
++pub(crate) fn capture_pinned_child(
++    pid: u32,
++    descriptor: OwnedFd,
++) -> io::Result<Arc<GuardedChildOrigin>> {
++    let fd = descriptor.as_raw_fd();
++    let kind = std::fs::read_link(format!("/proc/self/fd/{fd}"))?;
++    let info = bounded_read(&format!("/proc/self/fdinfo/{fd}"), 4096)?;
++    let mut identities = info.lines().filter_map(|line| line.strip_prefix("Pid:"));
++    if pid == 0
++        || kind != std::path::Path::new("anon_inode:[pidfd]")
++        || identities
++            .next()
++            .and_then(|value| value.trim().parse::<u32>().ok())
++            != Some(pid)
++        || identities.next().is_some()
++    {
++        return Err(io::Error::other(
++            "launcher process handle does not match PID",
++        ));
++    }
++    let handle = LinuxChildHandle(descriptor);
++    if !handle.is_live()? {
++        return Err(io::Error::other("launcher process has exited"));
++    }
++    let before = identity(pid)?;
+     if identity(pid)? != before || !handle.is_live()? {
+         return Err(io::Error::other("child origin changed during capture"));
+     }
+@@ -85,3 +114,45 @@ pub(crate) fn capture_guarded_child(pid: u32) -> io::Result<Arc<GuardedChildOrig
+         handle: Arc::new(handle),
+     }))
+ }
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use std::process::{Command, Stdio};
++
++    fn pin(pid: u32) -> OwnedFd {
++        let fd = unsafe { libc::syscall(libc::SYS_pidfd_open, pid as libc::pid_t, 0) };
++        assert!(fd >= 0, "pidfd_open failed: {}", io::Error::last_os_error());
++        unsafe { OwnedFd::from_raw_fd(fd as i32) }
++    }
++
++    #[test]
++    fn imported_handle_retains_the_real_process_identity() {
++        let pid = std::process::id();
++        let origin = capture_pinned_child(pid, pin(pid)).unwrap();
++        assert_eq!(origin.child.pid, pid);
++        assert!(origin.handle.is_live().unwrap());
++    }
++
++    #[test]
++    fn foreign_descriptor_or_mismatched_pid_is_refused() {
++        let pid = std::process::id();
++        let file: OwnedFd = std::fs::File::open("/dev/null").unwrap().into();
++        assert!(capture_pinned_child(pid, file).is_err());
++        assert!(capture_pinned_child(pid + 1, pin(pid)).is_err());
++    }
++
++    #[test]
++    fn exited_process_cannot_be_imported_as_a_live_terminal() {
++        let mut child = Command::new("/bin/cat")
++            .stdin(Stdio::piped())
++            .stdout(Stdio::null())
++            .spawn()
++            .unwrap();
++        let pid = child.id();
++        let descriptor = pin(pid);
++        drop(child.stdin.take());
++        assert!(child.wait().unwrap().success());
++        assert!(capture_pinned_child(pid, descriptor).is_err());
++    }
++}
