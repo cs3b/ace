@@ -31,6 +31,7 @@ File.write(other_sentinel, "not assigned")
 File.chown(account.uid, account.gid, other_sentinel)
 privacy_check = "try:\n    open(#{sentinel.inspect}).read()\nexcept PermissionError:\n    pass\nelse:\n    raise RuntimeError('private task was readable')\n"
 privacy_check += "try:\n    open(#{other_sentinel.inspect}).read()\nexcept FileNotFoundError:\n    pass\nelse:\n    raise RuntimeError('other project was visible')\n"
+privacy_check += "import os, errno\ntry:\n    os.rename(#{tasks.inspect}, #{(tasks + '-relocated').inspect})\nexcept OSError as error:\n    assert error.errno == errno.EBUSY, error\nelse:\n    raise RuntimeError('private task parent was relocatable')\n"
 unit = Ace::Lab::Auth::SessionUnit.new(role: "worker", id: SecureRandom.hex(8),
   command: [File.realpath("/usr/bin/python3"), "-c", "exec(#{privacy_check.inspect}); open(#{output.inspect}, 'w').write('worker completed')"],
   environment: {"GEM_HOME" => ENV.fetch("GEM_HOME"), "GEM_PATH" => ENV.fetch("GEM_PATH")})
@@ -76,7 +77,7 @@ PTY.open do |master, slave|
     end
     puts JSON.generate(unit: identity.unit, invocation: identity.invocation_id,
       session_uid: identity.process.fetch("uid"), backing_uid: stat.uid, barrier: "passed", write: "passed",
-      private_task_open: "denied", other_project: "hidden")
+      private_task_open: "denied", private_task_parent_rename: "denied", other_project: "hidden")
     completed = true
   rescue StandardError
     begin

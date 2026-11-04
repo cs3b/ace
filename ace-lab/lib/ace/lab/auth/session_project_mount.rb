@@ -71,6 +71,12 @@ module Ace
           @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mount",
             "-o", "remount,bind,rw", "--", project], namespace: namespace, source: source)
           if hide_private_tasks
+            # Pin the parent as a mountpoint too: otherwise a worker can
+            # rename .ace-tasks and expose the backing private subtree to a
+            # later session whose mask is installed at the original path.
+            task_root = File.dirname(private_tasks)
+            @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mount",
+              "--bind", task_root, task_root], namespace: namespace, source: source)
             @runner.call(["/usr/bin/nsenter", "--mount=/proc/self/fd/3", "--", "/bin/mount",
               "-t", "tmpfs", "-o", "ro,nosuid,nodev,noexec,mode=000,size=4k", "none", private_tasks],
               namespace: namespace, source: source)
