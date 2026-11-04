@@ -154,6 +154,8 @@ module Ace
                 refute_includes env.values, "LEASE-TOKEN"
                 env = env.merge("ACE_LAB_CREDENTIAL_FILE" => credential)
                 askpass = env.fetch("GIT_ASKPASS")
+                refute askpass.start_with?(dir + "/"), "credential mounts may be noexec; executable must come from runtime"
+                assert File.executable?(askpass)
                 username, status = Open3.capture2(env, askpass, "Username for 'https://forge.example.com': ")
                 assert status.success?
                 assert_equal "lab-role-dev\n", username
