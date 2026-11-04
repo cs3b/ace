@@ -23,7 +23,14 @@ sentinel = File.join(private_tasks, "private-sentinel")
 File.write(sentinel, "must remain private")
 File.chown(account.uid, account.gid, sentinel)
 output = File.join(project, "result")
+other_project = "/lab/e2e-other-#{SecureRandom.hex(8)}"
+Dir.mkdir(other_project, 0o755)
+File.chown(account.uid, account.gid, other_project)
+other_sentinel = File.join(other_project, "other-session")
+File.write(other_sentinel, "not assigned")
+File.chown(account.uid, account.gid, other_sentinel)
 privacy_check = "try:\n    open(#{sentinel.inspect}).read()\nexcept PermissionError:\n    pass\nelse:\n    raise RuntimeError('private task was readable')\n"
+privacy_check += "try:\n    open(#{other_sentinel.inspect}).read()\nexcept FileNotFoundError:\n    pass\nelse:\n    raise RuntimeError('other project was visible')\n"
 unit = Ace::Lab::Auth::SessionUnit.new(role: "worker", id: SecureRandom.hex(8),
   command: [File.realpath("/usr/bin/python3"), "-c", "exec(#{privacy_check.inspect}); open(#{output.inspect}, 'w').write('worker completed')"],
   environment: {"GEM_HOME" => ENV.fetch("GEM_HOME"), "GEM_PATH" => ENV.fetch("GEM_PATH")})
@@ -69,7 +76,7 @@ PTY.open do |master, slave|
     end
     puts JSON.generate(unit: identity.unit, invocation: identity.invocation_id,
       session_uid: identity.process.fetch("uid"), backing_uid: stat.uid, barrier: "passed", write: "passed",
-      private_task_open: "denied")
+      private_task_open: "denied", other_project: "hidden")
     completed = true
   rescue StandardError
     begin
@@ -91,6 +98,8 @@ PTY.open do |master, slave|
       Dir.rmdir(private_tasks)
       Dir.rmdir(tasks)
       Dir.rmdir(project)
+      File.unlink(other_sentinel)
+      Dir.rmdir(other_project)
     else
       warn "diagnostic project preserved: #{project}"
     end
