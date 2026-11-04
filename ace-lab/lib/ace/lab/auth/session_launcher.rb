@@ -83,10 +83,10 @@ module Ace
             end
           end
           manager.stop_service
-          after = manager.inspect_units.fetch("service")
-          unless after["InvocationID"] == identity.invocation_id &&
-              %w[inactive failed].include?(after["ActiveState"]) && after["MainPID"] == "0" &&
-              @platform.exited?(identity.pidfd)
+          # StopUnit waits for the control-group stop job. A successfully
+          # stopped transient unit may already be garbage-collected; asking
+          # for its properties again is not a reliable termination check.
+          unless @platform.exited?(identity.pidfd)
             raise Error, "session termination was not confirmed"
           end
           true
