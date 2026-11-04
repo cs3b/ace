@@ -7,6 +7,23 @@ module Ace
   module Lab
     module Auth
       class LeaseStoreTest < Minitest::Test
+        def test_session_lock_is_exclusive_stable_and_invocation_scoped
+          Dir.mktmpdir do |dir|
+            store = LeaseStore.new(dir)
+            unit = "ace-auth-session-worker-0123456789abcdef.service"
+            held_path = nil
+            store.with_session_lock(unit: unit, invocation: "a" * 32) do
+              held_path = Dir.glob(File.join(dir, "session-*.lock")).fetch(0)
+              File.open(held_path, File::RDWR) { |other| refute other.flock(File::LOCK_EX | File::LOCK_NB) }
+              store.with_session_lock(unit: unit, invocation: "b" * 32) { assert_equal 2, Dir.children(dir).size }
+            end
+            inode = File.stat(held_path).ino
+            store.with_session_lock(unit: unit, invocation: "a" * 32) { assert_equal inode, File.stat(held_path).ino }
+            File.open(held_path, File::RDWR) { |other| assert other.flock(File::LOCK_EX | File::LOCK_NB) }
+            assert_raises(ArgumentError) { store.with_session_lock(unit: unit, invocation: "0" * 32) {} }
+          end
+        end
+
         def test_rejects_empty_correlation_before_writing
           Dir.mktmpdir do |dir|
             store = LeaseStore.new(dir)

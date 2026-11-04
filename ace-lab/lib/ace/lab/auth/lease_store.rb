@@ -178,6 +178,24 @@ module Ace
           end
         end
 
+        # Serialize issuance and close for one authenticated session. This is
+        # a stable lock in the existing store, not a separate session registry.
+        # Callers acquire it before correlation/record locks.
+        def with_session_lock(unit:, invocation:)
+          unless unit.is_a?(String) && SessionPeer::UNIT.match?(unit) && invocation.is_a?(String) &&
+              invocation.match?(/\A[0-9a-f]{32}\z/) && invocation != "0" * 32
+            raise ArgumentError, "exact session unit and invocation are required"
+          end
+          key = Digest::SHA256.hexdigest(JSON.generate([unit, invocation]))
+          lock = open_lock(File.join(@dir, "session-#{key}.lock"))
+          begin
+            lock_flock(lock, File::LOCK_EX)
+            yield
+          ensure
+            lock.close
+          end
+        end
+
         # One exec at a time per lease: an exclusive lock on the lease's
         # exec lockfile, non-blocking — a parallel exec is a refusal.
         def with_exec_lock(id)

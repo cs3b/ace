@@ -114,6 +114,16 @@ module Ace
         # project config grants nothing.
         def request(profile_name:, role:, task:, assignment:, repos: [],
           ttl_minutes: nil)
+          arguments = {profile_name: profile_name, role: role, task: task, assignment: assignment,
+                       repos: repos, ttl_minutes: ttl_minutes}
+          return request_locked(**arguments) unless @session_uid
+
+          @store.with_session_lock(unit: @session_unit, invocation: @session_id) do
+            request_locked(**arguments)
+          end
+        end
+
+        def request_locked(profile_name:, role:, task:, assignment:, repos:, ttl_minutes:)
           issuance_started = false
           unless [profile_name, role, task, assignment].all? { |value| value.is_a?(String) && value.valid_encoding? && !value.strip.empty? }
             raise Refusal.new("profile, role, task and assignment must be non-empty strings")
@@ -315,6 +325,8 @@ module Ace
           end
           raise
         end
+
+        private :request_locked
 
         # --- status --------------------------------------------------------
 
@@ -583,13 +595,36 @@ module Ace
           unless invocation.is_a?(String) && invocation.match?(/\A[0-9a-f]{32}\z/)
             raise Refusal.new("issuer recovery requires an exact invocation identity")
           end
+          revoke_owned_records(invocation: invocation)
+        end
+
+        # The launch owner calls this after confirming whole-unit containment.
+        # A queued request rechecks its dead session inside this same lock, so
+        # no late grant can appear after the cleanup inventory was inspected.
+        def revoke_session(issuer_invocation:, unit:, invocation:)
+          unless Process.uid.zero? && Process.euid.zero? && @session_uid.nil? && @principal.call == "root"
+            raise Refusal.new("session cleanup requires the root operator")
+          end
+          unless issuer_invocation.is_a?(String) && issuer_invocation.match?(/\A[0-9a-f]{32}\z/) && issuer_invocation != "0" * 32
+            raise Refusal.new("session cleanup requires the issuer invocation")
+          end
+          @store.with_issuer_lifecycle_lock(exclusive: false) do
+            @store.with_session_lock(unit: unit, invocation: invocation) do
+              revoke_owned_records(invocation: issuer_invocation, session_unit: unit, session_id: invocation)
+            end
+          end
+        end
+
+        def revoke_owned_records(invocation:, session_unit: nil, session_id: nil)
+          matches = ->(record) { record["issuer_invocation"] == invocation &&
+            (!session_unit || record["session_unit"] == session_unit && record["session_id"] == session_id) }
           records = @store.all
           problems = records.select { |record| record["corrupt"] }.map { |record| record["id"].to_s }
-          results = records.select { |record| !record["corrupt"] && record["issuer_invocation"] == invocation }.filter_map do |record|
+          results = records.select { |record| !record["corrupt"] && matches.call(record) }.filter_map do |record|
             begin
               outcome = @store.with_exec_lock(record.fetch("id")) do
                 current = @store.load(record.fetch("id"))
-                unless current["id"] == record["id"] && current["issuer_invocation"] == invocation
+                unless current["id"] == record["id"] && matches.call(current)
                   raise Error, "issuer lease identity changed during recovery"
                 end
                 containment_error = nil
@@ -616,6 +651,8 @@ module Ace
           raise Error, "issuer recovery could not inspect or clean leases: #{problems.join(', ')}" unless problems.empty?
           results
         end
+
+        private :revoke_owned_records
 
         # Resolves interrupted issue/revoke cycles and expired
         # assignments in the SAME store: preparing (dead mid-issue),

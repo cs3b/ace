@@ -205,8 +205,18 @@ actual endpoint wiring are not yet validated.
 
 Confirmed integration requirement: session-close cannot simply snapshot leases
 after main PID exit. An authenticated request can be waiting in provider or
-correlation work before creating its record. The existing LeaseStore must
-serialize issuance finalization and exact-session cleanup by (unit, invocation),
-with a liveness recheck inside the lock. Preserve session→correlation→record lock
-order, and never replace live lock files. Full cgroup containment must precede
+correlation work before creating its record. The existing LeaseStore now
+serializes issuance finalization and exact-session cleanup by (unit, invocation),
+with a liveness recheck inside the lock. The lock order is issuer lifecycle→
+session→correlation→record; live lock files are never replaced. Full cgroup containment must precede
 cleanup success; main pidfd death alone is insufficient.
+
+Session cleanup uses Service.revoke_session under the shared issuer lifecycle
+lock and exact-session lock, reusing the existing revoke/recovery implementation
+and execution containment checks. A different session, unit or issuer remains
+untouched. Corrupt records and unconfirmed execution cleanup still block a clean
+result. Targeted verification passed 118 tests / 448 assertions; independent
+review passed with no actionable findings. Tests include actual flock exclusion,
+stable inode reuse, separate invocation keys, a dead-session recheck while the
+lock is held, and exact cleanup selection. The native close endpoint and a live
+issuance/close race remain unverified; this does not claim full-cycle acceptance.

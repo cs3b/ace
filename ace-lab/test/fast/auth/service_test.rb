@@ -476,6 +476,54 @@ module Ace
           assert_equal "b" * 32, record.fetch("issuer_invocation")
         end
 
+        def test_dead_session_is_rechecked_while_issuance_lock_is_held
+          skip "requires a non-root account for the fake peer" if Process.uid.zero?
+          document = YAML.safe_load(@document)
+          document["auth"]["profiles"]["developer"]["principals"] = ["session:worker"]
+          isolated = Process.stub(:euid, 0) do
+            Molecules::GrantResolver.stub(:read_verified, YAML.dump(document)) do
+              Service.new(session: session_identity, issuer_invocation: "b" * 32, supervised: true)
+            end
+          end
+          verify = lambda do
+            paths = Dir.glob(File.join(isolated.store.dir, "session-*.lock"))
+            assert_equal 1, paths.size
+            File.open(paths.first, File::RDWR) { |other| refute other.flock(File::LOCK_EX | File::LOCK_NB) }
+            raise Error, "session ended while waiting"
+          end
+          isolated.instance_variable_get(:@session_attachment).stub(:verify_session!, verify) do
+            assert_raises(Error) do
+              isolated.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+            end
+          end
+          assert_empty @fake.issued
+          assert_empty isolated.store.all
+        end
+
+        def test_session_cleanup_leaves_other_sessions_and_issuers_untouched
+          worker = service
+          unit = "ace-auth-session-worker-0123456789abcdef.service"
+          combinations = [["a", "b", unit], ["a", "c", unit],
+            ["a", "b", "ace-auth-session-worker-fedcba9876543210.service"], ["d", "b", unit]]
+          records = combinations.map.with_index do |(issuer, session, session_unit), index|
+            record = worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
+              task: index.to_s, assignment: index.to_s, repos: ["ace"], use_until: (Time.now.utc + 60).iso8601,
+              provider_expiry: nil, token_ref: "token-#{index}", session_uid: 1234,
+              session_unit: session_unit, session_id: session * 32, issuer_invocation: issuer * 32)
+            worker.store.update(record["id"]) { |value| value["state"] = "issued" }
+          end
+          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
+          lifecycle = ->(exclusive:, &block) { refute exclusive; block.call }
+          operator.store.stub(:with_issuer_lifecycle_lock, lifecycle) do
+            Process.stub(:uid, 0) { Process.stub(:euid, 0) do
+              result = operator.revoke_session(issuer_invocation: "a" * 32, unit: unit, invocation: "b" * 32)
+              assert_equal [records.first["id"]], result.map { |row| row["lease"] }
+            end }
+          end
+          assert_equal ["revoked", "issued", "issued", "issued"], records.map { |record| worker.store.load(record["id"])["state"] }
+          assert_equal ["token-0"], @fake.revoked
+        end
+
         def test_session_cannot_claim_a_different_role_in_profile
           skip "requires a non-root account for the fake peer" if Process.uid.zero?
 
