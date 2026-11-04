@@ -35,6 +35,19 @@ module Ace
           assert_equal "request", message["action"]
         end
 
+        def test_readiness_sends_only_target_and_requires_native_boolean_acknowledgement
+          response = {"id" => "ace-lab:readiness", "result" => {"type" => "agent_readiness", "ready" => true}}
+          result, message = exchange(response) { |client| client.readiness(target: "term_1234") }
+          assert result.fetch("ready")
+          assert_equal({"target" => "term_1234"}, message.fetch("params"))
+          assert_equal "agent.readiness", message.fetch("method")
+          assert_raises(Refusal) do
+            exchange(response.merge("id" => "foreign")) { |client| client.readiness(target: "term_1234") }
+          end
+          response["result"]["ready"] = "true"
+          assert_raises(Refusal) { exchange(response) { |client| client.readiness(target: "term_1234") } }
+        end
+
         def test_status_and_revoke_use_the_same_public_lease_id
           _, status = exchange("ok" => true, "result" => {"state" => "issued"}) { |client| client.status(lease_id: "lease") }
           result, revoke = exchange("ok" => true, "result" => {"cleanup" => "revoked"}) { |client| client.revoke(lease_id: "lease") }

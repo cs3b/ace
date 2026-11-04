@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require_relative "session_configuration"
 require_relative "session_native_transport"
+require_relative "session_readiness"
 
 module Ace
   module Lab
@@ -8,12 +9,12 @@ module Ace
       # Narrow supervisory API. Native owns terminal identity and process
       # admission; the issuer owns the original caller's project authority.
       class SessionControl
-        METHODS = %w[agent.list agent.get agent.prompt pane.current ping].freeze
+        METHODS = %w[agent.list agent.get agent.prompt pane.current ping agent.readiness].freeze
         PUBLIC_FIELDS = %w[terminal_id name agent agent_status workspace_id tab_id pane_id focused
           launch_pending interactive_ready state_change_seq completion_seq revision isolated_session].freeze
 
-        def initialize(configuration: SessionConfiguration.new, transport: SessionNativeTransport.new)
-          @configuration, @transport = configuration, transport
+        def initialize(configuration: SessionConfiguration.new, transport: SessionNativeTransport.new, readiness: SessionReadiness.new)
+          @configuration, @transport, @readiness = configuration, transport, readiness
         end
 
         def call(request, identity:)
@@ -47,6 +48,10 @@ module Ace
           end
           agent = native(id, "agent.get", {"target" => params.fetch("target")}, identity).dig("result", "agent")
           raise Error, "session target is unavailable" unless authorized?(agent, identity)
+          if method == "agent.readiness"
+            result = @readiness.call(agent: agent, identity: identity, request_id: id)
+            return {"id" => id, "result" => result.merge("type" => "agent_readiness")}
+          end
           if method == "agent.get"
             return {"id" => id, "result" => {"type" => "agent_info", "agent" => project(agent)}}
           end
@@ -110,7 +115,7 @@ module Ace
           end
           fields = case request["method"]
           when "agent.list", "ping" then []
-          when "agent.get" then %w[target]
+          when "agent.get", "agent.readiness" then %w[target]
           else %w[target text]
           end
           raise Error, "invalid session control fields" unless params.keys.sort == fields

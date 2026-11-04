@@ -26,6 +26,7 @@ module Ace::Lab::Auth
     def test_linux_descriptor_transfer_is_read_only_and_owned
       skip "Linux descriptor reader" unless RUBY_PLATFORM.include?("linux")
       file = reader.open(@path, identity: @identity)
+      assert_kind_of File, file
       assert_equal "evidence\n", file.read
       assert_equal Process.uid, file.stat.uid
       assert_equal File::RDONLY, file.fcntl(Fcntl::F_GETFL) & Fcntl::O_ACCMODE

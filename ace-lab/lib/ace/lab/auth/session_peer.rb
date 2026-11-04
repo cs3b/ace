@@ -191,6 +191,18 @@ module Ace
           raise
         end
 
+        def live!(identity)
+          unless identity.is_a?(Identity) && [identity.pidfd, identity.main_pidfd].all? { |handle|
+              handle.is_a?(IO) && !handle.closed? && !@platform.exited?(handle)
+            } && @manager_factory.call(identity.unit).unit_for_pidfd(handle: identity.main_pidfd) ==
+              {"unit" => identity.unit, "invocation_id" => identity.invocation_id}
+            raise Error, "session invocation is no longer live"
+          end
+          true
+        rescue Ace::Runtime::Error, SystemCallError, IOError
+          raise Error, "session invocation is unavailable"
+        end
+
         private :authenticate_process_handle
 
         # The same runtime-directory owner serves authenticated lease calls

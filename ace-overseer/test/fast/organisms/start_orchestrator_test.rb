@@ -171,7 +171,7 @@ module Organisms
       assert_equal 1, executor.agent_started.size
       prompt = executor.prompts.find { |entry| entry[:pane] == report["pane"] }
       assert prompt, "a prompt must reach the started agent"
-      assert_equal Ace::Overseer::Organisms::StartOrchestrator::FIRST_TURN_PROMPT,
+      assert_equal Ace::Overseer::Atoms::StartContract::FIRST_TURN_PROMPT,
         prompt[:text]
       # the prompt FOLLOWS agent_start: the session's first turn only
       # begins once the interactive agent is ready for input

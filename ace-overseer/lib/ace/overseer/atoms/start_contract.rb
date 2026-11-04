@@ -7,6 +7,16 @@ module Ace
       # first-run profile when no start section exists. A malformed explicit
       # configuration never falls back to another model or harness.
       class StartContract
+        FIRST_TURN_PROMPT = <<~PROMPT.chomp
+          Begin your first turn now. Follow the "First turn after start"
+          section of your standing instructions: read your private
+          _overseer tasks and the project state from its owners, continue
+          existing commissioned work before choosing anything new. Arm
+          standing observation with the ace_eyes tool, action start and
+          configPath naming your eyes configuration; verify its returned
+          observation state. Remain idle when there is nothing to do.
+        PROMPT
+
         SCOPES = %w[project lab].freeze
         SECTION_KEYS = %w[scope profile instructions].freeze
         PROFILE_KEYS = %w[harness model thinking].freeze

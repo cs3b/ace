@@ -248,7 +248,7 @@ module Organisms
       prompt_panes = executor.prompts.map { |entry| entry[:pane] }
       assert_equal %w[p-overseer-lab p-overseer-alpha p-overseer-beta].sort, prompt_panes.sort
       assert(executor.prompts.all? do |entry|
-        entry[:text] == Ace::Overseer::Organisms::StartOrchestrator::FIRST_TURN_PROMPT
+        entry[:text] == Ace::Overseer::Atoms::StartContract::FIRST_TURN_PROMPT
       end)
       executor.prompts.each do |entry|
         assert_includes entry[:text], "ace_eyes tool, action start"

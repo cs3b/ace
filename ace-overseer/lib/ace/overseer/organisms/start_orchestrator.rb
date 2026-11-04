@@ -4,7 +4,7 @@ require_relative "../atoms/start_contract"
 require_relative "../atoms/observation_sources"
 require_relative "../molecules/project_root_resolver"
 require_relative "../molecules/project_bundle"
-require_relative "../molecules/eyes_session_evidence"
+require_relative "../molecules/eyes_readiness"
 require "ace/herdr"
 require "ace/herdr/molecules/installed_pi_extensions"
 require "ace/lab"
@@ -44,15 +44,7 @@ module Ace
         # READY for input — the session begins its first turn when this
         # prompt arrives, exactly as the standing instructions' "First
         # turn after start" section describes (state read, /eyes arming).
-        FIRST_TURN_PROMPT = <<~PROMPT.chomp
-          Begin your first turn now. Follow the "First turn after start"
-          section of your standing instructions: read your private
-          _overseer tasks and the project state from its owners, continue
-          existing commissioned work before choosing anything new. Arm
-          standing observation with the ace_eyes tool, action start and
-          configPath naming your eyes configuration; verify its returned
-          observation state. Remain idle when there is nothing to do.
-        PROMPT
+
 
         attr_reader :cwd
 
@@ -83,7 +75,7 @@ module Ace
           @env = env
           @scope = scope
           @project_runner = project_runner || Molecules::ProjectBundle.new
-          @eyes_evidence = eyes_evidence || Molecules::EyesSessionEvidence.new
+          @eyes_evidence = eyes_evidence || Molecules::EyesReadiness.new(env: env)
         end
 
         # @param dry_run [Boolean] report the plan without creating a
@@ -174,7 +166,7 @@ module Ace
           command += Ace::Herdr::Molecules::InstalledPiExtensions.arguments
           thinking = plan["profile"]["thinking"]
           command += ["--thinking", thinking] if thinking
-          command += ["--append-system-prompt", guide, FIRST_TURN_PROMPT]
+          command += ["--append-system-prompt", guide, Atoms::StartContract::FIRST_TURN_PROMPT]
           {"status" => dry_run ? "dry_run" : "foreground", "scope" => plan["scope"],
             "root" => root, "profile" => plan["profile_name"],
             "instructions" => {"source" => source, "path" => guide},
@@ -615,7 +607,7 @@ module Ace
         # outcome, returned as a visible warning instead of a readiness
         # claim. The process exists, but may already have begun its turn.
         def first_prompt(pane, root)
-          response = @executor.agent_prompt(pane: pane, text: FIRST_TURN_PROMPT,
+          response = @executor.agent_prompt(pane: pane, text: Atoms::StartContract::FIRST_TURN_PROMPT,
             wait: true, until_states: %w[working blocked], timeout_ms: FIRST_TURN_TIMEOUT_MS)
           observed = response.parsed_json
           result = observed.is_a?(Hash) ? observed["result"] : nil
@@ -658,7 +650,7 @@ module Ace
         def observation_warning(pane, root)
           required = Atoms::ObservationSources::REQUIRED.dup
           required << Atoms::ObservationSources::PROJECT_SESSIONS if File.file?(File.join(root, ".ace/lab/config.yml"))
-          return nil if @eyes_evidence.ready?(pane: pane, root: root, prompt: FIRST_TURN_PROMPT, required_sources: required)
+          return nil if @eyes_evidence.ready?(pane: pane, root: root, prompt: Atoms::StartContract::FIRST_TURN_PROMPT, required_sources: required)
 
           "first turn and live eyes observation are not yet verified; required sources: #{required.join(", ")}; " \
             "preserve the session and recheck after its state changes"

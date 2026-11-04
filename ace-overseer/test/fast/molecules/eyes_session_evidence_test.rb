@@ -2,6 +2,7 @@
 
 require_relative "../../test_helper"
 require "ace/overseer/molecules/eyes_session_evidence"
+require "ace/overseer/molecules/eyes_descriptor_evaluator"
 require "fileutils"
 require "timeout"
 
@@ -70,6 +71,31 @@ class EyesSessionEvidenceTest < Minitest::Test
     refute ready?
   ensure
     opened&.close
+  end
+
+  def test_descriptor_evaluator_requires_owner_prompt_sources_and_exact_process
+    @records[2]["message"]["content"] = Ace::Overseer::Atoms::StartContract::FIRST_TURN_PROMPT
+    sources = Ace::Overseer::Atoms::ObservationSources::REQUIRED.to_h { |key| [key, "ok"] }
+    @records.last["data"]["observerEvidence"]["sources"] = sources
+    write_session
+    input = {"pane" => "w1:p1", "terminal_id" => "term", "root" => "/lab/ace",
+      "session_path" => @path, "process" => @process, "role" => "project-overseer"}
+    evaluator = Ace::Overseer::Molecules::EyesDescriptorEvaluator.new(executor: @executor,
+      identity: @identity, clock: -> { 20_000 })
+    File.open(@path, File::RDONLY) do |file|
+      assert evaluator.call(input, file: file)
+      refute evaluator.call(input.merge("terminal_id" => "foreign"), file: file)
+      refute evaluator.call(input.merge("session_path" => "/other.jsonl"), file: file)
+      refute evaluator.call(input.merge("process" => @process.merge("pid" => 124)), file: file)
+      refute evaluator.call(input.merge("role" => "worker"), file: file)
+      refute evaluator.call(input.merge("role" => "lab-overseer"), file: file)
+      sources["project_sessions"] = "ok"
+      write_session
+      assert evaluator.call(input.merge("role" => "lab-overseer"), file: file)
+      @records[2]["message"]["content"] = "other prompt"
+      write_session
+      refute evaluator.call(input, file: file)
+    end
   end
 
   def test_rejects_replaced_process_or_missing_foreground_agent

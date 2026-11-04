@@ -34,6 +34,22 @@ module Ace
           exchange({"action" => "revoke", "lease" => lease_id}).fetch("cleanup").to_sym
         end
 
+        def readiness(target:)
+          message = {"id" => "ace-lab:readiness", "method" => "agent.readiness", "params" => {"target" => target}}
+          connect_verified do |socket|
+            Transport.write(socket, message, deadline: Transport.deadline, limit: 16_384)
+            response = Transport.read(Transport::Ingress.new(socket), deadline: Transport.deadline(30))
+            result = response.is_a?(Hash) && response["result"]
+            unless response.is_a?(Hash) && response["id"] == message["id"] && !response.key?("error") &&
+                result.is_a?(Hash) && result["type"] == "agent_readiness" && [true, false].include?(result["ready"])
+              raise Refusal, "issuer could not verify session readiness"
+            end
+            result
+          end
+        rescue Ace::Runtime::Error, SystemCallError, IOError, SecurityError
+          raise Error, "issuer readiness transport is unavailable or invalid"
+        end
+
         def reconcile
           raise Refusal, "reconciliation requires the host operator"
         end

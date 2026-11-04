@@ -44,11 +44,11 @@ module Ace
           @executor, @identity, @clock, @file_opener = executor, identity, clock, file_opener
         end
 
-        def ready?(pane:, root:, prompt:, required_sources:)
+        def ready?(pane:, root:, prompt:, required_sources:, expected_terminal: nil)
           executor = @executor || Ace::Herdr::Molecules::BoundedObservation.new(
             deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5)
           before = pane_binding(executor, pane)
-          return false unless before
+          return false unless before && (expected_terminal.nil? || before["terminal_id"] == expected_terminal)
           path = before.fetch("path")
           file = @file_opener.call(path)
           stat = file.stat

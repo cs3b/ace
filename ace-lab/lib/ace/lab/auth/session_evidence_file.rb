@@ -76,8 +76,10 @@ module Ace
           unless (file.fcntl(Fcntl::F_GETFL) & Fcntl::O_ACCMODE) == File::RDONLY
             raise Error, "session evidence descriptor is writable"
           end
+          transferred = File.for_fd(file.fileno)
+          file.autoclose = false
           descriptors = []
-          file
+          transferred
         rescue SystemCallError, IOError, ArgumentError
           raise Error, "session evidence file is unavailable"
         ensure
