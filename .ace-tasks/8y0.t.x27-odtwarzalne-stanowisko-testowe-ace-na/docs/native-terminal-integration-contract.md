@@ -39,6 +39,42 @@ start unrestricted and be restricted after its first turn. Native readiness
 then requires the real Pi first turn and active eyes. Successful unit creation
 or receipt of the handoff is only process-start evidence.
 
+The host Herdr control socket must not be made generally accessible to dynamic
+session UIDs to solve connectivity. Its ordinary pane/shell execution methods
+run as the host owner and would let a worker escape its assigned filesystem
+view. Session-originated delegation and lifecycle communication must retain
+the authenticated system session at the existing native/API boundary; a role
+or project named by the model is not authority. The root launch endpoint must
+continue to resolve allowed projects/roles from the protected installation
+configuration. Do not substitute an unprivileged shell proxy PID for the
+systemd session identity.
+
+Native Linux origin preparation now has a working-tree change in
+`.ace-local/herdr-integration-source/src/platform/linux/guarded_origin.rs`:
+consume a supplied OwnedFd, verify its kernel pidfd type and exact live PID,
+then establish the existing guarded identity from kernel observations. The
+ordinary spawn capture shares that implementation. Tests cover a correct live
+handle, wrong descriptor, mismatched PID and exited process. This has not yet
+been promoted into the selected source patch or accepted as tested. Native
+validation sources are staged on the diagnostic VM under
+`/home/lab-operator/herdr-validation`; Rust 1.96.1 is installed for the build
+owner. Native runtime artifact and acceptance manifest are unchanged.
+
+Independent static review found no actionable defect in that origin delta.
+It confirmed that the remaining native route must reject origin-capture errors
+(the ordinary backend currently converts them to None), replace numeric-PID
+shutdown with authenticated session shutdown, and consume trusted terminal,
+pidfd and lifecycle metadata as one launch result. Descriptor validation alone
+is not authorization or proof of terminal/session association.
+
+Validation tooling installed on the diagnostic VM: just 1.59.0 and
+cargo-nextest 0.9.151, built with their locked dependency sets under the
+unprivileged build owner. Rustfmt/clippy match Rust 1.96.1. After correcting the
+formatter's two layout differences, the native `cargo fmt --check && just
+test-one guarded_origin` command started in `herdr-validation`. Its cold
+Rust/Zig build is in progress, not a passing test result. Continue observing
+that same run before replacing or rerunning it.
+
 Outstanding implementation: configured launch operation and descriptor
 handoff; native Child/backend adapter and managed-agent start path; mounted
 project access; session-local communication; actual issuer readiness; complete
