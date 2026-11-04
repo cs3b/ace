@@ -1,6 +1,33 @@
 # Native terminal integration contract
 
-## Current live integration state (2026-11-04)
+## Current live integration state (2026-11-04, candidate86)
+
+The diagnostic VM now runs native `9bc62225f7c2049d34f7b7287901555852b80cf4`
+with ace-herdr `0.10.1.pre.utm86`, ace-lab `0.14.2.pre.utm85` and ace-overseer
+`0.28.2.pre.utm84` from root-owned `/opt/ace/diagnostic/utm86/gems`.
+Native SHA256: `acb9b64d93006118bb1daca42634f80897ac5f73030b6c1a21ee18bfccabba92`.
+This diagnostic set is not an acceptance manifest.
+
+Real model-driven isolated delegation and guarded prompt delivery were proven
+on candidate83. Candidate86 additionally proves an authenticated readiness
+query from actual Pi through the singleton issuer, target authentication,
+private read-only evidence descriptor, installed owner evaluator, and final
+immutable native identity reread. With eyes deliberately off, the result was
+`ready: false` for `term_65f6bbcb5c43a2`, invocation
+`a603c648bbd24fc183c358028d23d2b2`, root `/lab/ace`, role `project-overseer`.
+No synthetic transcript or observer evidence was used. Positive first-turn
+and active-eyes readiness remains unproven.
+
+Current implementation work still required: route standard Overseer start and
+coworker dispatch through this isolated native path; establish the explicit
+protected coordinator-root selection and authorized host readiness; support
+worktree execution without runtime overrides; finish task/report/eyes and
+lease fault integration; register and run TS-MONO-003/004 twice after clean
+resets with one final pinned manifest. Missing rg/fd must be supplied by that
+installation instead of downloaded per session. Historical checkpoints below
+are component evidence, not current runtime configuration or acceptance.
+
+## Historical integration checkpoint: native77 / issuer80
 
 Native source `91026fe397b4e2f6b4c1566a006706f83c2a3fe4` is built by
 its owner procedure and installed as diagnostic native77. Artifact SHA-256:
