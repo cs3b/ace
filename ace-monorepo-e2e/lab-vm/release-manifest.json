@@ -124,10 +124,10 @@
     },
     {
       "name": "ace-overseer",
-      "version": "0.28.2.pre.utm97",
-      "sha256": "3edbc96ee998b1001e5aa992e034631eef52b4e3d5512cf3011a9e8c0ce6bf4a",
+      "version": "0.28.2.pre.utm100",
+      "sha256": "66fd81046bb5fdb3707029adb9ca7865e330a5adbaa663f610334573611787c8",
       "source": "local",
-      "source_commit": "2fbe5cb60b10febd79af32ca661a3cd366909d49"
+      "source_commit": "be2e2ae1ab9be0c4c14820df1e14c25052966911"
     },
     {
       "name": "ace-review",
@@ -137,10 +137,10 @@
     },
     {
       "name": "ace-runtime",
-      "version": "0.4.2.pre.utm97",
-      "sha256": "c6966cdeaf2082075f4d3814d60396ceb8fbe1cbdca96b4ba90bfbe347f32df2",
+      "version": "0.4.2.pre.utm100",
+      "sha256": "16a6a836307bdcc4933732456af790ef90f80bb424074bc90e52a997dadaf42c",
       "source": "local",
-      "source_commit": "2fbe5cb60b10febd79af32ca661a3cd366909d49"
+      "source_commit": "be2e2ae1ab9be0c4c14820df1e14c25052966911"
     },
     {
       "name": "ace-support-cli",
@@ -198,9 +198,10 @@
     },
     {
       "name": "ace-task",
-      "version": "0.41.0",
-      "sha256": "d75785ce5cf15027b96788aa9261d068ee722573d006ab9642848f407d73a66e",
-      "source": "https://rubygems.org"
+      "version": "0.41.1.pre.utm100",
+      "sha256": "836b876287d38907e047cf489748eff2f5dfecaad2c86ce226a262d0e83730c9",
+      "source": "local",
+      "source_commit": "bc4191520cb4770e2e7e75de47690d0b1f135e8d"
     },
     {
       "name": "ace-test",
