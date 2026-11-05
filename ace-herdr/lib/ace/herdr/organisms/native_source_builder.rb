@@ -61,6 +61,9 @@ module Ace
           compile_environment = @environment.merge("CARGO_HOME" => cargo_home,
             "CARGO_TARGET_DIR" => File.join(staging, "target"), "RUSTC" => tools.fetch("rustc"),
             "RUSTUP_TOOLCHAIN" => selected.fetch("rust_version"), "ZIG" => tools.fetch("zig"),
+            # Panic locations and generated source references otherwise embed
+            # the caller's output directory even in stripped release binaries.
+            "CARGO_ENCODED_RUSTFLAGS" => "--remap-path-prefix=#{staging}=/ace-native-build",
             "CARGO_TARGET_#{target.upcase.tr("-", "_")}_LINKER" => tools.fetch("linker"))
           run([tools.fetch("cargo"), "build", "--release", "--locked", "--target", target],
             chdir: checkout, environment: compile_environment, timeout_s: BUILD_TIMEOUT_SECONDS)

@@ -80,6 +80,8 @@ class NativeSourceBuilderTest < Minitest::Test
         assert_equal File.join(@tools, "rustc"), environment.fetch("RUSTC")
         assert_equal File.join(@tools, "musl-gcc"), environment.fetch("CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER")
         refute environment.key?("RUSTFLAGS")
+        staging = File.dirname(environment.fetch("CARGO_TARGET_DIR"))
+        assert_equal "--remap-path-prefix=#{staging}=/ace-native-build", environment.fetch("CARGO_ENCODED_RUSTFLAGS")
         return_result = result("", !@compile_failure)
         unless @compile_failure
           artifact = File.join(environment.fetch("CARGO_TARGET_DIR"), "x86_64-unknown-linux-musl", "release", "herdr")
