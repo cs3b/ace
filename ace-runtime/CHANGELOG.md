@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- Load typed runtime errors when protected socket, Linux process and systemd components are required directly, so denied readiness checks report their actual failure instead of NameError.
+
 ## [0.4.1] - 2026-10-18
 
 ### Changed

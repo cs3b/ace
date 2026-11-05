@@ -52,6 +52,15 @@ configuration and readiness to start. Do not require a running project
 Overseer, a first turn, or active project eyes in either worker assignment:
 those are the coordinator's confirm-start checks after verification. Workers
 must not start the project Overseer themselves. This prevents a circular gate.
+Worker/verifier checks must be executable with their commissioned session's
+permissions. Validate the prepared configuration, installed CLI/gem paths and
+owned project files. Do not require host-wide `ace-lab verify`, host D-Bus or
+systemd inspection, reading either overseer's private task tree, or a healthy
+full `ace-overseer observe` projection from a worker session. Those checks need
+the host or overseer role; private-tree masking is intentional. A worker reports
+missing authority and the exact blocked check instead of repairing host services
+or attempting to access the coordinator's private state. The coordinator proves
+full observation from the authorized project Overseer during confirm-start.
 The commission must include the target project's eyes configuration path
 `<project>/.ace-local/overseer/eyes.json` and
 the actual configured HITL recipient: the worker prepares the configuration

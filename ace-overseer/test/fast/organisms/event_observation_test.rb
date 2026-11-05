@@ -115,6 +115,32 @@ class OverseerEventObservationTest < AceOverseerTestCase
     end
   end
 
+  def test_unreadable_private_managers_degrade_only_their_source_and_never_settle_reports
+    report = {"id" => "worker-report", "key" => "report-key", "revision" => "report-rev",
+      "type" => "report", "result" => "success", "task" => "task-1", "assignment" => "assignment-1"}
+    tasks = Object.new
+    tasks.define_singleton_method(:list) { |**| raise Errno::EACCES, "private manager tree" }
+    local = -> {
+      {"events" => [{"key" => "source:overseer_tasks", "type" => "source-health", "revision" => "old"},
+                    {"key" => "task:public", "type" => "task", "revision" => "public-rev"}],
+       "sources" => {"project_tasks" => {"status" => "ok"}, "overseer_tasks" => {"status" => "degraded"}}}
+    }
+    projects = ->(**) { {"events" => [], "sources" => {}} }
+    hitl = ->(**) { {"schema" => "ace.hitl.observation/v1", "events" => [report], "settled" => []} }
+    observer = Ace::Overseer::Molecules::EventObservation.new(hitl: hitl, task_manager: tasks,
+      local_sources: local, project_observations: projects, config: {})
+
+    result = observer.call(owner: "overseer")
+    assert_equal "degraded", result.fetch("sources").fetch("overseer_tasks").fetch("status")
+    assert_match(/EACCES.*private manager tree/, result["sources"]["overseer_tasks"]["error"])
+    assert_equal "ok", result["sources"]["project_tasks"]["status"]
+    assert_equal "ok", result["sources"]["hitl"]["status"]
+    assert_includes result["events"], report
+    assert_empty result["settled"]
+    assert_equal 1, result["events"].count { |row| row["source_key"] == "source:overseer_tasks" }
+    assert_equal result, observer.call(owner: "overseer")
+  end
+
   def test_configured_issue_source_is_projected_as_an_eyes_event
     Dir.mktmpdir do |tmp|
       tasks = Ace::Task::Organisms::TaskManager.new(root_dir: File.join(tmp, "tasks"))

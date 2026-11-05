@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Preserve pending reports and mark private-task observation degraded when manager metadata is inaccessible; bootstrap workers validate only evidence accessible to their role.
+
 - Load protected lab Pi extensions for foreground overseer starts.
 
 ### Added

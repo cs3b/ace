@@ -40,7 +40,22 @@ module Ace
           local = @local_sources.call
           remote = remote_projection
           projects = @project_observations.call(owner: owner, scope: scope, limit: limit)
-          managers = @tasks.list(in_folder: "all").select { |task| !task.metadata["project_task"].to_s.empty? }
+          managers = begin
+            @tasks.list(in_folder: "all").select { |task| !task.metadata["project_task"].to_s.empty? }
+          rescue StandardError => error
+            # Report adoption depends on the private owner's state. An unreadable
+            # tree must leave reports pending and degrade that source, not abort
+            # healthy observations or claim that a report was already accepted.
+            name = Atoms::ObservationSources::OVERSEER_TASKS
+            local = local.merge(
+              "events" => local.fetch("events").reject { |row| row["key"] == "source:#{name}" } +
+                [health_marker(name, error)],
+              "sources" => local.fetch("sources").merge(name => {
+                "status" => "degraded", "error" => "#{error.class}: #{error.message}"
+              })
+            )
+            []
+          end
 
           if projection.nil?
             # A degraded HITL source degrades only itself: the local
