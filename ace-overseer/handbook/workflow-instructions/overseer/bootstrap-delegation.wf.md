@@ -195,9 +195,25 @@ assignments and agents instead of dispatching again.
 
 Only after accepted worker completion and independent verification does the
 overseer perform this commission's project-start coordination operation `ace-overseer start --reconcile`. Confirm the target's session, first
-turn and active eyes from actual session evidence. A ready process alone is
-not initialized observation. Close the confirmation step and managing task
-only with these proofs; the worker report alone cannot close the family.
+turn and active eyes through that command's authenticated readiness result.
+For the target project, `ready=true` proves the matching isolated session's
+first turn and active eyes; a terminal's `done` or `interactive_ready` alone
+does not. Record the returned target identity and readiness on confirm-start.
+
+When the target returns `ready=false`, preserve its session. Arm one eyes
+first-turn deadline (`key=confirm-start-<project-id>`, `revision=<terminal-id>`,
+`at=now_unix_ms + 60000`) and end the turn. On a project-session revision or
+that deadline, rerun `ace-overseer start --reconcile` from the lab root once.
+It reuses the existing session and checks its evidence without resending the
+prompt. Cancel the deadline when readiness is confirmed. If the deadline fires
+and readiness remains false, record the unconfirmed start and delegate diagnosis
+or escalate; do not repeatedly rearm deadlines or poll.
+
+Do not read implementation files, inspect another session's private files, or
+infer another agent's eyes from your own `ace_eyes status`. The public readiness
+result is the proof boundary; inability to obtain it is a blocker for the
+executor to diagnose. Close the confirmation step and managing task only with
+these proofs; the worker report alone cannot close the family.
 If first-prompt delivery is unconfirmed, preserve the existing session and do
 not submit the prompt again. Inspect its actual activity and escalate an
 unresolved delivery through HITL. The project-session observation can wake you

@@ -45,7 +45,7 @@ module Ace::Overseer::Organisms
         ready = readiness(agent, project, role, root)
         return report.merge("status" => "reused", "pane" => agent.fetch("terminal_id"),
           "workspace" => agent["workspace_id"], "ready" => ready,
-          "message" => ready ? "existing isolated overseer and eyes verified" : "existing session preserved; first turn and eyes are not yet verified")
+          "message" => ready ? "existing isolated overseer and eyes verified" : "existing session preserved; first turn and eyes are not yet verified; end the turn with eyes armed, then on a session change or one bounded deadline rerun ace-overseer start in the same scope (lab: start --reconcile); do not resend the prompt")
       end
       title = lab ? "overseer" : project
       spaces = result(@executor.workspace_list).fetch("workspaces").select { |space| space["label"] == title }
@@ -67,7 +67,7 @@ module Ace::Overseer::Organisms
       unless reply["type"] == "agent_prompted" && reply.dig("agent", "terminal_id") == terminal
         raise Ace::Overseer::Error, "first prompt acknowledgement differs; inspect existing session before retrying"
       end
-      report.merge("message" => "first prompt submitted; awaiting first turn and active eyes", "ready" => false)
+      report.merge("message" => "first prompt submitted; awaiting first turn and active eyes; end the turn with eyes armed, then on a session change or one bounded deadline rerun ace-overseer start in the same scope (lab: start --reconcile); ready=true confirms both without another prompt", "ready" => false)
     rescue Ace::Herdr::ExecutorError, Ace::Lab::Error, KeyError, TypeError, SystemCallError => e
       raise Ace::Overseer::Error, "isolated start could not be confirmed (#{e.class}); preserve existing sessions"
     end

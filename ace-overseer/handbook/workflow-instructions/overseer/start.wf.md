@@ -92,8 +92,8 @@ settlement alone is not proof of handling.
   grant. Credentials and OTP values never enter prompts, reports, or files.
   When forge access is missing, do not search host credential stores or set up
   a persistent `fj` login yourself. Request the existing session-scoped auth
-  handoff for the required role and repository; if it is unavailable, create a
-  precise HITL blocker for that capability and end the turn. Never ask a human
+  handoff for the required role and repository using the procedure below; if
+  it is unavailable, create a precise HITL blocker and end the turn. Never ask a human
   to paste a token or replace the lease with a durable shared credential.
 - Remote issue and PR observation (`observe.remote.issues` and
   `observe.remote.pull_requests`) and the HITL reply
@@ -102,3 +102,43 @@ settlement alone is not proof of handling.
   Capabilities genuinely not yet delivered (e.g. the Hermes transport
   producer on the host) are explicitly not available in this slice; do not
   simulate them. Missing capability is a reported gap, not a workaround.
+
+## Session-scoped forge access
+
+A missing ambient `fj` login is expected in an isolated session. Use the
+installed `ace-lab auth --help` interface before declaring forge access missing.
+The root-owned `/etc/lab/ace-lab/authorization.yml` contains public profile
+metadata under `auth.profiles`: allowed roles, principals, repositories and TTL.
+Read that configuration to choose a profile explicitly permitting your actual
+session role and target repository. Do not read any referenced issuer password
+or credential file, search the filesystem for tokens, or modify this policy.
+If the policy is unreadable or no profile permits the operation, report that
+specific capability gap through HITL.
+
+Create/reuse the private coordination task for the requested goal first. Bind
+the request to that real task and the actual recorded coordination assignment;
+never borrow a worker's assignment or impersonate its role. If the commission
+has no assignment identity, establish a coordination-only assignment through
+the existing assignment owner before requesting access. Its steps cover issue
+reading, planning and dispatch; do not use an implementation preset or assign
+installation, code changes, review or merge to yourself. Request only the repositories and TTL needed:
+
+```bash
+ace-lab auth request --profile <allowed-profile> --role <actual-session-role> --task <task-id> --assignment <assignment-id> --repo <owner/repository> --ttl <minutes>
+ace-lab auth exec <returned-lease-id> --cmd <installed-command> --cmd <argument> --cmd <argument>
+ace-lab auth status <returned-lease-id>
+```
+
+Each `--cmd` supplies exactly one argument. Run these commands directly, without
+pipes or output redirection. `auth exec` provides the ephemeral Forgejo login
+to its child and revokes access on completion; outside that child, `fj` remains
+unauthenticated. Read the returned execution and cleanup outcomes. Request a
+new lease for a later operation; never reuse a consumed lease. Revoke an unused
+lease with `ace-lab auth revoke <lease-id>`. Unconfirmed cleanup is a blocker.
+
+Issue reading and coordination may use the overseer's permitted profile.
+Implementation, review and integration belong to their separate executors,
+which request their own session-bound leases. Pass repository, scope and
+required role in the commission, never a token or another session's lease ID.
+Read real issue content from the forge; test fixture receipts and host files
+are not a substitute for that content.

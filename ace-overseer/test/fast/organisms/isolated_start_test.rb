@@ -42,7 +42,7 @@ class IsolatedStartTest < Minitest::Test
 
   def readiness(args)
     @calls << [:readiness, args]
-    {"ready" => true, "root" => @root, "role" => "project-overseer", "terminal_id" => "term_1234"}
+    {"ready" => !@evidence_pending, "root" => @root, "role" => "project-overseer", "terminal_id" => "term_1234"}
   end
 
   def operation
@@ -84,6 +84,20 @@ class IsolatedStartTest < Minitest::Test
     assert_equal "reused", report["status"]
     assert report["ready"]
     assert_equal %i[agent_list readiness], @calls.map(&:first)
+  end
+
+  def test_pending_readiness_can_be_rechecked_without_launching_or_prompting
+    @existing = [@agent]
+    @evidence_pending = true
+    pending = operation.call
+    refute pending["ready"]
+    assert_includes pending["message"], "ace-overseer start"
+    assert_includes pending["message"], "end the turn"
+    @evidence_pending = false
+    ready = operation.call
+    assert ready["ready"]
+    assert_equal pending["pane"], ready["pane"]
+    assert_equal %i[agent_list readiness agent_list readiness], @calls.map(&:first)
   end
 
   def test_lost_prompt_acknowledgement_never_resends_on_reuse

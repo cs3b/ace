@@ -183,3 +183,38 @@ Next manifest selects taskutm101, herdrutm101, coworkerutm102, support-itemsutm1
 Manifest SHA256: a12f9bcc86dfb9ac48f6a231bac0acc8c9d0eb8a9ce9610d36db6fa15474d058
 
 The previous VM is confirmed stopped and retained for the standard reset/export path. The next run must use a fresh clone, not this diagnostically modified guest. No new acceptance yet.
+
+## Candidate104 live bootstrap and autonomy failure
+
+Run `8y4ul83-monorepo-e2e-ts003`, fixture `fa56db32e90fa582`, VM
+`74A8B633-0AC7-4936-A03A-8E8609E3C728` reached actual delegated bootstrap:
+manager `8y4.t.wnf`, executable task `8y4.t.wnz`, worker `8y4wor`, verifier
+`8y4wor1`, reports `8y4wy0` and `8y4x58`. Project terminal
+`term_65f8eb7db34926` ran its first turn and armed eyes. Lab subsequently
+confirmed readiness and closed all three direct children and manager.
+
+This is NOT clean acceptance: during confirmation the lab coordinator read
+implementation files to discover the supported readiness procedure. TC002
+then produced HITL `8y4xon` requesting a human forge handoff despite the
+configured `e2e-overseer` session profile, and incorrectly sought main push
+access for the coordinator. No issue integration, TS004 or clean pair passed.
+Worker reports also persisted and were observed while their adapter delivery
+leg failed without routes; local reporting/resume semantics remain unresolved.
+
+After recording the concrete blocker, the diagnostic executor PID12113 was
+interrupted deliberately; runner26037 exited1. Its generic report labels the
+interruption Pi AuthenticationError, which is NOT evidence of provider credential
+failure. The actual stop reason is recorded in local candidate104-stop.json.
+The owned VM was gracefully stopped and preserved, not reset or deleted.
+
+Local fix makes isolated-start output and bootstrap workflow explain bounded,
+event-driven repeated reconciliation; no duplicate prompt/session is sent.
+Start workflow describes the real auth request/exec/status/revoke interface,
+public profile metadata, coordination-only assignment and separate executor
+leases. Existing independent reviewer review_native_repro found no blocker;
+its coordination-only clarification was incorporated.
+
+Regression red40aff922-bfed-4b94-a9bb-8d604468d011; green9/35
+c97281ce-bfb1-4149-8685-d9a703ff28eb. Full Overseer fast549/2511, zero failures,
+one skip:6b9cad7d-f50d-456c-a857-0eede79e96c0. These fixes are not deployed to
+the stopped candidate104 and require new immutable artifacts and clean reruns.
