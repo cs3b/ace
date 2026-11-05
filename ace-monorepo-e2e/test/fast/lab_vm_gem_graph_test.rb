@@ -4,6 +4,8 @@ require_relative "../test_helper"
 require_relative "../../lab-vm/gem-graph"
 require "tmpdir"
 require "fileutils"
+require "open3"
+require "rbconfig"
 
 class LabVmGemGraphTest < AceMonorepoE2eTestCase
   def setup
@@ -58,4 +60,48 @@ class LabVmGemGraphTest < AceMonorepoE2eTestCase
       LabVmGemGraph.validate!({"gems" => [{"name" => "vm-root", "version" => "2.0.0"}]}, @dir, roots: ["vm-root"])
     end
   end
+
+  def test_bootstrap_installs_a_pinned_prerelease_transitive_dependency
+    gem_archive("ace-lab", "1.0.1.pre.test", [["vm-task", ">= 1.0.0"]])
+    gem_archive("vm-task", "1.0.1.pre.test")
+    gem_archive("vm-other", "1.0.0")
+    home = File.join(@dir, "home")
+    FileUtils.mkdir_p(home)
+    env = {"HOME" => home, "GEM_HOME" => File.join(@dir, "gems"), "GEM_PATH" => "",
+      "RUBYOPT" => nil, "BUNDLE_GEMFILE" => nil, "BUNDLE_BIN_PATH" => nil}
+    helper = File.expand_path("../../lab-vm/gem-graph.rb", __dir__)
+    program = <<~RUBY
+      require ARGV.fetch(0)
+      manifest = {"gems" => [
+        {"name" => "ace-lab", "version" => "1.0.1.pre.test"},
+        {"name" => "vm-task", "version" => "1.0.1.pre.test"},
+        {"name" => "vm-other", "version" => "1.0.0"}]}
+      LabVmGemGraph.bootstrap!(manifest, ARGV.fetch(1), roots: ["ace-lab", "vm-other"], bootstrap_roots: ["ace-lab"])
+      Gem.clear_paths
+      gem "ace-lab", "= 1.0.1.pre.test"
+    RUBY
+    out, err, status = Open3.capture3(env, RbConfig.ruby, "-e", program, helper, @dir, chdir: @dir, unsetenv_others: true)
+    assert status.success?, "#{out}#{err}"
+    assert File.file?(File.join(env.fetch("GEM_HOME"), "specifications", "vm-task-1.0.1.pre.test.gemspec"))
+    refute File.exist?(File.join(env.fetch("GEM_HOME"), "specifications", "vm-other-1.0.0.gemspec"))
+  end
+
+  def test_install_plan_orders_every_pin_before_its_consumers
+    root = gem_archive("vm-root", "1.0.0", [["vm-lib", ">= 1"]])
+    library = gem_archive("vm-lib", "1.1.0.pre.test")
+    other = gem_archive("vm-other", "1.0.0")
+    plan = LabVmGemGraph.install_order({"gems" => [root, other, library]}, @dir,
+      roots: ["vm-root", "vm-other"]).map(&:name)
+    assert_equal %w[vm-lib vm-other vm-root], plan.sort
+    assert_operator plan.index("vm-lib"), :<, plan.index("vm-root")
+  end
+
+  def test_bootstrap_rejects_cycles_before_installing_any_archive
+    root = gem_archive("vm-root", "1.0.0", [["vm-lib", ">= 1"]])
+    library = gem_archive("vm-lib", "1.0.0", [["vm-root", ">= 1"]])
+    assert_raises(Gem::TSort::Cyclic) do
+      LabVmGemGraph.bootstrap!({"gems" => [root, library]}, @dir, roots: ["vm-root"])
+    end
+  end
+
 end

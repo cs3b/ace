@@ -2,6 +2,8 @@
 
 require "json"
 require "rubygems/package"
+require "rubygems/dependency_list"
+require "rubygems/installer"
 require "set"
 
 module LabVmGemGraph
@@ -42,11 +44,43 @@ module LabVmGemGraph
     raise ArgumentError, "pinned gems are not covered by the install roots" unless seen == specs.keys.to_set
     roots
   end
+
+  def self.install_order(manifest, artifact_dir, roots: ROOTS)
+    validate!(manifest, artifact_dir, roots: roots)
+    graph = Gem::DependencyList.new
+    manifest.fetch("gems").each do |entry|
+      graph.add(Gem::Package.new(File.join(artifact_dir, "#{entry.fetch('name')}-#{entry.fetch('version')}.gem")).spec)
+    end
+    graph.tsort # Detect cycles before installing anything.
+  end
+
+  # Only the installer and index tool need bootstrap installation. All other
+  # exact pins are installed by ace-lab using the dependency-first plan.
+  def self.bootstrap!(manifest, artifact_dir, roots: ROOTS,
+    bootstrap_roots: %w[ace-lab rubygems-generate_index])
+    ordered = install_order(manifest, artifact_dir, roots: roots)
+    specs = ordered.to_h { |spec| [spec.name, spec] }
+    selected = Set.new
+    pending = bootstrap_roots.dup
+    until pending.empty?
+      name = pending.pop
+      next unless selected.add?(name)
+      specs.fetch(name).runtime_dependencies.each do |dependency|
+        pending << dependency.name if specs.key?(dependency.name)
+      end
+    end
+    ordered.select { |spec| selected.include?(spec.name) }.each do |spec|
+      archive = File.join(artifact_dir, "#{spec.full_name}.gem")
+      Gem::Installer.at(archive, install_dir: ENV.fetch("GEM_HOME"), wrappers: true).install
+    end
+  end
+
 end
 
 if $PROGRAM_NAME == __FILE__
   manifest = JSON.parse(File.read(ARGV.fetch(0)))
-  roots = LabVmGemGraph.validate!(manifest, ARGV.fetch(1))
-  File.write(ARGV.fetch(2), JSON.generate(roots) + "\n")
-  puts "verified complete pinned dependency graph: #{manifest.fetch('gems').length} gems, #{roots.length} roots"
+  ordered = LabVmGemGraph.install_order(manifest, ARGV.fetch(1))
+  LabVmGemGraph.bootstrap!(manifest, ARGV.fetch(1)) if ARGV[3] == "--bootstrap"
+  File.write(ARGV.fetch(2), JSON.generate(ordered.map(&:name)) + "\n")
+  puts "verified complete pinned dependency graph: #{manifest.fetch('gems').length} gems, #{LabVmGemGraph::ROOTS.length} roots"
 end

@@ -72,3 +72,15 @@ Pre-reset dependent validation at be2e2ae1a source: Overseer feature suite passe
 
 
 Run 8y4p4qd was explicitly aborted after observed blocked bootstrap: real error report 8y4q2s and pending HITL 8y4q4v prevented verifier/project start. This is not a completed runner verdict, timeout-derived failure or acceptance. Confirmed owned host process groups 52538 and 55307 were terminated, and runner handle returned exit 143. No live VM repair or HITL answer was injected. The next fresh setup must export the old VM before reset. Candidate100 now replaces the manifest for that next clean run.
+
+
+## Candidate100 reset and discovered prerelease bootstrap gap
+
+Run 8y4qke3-monorepo-e2e-ts003 reset through the standard helper. Prior VM 5699474C-6433-4BEE-BC0C-041329993BCE was exported, then fresh VM 40F070E3-3558-42D7-ABB8-3EBD17A7742B booted with SSH and started runtime compilation. Host runner remains active; no bootstrap goal has yet been delivered.
+
+Source inspection found that adding the pinned ace-task prerelease exposes the old hand-maintained bootstrap list: RubyGems local dependency discovery does not select an otherwise satisfying transitive prerelease. A fresh-process real-gem regression reproduced the missing dependency (eeacd60d-8bcc-4e05-8db4-302048e54f5b); adding --prerelease did not resolve it and was not retained. The fixture now validates the complete graph and uses RubyGems DependencyList.tsort. Bootstrap installs only the ace-lab/index-tool closure from exact archives with Gem::Installer and ordinary dependency checks; every remaining pin is installed by ace-lab in dependency order. No network resolver or custom topological sorter was added. Existing ace-lab install/verify and exact final gemset verification remain, with explicit activation checks expanded to every pin. Manual prerelease special cases were removed.
+
+Independent review caught and corrected an acceptance weakness in the first implementation, which preinstalled every gem before ace-lab. The final regression proves an unrelated operational gem remains absent after bootstrap. The real-gem regression and cycle rejection pass; full fixture fast suite passed 101 tests / 357 assertions (e62251e6-79e8-4675-a460-9c4083044350), before the additional dependency-plan ordering regression. Current VM contains the original installer; changed fixture inputs require a new clean reset, not an in-place repair or acceptance claim.
+
+
+Final fixture suite passed 102 tests / 359 assertions (e01ec546-e839-48cd-a8af-7b1d4df3e78e). Independent re-review confirmed the ownership finding resolved and found no new blocker. Live installation remains unproven. Run 8y4qke3 is being stopped diagnostically because its copied bootstrap script has the reproduced prerelease resolution defect; it has not delivered a Lab Overseer goal and will not count as acceptance. Preserve its owned VM on the next helper reset.

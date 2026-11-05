@@ -31,6 +31,11 @@ lockfile pins its dependency graph and integrity hashes. Locally built test
 gems are rebuilt from the manifest's exact commits by `bin/lab-vm-build-gem`
 and must match their pinned hashes; they are never published. The operational
 gem repository is populated only from manifest entries, not every cached gem.
+Bootstrap installs only the installer/index-tool closure from exact archives,
+including transitive prereleases, without network resolution. RubyGems supplies
+a dependency-first plan for every manifest pin; cycles and invalid pins fail
+before installation. `ace-lab install` installs the remaining packages and
+`ace-lab verify` checks the operational set. A fresh process checks every pinned activation.
 `bin/lab-vm-runtime provision` starts a fresh work clone, verifies its SSH host key via the QEMU
 guest agent, copies these inputs and invokes the guest-side runtime installer
 and unprivileged native Herdr build. The pinned ARM64 Herdr binary and its

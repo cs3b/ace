@@ -72,9 +72,6 @@ cd /var/lib/ace-e2e/build
 ruby_version=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["ruby"])' "$input/release-manifest.json")
 node_version=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["node"]["version"])' "$input/release-manifest.json")
 zig_version=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["zig"]["version"])' "$input/release-manifest.json")
-builder_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "builder"))' "$input/release-manifest.json")
-index_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "rubygems-generate_index"))' "$input/release-manifest.json")
-lab_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-lab"))' "$input/release-manifest.json")
 
 if [ ! -x "$runtime/toolchains/ruby-$ruby_version/bin/ruby" ]; then
   tar -xzf "$input/artifacts/ruby-$ruby_version.tar.gz"
@@ -94,11 +91,10 @@ export PATH="$runtime/toolchains/ruby-$ruby_version/bin:$runtime/toolchains/node
 export GEM_HOME="$runtime/runtime/gems" GEM_PATH="$runtime/runtime/gems"
 mkdir -p "$GEM_HOME" /var/lib/ace-e2e/gem-repository/gems
 
-# Converge a minimal set of roots. The local index contains one pinned
-# version of every dependency, and the graph and complete installed set are
-# checked independently. Listing every transitive dependency as another root
-# makes ace-lab traverse the same closures repeatedly on every reset.
-ruby "$input/gem-graph.rb" "$input/release-manifest.json" "$input/artifacts" /var/lib/ace-e2e/install-roots.json
+# Bootstrap only the installer/index closure. Declare every manifest pin in
+# dependency order so ace-lab installs remaining prereleases explicitly,
+# without asking RubyGems to discover an unpinned transitive version.
+ruby "$input/gem-graph.rb" "$input/release-manifest.json" "$input/artifacts" /var/lib/ace-e2e/install-gems.json --bootstrap
 python3 - "$input/release-manifest.json" "$input/artifacts" /var/lib/ace-e2e/gem-repository/gems <<'PY'
 import json, pathlib, shutil, sys
 manifest = json.load(open(sys.argv[1]))
@@ -113,39 +109,7 @@ cat > /root/.gemrc <<'EOF'
 :sources:
 - file:///var/lib/ace-e2e/gem-repository
 EOF
-gem install --local --no-document "./builder-$builder_version.gem"
-gem install --local --no-document "./rubygems-generate_index-$index_version.gem"
 gem generate_index --directory /var/lib/ace-e2e/gem-repository
-# Install the protected runtime before consumers resolve prerelease dependencies.
-runtime_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-runtime"))' "$input/release-manifest.json")
-gem install --local --no-document "./ace-runtime-$runtime_version.gem"
-# Explicitly install the pinned prerelease adapter before ace-lab resolves it.
-forgejo_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-git-forgejo"))' "$input/release-manifest.json")
-gem install --local --no-document "./ace-git-forgejo-$forgejo_version.gem"
-# Explicitly install the pinned prerelease ace-herdr before other roots resolve
-# dependencies; RubyGems does not otherwise select prereleases implicitly.
-herdr_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-herdr"))' "$input/release-manifest.json")
-gem install --local --no-document "./ace-herdr-$herdr_version.gem"
-gem install --local --no-document "./ace-lab-$lab_version.gem"
-# The changed overseer and Pi instructions are installed as pinned candidate
-# gems, not loaded from the project checkout.
-overseer_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-overseer"))' "$input/release-manifest.json")
-pi_integration_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-handbook-integration-pi"))' "$input/release-manifest.json")
-wake_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-wake"))' "$input/release-manifest.json")
-coworker_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-coworker"))' "$input/release-manifest.json")
-# The pinned coworker prerelease must be present before overseer resolves it.
-gem install --local --no-document "./ace-coworker-$coworker_version.gem"
-gem install --local --no-document "./ace-overseer-$overseer_version.gem"
-# RubyGems does not discover a prerelease dependency implicitly.
-gem install --local --no-document "./ace-wake-$wake_version.gem"
-gem install --local --no-document "./ace-handbook-integration-pi-$pi_integration_version.gem"
-ruby - "$forgejo_version" "$lab_version" "$herdr_version" "$overseer_version" "$pi_integration_version" "$wake_version" "$coworker_version" <<'RUBY'
-%w[ace-git-forgejo ace-lab ace-herdr ace-overseer ace-handbook-integration-pi ace-wake ace-coworker].zip(ARGV).each do |name, version|
-  gem name, "= #{version}"
-  abort "pinned #{name} did not activate" unless Gem.loaded_specs.fetch(name).version.to_s == version
-end
-puts "verified pinned local candidate activation"
-RUBY
 
 # The installer is the state owner for the operational gem set. Its source is
 # the verified local repository, so transitive fetches cannot escape the pin.
@@ -153,12 +117,12 @@ mkdir -p /etc/lab/ace-lab
 python3 - "$input/release-manifest.json" > /etc/lab/ace-lab/install.yml <<'PY'
 import json, sys
 d = json.load(open(sys.argv[1]))
-roots = json.load(open('/var/lib/ace-e2e/install-roots.json'))
+ordered_names = json.load(open('/var/lib/ace-e2e/install-gems.json'))
 gems = {g['name']: g for g in d['gems']}
 print('schema_version: 1\nmachine: utm-e2e\naccounts:\n  - username: mo\n    role: worker\n    create: false')
 print('directories:\n  - path: /lab\n    owner: mo\n    mode: "0755"')
 print('gemset:\n  gem_home: /opt/ace/runtime/gems\n  gems:')
-for name in roots:
+for name in ordered_names:
     gem = gems[name]
     print('    - name: ' + gem['name'] + '\n      version: ' + gem['version'])
 print('  extensions:\n    - gem: ace-wake\n      path: /opt/ace/runtime/pi-agent/extensions\n      account: mo')
@@ -175,6 +139,8 @@ abort "external gemset differs from the pinned manifest" unless actual == expect
 expected.each do |name, version|
   selected = Gem::Specification.find_all_by_name(name).max_by(&:version)
   abort "a different version would activate for #{name}" unless selected && selected.version == Gem::Version.new(version)
+  gem name, "= #{version}"
+  abort "pinned #{name} did not activate" unless Gem.loaded_specs.fetch(name).version.to_s == version
 end
 puts "verified exact external gemset: #{actual.length} entries"
 RUBY
