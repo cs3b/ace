@@ -172,3 +172,14 @@ The same-root coordinator separation regression failed before implementation (c3
 HITL fast405/2088,5skips (b5b9b942-3b7f-4877-a938-06b763f58cf6); final Overseer fast548/2503,1skip (64898459-6e5d-4785-87f7-aa0c3ce65245); Overseer feat10/67 before final scope-only adjustment (db78e26b-bcab-4833-b221-53aba5e17f7c). Full testing also caught a first-turn prompt contract regression: explicit ace_eyes action start/configPath was omitted in9550ffd60; restored without weakening the test.
 
 Overseer0.28.2.pre.utm102 artifact from9550ffd60292ab90c1e79595128817a7bcdb4dd5 was built twice with identical SHA256 e6f6f0e289d24b8e6891a0cbfcded511e3a5bf7bf36f13342598fdbf6f513053. It is now superseded by subsequent prompt/routing edits and must not be selected as the final candidate. Builder/fetcher allowlists now include the changed owner packages ace-support-items, ace-git-worktree and ace-hitl, retaining immutable source/digest checks; no manifest changed yet.
+
+
+## Candidate104 routing and artifact closure
+
+Commit11a39f357 separates fixture lab and project addresses: lab eyes uses lab-overseer at /lab/.ace-local/hitl; project config supplies that same address plus its own overseer at /lab/ace/.ace-local/hitl. Bootstrap instructions distinguish the lab report return recipient from the project eyes recipient. Independent review found no actionable defect. Static fixture routing test1/7 passed6927d53d-9b39-437a-ae0f-da2747b4a224; this is configuration evidence, not live routing acceptance. Artifact fetcher test4/19 passed32aab37f-043f-45d9-aaff-f7dc2f20dc81.
+
+Next manifest selects taskutm101, herdrutm101, coworkerutm102, support-itemsutm103, git-worktreeutm103, hitlutm103, overseerutm104. Source SHA and actual artifact SHA256 are in the manifest; other pins remain unchanged. The three newly supported owner gems and final overseer gem were each rebuilt and matched their existing bytes. Fetcher validated60 cached artifacts with no downloads; full dependency graph validated55 pinned gems across7 install roots. Overseerutm103 is superseded byutm104, which includes the distinct-recipient bootstrap instructions.
+
+Manifest SHA256: a12f9bcc86dfb9ac48f6a231bac0acc8c9d0eb8a9ce9610d36db6fa15474d058
+
+The previous VM is confirmed stopped and retained for the standard reset/export path. The next run must use a fresh clone, not this diagnostically modified guest. No new acceptance yet.

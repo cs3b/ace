@@ -29,10 +29,10 @@
     },
     {
       "name": "ace-coworker",
-      "version": "0.8.1.pre.utm97",
-      "sha256": "4cb10361c80b36be4eed4884a590361dd65a5764e128d86b6091c78603f7c0ac",
+      "version": "0.8.1.pre.utm102",
+      "sha256": "7a26f3a566f8220968c9e84a42aa729d6bedc86b835ae7c4741b6b55b0fff385",
       "source": "local",
-      "source_commit": "2fbe5cb60b10febd79af32ca661a3cd366909d49"
+      "source_commit": "007e4ba026e58020d93527fd811ece74600984a3"
     },
     {
       "name": "ace-git",
@@ -61,9 +61,10 @@
     },
     {
       "name": "ace-git-worktree",
-      "version": "0.27.3",
-      "sha256": "0f559a905800fe57219276c5a74b83285b9069bad47c9a4744a30ed194ab51c3",
-      "source": "https://rubygems.org"
+      "version": "0.27.4.pre.utm103",
+      "sha256": "bcde5d7b49726a7024fb8da68d1ff5b9ca495f1470f926ada60cbdb9992e2fab",
+      "source": "local",
+      "source_commit": "84ee9113ee0903fbe52f4a39e960627283f7dcb7"
     },
     {
       "name": "ace-handbook",
@@ -80,16 +81,17 @@
     },
     {
       "name": "ace-herdr",
-      "version": "0.10.1.pre.utm99",
-      "sha256": "c7075e4c84bed726b179a552d25176afd31a1d120fa052bfe22a943efe77b70d",
+      "version": "0.10.1.pre.utm101",
+      "sha256": "bfb58afb67167ea514e098f76e8acef5768578f4628a41a34215fa943058b653",
       "source": "local",
-      "source_commit": "22912128490a48ea0cbcf2c337a941481a3683f8"
+      "source_commit": "783edcc5ee70f24af58a9b1d9a01c18950b5e068"
     },
     {
       "name": "ace-hitl",
-      "version": "0.25.0",
-      "sha256": "88800cf8f00189f4f49301bed7cc606e498162ceb3de42679e7281bcc11ba27c",
-      "source": "https://rubygems.org"
+      "version": "0.25.1.pre.utm103",
+      "sha256": "9645dd6d18479ec4c4322095a6cf6a091a0ccd23a04440168051ebfff28784d3",
+      "source": "local",
+      "source_commit": "84ee9113ee0903fbe52f4a39e960627283f7dcb7"
     },
     {
       "name": "ace-hitl-contract",
@@ -124,10 +126,10 @@
     },
     {
       "name": "ace-overseer",
-      "version": "0.28.2.pre.utm100",
-      "sha256": "66fd81046bb5fdb3707029adb9ca7865e330a5adbaa663f610334573611787c8",
+      "version": "0.28.2.pre.utm104",
+      "sha256": "c5c9cb8f01b011e2893f8b41ae6509ad1d2226fc6c6115d547bb152dc451fcfd",
       "source": "local",
-      "source_commit": "be2e2ae1ab9be0c4c14820df1e14c25052966911"
+      "source_commit": "11a39f3577e53270902e5869a2ae5263ac6f1efd"
     },
     {
       "name": "ace-review",
@@ -168,9 +170,10 @@
     },
     {
       "name": "ace-support-items",
-      "version": "0.15.16",
-      "sha256": "0ee763ea066f135375c3d9de7be92ccd81bfedc6fbdd86332dbf0608845bd951",
-      "source": "https://rubygems.org"
+      "version": "0.15.17.pre.utm103",
+      "sha256": "f7f4a754120dc2b3de89bf174ededb0fea84bd9ea01d5cbab5e6efb20e911bb3",
+      "source": "local",
+      "source_commit": "84ee9113ee0903fbe52f4a39e960627283f7dcb7"
     },
     {
       "name": "ace-support-markdown",
@@ -198,10 +201,10 @@
     },
     {
       "name": "ace-task",
-      "version": "0.41.1.pre.utm100",
-      "sha256": "836b876287d38907e047cf489748eff2f5dfecaad2c86ce226a262d0e83730c9",
+      "version": "0.41.1.pre.utm101",
+      "sha256": "929559b838ba9082786b13092da2ff8d6288263656ca8032923b7b4ef8d54011",
       "source": "local",
-      "source_commit": "bc4191520cb4770e2e7e75de47690d0b1f135e8d"
+      "source_commit": "783edcc5ee70f24af58a9b1d9a01c18950b5e068"
     },
     {
       "name": "ace-test",
