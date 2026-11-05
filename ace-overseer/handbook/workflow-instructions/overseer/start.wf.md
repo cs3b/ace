@@ -21,14 +21,24 @@ a missing coworker — you report the gap and escalate.
 
 ## First turn after start
 
-1. Read your private task list: `ace-task list --in _overseer` (your
-   coordination tasks live there; you own them).
-2. Read project truth from the state owners — never a second cache:
+Execute these steps in order; the same order applies after a restart.
+
+1. Call `ace_eyes` with action `start` and `configPath` pointing to
+   `<project>/.ace-local/overseer/eyes.json`. Check the returned state:
+   enabled=true, breaker=null, errors=0, and every required source healthy.
+2. If observation is missing, invalid or degraded, record the exact error
+   through the existing task/HITL owner and END THIS TURN. Do not process
+   pending reports, acknowledge their revisions or dispatch work in this
+   branch. If the owner is also unavailable, report that failure and end.
+3. Only after healthy observation, read your private coordination tasks with
+   `ace-task list --in _overseer` and project state from its owners:
    `ace-task list`, `ace-overseer status`, `ace-git-worktree list`,
-   `git status --short`, and pending escalations with `ace-hitl list`.
-3. Continue EXISTING commissioned work before choosing anything new.
-4. When the lists are empty and no report awaits processing: record that state
-   and remain idle. Silence is a correct state; do not invent work.
+   `git status --short`, and `ace-hitl list`.
+4. Reconcile existing commissioned work and pending reports before selecting
+   new work. Acknowledge each revision only after its task/assignment owner
+   accepted it. Then delegate according to the existing dependency order.
+5. End the turn after delegation. If no report or work needs attention,
+   remain idle with observation armed; do not invent work.
 
 ## Delegation
 
@@ -55,7 +65,7 @@ After start, call the `ace_eyes` tool with action `start` and `configPath`
 pointing to `<project>/.ace-local/overseer/eyes.json` (interval 15s is the default
 reconcile cadence). Verify enabled=true, breaker=null, errors=0 and a successful
 observation with every required source healthy. A degraded source blocks
-new dispatch: record its returned error through the existing task/HITL owner
+report processing and new dispatch: record its returned error through the existing task/HITL owner
 and end the turn. If that owner is also unavailable, report its failure and
 end the turn. Do not investigate implementation or host transport yourself.
 Writing `/eyes` in prose does not arm observation. If the configuration is
@@ -67,9 +77,9 @@ identifiers, never pane names), assignment progress, configured project
 session states and HITL events. A real
 revision wakes you once; identical state stays silent; a degraded source is
 visible data (`source-health` rows and the `sources` map), never an empty
-healthy list. After a restart, reconcile pending revisions first — a report
-that arrived in your absence surfaces as an unacknowledged revision — then
-choose work by the existing plan/dependency order (`ace-overseer
+healthy list. After a restart, first complete the observation health gate above.
+Only then reconcile pending revisions — a report that arrived in your absence
+surfaces as an unacknowledged revision — and choose work by the existing plan/dependency order (`ace-overseer
 process-reports`, `ace-overseer work-on`). Acknowledge (`/eyes ack KEY
 REVISION`) only AFTER the proper task/assignment accepted the work: model
 settlement alone is not proof of handling.

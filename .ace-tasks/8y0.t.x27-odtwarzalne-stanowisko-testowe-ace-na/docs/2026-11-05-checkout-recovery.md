@@ -135,3 +135,12 @@ Staged immutable gem artifacts (not installed, current manifest unchanged):
 - ace-coworker0.8.1.pre.utm102, source007e4ba026e58020d93527fd811ece74600984a3, SHA2567a26f3a566f8220968c9e84a42aa729d6bedc86b835ae7c4741b6b55b0fff385. Earlier coworkerutm101 lacks the verifier instruction correction and is not the next selection.
 
 Next candidate still requires ace-support-items and ace-git-worktree artifacts. The builder/fetcher allowlists need these two owner packages; those scripts are runtime fingerprint inputs, so they have not been changed under the running scenario. Stage that change after this run's outcome is preserved, then update the manifest and reset.
+
+
+## Independent verification and first project turn observed
+
+Verifier report8y4tyo was accepted by lab coordinator against assignment8y4tb31 and its evidence commits841b70f/08011c1 (guest task branch IDs as observed, not source candidate IDs). Coordinator invoked ace-overseer start --reconcile itself. Project session overseer-ace, terminalterm_65f8cf22d0aa96, pane w2:p2, role project-overseer, cwd/lab/ace started and executed a real first turn. Its eyes later displayed observing/pending12. Coordinator correctly kept confirm-start open pending completed first-turn/eyes evidence and ended its own turn; no repeated prompt or operator assistance. Full bootstrap acceptance still unproven.
+
+Project first turn exposed ambiguous instruction ordering: extensive repeated reasoning over reconcile-first versus degraded-observation/end-turn. Source StartContract and project guide now give one ordered protocol: arm/validate observation; on unavailable/degraded source record exact blocker/end without accepting reports or ack; only after healthy observation reconcile commissioned work, then dispatch/end. Lab guide distinguishes observed project failure from required-source failure. Independent review found no blocker; reviewer identified the lab-guide clarification, now applied. Atoms76/265 (2ca536b6-f661-4dcb-ac69-d06252296bf6), feat10/67 (8b8b08b3-5d33-42fd-8195-162f009fb3ac) pass. No model-behavior acceptance is claimed for the new instructions before a clean candidate run.
+
+The new project sees bootstrap reports accepted by the lab's private manager as unmatched against its own empty private tree. Observe how it settles this ownership boundary; no duplicate dispatch or correct handling has yet been asserted.

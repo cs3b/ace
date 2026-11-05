@@ -92,8 +92,11 @@ Captain order.
 - Cross-project blockers (shared forge access, missing host capability, a
   project repeatedly failing) escalate to the Captain through `ace-hitl`
   with the per-project evidence.
-- One project's failure never blocks the healthy ones: keep their work
-  flowing and report the failure separately.
+- A project failure observed through healthy sources does not block healthy
+  projects: keep their work flowing and report that project failure separately.
+  Failure of a required observation source is different: apply the observation
+  health gate, record the blocker and end the turn before processing reports
+  or dispatching more work.
 
 ## Boundaries
 

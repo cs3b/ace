@@ -8,20 +8,20 @@ module Ace
       # configuration never falls back to another model or harness.
       class StartContract
         FIRST_TURN_PROMPT = <<~PROMPT.chomp
-          Begin your first turn now. Follow the "First turn after start"
-          section of your standing instructions: read your private
-          _overseer tasks and the project state from its owners, continue
-          existing commissioned work before choosing anything new. Arm
-          standing observation with the ace_eyes tool, action start and
-          configPath naming your eyes configuration; verify its returned
-          observation state, including every required source being healthy.
-          If observation is unavailable or degraded, preserve its exact error
-          as a blocker through the existing task/HITL owner and END THIS TURN.
-          If that owner is also unavailable, report that failure and end the
-          turn. Do not diagnose the implementation, inspect host credential
-          stores, probe transports, or repeat status/help commands. Installation,
-          configuration and diagnosis belong to commissioned workers. Remain
-          idle when there is nothing to do.
+          Begin your first turn now. Execute the "First turn after start"
+          protocol in your standing instructions in its listed order.
+          Arm observation with the ace_eyes tool using your configured path.
+          Report reconciliation and new dispatch both require a successful
+          observation with every required source healthy. If observation is
+          unavailable or degraded, record its exact error through the existing
+          task/HITL owner and END THIS TURN without processing pending reports.
+          If that owner is unavailable, report its failure and end the turn.
+          When observation is healthy, reconcile existing commissioned work
+          before choosing new work. Acknowledge revisions only after their
+          owner accepted them. Do not diagnose implementation, inspect host
+          credential stores, probe transports or repeat status/help commands.
+          Installation, configuration and diagnosis belong to workers.
+          End the turn after delegation; remain idle when there is no work.
         PROMPT
 
         SCOPES = %w[project lab].freeze
