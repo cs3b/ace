@@ -29,6 +29,56 @@ module Ace
           pairs.map { |type, value| {type: type, value: value} }
         end
 
+        def test_isolated_layout_uses_only_authorized_agent_inventory
+          agents = [
+            {"workspace_id" => "w1", "tab_id" => "w1:t2", "pane_id" => "w1:p2",
+             "name" => "overseer", "cwd" => "/lab", "agent_status" => "idle"},
+            {"workspace_id" => "w1", "tab_id" => "w1:t3", "pane_id" => "w1:p3",
+             "name" => "worker", "cwd" => "/lab/ace", "agent_status" => "working"}
+          ]
+          executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+            agent_list: native_result({"result" => {"agents" => agents}}),
+            workspace_list: native_result({"result" => {"workspaces" => []}})
+          })
+          control = ControlSurface.new(executor: executor, env: {"ACE_LAB_SESSION" => "1"})
+          assert_equal %w[w1:p2 w1:p3], control.list_panes.map { |row| row[:id] }
+          assert_empty control.list_panes(workspace_id: "w9")
+          assert_equal %w[w1:t2 w1:t3], control.list_tabs.map { |row| row[:id] }
+          assert_equal ["w1"], control.list_workspaces.map { |row| row[:id] }
+          assert_empty executor.calls_of(:pane_list)
+          assert_empty executor.calls_of(:tab_list)
+        end
+
+        def test_isolated_layout_groups_shared_tabs_and_preserves_known_workspace
+          agents = [
+            {"workspace_id" => "w2", "tab_id" => "w2:t1", "pane_id" => "w2:p1"},
+            {"workspace_id" => "w2", "tab_id" => "w2:t1", "pane_id" => "w2:p2"},
+            {"workspace_id" => "w1", "tab_id" => "w1:t1", "pane_id" => "w1:p1"}
+          ]
+          executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+            agent_list: native_result({"result" => {"agents" => agents}}),
+            workspace_list: native_result({"result" => {"workspaces" => [{"workspace_id" => "w2", "label" => "ace", "number" => 2}]}})
+          })
+          control = ControlSurface.new(executor: executor, env: {"ACE_LAB_SESSION" => "1"})
+          tabs = control.list_tabs(workspace_id: "w2")
+          assert_equal 1, tabs.size
+          assert_equal 2, tabs.first[:pane_count]
+          spaces = control.list_workspaces
+          assert_equal %w[w2 w1], spaces.map { |row| row[:id] }
+          assert_equal "ace", spaces.first[:title]
+          assert_equal 2, spaces.first[:number]
+        end
+
+        def test_isolated_layout_does_not_turn_invalid_inventory_into_empty_success
+          [{"result" => {}}, {"result" => {"agents" => [nil]}},
+           {"result" => {"agents" => [{"workspace_id" => "w1"}]}},
+           {"error" => "unavailable", "result" => {"agents" => []}}].each do |payload|
+            executor = HerdrTestHelper::FakeExecutor.new(outcomes: {agent_list: native_result(payload)})
+            control = ControlSurface.new(executor: executor, env: {"ACE_LAB_SESSION" => "1"})
+            assert_raises(Ace::Herdr::ExecutorError) { control.list_panes }
+          end
+        end
+
         # --- send: plain pane --------------------------------------------------
 
         def test_plain_cmd_submits_via_pane_run

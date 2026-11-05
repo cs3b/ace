@@ -26,9 +26,11 @@ module Ace
           executor: Molecules::HerdrExecutor.new,
           preset_loader: Molecules::PresetLoader.new,
           default_agent_kind: "pi",
-          agent_start_timeout_ms: 60_000
+          agent_start_timeout_ms: 60_000,
+          env: ENV
         )
           @executor = executor
+          @env = env
           @preset_loader = preset_loader
           @default_agent_kind = default_agent_kind
           @agent_start_timeout_ms = agent_start_timeout_ms
@@ -64,20 +66,42 @@ module Ace
 
         # Live panes, optionally scoped to a workspace
         def list_panes(workspace_id: nil)
+          if @env["ACE_LAB_SESSION"] == "1"
+            return isolated_agents(workspace_id).map do |agent|
+              normalize_pane(agent.merge("terminal_title_stripped" => agent["name"]))
+            end
+          end
           result_rows(@executor.pane_list(workspace_id: workspace_id).parsed_json, "panes")
             .map { |row| normalize_pane(row) }
         end
 
         # Live tabs, optionally scoped to a workspace (tmux windows analogue)
         def list_tabs(workspace_id: nil)
+          if @env["ACE_LAB_SESSION"] == "1"
+            return isolated_agents(workspace_id).group_by { |agent| [agent["workspace_id"], agent["tab_id"]] }.map do |(workspace, tab), agents|
+              {id: tab, workspace: workspace, title: tab, number: nil,
+               pane_count: agents.size, focused: agents.any? { |agent| agent["focused"] }}
+            end
+          end
           result_rows(@executor.tab_list(workspace_id: workspace_id).parsed_json, "tabs")
             .map { |row| normalize_tab(row) }
         end
 
         # Live workspaces (tmux sessions analogue)
         def list_workspaces
-          result_rows(@executor.workspace_list.parsed_json, "workspaces")
+          rows = result_rows(@executor.workspace_list.parsed_json, "workspaces")
             .map { |row| normalize_workspace(row) }
+          if @env["ACE_LAB_SESSION"] == "1"
+            # Native agent identity proves the caller's actual workspace even
+            # when it is not a configured project workspace (the lab itself).
+            isolated_agents.group_by { |agent| agent["workspace_id"] }.each do |workspace, agents|
+              next if rows.any? { |row| row[:id] == workspace }
+              rows << {id: workspace, title: workspace, number: nil,
+                       pane_count: agents.size, tab_count: agents.map { |agent| agent["tab_id"] }.uniq.size,
+                       focused: agents.any? { |agent| agent["focused"] }}
+            end
+          end
+          rows
         end
 
         # --- capture ------------------------------------------------------------
@@ -517,6 +541,19 @@ module Ace
         end
 
         # --- list: normalization ----------------------------------------------
+
+        # The issuer owns role filtering. Use its existing authorized agent
+        # projection; never request raw host pane/tab inventories from a session.
+        def isolated_agents(workspace_id = nil)
+          reply = @executor.agent_list.parsed_json
+          agents = reply.is_a?(Hash) && !reply.key?("error") && reply["result"].is_a?(Hash) && reply["result"]["agents"]
+          unless agents.is_a?(Array) && agents.all? { |agent|
+              agent.is_a?(Hash) && %w[workspace_id tab_id pane_id].all? { |key| agent[key].is_a?(String) && !agent[key].empty? }
+            }
+            raise ExecutorError, "authorized agent layout is incomplete"
+          end
+          workspace_id ? agents.select { |agent| agent["workspace_id"] == workspace_id } : agents
+        end
 
         def normalize_pane(row)
           {

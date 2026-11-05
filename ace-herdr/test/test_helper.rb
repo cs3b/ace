@@ -28,6 +28,10 @@ module HerdrTestHelper
       @outcomes = outcomes
     end
 
+    def agent_list
+      call(:agent_list)
+    end
+
     def agent_get(pane)
       call(:agent_get, pane: pane)
     end
