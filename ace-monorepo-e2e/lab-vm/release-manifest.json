@@ -80,10 +80,10 @@
     },
     {
       "name": "ace-herdr",
-      "version": "0.10.1.pre.utm98",
-      "sha256": "97ccb0fb9ee3d7f4d6922e96ed2b76ce8fe2fe52ec21f37da69121458e28d143",
+      "version": "0.10.1.pre.utm99",
+      "sha256": "c7075e4c84bed726b179a552d25176afd31a1d120fa052bfe22a943efe77b70d",
       "source": "local",
-      "source_commit": "f1af8006c62b3e2829c9fed1be15fc48a5570d94"
+      "source_commit": "22912128490a48ea0cbcf2c337a941481a3683f8"
     },
     {
       "name": "ace-hitl",
@@ -359,10 +359,10 @@
   "herdr": {
     "rust_version": "1.96.1",
     "target": "aarch64-unknown-linux-musl",
-    "selection_sha256": "1d6993a995ba3cf9862960952210dab44bff66b47d8ee2345b8d9337e3189805",
+    "selection_sha256": "108bf67cec09a9458b338ecc24fbe64e5ea7eaef9df01e6900e667b9d34e5bc5",
     "baseline_commit": "7b116c05bfda646af39d2524c54e70c751f57ee8",
-    "artifact_sha256": "f349835e623887463ecc17d8edf825bc4ed1d5c44716fa6929305c7b1610ef6a",
-    "provenance_sha256": "6954b1b1f60dce1bd63311ab7ba209f10002910f4ae5e4b191d7509735e60ae4"
+    "artifact_sha256": "6943769804c704fd21f9a942e50f8f1772f70b8aaef839fd8f614044f01ce253",
+    "provenance_sha256": "c7d7a20957556fcb3aca7224ac0f748615c99d1bc515379381b496e368abb5f0"
   },
   "pi": {
     "package": "@earendil-works/pi-coding-agent",
