@@ -198,7 +198,7 @@ module Ace
             assert_equal "wfi://coworker/reviewer", config["instructions"]
             assert_equal "Review asg09 on 8xh.t.ddd as reviewer for overseer@lab.", config["start_prompt"]
             refute config["start_prompt"].include?("{{")
-            assert_equal({"channel" => "hitl"}, config["reporting"])
+            assert_equal({"channel" => "hitl", "delivery" => "adapter"}, config["reporting"])
             assert_equal({"on_failure" => "report"}, config["errors"])
             refute File.exist?(File.join(@dir, ".ace-local", "coworker", "config.yml"))
           end

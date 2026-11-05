@@ -13,8 +13,8 @@ module Ace
           @manager = manager
         end
 
-        def call(scope: "current", limit: 500, owner: nil)
-          events = incoming_events(scope: scope, limit: limit, owner: owner)
+        def call(scope: "current", limit: 500, owner: nil, in_folder: "next")
+          events = incoming_events(scope: scope, limit: limit, owner: owner, in_folder: in_folder)
           rows = events.map do |event|
             semantic = [event.id, event.type, event.status, event.result, event.kind,
               event.title, event.content, event.answer, event.questions,
@@ -30,9 +30,10 @@ module Ace
 
         # Shared read boundary for observation and report consumers. Preserve
         # strict enumeration and recipient ownership in both paths.
-        def incoming_events(scope: "current", limit: 500, owner: nil)
+        def incoming_events(scope: "current", limit: 500, owner: nil, in_folder: "next")
           raise ArgumentError, "invalid observation limit" unless (1..2000).cover?(limit)
-          events = @manager.list(in_folder: "next", scope: scope, limit: limit, strict: true)
+          raise ArgumentError, "invalid observation folder" unless %w[next all].include?(in_folder)
+          events = @manager.list(in_folder: in_folder, scope: scope, limit: limit, strict: true)
           raise ArgumentError, "observation exceeds configured event budget" if events.size > limit
           address = owner && Molecules::HitlAddressResolver.new(config: @manager.config).resolve(owner)
           events = events.select { |event| incoming?(event, address) } if address

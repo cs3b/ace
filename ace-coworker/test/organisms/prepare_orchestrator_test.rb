@@ -81,10 +81,10 @@ module Ace
 
         def orchestrator(provision_decision:, executor_result: {config: nil, assignments: []},
           hitl: FakeHitl.new, config: nil, task: task_model, lenient_overseer: nil,
-          sequence_composer: nil, start_config_writer: nil
+          sequence_composer: nil, start_config_writer: nil, defaults: nil
         )
           PrepareOrchestrator.new(
-            project_root: "/proj",
+            project_root: "/proj", config: defaults,
             task_probe: FakeTaskProbe.new(task),
             provision_probe: FakeProvisionProbe.new(provision_decision),
             executor_probe: FakeExecutorProbe.new(executor_result),
@@ -132,6 +132,22 @@ module Ace
         def created_decision
           {disposition: :created, reason: "created", worktree_path: "/proj/.ace-wt/t.8xg-t-aaa",
            branch: "8xg-aaa-branch"}
+        end
+
+        def test_local_readiness_publication_does_not_attempt_transport
+          hitl = FakeHitl.new
+          observed = []
+          hitl.define_singleton_method(:event_published?) do |id, **identity|
+            observed << [id, identity]
+            true
+          end
+          result = orchestrator(provision_decision: created_decision,
+            start_config_writer: FakeStartConfigWriter.new, hitl: hitl,
+            defaults: {"reporting" => {"delivery" => "observe"}})
+            .call(task_ref: "8xg.t.aaa", roles: %w[worker reviewer], to: "lab-overseer")
+          assert_equal true, result.report["published"]
+          assert_empty hitl.sent
+          assert_equal [["rpt001", {to: "lab-overseer", task: "8xg.t.aaa", type: "report", result: "success"}]], observed
         end
 
         def test_happy_create_returns_preparation

@@ -32,6 +32,7 @@ module Ace
             "assignment_progress" => assignment_snapshot&.progress,
             "overseer" => config.overseer,
             "reporting_channel" => config.reporting_channel,
+            "reporting_delivery" => config.reporting_delivery,
             "on_failure" => config.on_failure,
             "project_root" => project_root
           }

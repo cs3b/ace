@@ -75,7 +75,7 @@ module Ace
           def report_line(report)
             return "not sent (#{report['error']})" if report["error"]
 
-            delivery = report["delivered"] ? "delivered" : "not delivered (retry: ace-hitl send #{report['event']})"
+            delivery = report["published"] ? "published for observation; acceptance pending" : report["delivered"] ? "delivered" : "not delivered (retry: ace-hitl send #{report['event']})"
             "readiness event #{report['event']} (#{delivery})"
           end
 
@@ -99,7 +99,11 @@ module Ace
                 lines << "    #{line}"
               end
               if conflict["hitl_event"]
-                delivery = conflict["delivered"] ? "delivered" : "not delivered (retry: ace-hitl send #{conflict['hitl_event']})"
+                delivery = if !conflict["published"].nil?
+                  conflict["published"] ? "published for observation; acceptance pending" : "publication unverified"
+                else
+                  conflict["delivered"] ? "delivered" : "not delivered (retry: ace-hitl send #{conflict['hitl_event']})"
+                end
                 lines << "  event:      #{conflict['hitl_event']} (#{delivery})"
               end
             else

@@ -97,3 +97,21 @@ ADR-022 config cascade, dry-cli commands).
 ## License
 
 MIT — see [LICENSE](../LICENSE).
+
+### Local observation reporting
+
+A role preset or serialized coworker start config can select
+`reporting: {channel: hitl, delivery: observe}`. The default delivery mode is
+`adapter`. Observation mode creates the canonical HITL report, verifies its
+exact task, assignment, outcome and configured recipient through the HITL
+owner API, and returns `published for observation; acceptance pending`.
+It does not invoke a transport adapter or claim that the overseer accepted the
+work. The coordinator must have observation armed and accept the report through
+its existing task/assignment workflow.
+
+Resume checks the current publication, including archived reports, before
+considering reporting complete. Missing or mismatched publications are not
+success; changing to adapter delivery still requires transport. `--no-send`
+continues to defer reporting and does not mark observation publication complete.
+An observation source error is a failure, never permission to silently skip
+reporting. The executor brief displays the configured delivery mode.

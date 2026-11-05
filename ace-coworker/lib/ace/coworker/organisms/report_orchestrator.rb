@@ -85,7 +85,7 @@ module Ace
           created_event = false
           if !report_via_hitl?(cfg, outcome)
             # errors.on_failure=stop: never touch HITL, not even a resend.
-          elsif state["result"] == outcome.result && state["event_id"] && @reporter.event_exists?(state["event_id"])
+          elsif state["result"] == outcome.result && state["event_id"] && (cfg.reporting_delivery == "observe" ? @reporter.publication_matches?(state["event_id"], cfg, result: outcome.result) : @reporter.event_exists?(state["event_id"]))
             event_id = state["event_id"]
           elsif report_via_hitl?(cfg, outcome)
             event_id = @reporter.create(outcome, cfg)
@@ -106,7 +106,13 @@ module Ace
           end
 
           delivery = nil
-          if event_id && !no_send
+          if event_id && !no_send && cfg.reporting_delivery == "observe"
+            unless @reporter.publication_matches?(event_id, cfg, result: outcome.result)
+              return failure_result(outcome, cfg, record_path, event_id,
+                "outcome recorded; publication for configured observer could not be verified")
+            end
+            delivery = "published for observation (event #{event_id}); acceptance pending"
+          elsif event_id && !no_send
             send_result = @reporter.send_report(event_id)
             if send_result == true
               delivery = "delivered (event #{event_id})"

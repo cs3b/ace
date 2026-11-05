@@ -6,10 +6,10 @@ module Ace
       # Immutable validated coworker run configuration.
       class Config
         attr_reader :role, :instructions, :start_prompt, :start_prompt_file, :task, :assignment,
-          :overseer, :reporting_channel, :on_failure, :source_path, :toolchain
+          :overseer, :reporting_channel, :reporting_delivery, :on_failure, :source_path, :toolchain
 
         def initialize(role:, instructions:, start_prompt:, task:, assignment:, overseer:,
-          start_prompt_file: nil, reporting_channel: "hitl", on_failure: "report", source_path: nil, toolchain: nil)
+          start_prompt_file: nil, reporting_channel: "hitl", reporting_delivery: "adapter", on_failure: "report", source_path: nil, toolchain: nil)
           @toolchain = toolchain&.freeze
           @role = role.freeze
           @instructions = instructions.freeze
@@ -19,6 +19,7 @@ module Ace
           @assignment = assignment.freeze
           @overseer = overseer.freeze
           @reporting_channel = reporting_channel.freeze
+          @reporting_delivery = reporting_delivery.freeze
           @on_failure = on_failure.freeze
           @source_path = source_path.freeze
         end
@@ -32,7 +33,7 @@ module Ace
           self.class.new(role: role, instructions: instructions,
             start_prompt: start_prompt, start_prompt_file: start_prompt_file,
             task: task, assignment: assignment, overseer: overseer,
-            reporting_channel: reporting_channel, on_failure: on_failure,
+            reporting_channel: reporting_channel, reporting_delivery: reporting_delivery, on_failure: on_failure,
             source_path: source_path, toolchain: toolchain)
         end
 
@@ -46,7 +47,7 @@ module Ace
             "task" => task,
             "assignment" => assignment,
             "overseer" => overseer,
-            "reporting" => {"channel" => reporting_channel},
+            "reporting" => {"channel" => reporting_channel, "delivery" => reporting_delivery},
             "errors" => {"on_failure" => on_failure}
           }.compact
         end

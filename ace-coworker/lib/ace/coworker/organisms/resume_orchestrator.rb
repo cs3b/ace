@@ -26,7 +26,7 @@ module Ace
 
         def initialize(project_root: nil, config_loader: nil, task_probe: nil,
           assignment_probe: nil, evidence_reader: nil, report_reader: nil,
-          git_probe: nil, state_store: nil, report_orchestrator: nil, config: nil)
+          git_probe: nil, state_store: nil, report_orchestrator: nil, config: nil, hitl_reporter: nil)
           @config = config || Ace::Coworker.config
           @project_root = project_root || Molecules::ProjectRoot.new.resolve
           @config_loader = config_loader || Molecules::ConfigLoader.new(project_root: @project_root, defaults: @config)
@@ -38,6 +38,7 @@ module Ace
           @git_probe = git_probe || Molecules::GitStateProbe.new(project_root: @project_root)
           @state_store_factory = state_store
           @report_orchestrator = report_orchestrator
+          @hitl_reporter = hitl_reporter || Molecules::HitlReporter.new(project_root: @project_root)
         end
 
         # @return [ResumeResult]
@@ -56,15 +57,20 @@ module Ace
           step_cause = @evidence_reader.read(assignment_id, in_flight_number)
           step_report = @report_reader.read(assignment_id, in_flight_number)
 
+          publication_verified = false
+          if cfg.reporting_delivery == "observe" && report_state && report_state["event_id"]
+            publication_verified = @hitl_reporter.publication_matches?(report_state["event_id"], cfg.with(assignment: assignment_id), result: "success")
+          end
           plan = Atoms::ResumePlanner.plan(snapshot: snapshot,
             report_state: report_state, git_state: git_state,
+            reporting_delivery: cfg.reporting_delivery, publication_verified: publication_verified,
             step_cause: step_cause,
             step_report_path: step_report && step_report["path"])
 
           case plan.disposition
           when :continue, :complete
             ResumeResult.new(plan: plan,
-              message: plan.continue? ? "assignment in progress; resume the remaining work" : "assignment complete and delivered; nothing to resume",
+              message: plan.continue? ? "assignment in progress; resume the remaining work" : "assignment complete; configured reporting satisfied; nothing to resume",
               exit_code: 0)
           when :report
             return ResumeResult.new(plan: plan,

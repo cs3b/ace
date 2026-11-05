@@ -55,6 +55,13 @@ module Ace
           build_config(Atoms::ConfigSchema.normalize(raw), target)
         end
 
+        def reporting_delivery
+          mode = @defaults.dig("reporting", "delivery") || "adapter"
+          raise Error, "reporting.delivery must be adapter or observe" unless Atoms::ConfigSchema::DELIVERIES.include?(mode)
+
+          mode
+        end
+
         def ready?(path: nil)
           target = path ? File.expand_path(path, @project_root) : config_path
           File.file?(target)
@@ -91,6 +98,7 @@ module Ace
             assignment: normalized["assignment"],
             overseer: normalized["overseer"],
             reporting_channel: normalized.dig("reporting", "channel"),
+            reporting_delivery: normalized.dig("reporting", "delivery"),
             on_failure: normalized.dig("errors", "on_failure"),
             source_path: target, toolchain: normalized["toolchain"]
           )

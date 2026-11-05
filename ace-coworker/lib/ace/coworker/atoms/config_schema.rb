@@ -11,6 +11,7 @@ module Ace
         REQUIRED_FIELDS = %w[role instructions task assignment overseer].freeze
         PROTOCOL_PREFIXES = %w[wfi:// prompt:// tmpl://].freeze
         CHANNELS = %w[hitl].freeze
+        DELIVERIES = %w[adapter observe].freeze
         ON_FAILURE = %w[report stop].freeze
 
         # @param raw [Hash, nil] parsed config hash
@@ -53,7 +54,8 @@ module Ace
             "assignment" => str(raw["assignment"]),
             "overseer" => str(raw["overseer"]),
             "case" => str(raw["case"]),
-            "reporting" => {"channel" => nested_str(raw, "reporting", "channel").empty? ? "hitl" : nested_str(raw, "reporting", "channel")},
+            "reporting" => {"channel" => nested_str(raw, "reporting", "channel").empty? ? "hitl" : nested_str(raw, "reporting", "channel"),
+              "delivery" => nested_str(raw, "reporting", "delivery").empty? ? "adapter" : nested_str(raw, "reporting", "delivery")},
             "errors" => {"on_failure" => nested_str(raw, "errors", "on_failure").empty? ? "report" : nested_str(raw, "errors", "on_failure")}
           }.compact
         end
@@ -83,9 +85,10 @@ module Ace
 
         def self.reporting_errors(raw)
           channel = nested_str(raw, "reporting", "channel")
-          return [] if channel.empty?
-
-          CHANNELS.include?(channel) ? [] : ["reporting.channel '#{channel}' is not one of: #{CHANNELS.join(', ')}"]
+          errors = channel.empty? || CHANNELS.include?(channel) ? [] : ["reporting.channel '#{channel}' is not one of: #{CHANNELS.join(', ')}"]
+          delivery = nested_str(raw, "reporting", "delivery")
+          errors << "reporting.delivery must be adapter or observe" unless delivery.empty? || DELIVERIES.include?(delivery)
+          errors
         end
         private_class_method :reporting_errors
 

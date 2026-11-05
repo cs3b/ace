@@ -218,3 +218,37 @@ Regression red40aff922-bfed-4b94-a9bb-8d604468d011; green9/35
 c97281ce-bfb1-4149-8685-d9a703ff28eb. Full Overseer fast549/2511, zero failures,
 one skip:6b9cad7d-f50d-456c-a857-0eede79e96c0. These fixes are not deployed to
 the stopped candidate104 and require new immutable artifacts and clean reruns.
+
+## Explicit local publication contract
+
+Coworker reporting now supports explicit delivery=observe alongside adapter.
+Preset/default mode is serialized into start configurations and briefs. Observe
+creates the canonical HITL event and verifies its exact ID/type/task/assignment/
+outcome through the HITL owner projection for the configured recipient. It says
+published for observation, acceptance pending; coordinator acceptance is separate.
+Prepare readiness/conflict reports follow the same configured mode. The fixture
+selects observe in project configuration; no missing-route auto-detection.
+
+Resume revalidates publication, including archive via observe --in all; normal
+eyes retains the default next folder. Changed recipient/mode cannot reuse a
+previous publication as successful delivery. --no-send remains deferred.
+Independent review caught transient observation failure being treated as absence
+and creating duplicate reports. Read errors, invalid schema/rows and ambiguity
+now raise without creating or replacing the recorded event. Follow-up review
+confirmed both findings closed. No new state store or transport adapter added.
+
+Owner HITL fast406/2096 zero failures5skips (0cd4e4b5-54be-458a-b454-d857c39e5f0e),
+final public CLI archive check4/28 (dc033135-9d83-4d96-a0f9-9940acb28444).
+Report retry preservation19/120 (605be839-e186-4c26-9dd0-d843f89e3121), helper3/12
+(d7a3c3e4-998f-4b71-b6dc-ecca1608be04), resume8/38
+(56b452e9-2940-4144-9603-4b15aafbe23d), prepare25/187
+(3d38c4e2-98d6-466c-a4e3-560c679e898b), fixture4/5
+(d9241fba-f3de-44d2-b893-752e01da9d4e). Full coworker rerun required after
+updating expected serialized default mode in roles_commission_test; previous
+full run failed that assertion (0fc482cf-4321-423a-b1c1-13c8fe70be95).
+
+TC002 runner instruction explicitly keeps fixture receipts private to the
+harness and supplies actual issue URLs to the tested agent, without auth or
+execution guidance. Live autonomy and two clean acceptance pairs remain unproven.
+
+Final coworker fast418/1968 passed with no failures/errors: e4de6b46-0ef6-4fb8-9405-35dce51d8f96. Owned VM and base confirmed stopped; base configuration matches;176GiB free.

@@ -117,6 +117,9 @@ module Ace
           config["case"] = hitl_case unless hitl_case.empty?
           config["toolchain"] = "installed" if Ace::Support::Cli::Toolchain.installed?
           config["reporting"] = {"channel" => preset["reporting"]} unless preset["reporting"].to_s.empty?
+          config["reporting"] ||= {}
+          config["reporting"]["delivery"] = preset["reporting_delivery"].to_s.empty? ?
+            @config_loader.reporting_delivery : preset["reporting_delivery"]
           config["errors"] = {"on_failure" => preset["errors"]} unless preset["errors"].to_s.empty?
           config
         end

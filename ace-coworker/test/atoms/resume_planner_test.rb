@@ -60,6 +60,20 @@ module Ace
           assert_equal :complete, plan.disposition
         end
 
+        def test_observation_publication_requires_current_owner_verification_and_matching_mode
+          snap = snapshot(state: "completed", steps: [["010", "impl", "done"]])
+          state = {"result" => "success", "event_id" => "ab12cd",
+            "delivery" => "published for observation (event ab12cd); acceptance pending"}
+          assert_equal :complete, ResumePlanner.plan(snapshot: snap, report_state: state,
+            reporting_delivery: "observe", publication_verified: true).disposition
+          assert_equal :report, ResumePlanner.plan(snapshot: snap, report_state: state,
+            reporting_delivery: "observe", publication_verified: false).disposition
+          assert_equal :report, ResumePlanner.plan(snapshot: snap, report_state: state).disposition
+          state["delivery"] = nil
+          assert_equal :report, ResumePlanner.plan(snapshot: snap, report_state: state,
+            reporting_delivery: "observe", publication_verified: true).disposition
+        end
+
         def test_complete_after_delivered_error_report_still_reports_success
           # F2 regression: assignment failed, the error report was delivered,
           # then the assignment was fixed and completed. The delivered
