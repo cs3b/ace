@@ -381,8 +381,16 @@ module LabVm
         tell application "UTM"
           set proc to execute of virtual machine id vmId at programPath with arguments commandArgs with output capturing
           repeat
-            set res to get result of proc
-            if exited of res then exit repeat
+            try
+              set res to get result of proc
+              if exited of res then exit repeat
+            on error errorMessage number errorNumber
+              -- QGA can transiently return a malformed poll response. Keep
+              -- observing the existing process; never execute it a second time.
+              if errorMessage does not contain "Invalid parameter type for 'command.return', expected: object" then
+                error errorMessage number errorNumber
+              end if
+            end try
             delay 0.2
           end repeat
           return (exit code of res as text) & linefeed & (output text of res) & (error text of res)
