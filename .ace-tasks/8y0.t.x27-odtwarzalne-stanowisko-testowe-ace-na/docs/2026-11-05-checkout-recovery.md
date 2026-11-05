@@ -121,3 +121,17 @@ Read-only guest check confirmed mise absent (`command -v` exit127); tracked proj
 Real CLI marker regression failed before fix (e90f40f1-6003-4f4d-b89a-abe99ccf877c). Coworker fast passed408/1916 (9232d1a5-6b4a-4afe-9147-44dd7d7512f7). Worktree fast passed681/2148,16skips (a0ca13d9-3c05-4d8f-8a71-c1f7069d71ab). Independent review found no live-path blocker, identified branch reattachment and owner dry-run parity; both are covered. Final owner organism tests passed62/235 (9ab285a3-1540-4cbd-8694-721e30c1fe47). Removed conflicting bootstrap-worker guidance that required full private-tree observation; the authorized coordinator owns that check. Generic nondelegated worktree reuse was not redesigned or claimed as runtime readiness evidence.
 
 Live candidate100 worker8y4tb3 ended its turn and reported via event8y4tni. The lab coordinator subsequently invoked public dispatch of independent verifier8y4tb31, without operator prompting. Verifier outcome and project start remain unconfirmed. These fixes are not hot-installed into the ongoing run.
+
+
+## Next candidate staging, current run unchanged
+
+Verifier assignment8y4tb31 is observed working in separate pane w1:p4; lab coordinator and worker ended their turns. Runner80205 remains live. No verifier verdict, project start or full scenario acceptance yet.
+
+Source007e4ba026e58020d93527fd811ece74600984a3 aligns bootstrap-verifier scope with the reviewed worker contract; independent review found no weakened acceptance. Dependent Overseer fast suite passed543/2490,1skip (d8c0b2e3-3295-4743-90a4-01d0f5e7d96f).
+
+Staged immutable gem artifacts (not installed, current manifest unchanged):
+- ace-task0.41.1.pre.utm101, source783edcc5ee70f24af58a9b1d9a01c18950b5e068, SHA256929559b838ba9082786b13092da2ff8d6288263656ca8032923b7b4ef8d54011.
+- ace-herdr0.10.1.pre.utm101, same source, SHA256bfb58afb67167ea514e098f76e8acef5768578f4628a41a34215fa943058b653.
+- ace-coworker0.8.1.pre.utm102, source007e4ba026e58020d93527fd811ece74600984a3, SHA2567a26f3a566f8220968c9e84a42aa729d6bedc86b835ae7c4741b6b55b0fff385. Earlier coworkerutm101 lacks the verifier instruction correction and is not the next selection.
+
+Next candidate still requires ace-support-items and ace-git-worktree artifacts. The builder/fetcher allowlists need these two owner packages; those scripts are runtime fingerprint inputs, so they have not been changed under the running scenario. Stage that change after this run's outcome is preserved, then update the manifest and reset.
