@@ -2,9 +2,9 @@ hitl:
   machine: utm-e2e
   default_recipient: captain
   recipients:
-    overseer:
+    lab-overseer:
       machine: utm-e2e
-      folder: .ace-local/hitl
+      folder: /lab/.ace-local/hitl
     captain:
       machine: utm-e2e
       folder: .ace-local/hitl

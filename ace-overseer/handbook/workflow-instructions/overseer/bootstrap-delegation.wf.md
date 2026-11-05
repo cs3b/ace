@@ -63,7 +63,8 @@ or attempting to access the coordinator's private state. The coordinator proves
 full observation from the authorized project Overseer during confirm-start.
 The commission must include the target project's eyes configuration path
 `<project>/.ace-local/overseer/eyes.json` and
-the actual configured HITL recipient: the worker prepares the configuration
+the project Overseer's configured HITL recipient for its own eyes, separately
+from the lab recipient that receives bootstrap reports: the worker prepares the configuration
 and the independent verifier checks it before project start. Missing or
 ambiguous recipient information is a blocker, never a guessed address. The
 project Overseer arms the prepared configuration; it does not create or edit it.
@@ -103,13 +104,18 @@ report that capability gap. Do not claim that mentioning `/eyes` armed it.
 
 ## Prepare and actually launch a worker
 
-Read the target project's actual HITL configuration and use its exact configured recipient key
-for the overseer. The task specification, `--to`, and returned start configs
+Read the lab's armed eyes configuration to identify the commissioning
+coordinator's recipient, then resolve that address in the target project's
+HITL configuration. Use the target configuration's key for THAT same lab
+address, not its project Overseer address. Lab and project coordinators must
+have distinct configured addresses, with absolute folder paths when using
+folder-form addresses. A relative `.ace-local/hitl` repeated across roots does
+not identify which coordinator owns the report. The task specification, `--to`, and returned start configs
 must agree; do not invent an address or append a machine suffix. If no valid
 recipient is configured, report a blocking gap before dispatch.
 
 From the target project root, use `ace-coworker prepare --task <executable-task> --roles bootstrap-worker,bootstrap-verifier
---to <configured-overseer-recipient> --format json`. Read its returned worktree,
+--to <configured-lab-recipient> --format json`. Read its returned worktree,
 assignment IDs and start-config paths; record these on the matching private
 steps before launch through the task API, not only in prose:
 

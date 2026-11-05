@@ -118,7 +118,7 @@ begin
     # Local report transport is a fixture prerequisite, not the repair goal.
     # Keep it in the seeded commit so bootstrap starts from a clean project.
     FileUtils.mkdir_p(File.join(repository, ".ace/hitl"))
-    FileUtils.cp(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/fixtures/lab/.ace/hitl/config.yml"),
+    FileUtils.cp(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/fixtures/ace/.ace/hitl/config.yml"),
       File.join(repository, ".ace/hitl/config.yml"))
     FileUtils.mkdir_p(File.join(repository, ".ace/lab"))
     File.write(File.join(repository, ".ace/lab/config.yml"), <<~YAML)
