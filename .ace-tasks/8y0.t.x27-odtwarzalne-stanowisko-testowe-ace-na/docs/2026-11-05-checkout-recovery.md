@@ -252,3 +252,5 @@ harness and supplies actual issue URLs to the tested agent, without auth or
 execution guidance. Live autonomy and two clean acceptance pairs remain unproven.
 
 Final coworker fast418/1968 passed with no failures/errors: e4de6b46-0ef6-4fb8-9405-35dce51d8f96. Owned VM and base confirmed stopped; base configuration matches;176GiB free.
+
+Candidate105 pins Overseer0.28.2.pre.utm105, coworker0.8.1.pre.utm105 and HITL0.25.1.pre.utm105 from5c4fe32aab57ebddeb850eaa033d436494898521. Each built twice with identical bytes; SHA256 pins are in manifest. Fetcher verified60 cached artifacts, graph55gems/7roots. Monorepo E2E fast103/366 passed3d479a68-6998-4270-bb1e-75c49880e5d3. Manifest SHA256:9e3f77dad7cdfeea1599ce58bba33212f4ba7a152ccf3cadfe33f41070bb2fa4. Next run uses standard fresh setup/export/reset, not the preserved diagnostic guest.

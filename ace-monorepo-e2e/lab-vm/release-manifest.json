@@ -29,10 +29,10 @@
     },
     {
       "name": "ace-coworker",
-      "version": "0.8.1.pre.utm102",
-      "sha256": "7a26f3a566f8220968c9e84a42aa729d6bedc86b835ae7c4741b6b55b0fff385",
+      "version": "0.8.1.pre.utm105",
+      "sha256": "9c4c2c8d4ce87d39c0d5ee314116cd04d588cebb49635a9f85efc70ffb2111de",
       "source": "local",
-      "source_commit": "007e4ba026e58020d93527fd811ece74600984a3"
+      "source_commit": "5c4fe32aab57ebddeb850eaa033d436494898521"
     },
     {
       "name": "ace-git",
@@ -88,10 +88,10 @@
     },
     {
       "name": "ace-hitl",
-      "version": "0.25.1.pre.utm103",
-      "sha256": "9645dd6d18479ec4c4322095a6cf6a091a0ccd23a04440168051ebfff28784d3",
+      "version": "0.25.1.pre.utm105",
+      "sha256": "c0ea457f9868a2c4a4f022cc02f05f1498e19405638940dfa65e152531945fe3",
       "source": "local",
-      "source_commit": "84ee9113ee0903fbe52f4a39e960627283f7dcb7"
+      "source_commit": "5c4fe32aab57ebddeb850eaa033d436494898521"
     },
     {
       "name": "ace-hitl-contract",
@@ -126,10 +126,10 @@
     },
     {
       "name": "ace-overseer",
-      "version": "0.28.2.pre.utm104",
-      "sha256": "c5c9cb8f01b011e2893f8b41ae6509ad1d2226fc6c6115d547bb152dc451fcfd",
+      "version": "0.28.2.pre.utm105",
+      "sha256": "abb27563aaa38d5a23f47d3be6987e481f439e8b14a36f9e1cf3d440c30f9187",
       "source": "local",
-      "source_commit": "11a39f3577e53270902e5869a2ae5263ac6f1efd"
+      "source_commit": "5c4fe32aab57ebddeb850eaa033d436494898521"
     },
     {
       "name": "ace-review",
