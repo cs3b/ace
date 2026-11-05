@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Allow explicit accessible-only item discovery to skip permission-denied descendant directories while retaining strict complete scans and root access checks.
+
 ## [0.15.16] - 2026-10-29
 
 ### Fixed

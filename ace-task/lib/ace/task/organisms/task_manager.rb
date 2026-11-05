@@ -877,7 +877,7 @@ module Ace
 
         def resolve_scan_result(ref)
           scanner = Molecules::TaskScanner.new(@root_dir)
-          scan_results = scanner.scan
+          scan_results = scanner.scan(accessible_only: true)
           resolver = Molecules::TaskResolver.new(scan_results)
           resolver.resolve(ref)
         end

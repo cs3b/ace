@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Resolve accessible task references without entering another role's protected task tree; full task inventories still fail when a required directory cannot be read.
+
 - Serialize subtask allocation across processes and path aliases, including reparenting, so concurrent writers cannot reuse child IDs or overwrite a same-title spec. Refuse orchestrator conversion when children already exist.
 
 - Correct the private overseer task listing example.

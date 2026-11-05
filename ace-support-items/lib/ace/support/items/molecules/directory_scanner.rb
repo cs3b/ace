@@ -40,17 +40,17 @@ module Ace
 
           # Scan root directory recursively for items
           # @return [Array<ScanResult>] List of scan results, sorted by ID (chronological)
-          def scan
+          def scan(accessible_only: false)
             return [] unless Dir.exist?(@root_dir)
 
             results = []
-            scan_directory(@root_dir, results)
+            scan_directory(@root_dir, results, accessible_only: accessible_only)
             results.sort_by(&:id)
           end
 
           private
 
-          def scan_directory(dir, results)
+          def scan_directory(dir, results, accessible_only:)
             Dir.entries(dir).sort.each do |entry|
               next if entry.start_with?(".")
 
@@ -65,13 +65,17 @@ module Ace
                   results << result
                 else
                   # Folder has spec files but isn't an item (e.g., _maybe with orphan files) — recurse
-                  scan_directory(full_path, results)
+                  scan_directory(full_path, results, accessible_only: accessible_only)
                 end
               else
                 # Recurse into subdirectory (for special folders like _maybe/)
-                scan_directory(full_path, results)
+                scan_directory(full_path, results, accessible_only: accessible_only)
               end
             end
+          rescue Errno::EACCES, Errno::EPERM
+            # Only discovery may omit inaccessible descendants. A requested
+            # root and the default complete inventory always fail closed.
+            raise unless accessible_only && dir != @root_dir
           end
 
           def build_result(dir_path, file_path)

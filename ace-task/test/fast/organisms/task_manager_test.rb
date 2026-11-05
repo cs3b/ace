@@ -73,6 +73,22 @@ class TaskManagerTest < AceTaskTestCase
 
   # --- show ---
 
+  def test_show_resolves_public_task_without_access_to_private_sibling
+    skip "root bypasses directory access permissions" if Process.euid.zero?
+    public_task = @manager.create("Public assignment")
+    private_dir = File.join(@tmpdir, "_private")
+    FileUtils.mkdir_p(private_dir)
+    private_manager = Ace::Task::Organisms::TaskManager.new(root_dir: private_dir)
+    private_task = private_manager.create("Private coordination", time: Time.utc(2025, 1, 1))
+    File.chmod(0, private_dir)
+
+    assert_equal public_task.id, @manager.show(public_task.id).id
+    assert_nil @manager.show(private_task.id)
+    assert_raises(Errno::EACCES) { @manager.list(in_folder: "all") }
+  ensure
+    File.chmod(0o700, private_dir) if private_dir && File.directory?(private_dir)
+  end
+
   def test_show_by_full_id
     created = @manager.create("Showable task")
 
