@@ -84,3 +84,10 @@ Independent review caught and corrected an acceptance weakness in the first impl
 
 
 Final fixture suite passed 102 tests / 359 assertions (e01ec546-e839-48cd-a8af-7b1d4df3e78e). Independent re-review confirmed the ownership finding resolved and found no new blocker. Live installation remains unproven. Run 8y4qke3 is being stopped diagnostically because its copied bootstrap script has the reproduced prerelease resolution defect; it has not delivered a Lab Overseer goal and will not count as acceptance. Preserve its owned VM on the next helper reset.
+
+
+## Clean run after bootstrap dependency-order correction
+
+Run 8y4qke3 was explicitly stopped: only confirmed owned host group 63711 was terminated, and its runner handle returned 143. This was a diagnostic abort based on the reproduced old-bootstrap defect, not a completed scenario verdict. New run 8y4r2j1-monorepo-e2e-ts003 starts from source 6642eb0eb3008f93d363952108e18398e1e4383a with the same candidate100 gem manifest. The helper exported VM 40F070E3-3558-42D7-ABB8-3EBD17A7742B and created A36E4051-BEF2-4AA0-A839-6C7C78A1F608. SSH and live compiler processes confirm the new guest is progressing through runtime build.
+
+Read-only inspection of the live QEMULauncher arguments confirmed the exact owned UUID plus -accel hvf, -smp cpus=4,sockets=1,cores=4,threads=1 and -m 8192. This proves those running fixture settings, not a completed runtime installation or autonomous acceptance. No goal has yet been delivered in this run.
