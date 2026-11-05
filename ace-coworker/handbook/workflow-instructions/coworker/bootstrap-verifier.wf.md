@@ -50,8 +50,12 @@ configuration, allowed-change boundaries, executable resolution and dependency
 readiness with the task's explicit checks; compare actual results with the
 worker's claims. Do not repair the target or accept your own preparation.
 Independently check the commissioned eyes configuration and its configured
-HITL recipient, plus observation source health without starting an agent.
-Report discrepancies as failure for the coordinator to return to the worker.
+HITL recipient using checks available to the verifier role. Do not require full
+observation of private overseer tasks, host systemd or host-wide verification:
+the authorized coordinator confirms those sources at final project acceptance.
+Record any incidental restricted-source results without treating expected access
+denial as a configuration defect. A failed check required by the commissioned
+preparation scope remains a failure for the coordinator to return to the worker.
 
 Do not start the project overseer: the coordinator owns the final reconcile,
 first-turn and eyes acceptance. Your success accepts preparation only.
