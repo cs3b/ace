@@ -55,6 +55,16 @@ before/after state and exact checks without secrets. Do not start another
 project overseer yourself: after independent verification the lab coordinator
 owns reconcile/start. Leave unrelated work and live services untouched.
 Prepare the commissioned project eyes configuration using its explicit path
-and actual configured HITL recipient. Check the observation command and
-source health without starting the project agent; missing recipient, authority
-or degraded observation is a blocking report, not a guessed configuration.
+and actual configured HITL recipient. Validate its schema and the runtime paths
+available to your worker role. Full observation includes private overseer tasks:
+the authorized coordinator confirms all sources after independent verification
+and project start. Do not require access to that private tree, host systemd or
+host-wide verification to complete your scoped preparation. Report missing
+capabilities required by your commission; never widen permissions.
+
+Checkout preparation does not run project after-create hooks, mise trust or
+bootstrap commands. Read the project's worktree setup configuration and perform
+only the setup required by this commission, under your worker identity and
+selected runtime. Record executed and inapplicable phases with evidence. The
+standalone worktree bootstrap command does not replay after-create hooks; do not
+claim those hooks ran merely because bootstrap succeeded.

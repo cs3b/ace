@@ -50,6 +50,12 @@ false "work done".
      goal, the task dependencies, or the overseer tree.
 
 3. **Implement.**
+   - Checkout preparation delegates project setup to you. Inspect the project's
+     worktree configuration for after-create hooks, toolchain trust and bootstrap;
+     perform the setup needed by this assignment under your worker identity.
+     Preserve installed ACE as the operational runtime while preparing project
+     development dependencies separately. Record executed or inapplicable phases;
+     the standalone bootstrap command does not replay after-create hooks.
    - Work only inside this worktree. Mark checkboxes and step states only when
      the underlying work is verified.
    - Commit path-scoped (`ace-git-commit <paths>`), verifying `git status`

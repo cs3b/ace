@@ -237,7 +237,8 @@ module Ace
         end
 
         def readiness_lines(worktree_path:, branch:, disposition:, assignments:, start_configs:)
-          lines = ["worktree: #{worktree_path} (branch #{branch}, #{disposition})"]
+          lines = ["worktree: #{worktree_path} (branch #{branch}, #{disposition})",
+            "project setup: delegated to executor; checkout/assignments ready, hooks, toolchain trust and bootstrap not verified"]
           assignments.each do |entry|
             lines << "sequence #{entry['position']}/#{entry['of']} #{entry['role']}: " \
               "#{entry['assignment']} (#{entry['disposition']}, #{entry['steps']} steps)"
@@ -364,7 +365,7 @@ module Ace
           branch:, assignments: [], start_configs: [], worktree_assignments: [],
           report: nil, dry_run:)
           Models::Preparation.new(task: task, task_path: task_path, roles: roles,
-            worktree: {"path" => worktree_path, "branch" => branch, "disposition" => disposition},
+            worktree: {"path" => worktree_path, "branch" => branch, "disposition" => disposition, "project_setup" => "delegated"},
             worktree_assignments: worktree_assignments, assignments: assignments,
             start_configs: start_configs, report: report, dry_run: dry_run)
         end

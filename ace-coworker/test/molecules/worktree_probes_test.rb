@@ -156,7 +156,7 @@ module Ace
 
             assert_equal :recovered, result[:disposition]
             manager = instance.instance_variable_get(:@manager)
-            assert_equal [["8xg-aaa-branch", {path: missing}]], manager.reattach_calls
+            assert_equal [["8xg-aaa-branch", {path: missing, defer_setup: true}]], manager.reattach_calls
           end
         end
 

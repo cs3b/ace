@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Prepare checkout and assignments without running project setup as the coordinator; report setup as delegated and explicitly assign it to the worker.
+- Keep bootstrap-worker acceptance within its granted scope; the authorized coordinator confirms full private-task observation.
+
 - Include the selected configuration path in the executor's report command.
 - Prepare and independently verify commissioned project eyes configuration before the project Overseer starts.
 - Require direct ACE checks and their actual exit status in bootstrap worker and verifier evidence.

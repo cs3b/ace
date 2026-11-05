@@ -67,7 +67,7 @@ module Ace
           return {disposition: :would_create, reason: "no worktree for this task yet",
                   worktree_path: nil, branch: nil} if dry_run
 
-          create = @manager.create_task(task_ref.to_s)
+          create = @manager.create_task(task_ref.to_s, defer_setup: true)
           return create_with_verification(task_ref: task_ref, create: create) if create[:success]
 
           occupied = expected_directory_exists?(task_ref)
@@ -85,7 +85,7 @@ module Ace
                     worktree_path: decision[:worktree_path], branch: nil}
           end
 
-          retry_create = @manager.create_task(task_ref.to_s)
+          retry_create = @manager.create_task(task_ref.to_s, defer_setup: true)
           if retry_create[:success]
             return Atoms::PrepareDecision.from_create(retry_create.merge(recovered: true))
           end
@@ -101,7 +101,7 @@ module Ace
           # work lives on it): when recreation trips over the surviving
           # branch, reattach a worktree to it instead of minting a fresh
           # branch that would orphan that work.
-          reattached = @manager.create(decision[:branch].to_s, path: decision[:worktree_path])
+          reattached = @manager.create(decision[:branch].to_s, path: decision[:worktree_path], defer_setup: true)
           return Atoms::PrepareDecision.from_create(reattached.merge(recovered: true)) if reattached[:success]
 
           {disposition: :error,
