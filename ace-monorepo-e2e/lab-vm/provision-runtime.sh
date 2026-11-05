@@ -58,8 +58,10 @@ for archive, suite, key in [('debian', 'trixie', 'debian_release_sha256'),
     lines.append('deb [check-valid-until=no] ' + base + ' ' + suite + ' main\n')
 open('/var/lib/ace-e2e/debian-snapshot.list', 'w').writelines(lines)
 PY
-apt-get -o Dir::Etc::sourcelist=/var/lib/ace-e2e/debian-snapshot.list -o Dir::Etc::sourceparts=- update
-apt-get -o Dir::Etc::sourcelist=/var/lib/ace-e2e/debian-snapshot.list -o Dir::Etc::sourceparts=- install -y build-essential ca-certificates curl git libssl-dev zlib1g-dev \
+# Debian apt 3.0.3 can retain unbounded delayed-retry warnings (#1152704).
+# Fail on a download error; never continue with incomplete snapshot indexes.
+apt-get -o Acquire::Retries=0 -o Dir::Etc::sourcelist=/var/lib/ace-e2e/debian-snapshot.list -o Dir::Etc::sourceparts=- -o APT::Update::Error-Mode=any update
+apt-get -o Acquire::Retries=0 -o Dir::Etc::sourcelist=/var/lib/ace-e2e/debian-snapshot.list -o Dir::Etc::sourceparts=- install -y build-essential ca-certificates curl git libssl-dev zlib1g-dev \
   libyaml-dev libreadline-dev libffi-dev libgdbm-dev libncurses-dev libgmp-dev \
   pkg-config xz-utils musl-tools libnss-systemd
 # Isolated sessions rely on the same kernel restriction as ace-runtime's

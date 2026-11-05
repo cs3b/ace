@@ -254,3 +254,30 @@ execution guidance. Live autonomy and two clean acceptance pairs remain unproven
 Final coworker fast418/1968 passed with no failures/errors: e4de6b46-0ef6-4fb8-9405-35dce51d8f96. Owned VM and base confirmed stopped; base configuration matches;176GiB free.
 
 Candidate105 pins Overseer0.28.2.pre.utm105, coworker0.8.1.pre.utm105 and HITL0.25.1.pre.utm105 from5c4fe32aab57ebddeb850eaa033d436494898521. Each built twice with identical bytes; SHA256 pins are in manifest. Fetcher verified60 cached artifacts, graph55gems/7roots. Monorepo E2E fast103/366 passed3d479a68-6998-4270-bb1e-75c49880e5d3. Manifest SHA256:9e3f77dad7cdfeea1599ce58bba33212f4ba7a152ccf3cadfe33f41070bb2fa4. Next run uses standard fresh setup/export/reset, not the preserved diagnostic guest.
+
+## Candidate105 provisioning failure (not an ACE acceptance result)
+
+Run8y4y1hg-monorepo-e2e-ts003 failed before runtime installation or agent start.
+Kernel evidence on VM A5A1DEB0-6B06-4855-93F4-6700CB1396CB: apt-get926
+was OOM-killed with anon-rss7961896kB. The QGA service failed as a consequence;
+its service memory peak must not be attributed to qemu-ga itself. Runner exited1
+and the helper stopped/preserved the VM. It was restarted solely for diagnosis.
+
+Debian report1152704 describes an apt3.0.3 delayed-retry warning accumulation
+under slow downloads; this matches the symptom but is not yet a proven local
+causal reproduction. A bounded diagnostic with Acquire::Retries=0 and
+APT::Update::Error-Mode=any passed with existing indexes (242.5MB peak).
+A separate empty-list download is in progress under a768MiB/300s systemd limit.
+Runtime provisioning now disables internal acquisition retries and refuses any
+failed index download. This does not change package pins or signature checks.
+No fresh acceptance has passed; two clean pairs remain required.
+
+Empty-list diagnostic terminated with apt exit100 after snapshot HTTP503/504
+and fallback404 for security Packages; peak236.7MB, no OOM. The no-retry diagnostic exited without OOM; its explicit memory/time limits
+mean this does not prove a general resource bound, network
+reliability or complete provisioning. A second diagnostic attempts the missing
+index. Shell syntax passed; monorepo fast103/366 zero failures/errors:
+462b24a7-ae43-4644-9239-41960b156360.
+
+Independent review found no actionable blocker; resource-bound wording corrected
+to distinguish the observed result from a general guarantee.
