@@ -5,6 +5,12 @@ All notable changes to `ace-hitl` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Expose the existing strict incoming-event selection for report consumers so observation and consumption share recipient ownership rules.
+
 ## [0.25.0] - 2026-10-30
 
 ### Fixed (review rounds 3/3b + re-review R2)

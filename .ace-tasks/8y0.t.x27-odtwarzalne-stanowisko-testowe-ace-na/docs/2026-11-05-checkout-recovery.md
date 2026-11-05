@@ -155,3 +155,20 @@ Public `ace-hitl show 8y4tni` from /lab/ace resolves the worker-owned report in 
 Two distinct paths must be addressed together before claiming scoped report consumption: HITL EventObservation filters by the resolved recipient address, while Overseer HitlInbox currently lists all reports in the current scope without a recipient filter. ProjectObservations forwards the lab observer owner name into each project configuration. Bootstrap delegation currently selects the target project's configured overseer recipient even though the lab owns the commission. Merely filtering HitlInbox would not fix this fixture because both coordinators resolve to the same address. Merely closing/ignoring unmatched reports would risk hiding unaccepted work.
 
 Next change must use existing HITL address/routing ownership to distinguish the commissioning coordinator, propagate that identity through preparation and observation, and exercise lab/project isolation plus restart/duplicate handling. No new receipt registry or task-state copy is warranted. These are confirmed source/config observations, not a claimed fix or a passed acceptance.
+
+
+## Diagnostic run stopped on observed role violation
+
+Run8y4r2j1-monorepo-e2e-ts003 was deliberately terminated after the project Overseer began implementation diagnosis (`grep -rn "unprocessed_report" /opt`, observed in pane w2:p2), contrary to the required coordinator role. Before that, the lab answered project HITL8y4ubk by directing the project Overseer to disable the herdr status source itself; it escalated the underlying defects as lab HITL8y4ud8. These are agent actions, not injected operator instructions. The test cannot pass the role-boundary criterion. This is not an observation-timeout inference.
+
+Owned runner process group67405 was sent TERM; session80205 returned exit143. UTM working UUID A36E4051-BEF2-4AA0-A839-6C7C78A1F608 was requested to shut down and subsequently confirmed `stopped` by utmctl. Its disk is retained, not reset or deleted. No complete TS003/004 or clean acceptance pair passed.
+
+## Shared recipient filtering and scope regression
+
+HITL EventObservation now exposes its existing strict incoming-event selection to report consumers. HitlInbox uses that owner rule; process-reports accepts configured owner and optional current/all scope. Missing/unknown owners and invalid scopes fail explicitly. This removes the consumption/observation mismatch, but distinct lab/project address configuration remains necessary; no full routing fix is claimed yet.
+
+The same-root coordinator separation regression failed before implementation (c391304e-8c20-443e-9645-9e41848ea362). Independent review found the initial adaptation accidentally narrowed canonical checkout scope to current. A real Git linked-worktree regression then failed with expected report versus empty inbox (2cd649cb-a904-4a7c-9a5f-5bc736273786). The fix preserves nil/default scope through HITL and allows explicit scope alignment; tests cover default/all/current and invalid scope. Re-review confirmed the scope finding resolved and no new actionable finding.
+
+HITL fast405/2088,5skips (b5b9b942-3b7f-4877-a938-06b763f58cf6); final Overseer fast548/2503,1skip (64898459-6e5d-4785-87f7-aa0c3ce65245); Overseer feat10/67 before final scope-only adjustment (db78e26b-bcab-4833-b221-53aba5e17f7c). Full testing also caught a first-turn prompt contract regression: explicit ace_eyes action start/configPath was omitted in9550ffd60; restored without weakening the test.
+
+Overseer0.28.2.pre.utm102 artifact from9550ffd60292ab90c1e79595128817a7bcdb4dd5 was built twice with identical SHA256 e6f6f0e289d24b8e6891a0cbfcded511e3a5bf7bf36f13342598fdbf6f513053. It is now superseded by subsequent prompt/routing edits and must not be selected as the final candidate. Builder/fetcher allowlists now include the changed owner packages ace-support-items, ace-git-worktree and ace-hitl, retaining immutable source/digest checks; no manifest changed yet.

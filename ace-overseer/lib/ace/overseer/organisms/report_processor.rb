@@ -16,9 +16,9 @@ module Ace
       class ReportProcessor
         OUTCOME_STATUSES = %i[success error needs_answer duplicate unmatched].freeze
 
-        def initialize(inbox: nil, task_manager: nil, handoff: nil, work_on: nil, completion_check: nil)
+        def initialize(inbox: nil, task_manager: nil, handoff: nil, work_on: nil, completion_check: nil, owner: "overseer", scope: nil)
           @completion_check = completion_check || Molecules::ReportCompletionCheck.new
-          @inbox = inbox || Molecules::HitlInbox.new
+          @inbox = inbox || Molecules::HitlInbox.new(owner: owner, scope: scope)
           @task_manager = task_manager || Ace::Task::Organisms::TaskManager.new
           @handoff = handoff || Organisms::HandoffOrchestrator.new(task_loader: @task_manager)
           @work_on = work_on || Organisms::WorkOnOrchestrator.new(task_loader: @task_manager)

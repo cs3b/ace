@@ -10,7 +10,8 @@ module Ace
         FIRST_TURN_PROMPT = <<~PROMPT.chomp
           Begin your first turn now. Execute the "First turn after start"
           protocol in your standing instructions in its listed order.
-          Arm observation with the ace_eyes tool using your configured path.
+          Arm observation with the ace_eyes tool, action start, using configPath
+          set to your configured eyes path.
           Report reconciliation and new dispatch both require a successful
           observation with every required source healthy. If observation is
           unavailable or degraded, record its exact error through the existing

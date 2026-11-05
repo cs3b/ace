@@ -9,6 +9,8 @@ module Ace
 
           desc "Process incoming ace-hitl reports and continue the overseer queue"
 
+          option :scope, type: :string, desc: "HITL scope: current or all (default: owner checkout scope)"
+          option :owner, type: :string, default: "overseer", desc: "Configured HITL recipient, matching the eyes observer"
           option :dry_run, type: :boolean, default: false, desc: "Interpret reports without writes or continuation"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
@@ -18,10 +20,10 @@ module Ace
             @processor = processor
           end
 
-          def call(dry_run: false, **options)
+          def call(dry_run: false, owner: "overseer", scope: nil, **options)
             Atoms::RepoGuard.ensure_repo!
 
-            processor = @processor || Organisms::ReportProcessor.new
+            processor = @processor || Organisms::ReportProcessor.new(owner: owner, scope: scope)
             result = processor.call(
               dry_run: dry_run,
               on_progress: options[:quiet] ? nil : ->(msg) { puts msg }
