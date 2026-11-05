@@ -82,6 +82,23 @@ class TaskReparenterTest < AceTaskTestCase
     assert_match(/parent: 8pp\.t\.q7w/, subtask_content)
   end
 
+  def test_convert_rejects_existing_children_without_mutation
+    task_dir = create_task_dir("8pp.t.q7w", "my-task")
+    create_spec(task_dir, "8pp.t.q7w-my-task", status: "pending")
+    task = load_task(task_dir, "8pp.t.q7w")
+    child = Ace::Task::Molecules::SubtaskCreator.new.create(task, "Existing child")
+    before = Dir.glob(File.join(task_dir, "**", "*.s.md")).to_h { |path| [path, File.read(path)] }
+    reparenter = Ace::Task::Molecules::TaskReparenter.new(root_dir: @tasks_dir)
+
+    error = assert_raises(ArgumentError) do
+      reparenter.reparent(task, target: "self", resolve_ref: ->(_) {})
+    end
+    assert_match(/already has subtasks/, error.message)
+    after = Dir.glob(File.join(task_dir, "**", "*.s.md")).to_h { |path| [path, File.read(path)] }
+    assert_equal before, after
+    assert_equal "8pp.t.q7w.0", child.id
+  end
+
   def test_convert_raises_for_subtask
     parent_dir = create_task_dir("8pp.t.q7w", "parent")
     create_spec(parent_dir, "8pp.t.q7w-parent", status: "pending")

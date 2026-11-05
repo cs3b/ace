@@ -73,7 +73,10 @@ class LabVmArtifactsTest < AceMonorepoE2eTestCase
       "source" => "local", "source_commit" => "c" * 40, "sha256" => Digest::SHA256.hexdigest(@data)}
     release["gems"] << {"name" => "ace-coworker", "version" => "0.8.1.pre.test",
       "source" => "local", "source_commit" => "b" * 40, "sha256" => Digest::SHA256.hexdigest(@data)}
+    release["gems"] << {"name" => "ace-task", "version" => "0.41.1.pre.test",
+      "source" => "local", "source_commit" => "d" * 40, "sha256" => Digest::SHA256.hexdigest(@data)}
     File.write(path, JSON.generate(release))
+    File.write(File.join(@cache, "ace-task-0.41.1.pre.test.gem"), @data)
     File.write(File.join(@cache, "ace-wake-0.2.1.pre.test.gem"), @data)
     File.write(File.join(@cache, "ace-coworker-0.8.1.pre.test.gem"), @data)
     File.write(File.join(@cache, "ace-runtime-0.4.2.pre.test.gem"), @data)

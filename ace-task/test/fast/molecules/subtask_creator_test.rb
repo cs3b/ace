@@ -2,6 +2,9 @@
 
 require "test_helper"
 require "tmpdir"
+require "timeout"
+require "json"
+require "ace/task/molecules/task_reparenter"
 
 class SubtaskCreatorTest < AceTaskTestCase
   def setup
@@ -56,6 +59,128 @@ class SubtaskCreatorTest < AceTaskTestCase
     assert_equal "#{@parent.id}.0", first.id
     assert_equal "#{@parent.id}.1", second.id
     assert_equal "#{@parent.id}.2", third.id
+  end
+
+  def test_concurrent_processes_allocate_distinct_subtasks_without_overwriting
+    assert_concurrent_allocations
+  end
+
+  def test_creators_and_demoters_share_parent_allocation_across_aliases
+    assert_concurrent_allocations(demote: true)
+  end
+
+  def assert_concurrent_allocations(demote: false)
+    skip "requires fork" unless Process.respond_to?(:fork)
+
+    alias_path = File.join(@tmpdir, "parent-alias")
+    File.symlink(@parent.path, alias_path)
+    gate_read, gate_write = IO.pipe
+    children = []
+    # Hold the real read/write race window open, without replacing allocation.
+    slow_creator = Class.new(Ace::Task::Molecules::SubtaskCreator) do
+      private
+
+      def destination_paths_for(parent, title)
+        paths = super
+        sleep 0.1
+        paths
+      end
+    end
+    slow_reparenter = Class.new(Ace::Task::Molecules::TaskReparenter) do
+      private
+
+      def demoted_paths(task, parent)
+        paths = super
+        sleep 0.1
+        paths
+      end
+    end
+    standalone = demote ? [2, 3].to_h do |index|
+      [index, @creator.create("Move child #{index}", time: Time.utc(2026, 2, 26, 12, index, 0))]
+    end : {}
+    4.times do |index|
+      children << fork do
+        gate_write.close
+        gate_read.read(1)
+        parent = @parent.dup
+        parent.path = alias_path if index.odd?
+        child = if standalone[index]
+          slow_reparenter.new(root_dir: @tmpdir).reparent(standalone[index],
+            target: parent.id, resolve_ref: ->(_) { parent })
+        else
+          slow_creator.new.create(parent, "Concurrent child")
+        end
+        File.write(File.join(@tmpdir, "result-#{index}.json"), JSON.generate(id: child.id, path: child.file_path))
+        exit! 0
+      rescue StandardError
+        exit! 1
+      end
+    end
+    gate_read.close
+    gate_write.write("go!!")
+    gate_write.close
+    Timeout.timeout(10) do
+      children.each do |pid|
+        _, status = Process.waitpid2(pid)
+        assert status.success?, "child creation process failed"
+      end
+    end
+    children.clear
+    results = 4.times.map { |index| JSON.parse(File.read(File.join(@tmpdir, "result-#{index}.json"))) }
+    assert_equal 4, results.map { |result| result.fetch("id") }.uniq.size
+    assert_equal 4, results.map { |result| File.realpath(result.fetch("path")) }.uniq.size
+    results.each do |result|
+      assert_includes File.read(result.fetch("path")), "id: #{result.fetch('id')}"
+    end
+  ensure
+    gate_read&.close unless gate_read&.closed?
+    gate_write&.close unless gate_write&.closed?
+    Array(children).each do |pid|
+      begin
+        Process.kill("KILL", pid)
+        Process.waitpid(pid)
+      rescue Errno::ESRCH, Errno::ECHILD
+        nil
+      end
+    end
+  end
+
+  def test_process_death_releases_allocation_without_reusing_partial_child
+    skip "requires fork" unless Process.respond_to?(:fork)
+
+    ready_read, ready_write = IO.pipe
+    pid = fork do
+      ready_read.close
+      Ace::Task::Molecules::SubtaskAllocationLock.synchronize(@parent.path) do
+        Dir.mkdir(File.join(@parent.path, "0-interrupted"))
+        ready_write.write("ready")
+        ready_write.close
+        sleep 30
+      end
+      exit! 0
+    end
+    ready_write.close
+    assert_equal "ready", Timeout.timeout(5) { ready_read.read(5) }
+    Process.kill("KILL", pid)
+    Process.waitpid(pid)
+    pid = nil
+    child = Timeout.timeout(5) do
+      Ace::Task::Molecules::SubtaskCreator.new.create(@parent, "After interrupted writer")
+    end
+    assert_equal "#{@parent.id}.1", child.id
+    assert File.file?(child.file_path)
+    assert Dir.exist?(File.join(@parent.path, "0-interrupted"))
+  ensure
+    ready_read&.close unless ready_read&.closed?
+    ready_write&.close unless ready_write&.closed?
+    if pid
+      begin
+        Process.kill("KILL", pid)
+        Process.waitpid(pid)
+      rescue Errno::ESRCH, Errno::ECHILD
+        nil
+      end
+    end
   end
 
   def test_subtask_has_spec_file_with_frontmatter

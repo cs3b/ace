@@ -163,6 +163,11 @@ special-folder prefix (for example, `--in backlog` targets `_backlog/`).
 `--gc` is rejected when the target path is Git-ignored, because Git would not
 stage it.
 
+Concurrent child creation and reparenting into the same parent serialize ID
+allocation and spec publication. Path aliases share that exclusion. An interrupted
+writer's existing child directory keeps its allocated slot; it is not overwritten.
+`--move-as-child-of self` refuses a task that already has children.
+
 ### ace-task show REF
 
 Display task details by reference (full ID, short ref, or suffix).

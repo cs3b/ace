@@ -29,7 +29,7 @@ module Ace
           when "none"
             promote_to_standalone(task)
           when "self"
-            convert_to_orchestrator(task)
+            SubtaskAllocationLock.synchronize(task.path) { convert_to_orchestrator(task) }
           else
             demote_to_subtask(task, parent_ref: target, resolve_ref: resolve_ref)
           end
@@ -110,6 +110,10 @@ module Ace
             raise ArgumentError, "Cannot convert subtask #{task.id} to orchestrator — promote first"
           end
 
+          unless scan_existing_subtask_chars(task.path, task.id).empty?
+            raise ArgumentError, "Task #{task.id} already has subtasks; cannot convert it again"
+          end
+
           paths = orchestrator_paths(task)
           subtask_id = paths[:id]
           subtask_dir = paths[:dir]
@@ -155,37 +159,39 @@ module Ace
             raise ArgumentError, "Cannot reparent task to itself"
           end
 
-          paths = demoted_paths(task, parent_task)
-          new_id = paths[:id]
-          new_dir = paths[:dir]
-          new_spec_basename = paths[:spec_basename]
+          SubtaskAllocationLock.synchronize(parent_task.path) do
+            paths = demoted_paths(task, parent_task)
+            new_id = paths[:id]
+            new_dir = paths[:dir]
+            new_spec_basename = paths[:spec_basename]
 
-          raise ArgumentError, "Destination already exists: #{new_dir}" if File.exist?(new_dir)
+            raise ArgumentError, "Destination already exists: #{new_dir}" if File.exist?(new_dir)
 
-          # Move folder into parent
-          FileUtils.mv(task.path, new_dir)
+            # Move folder into parent
+            FileUtils.mv(task.path, new_dir)
 
-          # Rename spec file
-          old_spec_basename = File.basename(task.file_path)
-          old_spec_in_new_dir = File.join(new_dir, old_spec_basename)
-          new_spec_path = File.join(new_dir, new_spec_basename)
+            # Rename spec file
+            old_spec_basename = File.basename(task.file_path)
+            old_spec_in_new_dir = File.join(new_dir, old_spec_basename)
+            new_spec_path = File.join(new_dir, new_spec_basename)
 
-          File.rename(old_spec_in_new_dir, new_spec_path) if old_spec_basename != new_spec_basename
+            File.rename(old_spec_in_new_dir, new_spec_path) if old_spec_basename != new_spec_basename
 
-          # Update frontmatter: new ID, set parent
-          update_frontmatter(new_spec_path) do |fm|
-            fm["id"] = new_id
-            fm["parent"] = parent_task.id
+            # Update frontmatter: new ID, set parent
+            update_frontmatter(new_spec_path) do |fm|
+              fm["id"] = new_id
+              fm["parent"] = parent_task.id
+            end
+
+            # Descendant identities hang off the parent ID: rewrite their
+            # frontmatter and spec filenames so persisted IDs stay authoritative.
+            id_map = {task.id => new_id}
+            rewrite_descendants(new_dir, old_parent_id: task.id, new_parent_id: new_id, id_map: id_map)
+            rewrite_dependency_references(id_map)
+
+            loader = TaskLoader.new
+            loader.load(new_dir, id: new_id)
           end
-
-          # Descendant identities hang off the parent ID: rewrite their
-          # frontmatter and spec filenames so persisted IDs stay authoritative.
-          id_map = {task.id => new_id}
-          rewrite_descendants(new_dir, old_parent_id: task.id, new_parent_id: new_id, id_map: id_map)
-          rewrite_dependency_references(id_map)
-
-          loader = TaskLoader.new
-          loader.load(new_dir, id: new_id)
         end
 
         # Rewrite dependency references in every task spec after an ID map
