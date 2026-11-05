@@ -370,7 +370,7 @@
     "lockfile": "pi/package-lock.json"
   },
   "rustup": {
-    "url": "https://static.rust-lang.org/rustup/dist/aarch64-unknown-linux-gnu/rustup-init",
+    "url": "https://static.rust-lang.org/rustup/archive/1.29.2/aarch64-unknown-linux-gnu/rustup-init",
     "sha256": "a9c168dbea81a84671c6b7a5c1795cb0eb699020110d107ddfca427bd797e697",
     "channel_manifest_url": "https://static.rust-lang.org/dist/channel-rust-1.96.1.toml",
     "channel_manifest_sha256": "87eb76c53073e72b766083bed5530820694253b832a762d8385bda5759f03975"
