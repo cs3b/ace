@@ -190,7 +190,11 @@ module Ace
                 idx = extract_result_dir_index(key)
                 idx.nil? || selected_positions.include?(idx)
               end
-              return selected_from_layout unless selected_from_layout.empty?
+              unless selected_from_layout.empty?
+                return selected_from_layout.map do |path|
+                  path.to_s.end_with?("/") ? path : File.dirname(path.to_s)
+                end.uniq
+              end
             end
 
             selected_positions.map { |idx| "results/tc/#{format("%02d", idx)}" }
