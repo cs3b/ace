@@ -1,7 +1,8 @@
 From 7a2e78b4e92d2b694bd8a06c1ef4943915c399b2 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 7 Oct 2026 00:43:20 +0100
-Subject: [PATCH] feat: guard and permanently drain original-terminal input
+Subject: [PATCH 01/17] feat: guard and permanently drain original-terminal
+ input
 
 ---
  docs/next/api/herdr-api.schema.json           |  338 ++++++
@@ -3491,11 +3492,15 @@ index 9171340..a971ef6 100644
      pub fn queue_user_input_submission(
          &self,
          text: Bytes,
+-- 
+2.54.0 (Apple Git-157)
+
 
 From ef3089b24e6f3839d8331926edc295f3b6921dfe Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 01:42:50 +0100
-Subject: [PATCH] feat: accept pinned process identity from trusted launchers
+Subject: [PATCH 02/17] feat: accept pinned process identity from trusted
+ launchers
 
 ---
  src/platform/linux/guarded_origin.rs | 75 +++++++++++++++++++++++++++-
@@ -3595,12 +3600,15 @@ index 2a44e8f..898ec0b 100644
 +        assert!(capture_pinned_child(pid, descriptor).is_err());
 +    }
 +}
+-- 
+2.54.0 (Apple Git-157)
+
 
 From ec8d6b4a7643227ad3066eb740b8886e83d8483e Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 01:56:03 +0100
-Subject: [PATCH] feat: track isolated process completion through launcher
- lifecycle
+Subject: [PATCH 03/17] feat: track isolated process completion through
+ launcher lifecycle
 
 ---
  src/platform/linux.rs               |   2 +
@@ -3874,11 +3882,14 @@ index 0000000..b82a58d
 +        assert_eq!(request["unit"], child.unit);
 +    }
 +}
+-- 
+2.54.0 (Apple Git-157)
+
 
 From 8ba0cc36639448ff2223f7893caf22d05ec38ae8 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 02:02:10 +0100
-Subject: [PATCH] feat: receive authenticated session terminal handoff
+Subject: [PATCH 04/17] feat: receive authenticated session terminal handoff
 
 ---
  src/platform/linux.rs                 |   1 +
@@ -4115,11 +4126,15 @@ index 0000000..dae56c2
 +        }
 +    }
 +}
+-- 
+2.54.0 (Apple Git-157)
+
+
 From 7405a1259c4f25332fc0b90f7d64355e8808b01b Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 02:49:19 +0100
-Subject: [PATCH] feat(linux): attach configured isolated sessions to terminal
- lifecycle
+Subject: [PATCH 05/17] feat(linux): attach configured isolated sessions to
+ terminal lifecycle
 
 ---
  src/pane.rs                           | 325 +++++++++++++++++++++-----
@@ -4864,11 +4879,15 @@ index a971ef6..9b20d14 100644
      pub fn apply_host_terminal_theme(&self, theme: crate::terminal_theme::TerminalTheme) {
          self.0.apply_host_terminal_theme(theme);
      }
+-- 
+2.54.0 (Apple Git-157)
+
+
 From 95f69ef3fc5ecbd4f450f99e3420361997b84eac Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 03:12:58 +0100
-Subject: [PATCH] feat: admit and restore configured isolated agents through
- native API
+Subject: [PATCH 06/17] feat: admit and restore configured isolated agents
+ through native API
 
 ---
  docs/next/api/herdr-api.schema.json   |  60 ++++++++
@@ -6239,10 +6258,14 @@ index b48baf5..26b1b0c 100644
      );
  }
  
+-- 
+2.54.0 (Apple Git-157)
+
+
 From a90bc55ad5b26ff95e145499b2bda02a4cf941fa Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 03:22:46 +0100
-Subject: [PATCH] fix(linux): handle musl ancillary length ABI
+Subject: [PATCH 07/17] fix(linux): handle musl ancillary length ABI
 
 ---
  src/platform/linux/session_handoff.rs | 6 ++++--
@@ -6272,11 +6295,15 @@ index 1758f1d..16d45ef 100644
              let mut cmsg = libc::CMSG_FIRSTHDR(&message);
              while !cmsg.is_null() {
                  controls += 1;
+-- 
+2.54.0 (Apple Git-157)
+
+
 From 91026fe397b4e2f6b4c1566a006706f83c2a3fe4 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 03:30:46 +0100
-Subject: [PATCH] fix: dispatch isolated headless starts and reserve terminal
- identity
+Subject: [PATCH 08/17] fix: dispatch isolated headless starts and reserve
+ terminal identity
 
 ---
  src/app/api/isolated_agents.rs   |  5 +++++
@@ -6434,10 +6461,14 @@ index 310ef4d..d4e8c68 100644
          let terminal = TerminalState::new(terminal_id.clone(), cwd);
          let mut panes = HashMap::new();
          panes.insert(root_id, PaneState::new(terminal_id));
+-- 
+2.54.0 (Apple Git-157)
+
+
 From 6d6fd9e29c4a412dd0dabfa1e70415584ad1207e Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 02:54:00 +0000
-Subject: [PATCH] fix: resolve isolated agent reports by exact terminal
+Subject: [PATCH 09/17] fix: resolve isolated agent reports by exact terminal
  identity
 
 ---
@@ -6518,11 +6549,15 @@ index 5ca1830..039e127 100644
      #[test]
      fn pane_input_set_changes_only_the_target_pane() {
          let (mut app, public_pane_id) = app_with_test_workspace();
+-- 
+2.54.0 (Apple Git-157)
+
+
 From e884a1608d316d322a673c5905d8b67d8a51bf53 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 02:57:12 +0000
-Subject: [PATCH] fix: validate Pi report acknowledgements before accepting
- delivery
+Subject: [PATCH 10/17] fix: validate Pi report acknowledgements before
+ accepting delivery
 
 ---
  .../assets/herdr-agent-state.test.ts          | 28 +++++++++++++------
@@ -6663,10 +6698,15 @@ index 673225a..546289d 100644
  const OMP_EXTENSION_INSTALL_NAME: &str = "herdr-omp-agent-state.ts";
  const OMP_EXTENSION_ASSET: &str = include_str!("assets/omp/herdr-agent-state.ts");
  const OMP_INTEGRATION_VERSION: u32 = 10;
+-- 
+2.54.0 (Apple Git-157)
+
+
 From dfb88ce05e26cf692d5cff000818550a6bfada85 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 03:00:59 +0000
-Subject: [PATCH] fix: bind isolated launches to reserved terminal identity
+Subject: [PATCH 11/17] fix: bind isolated launches to reserved terminal
+ identity
 
 ---
  src/app/api/isolated_agents.rs       |  9 +++--
@@ -6851,11 +6891,15 @@ index 13b8aee..c9e3f73 100644
  ) -> std::io::Result<crate::pty::backend::SpawnedPty> {
      Err(std::io::Error::new(
          std::io::ErrorKind::Unsupported,
+-- 
+2.54.0 (Apple Git-157)
+
+
 From 9010381bc6f1ffd31018694fbe999b0a81fe414b Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 03:31:07 +0000
-Subject: [PATCH] Expose isolated launch selection and resolve exact process
- targets
+Subject: [PATCH 12/17] Expose isolated launch selection and resolve exact
+ process targets
 
 ---
  docs/next/api/herdr-api.schema.json | 27 ++++++++++++++++++++++
@@ -7045,10 +7089,15 @@ index bcd5d25..fc456bb 100644
  #[serde(deny_unknown_fields)]
  pub struct IsolatedSessionConfig {
      pub project: String,
+-- 
+2.54.0 (Apple Git-157)
+
+
 From 9bc62225f7c2049d34f7b7287901555852b80cf4 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 04:17:44 +0000
-Subject: [PATCH] fix: resolve agent queries by immutable terminal identity
+Subject: [PATCH 13/17] fix: resolve agent queries by immutable terminal
+ identity
 
 ---
  src/app/terminal_targets.rs | 35 +++++++++++++++++++++++++++++++++++
@@ -7107,10 +7156,14 @@ index 658eeaa..003c30c 100644
      #[test]
      fn named_targets_follow_terminal_identity_after_pane_and_tab_reordering() {
          let mut app = test_app();
+-- 
+2.54.0 (Apple Git-157)
+
+
 From e70ad71d36b53b866743f3c81330813502db3627 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 04:31:10 +0000
-Subject: [PATCH] fix: permit configured lab coordinator terminal handoff
+Subject: [PATCH 14/17] fix: permit configured lab coordinator terminal handoff
 
 ---
  src/platform/linux/session_handoff.rs | 42 +++++++++++++++++++++++++--
@@ -7183,11 +7236,15 @@ index 16d45ef..dd88fbf 100644
      use super::*;
      use std::io::Write;
      fn send_handles(mut stream: &UnixStream, count: usize, fragmented: bool) {
+-- 
+2.54.0 (Apple Git-157)
+
+
 From c17ef7290086f338dd33370ebc9304149c3fa9f4 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 04:57:42 +0000
-Subject: [PATCH] fix: observe isolated interactive readiness before startup
- wait completes
+Subject: [PATCH 15/17] fix: observe isolated interactive readiness before
+ startup wait completes
 
 ---
  src/api/wait.rs        | 43 ++++++++++++++++++++++++++++++++++++++++--
@@ -7381,10 +7438,14 @@ index 8c3d4b8..ef94112 100644
              if self.app.expire_due_metadata(Instant::now()) {
                  needs_render = true;
                  needs_full_render = true;
+-- 
+2.54.0 (Apple Git-157)
+
+
 From b0be31ac215bd68934caae4bb17c3eb3dd0b6be0 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 05:43:33 +0000
-Subject: [PATCH] feat: retain scoped execution directories for isolated
+Subject: [PATCH 16/17] feat: retain scoped execution directories for isolated
  workers
 
 ---
@@ -7401,7 +7462,7 @@ Subject: [PATCH] feat: retain scoped execution directories for isolated
  10 files changed, 115 insertions(+), 37 deletions(-)
 
 diff --git a/src/api/schema/agents.rs b/src/api/schema/agents.rs
-index 2410447c..f362f4dd 100644
+index 2410447..f362f4d 100644
 --- a/src/api/schema/agents.rs
 +++ b/src/api/schema/agents.rs
 @@ -166,6 +166,8 @@ pub enum AgentViewSortOrder {
@@ -7414,7 +7475,7 @@ index 2410447c..f362f4dd 100644
      pub workspace_id: String,
      pub project: String,
 diff --git a/src/api/schema/tests.rs b/src/api/schema/tests.rs
-index af5cb8dc..d967277b 100644
+index af5cb8d..d967277 100644
 --- a/src/api/schema/tests.rs
 +++ b/src/api/schema/tests.rs
 @@ -1526,7 +1526,10 @@ fn isolated_start_is_a_distinct_closed_configuration_request() {
@@ -7430,7 +7491,7 @@ index af5cb8dc..d967277b 100644
          invalid["params"][field] = serde_json::json!("override");
          assert!(serde_json::from_value::<Request>(invalid).is_err());
 diff --git a/src/app/api/isolated_agents.rs b/src/app/api/isolated_agents.rs
-index 4baffdfe..b81359c3 100644
+index 4baffdf..b81359c 100644
 --- a/src/app/api/isolated_agents.rs
 +++ b/src/app/api/isolated_agents.rs
 @@ -52,6 +52,7 @@ impl App {
@@ -7450,7 +7511,7 @@ index 4baffdfe..b81359c3 100644
              workspace_id: "missing".into(),
              project: "ace".into(),
 diff --git a/src/cli/agent.rs b/src/cli/agent.rs
-index 7c6f7d81..865a6d72 100644
+index 7c6f7d8..865a6d7 100644
 --- a/src/cli/agent.rs
 +++ b/src/cli/agent.rs
 @@ -290,7 +290,7 @@ fn matched_rule_region_preview<'a>(
@@ -7486,7 +7547,7 @@ index 7c6f7d81..865a6d72 100644
              workspace_id,
              project,
 diff --git a/src/persist/restore.rs b/src/persist/restore.rs
-index 2b3ef862..7df40501 100644
+index 2b3ef86..7df4050 100644
 --- a/src/persist/restore.rs
 +++ b/src/persist/restore.rs
 @@ -518,32 +518,37 @@ fn restore_tab(
@@ -7554,7 +7615,7 @@ index 2b3ef862..7df40501 100644
                  Err(std::io::Error::other(
                      "isolated session restoration is disabled",
 diff --git a/src/platform/linux/session_handoff.rs b/src/platform/linux/session_handoff.rs
-index dd88fbfa..6f25878a 100644
+index dd88fbf..6f25878 100644
 --- a/src/platform/linux/session_handoff.rs
 +++ b/src/platform/linux/session_handoff.rs
 @@ -45,7 +45,22 @@ fn valid_directory(directory: &std::path::Path, unit: &str) -> bool {
@@ -7607,7 +7668,7 @@ index dd88fbfa..6f25878a 100644
      fn isolated_coordinator_directory_requires_exact_lab_unit_role() {
          use std::path::Path;
 diff --git a/src/platform/linux/session_launch.rs b/src/platform/linux/session_launch.rs
-index 021dda46..46e63482 100644
+index 021dda4..46e6348 100644
 --- a/src/platform/linux/session_launch.rs
 +++ b/src/platform/linux/session_launch.rs
 @@ -13,6 +13,7 @@ const ENDPOINT: &str = "/run/lab/ace-lab-auth.sock";
@@ -7699,7 +7760,7 @@ index 021dda46..46e63482 100644
      }
  }
 diff --git a/src/platform/mod.rs b/src/platform/mod.rs
-index c9e3f739..7834a2b6 100644
+index c9e3f73..7834a2b 100644
 --- a/src/platform/mod.rs
 +++ b/src/platform/mod.rs
 @@ -13,6 +13,7 @@ pub(crate) fn supports_isolated_sessions() -> bool {
@@ -7711,7 +7772,7 @@ index c9e3f739..7834a2b6 100644
      _cols: u16,
      _terminal_id: &str,
 diff --git a/src/server/headless/tests/mod.rs b/src/server/headless/tests/mod.rs
-index 77ca94f6..20175865 100644
+index 77ca94f..2017586 100644
 --- a/src/server/headless/tests/mod.rs
 +++ b/src/server/headless/tests/mod.rs
 @@ -7851,6 +7851,7 @@ async fn headless_isolated_start_reaches_deferred_dispatcher() {
@@ -7723,7 +7784,7 @@ index 77ca94f6..20175865 100644
                      workspace_id: "999999".into(),
                      project: "ace".into(),
 diff --git a/tests/cli/agents.rs b/tests/cli/agents.rs
-index ce2202e2..f73327cb 100644
+index ce2202e..f73327c 100644
 --- a/tests/cli/agents.rs
 +++ b/tests/cli/agents.rs
 @@ -1479,7 +1479,8 @@ fn isolated_start_cli_rejects_runtime_overrides_and_duplicate_selection() {
@@ -7736,6 +7797,449 @@ index ce2202e2..f73327cb 100644
      ] {
          let mut args = vec![
              "agent",
+-- 
+2.54.0 (Apple Git-157)
+
+
+From 554ba05e537fa908c503745a35dfee176ad1c820 Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Thu, 5 Nov 2026 16:33:42 +0000
+Subject: [PATCH 17/17] fix: wait for isolated pi lifecycle readiness before
+ accepting input
+
+---
+ docs/next/api/herdr-api.schema.json |   6 ++
+ src/app/api/agents.rs               |  89 ++++++++---------
+ src/pane.rs                         |  54 ++++++----
+ src/platform/guarded_prompt.rs      |   7 +-
+ src/terminal/state.rs               | 150 +++++++++++++++++++++++++++-
+ 5 files changed, 235 insertions(+), 71 deletions(-)
+
+diff --git a/docs/next/api/herdr-api.schema.json b/docs/next/api/herdr-api.schema.json
+index 4611c3d..4b5ac0a 100644
+--- a/docs/next/api/herdr-api.schema.json
++++ b/docs/next/api/herdr-api.schema.json
+@@ -1444,6 +1444,12 @@
+         "AgentStartIsolatedParams": {
+           "additionalProperties": false,
+           "properties": {
++            "cwd": {
++              "type": [
++                "string",
++                "null"
++              ]
++            },
+             "name": {
+               "type": "string"
+             },
+diff --git a/src/app/api/agents.rs b/src/app/api/agents.rs
+index dfa7fd0..0704339 100644
+--- a/src/app/api/agents.rs
++++ b/src/app/api/agents.rs
+@@ -11,6 +11,13 @@ use crate::platform::guarded_prompt::{GuardedPromptError, GuardedPromptOrigin};
+ 
+ use super::responses::{encode_error, encode_error_body, encode_success};
+ 
++type QueuedGuardedPrompt = (
++    String,
++    crate::api::schema::AgentInfo,
++    GuardedPromptOrigin,
++    std::sync::mpsc::Receiver<Result<(), GuardedPromptError>>,
++);
++
+ const AGENT_PROMPT_SUBMIT_DELAY: Duration = Duration::from_millis(300);
+ // A missing completion never authorizes drain; inhibition remains installed.
+ const INPUT_DRAIN_ACK_TIMEOUT: Duration = Duration::from_secs(5);
+@@ -203,15 +210,7 @@ impl App {
+         &mut self,
+         id: String,
+         params: AgentPromptParams,
+-    ) -> Result<
+-        (
+-            String,
+-            crate::api::schema::AgentInfo,
+-            GuardedPromptOrigin,
+-            std::sync::mpsc::Receiver<Result<(), GuardedPromptError>>,
+-        ),
+-        String,
+-    > {
++    ) -> Result<QueuedGuardedPrompt, String> {
+         let expected = params
+             .validate_guarded()
+             .map_err(|error| guarded_error(id.clone(), error))?;
+@@ -551,6 +550,42 @@ fn agent_not_found(id: String, target: &str) -> String {
+     )
+ }
+ 
++fn guarded_error(id: String, error: GuardedPromptError) -> String {
++    serde_json::json!(crate::api::schema::GuardedPromptErrorResponse {
++        id,
++        error: crate::api::schema::GuardedPromptErrorBody {
++            code: error.code().to_owned(),
++            message: "guarded prompt did not complete".to_owned(),
++            phase: error.phase().to_owned(),
++        },
++    })
++    .to_string()
++}
++
++pub(super) fn input_drain_error(
++    id: String,
++    error: crate::platform::guarded_prompt::InputDrainError,
++) -> String {
++    serde_json::json!(crate::api::schema::InputDrainErrorResponse {
++        id,
++        error: crate::api::schema::InputDrainErrorBody {
++            code: match error {
++                crate::platform::guarded_prompt::InputDrainError::GuardMismatch => {
++                    crate::api::schema::InputDrainCode::GuardMismatch
++                }
++                crate::platform::guarded_prompt::InputDrainError::OriginUnavailable => {
++                    crate::api::schema::InputDrainCode::OriginUnavailable
++                }
++                crate::platform::guarded_prompt::InputDrainError::Unavailable => {
++                    crate::api::schema::InputDrainCode::Unavailable
++                }
++            },
++            phase: crate::api::schema::InputDrainPhase::Unconfirmed,
++        },
++    })
++    .to_string()
++}
++
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+@@ -1054,39 +1089,3 @@ mod tests {
+         }
+     }
+ }
+-
+-fn guarded_error(id: String, error: GuardedPromptError) -> String {
+-    serde_json::json!(crate::api::schema::GuardedPromptErrorResponse {
+-        id,
+-        error: crate::api::schema::GuardedPromptErrorBody {
+-            code: error.code().to_owned(),
+-            message: "guarded prompt did not complete".to_owned(),
+-            phase: error.phase().to_owned(),
+-        },
+-    })
+-    .to_string()
+-}
+-
+-pub(super) fn input_drain_error(
+-    id: String,
+-    error: crate::platform::guarded_prompt::InputDrainError,
+-) -> String {
+-    serde_json::json!(crate::api::schema::InputDrainErrorResponse {
+-        id,
+-        error: crate::api::schema::InputDrainErrorBody {
+-            code: match error {
+-                crate::platform::guarded_prompt::InputDrainError::GuardMismatch => {
+-                    crate::api::schema::InputDrainCode::GuardMismatch
+-                }
+-                crate::platform::guarded_prompt::InputDrainError::OriginUnavailable => {
+-                    crate::api::schema::InputDrainCode::OriginUnavailable
+-                }
+-                crate::platform::guarded_prompt::InputDrainError::Unavailable => {
+-                    crate::api::schema::InputDrainCode::Unavailable
+-                }
+-            },
+-            phase: crate::api::schema::InputDrainPhase::Unconfirmed,
+-        },
+-    })
+-    .to_string()
+-}
+diff --git a/src/pane.rs b/src/pane.rs
+index 47ed6d9..47337cb 100644
+--- a/src/pane.rs
++++ b/src/pane.rs
+@@ -3624,24 +3624,30 @@ impl PaneRuntime {
+         &self,
+         terminal_id: &str,
+     ) -> Option<crate::platform::guarded_prompt::GuardedPromptOrigin> {
+-        #[cfg(unix)]
+-        if let PaneRuntimeIo::Actor(actor) = &self.io {
+-            return actor.guarded_origin(terminal_id);
++        match &self.io {
++            #[cfg(unix)]
++            PaneRuntimeIo::Actor(actor) => actor.guarded_origin(terminal_id),
++            #[cfg(any(test, not(unix)))]
++            _ => {
++                let _ = terminal_id;
++                None
++            }
+         }
+-        let _ = terminal_id;
+-        None
+     }
+ 
+     pub(crate) fn captured_input_origin(
+         &self,
+         terminal_id: &str,
+     ) -> Option<crate::platform::guarded_prompt::GuardedPromptOrigin> {
+-        #[cfg(unix)]
+-        if let PaneRuntimeIo::Actor(actor) = &self.io {
+-            return actor.captured_input_origin(terminal_id);
++        match &self.io {
++            #[cfg(unix)]
++            PaneRuntimeIo::Actor(actor) => actor.captured_input_origin(terminal_id),
++            #[cfg(any(test, not(unix)))]
++            _ => {
++                let _ = terminal_id;
++                None
++            }
+         }
+-        let _ = terminal_id;
+-        None
+     }
+     pub(crate) fn inhibit_input(
+         &self,
+@@ -3650,12 +3656,15 @@ impl PaneRuntime {
+         std::sync::mpsc::Receiver<Result<(), crate::platform::guarded_prompt::InputDrainError>>,
+         crate::platform::guarded_prompt::InputDrainError,
+     > {
+-        #[cfg(unix)]
+-        if let PaneRuntimeIo::Actor(actor) = &self.io {
+-            return actor.inhibit_input(expected);
++        match &self.io {
++            #[cfg(unix)]
++            PaneRuntimeIo::Actor(actor) => actor.inhibit_input(expected),
++            #[cfg(any(test, not(unix)))]
++            _ => {
++                let _ = expected;
++                Err(crate::platform::guarded_prompt::InputDrainError::OriginUnavailable)
++            }
+         }
+-        let _ = expected;
+-        Err(crate::platform::guarded_prompt::InputDrainError::OriginUnavailable)
+     }
+     pub(crate) fn queue_guarded_submission(
+         &self,
+@@ -3667,12 +3676,17 @@ impl PaneRuntime {
+         std::sync::mpsc::Receiver<Result<(), crate::platform::guarded_prompt::GuardedPromptError>>,
+         crate::platform::guarded_prompt::GuardedPromptError,
+     > {
+-        #[cfg(unix)]
+-        if let PaneRuntimeIo::Actor(actor) = &self.io {
+-            return actor.queue_guarded_submission(text, enter, delay, expected);
++        match &self.io {
++            #[cfg(unix)]
++            PaneRuntimeIo::Actor(actor) => {
++                actor.queue_guarded_submission(text, enter, delay, expected)
++            }
++            #[cfg(any(test, not(unix)))]
++            _ => {
++                let _ = (text, enter, delay, expected);
++                Err(crate::platform::guarded_prompt::GuardedPromptError::OriginUnavailable)
++            }
+         }
+-        let _ = (text, enter, delay, expected);
+-        Err(crate::platform::guarded_prompt::GuardedPromptError::OriginUnavailable)
+     }
+ 
+     pub fn queue_user_input_submission(
+diff --git a/src/platform/guarded_prompt.rs b/src/platform/guarded_prompt.rs
+index d8c2848..e35245d 100644
+--- a/src/platform/guarded_prompt.rs
++++ b/src/platform/guarded_prompt.rs
+@@ -201,6 +201,7 @@ impl GuardedWriteState {
+     }
+ }
+ 
++#[cfg(any(target_os = "linux", test))]
+ pub(crate) fn parse_linux_child_identity(
+     pid: u32,
+     status: &str,
+@@ -259,10 +260,8 @@ pub(crate) fn parse_linux_child_identity(
+                     values.dedup();
+                     groups = Some(values);
+                 }
+-                "PPid" => {
+-                    if values.len() != 1 || ppid.replace(values[0]).is_some() {
+-                        return Err(invalid());
+-                    }
++                "PPid" if values.len() != 1 || ppid.replace(values[0]).is_some() => {
++                    return Err(invalid());
+                 }
+                 _ => {}
+             }
+diff --git a/src/terminal/state.rs b/src/terminal/state.rs
+index fc456bb..c343828 100644
+--- a/src/terminal/state.rs
++++ b/src/terminal/state.rs
+@@ -2234,8 +2234,21 @@ impl TerminalState {
+             self.clear_agent_name();
+             return true;
+         }
++        // Isolated Pi always has the protected lifecycle integration. Its UI can
++        // look idle while startup still rejects input; only the session_start
++        // hook proves that its command handler has been installed.
++        let input_initialized = self.isolated_launch.is_none()
++            || managed.kind != Agent::Pi
++            || self.live_full_lifecycle_hook_authority()
++                && self.hook_authority.as_ref().is_some_and(|authority| {
++                    authority.source == "herdr:pi"
++                        && authority.agent_label == "pi"
++                        && authority.session_ref.is_some()
++                        && authority.state == AgentState::Idle
++                });
+         if managed.phase == ManagedAgentPhase::Blocked {
+-            if known_agent == Some(managed.kind)
++            if input_initialized
++                && known_agent == Some(managed.kind)
+                 && (self.state == AgentState::Idle
+                     || managed.kind == Agent::Codex
+                         && self.state == AgentState::Unknown
+@@ -2268,7 +2281,8 @@ impl TerminalState {
+                 return true;
+             }
+             if ready_after.is_none_or(|ready_after| now >= ready_after) {
+-                if known_agent == Some(managed.kind)
++                if input_initialized
++                    && known_agent == Some(managed.kind)
+                     && (self.state == AgentState::Idle
+                         || managed.kind == Agent::Codex
+                             && self.state == AgentState::Unknown
+@@ -2535,6 +2549,138 @@ mod tests {
+         assert_eq!(terminal.agent_name, None);
+     }
+ 
++    #[test]
++    fn isolated_pi_requires_lifecycle_hook_before_accepting_input() {
++        // Pi renders an idle-looking UI before tools and input handlers are ready.
++        // The protected extension reports only after session_start.
++        for initially_blocked in [false, true] {
++            let mut terminal = test_terminal();
++            let now = Instant::now();
++            terminal.isolated_launch = Some(IsolatedSessionConfig {
++                project: "/lab/ace".into(),
++                role: "worker".into(),
++            });
++            terminal.begin_managed_agent(
++                "worker".into(),
++                Agent::Pi,
++                now,
++                Duration::ZERO,
++                Duration::from_secs(120),
++            );
++            if initially_blocked {
++                terminal.set_detected_state(Some(Agent::Pi), AgentState::Blocked);
++                terminal.reconcile_managed_agent_at(now, false);
++            }
++            terminal.set_detected_state(Some(Agent::Pi), AgentState::Idle);
++            terminal.reconcile_managed_agent_at(now + Duration::from_secs(5), false);
++            assert!(terminal.managed_agent_launch_pending());
++            assert!(!terminal.managed_agent_interactive_ready());
++
++            terminal.set_hook_authority_with_session_ref(
++                "custom".into(),
++                "pi".into(),
++                AgentState::Idle,
++                None,
++                None,
++                Some(1),
++            );
++            terminal.reconcile_managed_agent_at(now + Duration::from_secs(5), false);
++            assert!(!terminal.managed_agent_interactive_ready());
++            terminal.clear_hook_authority(Some("custom"), Some(2));
++            terminal
++                .set_agent_session_ref_for_session_start(
++                    "herdr:pi".into(),
++                    "pi".into(),
++                    crate::agent_resume::AgentSessionRef::id("ready-session"),
++                    Some(1),
++                    Some("new".into()),
++                )
++                .expect("protected session_start should anchor the session");
++            terminal.set_hook_authority_with_session_ref(
++                "herdr:pi".into(),
++                "pi".into(),
++                AgentState::Working,
++                None,
++                crate::agent_resume::AgentSessionRef::id("ready-session"),
++                Some(2),
++            );
++            terminal.reconcile_managed_agent_at(now + Duration::from_secs(5), false);
++            assert!(!terminal.managed_agent_interactive_ready());
++            terminal.set_hook_authority_with_session_ref(
++                "herdr:pi".into(),
++                "pi".into(),
++                AgentState::Idle,
++                None,
++                crate::agent_resume::AgentSessionRef::id("ready-session"),
++                Some(3),
++            );
++            assert!(terminal.reconcile_managed_agent_at(now + Duration::from_secs(6), false));
++            assert!(terminal.managed_agent_interactive_ready());
++            assert!(!terminal.managed_agent_launch_pending());
++        }
++    }
++
++    #[test]
++    fn isolated_pi_exit_invalidates_ready_hook_before_input_is_released() {
++        let mut terminal = test_terminal();
++        let now = Instant::now();
++        terminal.isolated_launch = Some(IsolatedSessionConfig {
++            project: "ace".into(),
++            role: "worker".into(),
++        });
++        terminal.begin_managed_agent(
++            "worker".into(),
++            Agent::Pi,
++            now,
++            Duration::ZERO,
++            Duration::from_secs(120),
++        );
++        let session_ref = crate::agent_resume::AgentSessionRef::id("exited-session");
++        terminal.set_detected_state(Some(Agent::Pi), AgentState::Idle);
++        terminal
++            .set_agent_session_ref_for_session_start(
++                "herdr:pi".into(),
++                "pi".into(),
++                session_ref.clone(),
++                Some(1),
++                Some("new".into()),
++            )
++            .expect("session must be anchored before its hook");
++        terminal.set_hook_authority_with_session_ref(
++            "herdr:pi".into(),
++            "pi".into(),
++            AgentState::Idle,
++            None,
++            session_ref.clone(),
++            Some(2),
++        );
++        assert!(terminal.live_full_lifecycle_hook_authority());
++        assert_eq!(
++            terminal.hook_authority.as_ref().unwrap().state,
++            AgentState::Idle
++        );
++        terminal.set_detected_state_with_screen_signals_at(
++            Some(Agent::Pi),
++            AgentState::Idle,
++            false,
++            false,
++            false,
++            true,
++            now,
++        );
++        terminal.set_hook_authority_with_session_ref(
++            "herdr:pi".into(),
++            "pi".into(),
++            AgentState::Idle,
++            None,
++            session_ref,
++            Some(3),
++        );
++        terminal.reconcile_managed_agent_at(now + Duration::from_secs(1), false);
++        assert!(!terminal.live_full_lifecycle_hook_authority());
++        assert!(!terminal.managed_agent_interactive_ready());
++    }
++
+     #[test]
+     fn codex_managed_readiness_requires_current_prompt_without_idle() {
+         let now = Instant::now();
 -- 
 2.54.0 (Apple Git-157)
 
