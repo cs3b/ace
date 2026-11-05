@@ -137,7 +137,7 @@ When using default report paths, derive the newest directory from `.ace-local/te
 - `ace-test-e2e` runs scenario workflows from `test/e2e/`; deterministic package coverage should run via `ace-test <package>` (default `fast`) and `ace-test <package> feat`.
 - Scenario metadata is read from each scenario directory's `scenario.yml`.
 - ACE supports two TC styles: `public-surface` user journeys and `retained-contract` deterministic regression checks.
-- `sandbox-layout` is a directory-level outcome hint for prep and verifier context. It does not replace exact file declarations when a verifier depends on specific `results/tc/...` files.
+- `sandbox-layout` declares directories and artifact files. Keys ending in `/` are directories; other keys are files, for which prep creates only parent directories and preserves existing contents. File-dependent verification requires exact file declarations in the runner or `sandbox-layout`; a directory entry alone is insufficient.
 - Verifier-only artifact references and wildcard artifact paths are invalid scenario contracts.
 - Grouped runner shorthand such as ``results/tc/02/help.stdout`, `.stderr`, `.exit`` counts as an explicit declaration of all three files.
 - Use `--dry-run` before long executions when validating selection and tags.

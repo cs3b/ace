@@ -46,7 +46,7 @@ Example: `ace-lint/test/e2e/TS-LINT-001-lint-pipeline/scenario.yml`
 |-------|------|---------|-------------|
 | `priority` | string | `medium` | Test priority: `high`, `medium`, `low` |
 | `tool-under-test` | string | — | Primary command/tool validated |
-| `sandbox-layout` | object | `{}` | Directory-level outcome hints used to precreate `results/tc/*` paths and guide verification |
+| `sandbox-layout` | object | `{}` | Directory and exact artifact-file declarations; trailing `/` denotes a directory, otherwise only the parent directory is created |
 | `duration` | string | — | Estimated duration (e.g., `~15min`) |
 | `timeout` | integer | — | Optional per-scenario execution timeout in seconds |
 | `automation-candidate` | boolean | `false` | Whether test is automatable |
@@ -74,7 +74,8 @@ Artifact layout conventions:
 - canonical: `results/tc/{NN}/`
 - avoid non-TC-scoped result folders
 - keep only declared verifier-dependent evidence under `results/tc/{NN}/`; runner observations live in harness reports, not sandbox helper files
-- file-level verifier checks must be declared by the runner; `sandbox-layout` does not replace exact file declarations
+- file-level verifier checks require exact paths declared by the runner or `sandbox-layout`; directory hints alone are insufficient
+- in `sandbox-layout`, keys ending in `/` declare directories; other keys declare files, whose parent directories are created without creating or replacing the files
 - grouped shorthand such as ``results/tc/01/help.stdout`, `.stderr`, `.exit`` is valid for exact sibling captures
 - wildcard artifact paths are not supported
 - absence of a declared path is debug context, not a standalone failure reason
