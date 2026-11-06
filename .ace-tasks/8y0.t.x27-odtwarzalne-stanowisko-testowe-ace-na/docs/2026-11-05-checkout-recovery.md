@@ -468,3 +468,20 @@ read four real, independently configured project inventories (one record each),
 with poisoned checkout Gemfiles. Inventory work took0.015472s on this host.
 This is artifact-level evidence on macOS, not Linux timing or E2E acceptance.
 The current candidate105 VM and tracked release manifest remain unchanged.
+
+
+### Live review handoff and fixture PATH correction
+
+The project Overseer independently continued after worker completion and launched
+base reviewer8y54751 (term_65f938767dd3f9) and docs reviewer8y54731
+(term_65f939544d0d1a). Both real PRs5/6 were independently read from Forgejo's
+read-only database before handoff: open, unmerged, no reviews yet. This is new
+progress beyond the earlier waiting snapshot, not a completed integration.
+
+Base reviewer exposed missing Pi CLI in the isolated session PATH and itself
+retried ace-review after adding the existing installed Pi bin directory. The
+fixture's ordinary profile already included that directory, but session_runtime
+path omitted it. Added /opt/ace/runtime/pi/node_modules/.bin to the trusted
+fixture session PATH for future resets. Read-only guest stat confirms the
+existing directory is root:root0755. No modification of the running VM or agent
+instructions was made; review verdicts and merges remain pending.
