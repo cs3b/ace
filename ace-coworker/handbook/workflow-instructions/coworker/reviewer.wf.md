@@ -139,15 +139,18 @@ product decision is escalated to the overseer instead.
      the convergence counters by itself.
 
 6. **Return to full review.**
-   - After fixes, run a FULL round over the whole candidate with the same
-     retained forge selection. With a `--pr` subject, `--delta` may scope
-     later rounds (it carries findings forward); with a local diff subject,
-     re-run the full `diff:<merge-base>..<head>` range (`--delta` requires
-     `--pr`). A delta round counts toward the 3/2/10 rule only when it
-     still reviews every changed part; a fix-diff check never counts. Any
-     candidate change renews the evidence: every accepted review binds the
-     current candidate SHA; a committed task edit changes the candidate and
-     requires renewed evidence.
+   - For a forge PR, publish scoped fix commits to the existing PR source
+     branch before the next full round. Use the reviewer session's own
+     authorized lease. Read the current PR source repository, branch and
+     HEAD from the forge. Proceed only if that HEAD is the last known PR
+     revision and the update is a fast-forward. Push the exact candidate
+     to that branch without force and re-read the PR to verify its HEAD.
+     An unexpected remote change or denied push blocks this handoff.
+   - Run a FULL round over the whole current candidate with the retained
+     forge selection and the verified forge base and HEAD. Recompute the
+     merge-base if either changes. A fix-only diff or scoped delta is
+     separate from a full round. A committed task edit also changes the
+     candidate and requires renewed review and test evidence.
    - **Convergence rule 3/2/10**: minimum 3 full rounds, the last 2
      consecutive without confirmed High/Critical and with no unresolved
      earlier High/Critical; maximum 10 - if round 10 satisfies the rule,
