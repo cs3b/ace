@@ -25,6 +25,7 @@ class DefaultTargetSelectionCliTest < Minitest::Test
         SOURCE
       end
       File.write(File.join(root, "Gemfile"), "eval_gemfile #{File.join(ROOT, 'Gemfile').inspect}\n")
+      configure_fixture_bundle(root)
       if narrow
         FileUtils.mkdir_p(File.join(root, ".ace", "test"))
         File.write(File.join(root, ".ace/test/runner.yml"), YAML.dump({"targets" => {"all" => ["fast"]}}))

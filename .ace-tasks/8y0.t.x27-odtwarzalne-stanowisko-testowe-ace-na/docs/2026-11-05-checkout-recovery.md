@@ -399,3 +399,19 @@ files were restored after baseline testing and their SHA-256 hashes verified.
 
 Acceptance remains 0/2. The running manifest is unchanged; rebuilt candidate and
 clean reset acceptance are still required.
+
+
+### Runner feature-suite follow-up
+
+The remaining fixture failures were traced to temporary projects evaluating the
+checkout Gemfile without its configured dependency directory. A shared test-only
+`configure_fixture_bundle` now writes that directory to each fixture’s local
+Bundler configuration; environment isolation and verdict/evidence assertions are
+unchanged. Independent reviewer found no actionable issue. Focused tests: 3/30
+(`bf1e5969-00b6-4f3c-a034-986c7803abc5`) and 23/474
+(`927fe2e4-deaa-4cc8-9767-61b49ac61450`). Full feat now passes **96 tests / 803
+assertions / 0 failures / 0 errors** (`828549da-181a-4f8a-9198-c598c5f24987`).
+This supersedes the local baseline-failure limitation above, not the outstanding
+live installed-runtime acceptance. Candidate109 artifacts were reproducibly built
+from eee6b426645b61783bc97397e6c3531973457562; this subsequent test-only change is
+not included in that source SHA. The active VM manifest remains unchanged.

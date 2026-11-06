@@ -136,6 +136,7 @@ class SuiteExecutionEvidenceTest < Minitest::Test
     [false, true].product([false, true]).each do |failure, save_reports|
       Dir.mktmpdir do |root|
         File.write(File.join(root, "Gemfile"), "eval_gemfile #{File.join(ROOT, 'Gemfile').inspect}\n")
+        configure_fixture_bundle(root)
         package = {"name" => "ace-sample", "path" => root, "entry_id" => "suite-entry"}
         monitor = FixtureMonitor.new
         monitor.command = fixture_command(root, failure: failure, saved: save_reports, barrier: true)
@@ -174,6 +175,7 @@ class SuiteExecutionEvidenceTest < Minitest::Test
     [:exit, :timeout, :interrupt].each do |mode|
       Dir.mktmpdir do |root|
         File.write(File.join(root, "Gemfile"), "eval_gemfile #{File.join(ROOT, 'Gemfile').inspect}\n")
+        configure_fixture_bundle(root)
         package = {"name" => "ace-sample", "path" => root, "entry_id" => "entry"}
         current_time = Time.now
         monitor = FixtureMonitor.new(package_timeout: 1, clock: -> { current_time })
@@ -202,6 +204,7 @@ class SuiteExecutionEvidenceTest < Minitest::Test
       [false, true].each do |zero|
         Dir.mktmpdir do |root|
           File.write(File.join(root, "Gemfile"), "eval_gemfile #{File.join(ROOT, 'Gemfile').inspect}\n")
+          configure_fixture_bundle(root)
           FileUtils.mkdir_p(File.join(root, ".ace/test"))
           FileUtils.mkdir_p(File.join(root, "test"))
           File.write(File.join(root, ".ace/test/runner.yml"), YAML.dump({"version" => 1,
@@ -310,6 +313,7 @@ class SuiteExecutionEvidenceTest < Minitest::Test
     [true, false].each do |save_reports|
       Dir.mktmpdir do |root|
         File.write(File.join(root, "Gemfile"), "eval_gemfile #{File.join(ROOT, 'Gemfile').inspect}\n")
+        configure_fixture_bundle(root)
         FileUtils.mkdir_p(File.join(root, ".ace/test"))
         FileUtils.mkdir_p(File.join(root, "test"))
         File.write(File.join(root, "test/empty_test.rb"), "require 'minitest/autorun'\n")

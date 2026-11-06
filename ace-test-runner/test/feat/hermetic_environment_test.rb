@@ -176,11 +176,7 @@ class HermeticEnvironmentTest < Minitest::Test
       end
     RUBY
 
-    if (bundle_path = Bundler.settings[:path])
-      FileUtils.mkdir_p(File.join(package, ".bundle"))
-      File.write(File.join(package, ".bundle", "config"), YAML.dump(
-        "BUNDLE_PATH" => File.expand_path(bundle_path, Bundler.root)))
-    end
+    configure_fixture_bundle(package)
 
     # Fixture preparation may reuse the checkout's resolved dependency cache;
     # the actual runner/test processes below still receive sanitized environments.

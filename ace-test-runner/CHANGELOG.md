@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Prepare temporary CLI/suite test projects with the checkout’s configured dependency directory so hermetic subprocess tests do not depend on globally installed gems.
+
 - Keep suite package workers on the selected installed toolchain while sanitizing actual test children separately. Installed workers no longer bootstrap ACE through the tested checkout's Gemfile.
 - Use Bundler's exec entry point for development-mode suite workers so switching the locked Bundler version does not drop Ruby preload setup and fail before tests start.
 
