@@ -300,3 +300,24 @@ The failed run cannot count toward two clean acceptance pairs.
 Timeout fix: fast103/366 passed (f998b619-1895-4f3d-9cf1-193cac6645bc).
 Independent reviewer confirmed loader/orchestrator/executor propagation and no
 actionable findings. Failed-run VM gracefully stopped and preserved.
+
+## Run8y505iy: package download failure and setup diagnostics
+
+Fresh VM89BA8069-414A-4091-8AA6-16153DF7BC9C passed index update but failed
+during package installation before Ruby build. Runner66208 exited1 and helper
+stopped/preserved VM. It was restarted only for diagnosis. Original detailed
+stdout was discarded by SetupExecutor on failure; exact original error cannot
+be recovered from that report. No OOM evidence in previous kernel journal and
+no new installation entry in APT history. A bounded download-only diagnostic
+reproduced HTTP504 for libbinutils2.44-3 from the pinned snapshot, with only
+662kB of98.7MB archives still missing. This supports transient archive download
+failure; it is not a recovered original transcript.
+
+SetupExecutor now includes both labelled output streams and the exit code in
+its error. Real-shell regression uses separate fixture files so assertions
+cannot pass by matching the command text, and verifies later steps never run.
+Red45tests1failure e6dfd9ef-8209-4124-8699-6ffa210c99dd; green45/145
+a9b99b12-e725-4aef-841d-57012e3fcf43. Full runner fast654/2212 passed
+32c0254d-f058-4040-818e-ed593dfc8707. Independent review: no actionable finding.
+Next: bounded whole-process acquisition retry, then install only complete
+archives; internal APT retries remain disabled. No acceptance pair completed.
