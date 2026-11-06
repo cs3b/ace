@@ -66,6 +66,14 @@ module Ace
               raise ArgumentError, "session role differs from its verified unit"
             end
 
+            runtime_environment = session.runtime_environment
+            unless runtime_environment.is_a?(Hash) && runtime_environment.keys.sort == SessionPeer::RUNTIME_ENVIRONMENT.sort &&
+                runtime_environment["ACE_TOOLCHAIN"] == "installed" && runtime_environment.values.all? { |value|
+                  value.is_a?(String) && !value.empty? && !value.match?(/[[:cntrl:]]/)
+                }
+              raise ArgumentError, "session execution requires its authenticated installed runtime"
+            end
+            @session_runtime_environment = runtime_environment.transform_values { |value| value.dup.freeze }.freeze
             attachment = SessionAttachment.new(identity: session)
             @session_attachment = attachment
             @session_runner = SessionRunner.new(uid: session.uid, cwd: session.cwd, attach: attachment,
@@ -919,9 +927,10 @@ module Ace
         # No caller or provider projection may silently replace the selected
         # installed runtime. An absent path stays absent.
         def preserve_installed_runtime!(environment)
-          if ENV["ACE_TOOLCHAIN"] == "installed"
-            %w[ACE_TOOLCHAIN GEM_HOME GEM_PATH PATH].each do |key|
-              ENV.key?(key) ? environment[key] = ENV[key] : environment.delete(key)
+          selected = @session_runtime_environment || ENV
+          if selected["ACE_TOOLCHAIN"] == "installed"
+            SessionPeer::RUNTIME_ENVIRONMENT.each do |key|
+              selected.key?(key) ? environment[key] = selected[key] : environment.delete(key)
             end
           end
           environment

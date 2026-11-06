@@ -27,8 +27,10 @@ module Ace
                       "RuntimeDirectory" => "as", "RuntimeDirectoryPreserve" => "s", "Environment" => "as",
                       "RemainAfterExit" => "b"}.freeze
 
+        RUNTIME_ENVIRONMENT = %w[ACE_TOOLCHAIN PATH GEM_HOME GEM_PATH].freeze
+
         Identity = Struct.new(:uid, :gid, :role, :invocation_id, :unit, :cwd, :runtime_dir, :pidfd, :main_pidfd,
-          :main_pid, :mount_namespace, :project_root, :terminal_id, keyword_init: true) do
+          :main_pid, :mount_namespace, :project_root, :terminal_id, :runtime_environment, keyword_init: true) do
           def close
             pidfd.close unless pidfd.closed?
             main_pidfd.close unless main_pidfd.closed?
@@ -137,6 +139,13 @@ module Ace
             raise Error, "session configured environment is ambiguous" unless entries.size == 1
             [key, entries.first.delete_prefix("#{key}=")]
           end
+          runtime_environment = RUNTIME_ENVIRONMENT.to_h do |key|
+            entries = environment.grep(/\A#{key}=/)
+            raise Error, "session runtime environment is missing or ambiguous" unless entries.size == 1
+            value = entries.first.delete_prefix("#{key}=")
+            raise Error, "session runtime environment is invalid" if value.empty? || value.match?(/[[:cntrl:]]/)
+            [key, value.freeze]
+          end.freeze
           terminal_entries = environment.grep(/\AACE_LAB_TERMINAL_ID=/)
           terminal_id = terminal_entries.first&.delete_prefix("ACE_LAB_TERMINAL_ID=")
           if terminal_entries.size > 1 || (terminal_id && !TERMINAL_ID.match?(terminal_id))
@@ -180,7 +189,8 @@ module Ace
           Identity.new(uid: peer.fetch("uid"), gid: peer.fetch("gid"), role: match[1],
             invocation_id: manager_identity.fetch("invocation_id"), unit: unit,
             cwd: cwd, runtime_dir: runtime_dir, pidfd: handle, main_pidfd: main_handle,
-            main_pid: Integer(main_pid, 10), mount_namespace: namespace, project_root: project_root, terminal_id: terminal_id&.freeze).freeze
+            main_pid: Integer(main_pid, 10), mount_namespace: namespace, project_root: project_root, terminal_id: terminal_id&.freeze,
+            runtime_environment: runtime_environment).freeze
         rescue Exception => error
           handle&.close unless handle&.closed?
           main_handle&.close unless main_handle&.closed?

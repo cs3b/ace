@@ -35,7 +35,8 @@ module Ace
                            "RuntimeDirectory" => ["ace-auth-0123456789abcdef"],
                            "RuntimeDirectoryPreserve" => "no", "RemainAfterExit" => true,
                            "BindsTo" => [SessionPeer::ISSUER_UNIT], "After" => [SessionPeer::ISSUER_UNIT], "Environment" => ["ACE_TOOLCHAIN=installed",
-                             "ACE_LAB_SESSION=1", "ACE_LAB_PROJECT_ROOT=/lab/ace"]}
+                             "ACE_LAB_SESSION=1", "ACE_LAB_PROJECT_ROOT=/lab/ace",
+                             "PATH=/opt/ace/runtime/bin:/usr/bin:/bin", "GEM_HOME=/opt/ace/runtime", "GEM_PATH=/opt/ace/runtime"]}
           end
           def unit_for_pidfd(handle:) = {"unit" => UNIT, "invocation_id" => invocation}
           def inspect_units = {"service" => {"ActiveState" => "active", "ControlGroup" => GROUP,
@@ -126,6 +127,24 @@ module Ace
           assert identity.pidfd.closed?
           assert identity.main_pidfd.closed?
           assert identity.mount_namespace.closed?
+        end
+
+        def test_runtime_environment_is_bound_to_the_authenticated_systemd_unit
+          identity = @peer.authenticate(FakeSocket.new)
+          assert_equal({"ACE_TOOLCHAIN" => "installed", "PATH" => "/opt/ace/runtime/bin:/usr/bin:/bin",
+            "GEM_HOME" => "/opt/ace/runtime", "GEM_PATH" => "/opt/ace/runtime"}, identity.runtime_environment)
+          assert identity.runtime_environment.frozen?
+          assert identity.runtime_environment.values.all?(&:frozen?)
+        ensure
+          identity&.close
+        end
+
+        def test_refuses_missing_or_ambiguous_runtime_environment
+          original = @manager.properties.fetch("Environment").dup
+          [original.reject { |item| item.start_with?("PATH=") }, original + ["PATH=/tmp/bin"]].each do |environment|
+            @manager.properties["Environment"] = environment
+            assert_raises(Error) { @peer.authenticate(FakeSocket.new) }
+          end
         end
 
         def test_refuses_a_reused_unit_or_unsafe_runtime_policy

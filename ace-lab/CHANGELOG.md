@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Preserve the authenticated session’s installed PATH and gem environment for leased commands, instead of replacing them with the issuer service’s restricted PATH. Missing or ambiguous systemd runtime bindings fail authentication.
+
 - Refuse session lease execution by a different issuer instance than the one responsible for its cleanup.
 - Classify missing or malformed extension projections and preserve dry-run filesystem state; verify directory traversal and reject unsafe receipt paths.
 

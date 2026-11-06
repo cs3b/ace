@@ -111,7 +111,9 @@ module Ace
           SessionPeer::Identity.new(uid: Process.uid, gid: Process.gid, role: "worker",
             invocation_id: "a" * 32, unit: "ace-auth-session-worker-0123456789abcdef.service",
             cwd: Dir.pwd, runtime_dir: "/run/ace-auth-0123456789abcdef", pidfd: @peer_handle, main_pidfd: @main_handle,
-            main_pid: Process.pid, mount_namespace: @mount_namespace)
+            main_pid: Process.pid, mount_namespace: @mount_namespace,
+            runtime_environment: {"ACE_TOOLCHAIN" => "installed", "GEM_HOME" => "/opt/ace/runtime",
+              "GEM_PATH" => "/opt/ace/runtime", "PATH" => "/opt/ace/runtime/bin:/usr/bin:/bin"})
         end
 
         def service(document: @document)
@@ -785,6 +787,27 @@ module Ace
           report = svc.exec(lease_id: lease["id"], argv: %w[false])
           assert_equal 3, report["exit"]
           assert_equal "revoked", report["cleanup"]
+        end
+
+        def test_authenticated_session_runtime_overrides_issuer_and_provider_runtime
+          skip "requires a non-root account for the fake peer" if Process.uid.zero?
+          identity = session_identity
+          isolated = Process.stub(:euid, 0) do
+            Molecules::GrantResolver.stub(:read_verified, @document) do
+              Service.new(session: identity, issuer_invocation: "b" * 32)
+            end
+          end
+          # Exercise the same projection applied after the provider adds its
+          # child environment; the issuer PATH deliberately lacks runtime/bin.
+          original = ENV["PATH"]
+          ENV["PATH"] = "/usr/bin:/bin"
+          projected = isolated.send(:preserve_installed_runtime!, {
+            "ACE_TOOLCHAIN" => "auto", "PATH" => "/provider/bin", "GEM_HOME" => "/provider/gems",
+            "GEM_PATH" => "/provider/gems", "XDG_DATA_HOME" => "/credential-handoff"})
+          identity.runtime_environment.each { |key, value| assert_equal value, projected[key] }
+          assert_equal "/credential-handoff", projected["XDG_DATA_HOME"]
+        ensure
+          original ? ENV["PATH"] = original : ENV.delete("PATH") unless Process.uid.zero?
         end
 
         def test_exec_preserves_the_selected_installed_runtime
