@@ -415,3 +415,15 @@ This supersedes the local baseline-failure limitation above, not the outstanding
 live installed-runtime acceptance. Candidate109 artifacts were reproducibly built
 from eee6b426645b61783bc97397e6c3531973457562; this subsequent test-only change is
 not included in that source SHA. The active VM manifest remains unchanged.
+
+
+### Candidate109 staging check
+
+Artifact inventory now accepts pinned local ace-test-runner builds, matching the
+build helper. Regression was red before the allowlist change (b32f74ea-d868-4251-b88b-236914d21ed4),
+green after (4/19, 451d94f2-2c26-4ef4-95fe-504017dcd828). Full monorepo-e2e
+package tests pass 108/402 (643dca31-5d79-4c91-90a8-dc822d39fcbb).
+A next-run manifest is staged only in local analysis/candidate109-manifest.json;
+the live tracked manifest has not changed. Existing gem-graph validation confirms
+55 exact gem artifacts satisfy all 7 installation roots. Staging and component
+tests do not establish installed E2E acceptance.
