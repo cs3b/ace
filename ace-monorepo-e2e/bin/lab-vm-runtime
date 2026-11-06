@@ -85,12 +85,12 @@ begin
       raise "working clone is not fresh: #{output}" unless code.zero?
       root = File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm")
       inputs = [File.join(LabVm.local_dir, "artifacts"), File.join(root, "pi"), File.join(root, "release-manifest.json"),
-        File.join(root, "provision-runtime.sh"), File.join(root, "build-herdr.sh"), File.join(root, "gem-graph.rb")]
+        File.join(root, "provision-runtime.sh"), File.join(root, "install-system-packages.sh"), File.join(root, "build-herdr.sh"), File.join(root, "gem-graph.rb")]
       raise "fixture copy failed" unless system("scp", "-q", "-r", *ssh_options, *inputs, "lab-operator@#{address}:/home/lab-operator/ace-e2e-input/")
       stage = LabVm.staging_command("/home/lab-operator/ace-e2e-input", "/var/lib/ace-e2e/input")
       code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", stage)
       raise "guest input preparation failed: #{output}" unless code.zero?
-      %w[release-manifest.json provision-runtime.sh build-herdr.sh gem-graph.rb pi/package.json pi/package-lock.json].each do |relative|
+      %w[release-manifest.json provision-runtime.sh install-system-packages.sh build-herdr.sh gem-graph.rb pi/package.json pi/package-lock.json].each do |relative|
         local_path = File.join(root, relative)
         expected = Digest::SHA256.file(local_path).hexdigest
         code, output = LabVm.guest_exec(uuid, "/usr/bin/sha256sum", "/var/lib/ace-e2e/input/#{relative}")

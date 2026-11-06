@@ -321,3 +321,20 @@ a9b99b12-e725-4aef-841d-57012e3fcf43. Full runner fast654/2212 passed
 32c0254d-f058-4040-818e-ed593dfc8707. Independent review: no actionable finding.
 Next: bounded whole-process acquisition retry, then install only complete
 archives; internal APT retries remain disabled. No acceptance pair completed.
+
+## Snapshot acquisition recovery
+
+New install-system-packages.sh retries index acquisition and download-only at
+most three separate apt processes on exit100, then installs once with
+--no-download. Internal retries remain0; snapshot/signature/checksum validation
+is unchanged. Helper is included in runtime fingerprint, transfer and guest
+SHA verification. Five shell-boundary tests cover transient recovery, exhausted
+indexes/downloads, fresh processes and no install retry (5/36;
+1097c215-9360-47be-9446-3fd6edf898da). Full monorepo fast108/402 passed
+f565f2f5-3ba6-41ed-9ebc-35d7b3da3abe; independent review found no blocker.
+
+Real diagnostic unit ace-e2e-apt-recovery-diagnostic on preserved VM89BA...
+failed first acquisition of cpp-14, logged fresh-process retry at00:14:08,
+completed archive download at00:14:18, then installed offline successfully
+at2026-11-06T00:14:58Z (Result=success, ExecMainStatus=0). This was explicitly
+diagnostic, under768MiB/600s limits, not acceptance. A new clean run is required.

@@ -29,6 +29,7 @@ module LabVm
     ace-monorepo-e2e/lab-vm/profile.yml
     ace-monorepo-e2e/lab-vm/release-manifest.json
     ace-monorepo-e2e/lab-vm/provision-runtime.sh
+    ace-monorepo-e2e/lab-vm/install-system-packages.sh
     ace-monorepo-e2e/lab-vm/build-herdr.sh
     ace-monorepo-e2e/lab-vm/native-cache.rb
     ace-monorepo-e2e/lab-vm/gem-graph.rb

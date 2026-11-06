@@ -36,6 +36,14 @@ including transitive prereleases, without network resolution. RubyGems supplies
 a dependency-first plan for every manifest pin; cycles and invalid pins fail
 before installation. `ace-lab install` installs the remaining packages and
 `ace-lab verify` checks the operational set. A fresh process checks every pinned activation.
+System dependencies use the manifest's Debian snapshot and retain APT signature
+and package checksum checks. Index refresh and archive download each get at most
+three fresh APT processes on acquisition failure, with internal APT retries
+disabled to avoid the Debian 3.0.3 delayed-retry warning accumulation. Installation
+runs once, with network downloads disabled, only after acquisition succeeds.
+Exhaustion fails setup and preserves the VM; it never blesses partial indexes.
+These retries do not change snapshot pins or bypass verification.
+
 `bin/lab-vm-runtime provision` starts a fresh work clone, verifies its SSH host key via the QEMU
 guest agent, copies these inputs and invokes the guest-side runtime installer
 and unprivileged native Herdr build. The pinned ARM64 Herdr binary and its
