@@ -528,3 +528,11 @@ Run `8y56gj8-monorepo-e2e-ts003` terminated with ERROR: verifier returned an inc
 Fixes: ca2dbc29e explicit private-manager creation/validation;29d569122 one startup checkpoint followed by event-driven wait and one bounded diagnosis watchdog;43cf2adbe renewable paced source observation with independent local deadlines and cadence-aware readiness. Independent review clean. Wake suite passed; full overseer554tests/2551assertions,0failures,1skip.
 
 Candidate112 changes only wake0.2.1.pre.utm112 and overseer0.28.2.pre.utm112, built twice identically from43cf2adbe1fadabf8cb90ecb72c17cb9c44d6ccb. SHA256 wake f4dcec5fce77d266864bf1fa1cfdc8d8ffb2889f58ae78efb94fd79f94353dde;overseer3e99d90871c49b3cd6d0fb4b3e9e565952626ad2881b67661c206b35d1d7f49f. All60cached inputs verified; full gem graph valid. No live acceptance claimed.
+
+## utm112 evidence and utm113 activation
+
+Run `8y5gkvj` completed autonomous bootstrap with ignored manager `8y5.t.ide`, ordered children, accepted worker/verifier reports `8y5io3`/`8y5ivd` and authenticated `ready: true`. Eyes renewed its hourly allowance and continued without a breaker. Forgejo main received base `81c740d` then CLI `34b17c1`; TC002 snapshot showed docs and release open. Zero PRs or provider approvals existed, and the base push included four commits outside the reviewed range. No acceptance credit.
+
+Verifier startup failed with `E2BIG` on a 1,139,135-byte prompt. Host fix `d8bca8014` streams Pi prompts through stdin and drains subprocess output concurrently. Real subprocess regression transferred 1.26 MB despite 256 KiB startup stderr. Targeted tests 92/247, no failures and one skip.
+
+Candidate utm113 pins coworker and overseer from `56b4c719a065927cf78f4a798024d9da003516cd`, reproducible builds and validated graph. Forge issue commissions require a tested PR, independent full-delta approval and provider merge; the fixture protects main. The live protection and both clean TS003/TS004 pairs remain to be verified.
