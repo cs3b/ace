@@ -1,6 +1,6 @@
 # TC-002: Delegate the four Forgejo issues
 
-Give the ready project Overseer the issue URLs from the fixture receipt and one goal: order and deliver the base, dependent CLI and documentation issues with independent review and integration on main, leaving release queued. Do not suggest its next steps or choose workers. Allow up to 90 minutes. Read actual Forgejo and task/assignment state through their installed public interfaces.
+Give the ready project Overseer the issue URLs from the fixture receipt and one goal: order and deliver the base, dependent CLI and documentation issues with independent review and integration on main, leaving release queued. Do not suggest its next steps or choose workers. Allow up to 180 minutes. Read actual Forgejo and task/assignment state through their installed public interfaces.
 
 The fixture receipt is private runner input, not a source for the tested agent.
 Include the actual issue URLs in the goal. Do not tell the Overseer to search

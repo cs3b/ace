@@ -485,3 +485,17 @@ path omitted it. Added /opt/ace/runtime/pi/node_modules/.bin to the trusted
 fixture session PATH for future resets. Read-only guest stat confirms the
 existing directory is root:root0755. No modification of the running VM or agent
 instructions was made; review verdicts and merges remain pending.
+
+
+### Next-run execution budget
+
+The current candidate105 delivery phase reached two independent reviewer sessions
+only after worker dependency installation and a real full-suite run; the base
+review's first model execution then took roughly six minutes. No throughput SLA
+is part of the requested acceptance. For future TS003 runs, delivery budget is
+180 minutes and total runner budget18000s, accommodating bootstrap, the serial
+base→CLI dependency chain, independent review/integration and idle verification.
+All acceptance conditions remain unchanged, including five minutes with no model
+turns after notifications drain. This changes only future scenario execution;
+the current runner retains its recorded10800s timeout and its original case
+instructions. Its outcome must be reported under those original limits.
