@@ -87,8 +87,11 @@ module Ace
           observed, sources, config = evidence.values_at("observedAt", "sources") + [eye["config"]]
           return false unless observed.is_a?(Integer) && observed >= prompt_at && observed <= now_ms && config.is_a?(Hash) &&
             config["intervalSeconds"].is_a?(Integer) && config["intervalSeconds"].between?(1, 3600) &&
+            config["maxObservationsPerHour"].is_a?(Integer) && config["maxObservationsPerHour"].between?(1, 3600) &&
             config["timeoutMs"].is_a?(Integer) && config["timeoutMs"].between?(100, 120_000)
-          return false if fresh && now_ms - observed > config["intervalSeconds"] * 1000 + config["timeoutMs"]
+          interval = config["intervalSeconds"] * 1000
+          cadence = (3_600_000.0 / (config["maxObservationsPerHour"] * interval)).ceil * interval
+          return false if fresh && now_ms - observed > cadence + config["timeoutMs"]
           sources.is_a?(Hash) && sources.size.between?(1, 64) &&
             sources.keys.all? { |name| name.is_a?(String) && name.match?(/\A[a-zA-Z0-9_.:-]{1,128}\z/) } &&
             required_sources.all? { |name| sources[name] == "ok" } && sources.values.all? { |status| status == "ok" }

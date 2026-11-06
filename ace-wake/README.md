@@ -35,6 +35,14 @@ cleared, the next observation delivers any still-unhandled revisions. This can
 delay notification by one observation interval, but avoids turns for changes
 already handled during the active turn.
 
+The effective observation interval is the larger of `intervalSeconds` and
+`3600 / maxObservationsPerHour` seconds, rounded up to a whole timer interval.
+Local deadlines are checked on timer ticks even when source reads are throttled.
+Extra observations can consume the remaining hourly allowance; the timer stays
+armed and observation resumes automatically in the next window, including
+after restart. This local read limit does not reset provider quota, wake-budget
+or failure breakers, which still require their explicit recovery procedure.
+
 ## Mount-aware poll fallback
 
 `/lab/state/hitl-address/ace` (the HITL transport folder) is a FUSE/virtiofs

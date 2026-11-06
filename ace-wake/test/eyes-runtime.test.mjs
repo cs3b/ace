@@ -344,3 +344,50 @@ it("rejects native observations without source health", async () => {
     fs.rmSync(dir, {recursive: true, force: true});
   }
 });
+
+it("short configured intervals keep observing across hourly allowances and deliver a late report", async()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-budget-"));
+  const host=createFakeHost();
+  let observations=0, rows=[];
+  const session=await startSession(host,{eyes:{
+    now:host.clock.now,schedule:host.setIntervalFn,cancel:host.clearIntervalFn,
+    observe:async()=>{observations++;return {schema:"ace.hitl.observation/v1",events:rows,sources:{tasks:{status:"ok"}}};}
+  }});
+  try {
+    const file=path.join(dir,"eyes.json");
+    fs.writeFileSync(file,JSON.stringify({intervalSeconds:10,maxObservationsPerHour:120}));
+    await host.runCommand("eyes",`start ${file}`);
+    for(let i=0;i<720;i++){host.clock.advance(10000);await flush();}
+    assert.equal(host.sends.length,0,"unchanged state causes no model turns");
+    assert.ok(observations>=240 && observations<=241,"observations are spread over both hours");
+    assert.equal(host.intervals.size,1,"renewable allowance never removes observation timer");
+    rows=[{key,revision,id:"late-worker-report"}];
+    for(let i=0;i<3;i++){host.clock.advance(10000);await flush();}
+    assert.equal(host.sends.length,1);
+    const state=host.sessionEntries.filter(e=>e.customType==="ace-wake-eyes").at(-1).data;
+    assert.equal(state.breaker,null);
+    assert.equal(state.pending[key].revision,revision);
+  } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
+});
+
+it("runtime delivers a local deadline without spending an exhausted observation allowance", async()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-deadline-budget-"));
+  const host=createFakeHost(), tools=new Map();
+  host.pi.registerTool=tool=>tools.set(tool.name,tool);
+  let observations=0;
+  const session=await startSession(host,{eyes:{
+    now:host.clock.now,schedule:host.setIntervalFn,cancel:host.clearIntervalFn,
+    observe:async()=>{observations++;return {schema:"ace.hitl.observation/v1",events:[],sources:{tasks:{status:"ok"}}};}
+  }});
+  try {
+    const file=path.join(dir,"eyes.json");
+    fs.writeFileSync(file,JSON.stringify({intervalSeconds:10,maxObservationsPerHour:1}));
+    await host.runCommand("eyes",`start ${file}`);
+    await tools.get("ace_eyes").execute("deadline",{action:"deadline",key:"startup",revision:"session-1",at:60000});
+    for(let i=0;i<6;i++){host.clock.advance(10000);await flush();}
+    assert.equal(observations,1);
+    assert.equal(host.sends.length,1);
+    assert.match(host.sends[0].text,/deadline:startup/);
+    assert.equal(host.intervals.size,1);
+  } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
+});

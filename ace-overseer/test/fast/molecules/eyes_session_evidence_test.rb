@@ -33,7 +33,7 @@ class EyesSessionEvidenceTest < Minitest::Test
       {"id" => "two", "parentId" => "one", "type" => "message", "message" => {"role" => "assistant", "stopReason" => "stop"}},
       {"id" => "three", "parentId" => "two", "type" => "custom", "customType" => "ace-wake-eyes", "data" => {
         "ownerCwd" => "/lab/ace", "enabled" => true, "retired" => false, "breaker" => nil, "errors" => 0,
-        "config" => {"intervalSeconds" => 30, "timeoutMs" => 60_000},
+        "config" => {"intervalSeconds" => 30, "maxObservationsPerHour" => 120, "timeoutMs" => 60_000},
         "observerEvidence" => {"process" => {"pid" => 123, "startedAt" => @process["started_at"]},
                                "observedAt" => 19_000, "sources" => {"tasks" => "ok"}}
       }}

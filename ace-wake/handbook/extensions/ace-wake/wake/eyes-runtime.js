@@ -51,7 +51,8 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
   function arm() {
     stopTimer();
     if (eyes?.s.enabled && !eyes.s.retired && !eyes.s.breaker) {
-      timer = schedule(() => { void eyes.tick(); }, eyes.s.config.intervalSeconds * 1000);
+      timer = schedule(() => { void eyes.tick({ scheduled: true }); },
+        eyes.s.config.intervalSeconds * 1000);
       timer?.unref?.();
     }
   }

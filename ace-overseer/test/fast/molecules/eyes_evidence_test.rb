@@ -17,7 +17,7 @@ class EyesEvidenceTest < Minitest::Test
       {"type" => "message", "message" => {"role" => "assistant", "stopReason" => "stop"}},
       {"type" => "custom", "customType" => "ace-wake-eyes", "data" => {
         "ownerCwd" => "/lab/ace", "enabled" => true, "retired" => false, "breaker" => nil, "errors" => 0,
-        "config" => {"intervalSeconds" => 30, "timeoutMs" => 60_000},
+        "config" => {"intervalSeconds" => 30, "maxObservationsPerHour" => 120, "timeoutMs" => 60_000},
         "observerEvidence" => {"process" => {"pid" => 123, "startedAt" => @identity["started_at"]},
                                "observedAt" => 19_000, "sources" => {"tasks" => "ok", "hitl" => "ok"}}
       }}
@@ -30,6 +30,24 @@ class EyesEvidenceTest < Minitest::Test
 
   def test_accepts_a_fresh_healthy_observation_after_the_first_turn
     assert ready?
+  end
+
+  def test_freshness_uses_budget_limited_observation_cadence
+    config = @branch.last.fetch("data").fetch("config")
+    config["intervalSeconds"] = 10
+    config["maxObservationsPerHour"] = 1
+    assert ready?(now_ms: 19_000 + 3_600_000 + 60_000)
+    refute ready?(now_ms: 19_000 + 3_600_000 + 60_001)
+    config["maxObservationsPerHour"] = 0
+    refute ready?
+  end
+
+  def test_freshness_rounds_up_to_the_next_timer_tick
+    config = @branch.last.fetch("data").fetch("config")
+    config["intervalSeconds"] = 20
+    config["timeoutMs"] = 100
+    assert ready?(now_ms: 19_000 + 40_100)
+    refute ready?(now_ms: 19_000 + 40_101)
   end
 
   def test_real_sdk_can_bind_after_the_first_prompt

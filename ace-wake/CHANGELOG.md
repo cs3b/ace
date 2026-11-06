@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Pace standing observations to their hourly allowance and renew exhausted read limits automatically without stopping eyes or requiring a model turn.
+
 - Defer eyes notifications until the agent is idle so revisions handled during a turn do not leave stale queued wakes.
 - Deliver deadlines that expire while an observation is running in the same observation cycle.
 

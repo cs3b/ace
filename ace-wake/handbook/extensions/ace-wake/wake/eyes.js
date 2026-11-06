@@ -107,27 +107,37 @@ export class Eyes {
       keys.add(event.key);
     }
   }
-  async tick() {
+  async tick({ scheduled = false } = {}) {
     if (this.busy === this.generation || this.disposed || !this.s.enabled || this.s.retired || this.s.breaker) return;
     const now = this.now();
     if (!this.s.window || now - this.s.window.start >= 3600000) this.s.window = { start: now, count: 0, wakes: 0 };
-    if (this.s.window.count >= this.s.config.maxObservationsPerHour) { this.block("observation-budget"); return; }
-    this.s.window.count++; this.persist(); // Budget survives restart too.
+    const timerInterval = this.s.config.intervalSeconds * 1000;
+    const cadence = Math.ceil(3600000 / (this.s.config.maxObservationsPerHour * timerInterval)) * timerInterval;
+    const due = !scheduled || this.s.window.lastAttemptAt === undefined ||
+      now - this.s.window.lastAttemptAt >= cadence;
+    const acquire = due && this.s.window.count < this.s.config.maxObservationsPerHour;
     const generation = this.generation;
     this.busy = generation;
+    let observed = false;
     try {
-      const result = await this.observe(this.s.config);
-      if (generation !== this.generation || this.disposed) return;
-      this.validate(result);
-      this.onObserved(result);
-      for (const e of result.settled || []) {
-        this.s.acknowledged[e.key] = e.revision;
-        if (this.s.pending[e.key]?.revision === e.revision) delete this.s.pending[e.key];
-        this.sent.delete(e.key);
-      }
-      if (this.inflight && this.sent.size === 0) this.inflight = false;
-      for (const e of result.events) {
-        if (this.s.acknowledged[e.key] !== e.revision) this.s.pending[e.key] = { id: e.id, revision: e.revision };
+      if (acquire) {
+        this.s.window.count++;
+        this.s.window.lastAttemptAt = now;
+        this.persist(); // Attempts and allowance survive restart.
+        const result = await this.observe(this.s.config);
+        if (generation !== this.generation || this.disposed) return;
+        this.validate(result);
+        this.onObserved(result);
+        for (const e of result.settled || []) {
+          this.s.acknowledged[e.key] = e.revision;
+          if (this.s.pending[e.key]?.revision === e.revision) delete this.s.pending[e.key];
+          this.sent.delete(e.key);
+        }
+        if (this.inflight && this.sent.size === 0) this.inflight = false;
+        for (const e of result.events) {
+          if (this.s.acknowledged[e.key] !== e.revision) this.s.pending[e.key] = { id: e.id, revision: e.revision };
+        }
+        observed = true;
       }
       for (const [name, deadline] of Object.entries(this.s.deadlines)) {
         const { at, operationRevision } = deadline;
@@ -156,7 +166,7 @@ export class Eyes {
         if (this.inflight) this.sent = new Map(batch.map(([key, value]) => [key, value.revision]));
         if (!this.inflight) throw new Error("wake delivery refused");
       }
-      if (this.s.errors && (!this.inflight || this.deliveryStatus() === "accepted")) { this.s.errors = 0; this.persist(); }
+      if (observed && this.s.errors && (!this.inflight || this.deliveryStatus() === "accepted")) { this.s.errors = 0; this.persist(); }
     } catch {
       if (generation !== this.generation || this.disposed) return;
       this.s.errors++; this.persist();
