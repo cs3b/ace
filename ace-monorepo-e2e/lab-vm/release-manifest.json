@@ -30,10 +30,10 @@
     },
     {
       "name": "ace-coworker",
-      "version": "0.8.1.pre.utm114.1",
-      "sha256": "47d6120f20c2522ee94cd30e22a79fb6b7048b8d9dd6ac2288a071415af487dd",
+      "version": "0.8.1.pre.utm115",
+      "sha256": "7a50c26218ac0ffeeb3f9434aab5b94fedbc5ac3dca5ea057ea7a54a6c83c561",
       "source": "local",
-      "source_commit": "4fc3292adb8b7735bd4c52e5243bf019c154c5f3"
+      "source_commit": "d1d932ec6e0f80a6b49153497a6dd6a8191adf78"
     },
     {
       "name": "ace-git",
@@ -128,10 +128,10 @@
     },
     {
       "name": "ace-overseer",
-      "version": "0.28.2.pre.utm114",
-      "sha256": "b92313a99b001ecaa13a28a3afce0e2561871827dcde039ffb2f9fb432c31dc9",
+      "version": "0.28.2.pre.utm115",
+      "sha256": "893c4b533369712e2675badba06b3e05bfb7d8738c38a6ac72231fa353cfcf2c",
       "source": "local",
-      "source_commit": "db9ed5d7bb941fc738343a55597accbc8ffd049a"
+      "source_commit": "d1d932ec6e0f80a6b49153497a6dd6a8191adf78"
     },
     {
       "name": "ace-review",
