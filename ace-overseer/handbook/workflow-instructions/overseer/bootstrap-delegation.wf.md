@@ -35,6 +35,29 @@ Create one lab coordination task in `_overseer`, with three direct children:
 prepare, independently verify, confirm start. The latter two depend on their
 predecessor. Only the lab overseer updates this private tree.
 
+From the lab root, use the explicit private-folder selector when creating
+the manager; a title or `lab-coordination` tag does not select its location:
+
+```bash
+ace-task list --in _overseer
+ace-task create "Bootstrap <project> readiness" --in _overseer --tags bootstrap,lab-coordination
+ace-task create "Prepare <project>" --child-of <manager-ref>
+ace-task create "Independently verify <project>" --child-of <manager-ref>
+ace-task create "Confirm start <project>" --child-of <manager-ref>
+ace-task update <verify-ref> --add dependencies=<prepare-ref>
+ace-task update <confirm-ref> --add dependencies=<verify-ref>
+ace-task show <manager-ref>
+ace-task list --in _overseer
+```
+
+Use the full task IDs returned by the commands, not abbreviated references.
+Children inherit the parent's location.
+Before dispatch, verify the manager and its three direct children resolve
+under `<lab>/.ace-tasks/_overseer/` and are gitignored. A manager in the public
+task root does not satisfy this contract. Reconcile its location through the
+task owner's public CLI before dispatch; do not create a duplicate commission
+or treat a successful worker report as proof that the manager is private.
+
 Create the executable bootstrap task through `ace-task` in the target project's
 canonical root, linking it as the private lab manager's `project_task` and
 recording `project_root`. Keep its specification in its project task folder.
