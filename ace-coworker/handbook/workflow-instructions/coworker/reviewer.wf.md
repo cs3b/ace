@@ -5,7 +5,7 @@ description: Reviewer role for the file-based lab. Independent of the worker; re
 doc-type: workflow
 purpose: reviewer role workflow instruction
 ace-docs:
-  last-updated: '2026-10-19'
+  last-updated: '2026-11-06'
 ---
 
 # Reviewer - Independent Review with Fixes Inside the Assignment
@@ -70,6 +70,17 @@ product decision is escalated to the overseer instead.
      forge selection `--server NAME` or `--default-server` (mutually
      exclusive) - never infer a forge from a hostname or the caller's
      identity.
+   - For a commissioned PR, review the **full forge PR delta**. Prefer its
+     typed PR reference. If using a local diff range, first resolve the actual
+     target branch and candidate HEAD from the configured forge, fetch those
+     exact refs through your granted access, and compute their merge-base.
+     Record the full base and head SHAs and compare the selected files with the
+     forge PR diff. Local `main` may contain unpublished coordination/task
+     commits and is not evidence of the forge base. Include those commits when
+     they are part of the PR; a worker-only slice is not a full review round.
+     Missing base/head evidence or omitted PR changes blocks acceptance. After
+     candidate/base changes, re-establish the complete range for subsequent
+     full rounds; a fix-only check does not replace it.
    - `--dry-run` first: check the selected/omitted files and the budgets
      (30k context / 30k instructions / 128k total input). Change scope if too
      large; never silently truncate or claim omitted code was reviewed.
@@ -227,8 +238,9 @@ and reported. Anything less is an error outcome with the cause named.
 - No new state owners, journals, or queues (ADR-034): `.ace-local/coworker/`
   belongs to ace-coworker, `.ace-local/assign/` to ace-assign,
   `.ace-local/review/` to ace-review, `.ace-local/hitl/` to ace-hitl.
-- Inside the ACE repository itself, invoke every tool as `bin/ace-*` (the
-  binstubs pin the checkout's bundle).
+- With `ACE_TOOLCHAIN=installed`, use installed executables and packaged
+  instructions; the checkout is reviewed project data, never your runtime.
+  In development mode inside the ACE repository, use `bin/ace-*`.
 
 
 Deployment must provide a dedicated automation reviewer identity and one writer

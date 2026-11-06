@@ -5,3 +5,9 @@ Require executable fixture tests on each actual candidate HEAD, independent revi
 Use the actual VM/Forgejo state, then `results/tc/02/state.json` and
 `sessions.json`, then the command stdout/stderr/exit captures. Missing, stale or
 contradictory evidence is FAIL. Confirm the fixture identity matches setup.
+
+For each PR, verify full review rounds cover the complete forge PR delta at the
+recorded candidate HEAD, including committed task/coordination records. A range
+based on a local main containing unpublished commits may omit PR changes: compare
+its base and selected files against the actual forge target/merge-base. Reject
+partial worker-only review presented as a full round, even if HEAD matches.

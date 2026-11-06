@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Read worktree assignment inventories through the installed ace-assign owner API instead of launching one CLI per worktree; preserve per-project configuration and report read errors.
+- Require commissioned PR review rounds to cover the full forge delta, verifying base/head and included files rather than assuming local main is the forge base; preserve installed runtime in reviewer instructions.
 
-### Fixed
+- Read worktree assignment inventories through the installed ace-assign owner API instead of launching one CLI per worktree; preserve per-project configuration and report read errors.
 
 - Report missing or mismatched assignments and failed assignment status probes as not ready in coworker status instead of returning `ready: true` with an assignment error.
 

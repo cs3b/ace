@@ -499,3 +499,18 @@ All acceptance conditions remain unchanged, including five minutes with no model
 turns after notifications drain. This changes only future scenario execution;
 the current runner retains its recorded10800s timeout and its original case
 instructions. Its outcome must be reported under those original limits.
+
+
+### Full PR review range correction
+
+Observed base reviewer subject:
+`diff:ccb6b904d0b30fb4a1c403282c6e325287b31002..b75554543f8e1c57c4ca685ec033c20a0f3bb9ba`.
+Read-only git evidence in /lab/ace: local main is ccb6b904d0b30fb4a1c403282c6e325287b31002;
+origin/main and its merge-base with that candidate are both
+167ebcbe63c2646809485fd0f782a7b97023f5fc. Thus this claimed full round excludes
+coordination commits present in the actual PR. Reviewer instructions now require
+forge-derived base/head and full-file coverage; TC002 verifier explicitly rejects
+worker-only ranges presented as full review. The installed-mode reviewer boundary
+also no longer unconditionally selects checkout binstubs. Live agents unchanged.
+Candidate110 is superseded by this instruction change; build a new candidate before
+acceptance. Scenario-contract check2/69 passes (faaaadd5-2812-47cb-aa94-38c3c6d89795).
