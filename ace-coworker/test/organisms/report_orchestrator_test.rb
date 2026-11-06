@@ -47,6 +47,11 @@ module Ace
             reporter: Molecules::HitlReporter.new(project_root: @dir, runner: runner))
         end
 
+        def completed_outcome
+          snapshot = Models::AssignmentSnapshot.from_status_json(JSON.parse(completed_json))
+          Atoms::OutcomePlanner.plan(snapshot).to_h
+        end
+
         def completed_json
           CoworkerFixture.status_json(state: "completed",
             steps: [{number: "010", name: "impl", status: "done"}, {number: "020", name: "verify", status: "done"}])
@@ -128,7 +133,7 @@ module Ace
           config["reporting"] = {"delivery" => "observe"}
           File.write(@config_path, YAML.dump(config))
           FileUtils.mkdir_p(File.dirname(state_path))
-          original = JSON.generate("result" => "success", "event_id" => "8xhq01")
+          original = JSON.generate("result" => "success", "event_id" => "8xhq01", "outcome" => completed_outcome)
           File.write(state_path, original)
           [{success: false, err: "unreadable observation"},
            {success: true, out: JSON.generate("schema" => "ace.hitl.observation/v1", "events" => [{}])}].each do |response|
@@ -354,7 +359,7 @@ module Ace
           # ace-hitl interface (which honors a custom root_dir), never a
           # glob of the constant .ace-local/hitl path.
           FileUtils.mkdir_p(File.dirname(state_path))
-          File.write(state_path, JSON.generate({"result" => "success", "event_id" => "8xhq30"}))
+          File.write(state_path, JSON.generate("result" => "success", "event_id" => "8xhq30", "outcome" => completed_outcome))
 
           result = orchestrator(json: completed_json,
             script: [{success: true, out: "/custom-root/8xhq30-evt.hitl.s.md\n"},

@@ -23,6 +23,10 @@ module Ace
           result == "success"
         end
 
+        def matches_report?(state)
+          state.is_a?(Hash) && state["result"] == result && state["outcome"] == to_h
+        end
+
         def to_h
           {
             "result" => result,

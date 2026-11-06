@@ -45,7 +45,8 @@ module Ace
         def test_complete_with_undelivered_event_resends_same_id
           snap = snapshot(state: "completed", steps: [["010", "impl", "done"]])
           plan = ResumePlanner.plan(snapshot: snap,
-            report_state: {"result" => "success", "event_id" => "ab12cd", "delivery" => nil})
+            report_state: {"result" => "success", "event_id" => "ab12cd",
+              "outcome" => OutcomePlanner.plan(snap).to_h, "delivery" => nil})
 
           assert_equal :report, plan.disposition
           assert_equal "ab12cd", plan.redeliver_event_id
@@ -55,7 +56,7 @@ module Ace
           snap = snapshot(state: "completed", steps: [["010", "impl", "done"]])
           plan = ResumePlanner.plan(snapshot: snap,
             report_state: {"result" => "success", "event_id" => "ab12cd",
-              "delivery" => "delivered (event ab12cd)"})
+              "outcome" => OutcomePlanner.plan(snap).to_h, "delivery" => "delivered (event ab12cd)"})
 
           assert_equal :complete, plan.disposition
         end
@@ -64,6 +65,7 @@ module Ace
           snap = snapshot(state: "completed", steps: [["010", "impl", "done"]])
           state = {"result" => "success", "event_id" => "ab12cd",
             "delivery" => "published for observation (event ab12cd); acceptance pending"}
+          state["outcome"] = OutcomePlanner.plan(snap).to_h
           assert_equal :complete, ResumePlanner.plan(snapshot: snap, report_state: state,
             reporting_delivery: "observe", publication_verified: true).disposition
           assert_equal :report, ResumePlanner.plan(snapshot: snap, report_state: state,
@@ -72,6 +74,27 @@ module Ace
           state["delivery"] = nil
           assert_equal :report, ResumePlanner.plan(snapshot: snap, report_state: state,
             reporting_delivery: "observe", publication_verified: true).disposition
+        end
+
+        def test_completed_followup_step_requires_new_report_even_if_old_event_is_verified
+          reviewed = snapshot(state: "completed", steps: [["010", "review-rounds", "done"]])
+          approved = snapshot(state: "completed", steps: [
+            ["010", "review-rounds", "done"], ["020", "publish-approval", "done"]])
+          state = {"result" => "success", "event_id" => "ab12cd",
+            "outcome" => OutcomePlanner.plan(reviewed).to_h,
+            "delivery" => "published for observation (event ab12cd); acceptance pending"}
+
+          plan = ResumePlanner.plan(snapshot: approved, report_state: state,
+            reporting_delivery: "observe", publication_verified: true)
+
+          assert_equal :report, plan.disposition
+          assert_nil plan.redeliver_event_id
+
+          state.delete("outcome")
+          plan = ResumePlanner.plan(snapshot: approved, report_state: state,
+            reporting_delivery: "observe", publication_verified: true)
+          assert_equal :report, plan.disposition
+          assert_nil plan.redeliver_event_id
         end
 
         def test_complete_after_delivered_error_report_still_reports_success

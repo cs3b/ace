@@ -58,7 +58,8 @@ module Ace
           step_report = @report_reader.read(assignment_id, in_flight_number)
 
           publication_verified = false
-          if cfg.reporting_delivery == "observe" && report_state && report_state["event_id"]
+          if cfg.reporting_delivery == "observe" && snapshot.completion_verdict == :complete &&
+              report_state && report_state["event_id"] && Atoms::OutcomePlanner.plan(snapshot).matches_report?(report_state)
             publication_verified = @hitl_reporter.publication_matches?(report_state["event_id"], cfg.with(assignment: assignment_id), result: "success")
           end
           plan = Atoms::ResumePlanner.plan(snapshot: snapshot,

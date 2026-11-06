@@ -151,6 +151,7 @@ module Ace
             assert_includes worker_steps, @task_ref
             assert_includes reviewer_steps, "3/2/10"
             assert_includes reviewer_steps, "ace-coworker rounds record"
+            assert_includes reviewer_steps, "publish-approval"
             assert_includes reviewer_steps, ids[0], "reviewer entry condition names the worker assignment"
             assert_includes integrator_steps, "ace-coworker gate"
             assert_includes integrator_steps, ids[1]

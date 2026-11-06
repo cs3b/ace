@@ -85,8 +85,7 @@ module Ace
           created_event = false
           if !report_via_hitl?(cfg, outcome)
             # errors.on_failure=stop: never touch HITL, not even a resend.
-          elsif state["result"] == outcome.result && state.fetch("outcome", outcome.to_h) == outcome.to_h &&
-              state["event_id"] && (cfg.reporting_delivery == "observe" ? @reporter.publication_matches?(state["event_id"], cfg, result: outcome.result) : @reporter.event_exists?(state["event_id"]))
+          elsif outcome.matches_report?(state) && state["event_id"] && (cfg.reporting_delivery == "observe" ? @reporter.publication_matches?(state["event_id"], cfg, result: outcome.result) : @reporter.event_exists?(state["event_id"]))
             event_id = state["event_id"]
           elsif report_via_hitl?(cfg, outcome)
             event_id = @reporter.create(outcome, cfg)

@@ -105,8 +105,9 @@ then resume the worker publication step if necessary. The worker owns this
 handoff even if a prompt to its active session was refused.
 
 Pass the verified PR and tested HEAD to the reviewer. Before dispatch for
-a forge issue, prepare a final `publish-approval` step through `ace-assign`
-in the reviewer's assignment. The step finishes only with the formal
+a forge issue, verify the reviewer's assignment has a final
+`publish-approval` step. Add it through `ace-assign` if a project override
+omitted it. The step finishes only with the formal
 receipt recorded alongside the tests. For a forge issue,
 local review acceptance alone leaves the integration leg pending. Require
 the reviewer's formal approval receipt for that PR, verify it against the

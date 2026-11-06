@@ -43,6 +43,11 @@ module Ace
                     {number: "020", name: "verify", status: "active"}])
         end
 
+        def completed_outcome
+          snapshot = Models::AssignmentSnapshot.from_status_json(JSON.parse(completed_json))
+          Atoms::OutcomePlanner.plan(snapshot).to_h
+        end
+
         def completed_json
           CoworkerFixture.status_json(state: "completed",
             steps: [{number: "010", name: "impl", status: "done"}])
@@ -57,7 +62,7 @@ module Ace
           raw["reporting"] = {"delivery" => "observe"}
           File.write(@config_path, YAML.dump(raw))
           Molecules::ReportStateStore.new(project_root: @dir).write("abc123", {
-            "result" => "success", "event_id" => "ab12cd",
+            "result" => "success", "event_id" => "ab12cd", "outcome" => completed_outcome,
             "delivery" => "published for observation (event ab12cd); acceptance pending"})
           checks = []
           reporter = Object.new
@@ -161,7 +166,7 @@ module Ace
           state_dir = File.join(@dir, ".ace-local", "coworker", "reports")
           FileUtils.mkdir_p(state_dir)
           File.write(File.join(state_dir, "abc123.json"),
-            JSON.generate({"result" => "success", "event_id" => "ab12cd",
+            JSON.generate({"result" => "success", "event_id" => "ab12cd", "outcome" => completed_outcome,
               "delivery" => "delivered (event ab12cd)"}))
 
           result = orchestrator(json: completed_json).call(config_path: nil)
