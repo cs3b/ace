@@ -453,3 +453,18 @@ assign643/2531 with2skip (c1908ff8-12e4-4b57-893a-76628f723221), coworker418/197
 and end-to-end correctness remain unverified until a fresh candidate run.
 Candidate109 lacks this optimization and is superseded for acceptance; do not
 activate its staged manifest. Active run remains candidate105, acceptance0/2.
+
+
+### Candidate110 built-artifact rehearsal
+
+Six changed gems (support-config, assign, lab, coworker, overseer, test-runner)
+were each built twice from `0660169a0bb4f4ac38a0f94216b7def10c546f27`; all repeated
+SHA-256 values matched. Local metadata: analysis/candidate110-build.json; staged
+manifest: analysis/candidate110-manifest.json. The graph verifies55gems/7roots.
+All55 artifacts installed into the private macOS rehearsal110/gems directory,
+including native dependencies. An env-cleared ACE_TOOLCHAIN=installed probe
+loaded the three new inventory libraries exclusively from that gem home and
+read four real, independently configured project inventories (one record each),
+with poisoned checkout Gemfiles. Inventory work took0.015472s on this host.
+This is artifact-level evidence on macOS, not Linux timing or E2E acceptance.
+The current candidate105 VM and tracked release manifest remain unchanged.
