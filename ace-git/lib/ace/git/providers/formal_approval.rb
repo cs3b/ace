@@ -16,9 +16,10 @@ module Ace
         CORRELATION = /\A[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}\z/
         MARKER = /\n\n<!-- ace-approval:([a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}) sha256:([0-9a-f]{64}) -->\z/
 
-        def initialize(provider:, request:, list:, official: false, pending_reuse: false)
+        def initialize(provider:, request:, list:, official: false, pending_reuse: false, expected_reviewer: nil)
           @provider, @request, @list, @official = provider, request, list, official
           @pending_reuse = pending_reuse
+          @expected_reviewer = expected_reviewer
         end
 
         def approve(number:, expected_head:, body:, correlation:)
@@ -44,7 +45,7 @@ module Ace
             end
             lock.flock(File::LOCK_EX)
             pr = current!(number, expected_head)
-            actor = identity!(@request.call(:get, :actor, nil))
+            actor = @expected_reviewer ? [nil, @expected_reviewer] : identity!(@request.call(:get, :actor, nil))
             deny_author!(pr, actor)
             rows = reviews!(number)
             matches = rows.select { |row| row.fetch("body").include?("<!-- ace-approval:#{correlation} ") }
@@ -52,14 +53,18 @@ module Ace
             existing = matches.first
             row!(existing) if existing
             if existing && (existing["body"] != sent_body || existing["commit_id"] != expected_head ||
-                identity!(existing["user"]) != actor)
+                !matches_actor?(actor, identity!(existing["user"])))
               raise ProviderConflictingMatchesError, "Approval correlation is already bound to different evidence"
             end
             # A provider may reuse its current pending object on direct create.
             # Only an exact known, comment-free pending review is resumable, and
             # only when the adapter proves explicit commit preservation on reuse.
             owned_pending = rows.select do |row|
-              row["state"] == "PENDING" && row["user"].is_a?(Hash) && row["user"]["id"] == actor.first
+              next false unless row["state"] == "PENDING"
+
+              # A repository-scoped Forgejo token can only see its own
+              # pending reviews. Preserve every visible unrelated pending.
+              @expected_reviewer || (row["user"].is_a?(Hash) && row["user"]["id"] == actor.first)
             end
             unrelated = owned_pending.any? { |row| !existing || row["id"] != existing["id"] }
             if unrelated
@@ -140,6 +145,10 @@ module Ace
           [user["id"], user["login"]]
         end
 
+        def matches_actor?(expected, actual)
+          expected.first ? expected == actual : expected.last.casecmp?(actual.last)
+        end
+
         def deny_author!(pr, actor)
           unless pr.author.is_a?(String) && !pr.author.empty?
             raise ProviderMalformedOutputError, "PR author is unverified"
@@ -199,7 +208,7 @@ module Ace
               row["state"] == "APPROVED" && row["commit_id"] == expected_head &&
               !row["dismissed"] && !row["stale"] && (!@official || row["official"] == true) &&
               (!latest || latest["id"] == row["id"]) && (!expected_body || row["body"] == expected_body) &&
-              (!actor || actor == actual_actor) && row["html_url"].is_a?(String) &&
+              (!actor || matches_actor?(actor, actual_actor)) && row["html_url"].is_a?(String) &&
               row["html_url"].start_with?("#{pr.url}#")
             raise ProviderIdentityMismatchError, "Review is not the effective exact-head formal approval"
           end

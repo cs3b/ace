@@ -959,7 +959,19 @@ module Ace
             review_http.request(method, path, body: payload)
           end
           Ace::Git::Providers::FormalApproval.new(provider: self, request: request,
-            list: method(:formal_review_rows), official: true, pending_reuse: true)
+            list: method(:formal_review_rows), official: true, pending_reuse: true,
+            expected_reviewer: leased_reviewer_account)
+        end
+
+        # Repository-scoped leases cannot call /api/v1/user. The issuer's
+        # account is an expectation; the forge review supplies the identity.
+        def leased_reviewer_account
+          return unless ENV["ACE_LAB_FORGEJO_ORIGIN"] == RepositoryBinding::Target.resolve(server.url).host_url
+
+          account = ENV["ACE_LAB_FORGEJO_ACCOUNT"]
+          return account if account&.match?(/\A[a-zA-Z0-9_.-]+\z/)
+
+          raise Ace::Git::ProviderAuthenticationError, "Forgejo lease has no valid reviewer account"
         end
 
         # Forgejo lists review requests alongside actual reviews. User and
