@@ -514,3 +514,9 @@ worker-only ranges presented as full review. The installed-mode reviewer boundar
 also no longer unconditionally selects checkout binstubs. Live agents unchanged.
 Candidate110 is superseded by this instruction change; build a new candidate before
 acceptance. Scenario-contract check2/69 passes (faaaadd5-2812-47cb-aa94-38c3c6d89795).
+
+## 2026-11-06 — candidate105 terminal and candidate111 activation
+
+Run `8y50e5a-monorepo-e2e-ts003` terminated with `Ace::LLM::ProviderError`: runner exceeded its original 10800-second deadline at 04:16:55Z. No final acceptance verdict was produced; acceptance remains 0/2. Before termination the project Overseer independently consumed base reviewer report `8y56ct` and dispatched integrator assignment `8y54752`, terminal `term_65f93dcec2502b`, isolated session `35f933cd427f0953`. The integrator started its installed coworker brief; merge was not established. The reviewer ACCEPT is not full-delta proof because its local range omitted part of the Forgejo PR.
+
+The terminated run permits activation of staged candidate111, built twice identically from `97123d7026fc44cfbf3c9ef16e4c0d1cca7cb8b7`. The helper reset is exporting the old owned VM before replacing it. All previous runtime observations remain component evidence, not clean acceptance.
