@@ -364,9 +364,15 @@ Matching and outcome rules (enforced mechanically):
   it `done`, then continues with the next unblocked step (same
   `DependencyReadiness` gate as `work-on`): `ace-overseer handoff` for the
   next role when the family records a worktree, otherwise the `work-on`
-  gate. A refused continuation is reported as blocked with reasons. The
-  handoff outcome carries the actionable start command (the same one the
-  Handoff CLI prints); the window is ensured, the agent runs the command.
+  gate in local terminal mode. A refused continuation is reported as blocked
+  with reasons. Local handoff ensures the window and returns the start command.
+  In an isolated lab session (`ACE_LAB_SESSION=1`), report processing opens no
+  terminal: it checks the complete prepared handoff gate without side effects
+  and returns the exact next leg, worktree and start config as a coordinator
+  action. Without a family worktree, it asks the coordinator to reconcile and
+  prepare the allocation. The coordinator commissions `ace-herdr dispatch`
+  using that allocation; accepting a report does not prove the next executor
+  started. A completed role sequence does not close pending coordination steps.
 - A repeated delivery of an already-processed report is `duplicate`: the
   recorded result and existing allocation answer it; nothing re-runs
   (delivery repetition is never work repetition). A duplicate whose

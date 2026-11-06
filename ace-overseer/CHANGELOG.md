@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keep isolated report continuation on the authenticated dispatch path: accept reports once, check prepared handoff readiness without opening a local terminal, and return the next coordination action without claiming an executor has started.
+
 - Give project overseers the installed isolated-worker dispatch procedure, including prepared assignment/config identities and verifier/integrator roles, instead of directing isolated sessions to the local-terminal `work-on` path.
 
 - Keep bootstrap acceptance separate from executor status and active preparation; resolve returned worker/verifier configs against their execution worktree.

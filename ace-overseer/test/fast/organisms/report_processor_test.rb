@@ -46,16 +46,18 @@ class ReportProcessorTest < AceOverseerTestCase
   end
 
   class FakeHandoff
-    attr_reader :calls
+    attr_reader :calls, :options
 
     def initialize(error: nil, status: "ready", next_role: "reviewer")
       @error = error
       @status = status
       @next_role = next_role
       @calls = []
+      @options = []
     end
 
-    def call(task_ref:, **)
+    def call(task_ref:, **options)
+      @options << options
       @calls << task_ref
       raise @error if @error
 
@@ -111,6 +113,76 @@ class ReportProcessorTest < AceOverseerTestCase
       handoff: handoff,
       work_on: work_on
     )
+  end
+
+  def test_isolated_report_without_family_worktree_returns_coordination_without_local_start
+    original = ENV["ACE_LAB_SESSION"]
+    ENV["ACE_LAB_SESSION"] = "1"
+    steps = [step("8xg.t.mgr.0", metadata: {"assignment" => "w1"}),
+      step("8xg.t.mgr.1", status: "pending", dependencies: ["8xg.t.mgr.0"])]
+    work_on = FakeWorkOn.new
+    subject = processor(events: [report], managers: [manager(steps: steps)], work_on: work_on)
+    first = subject.call[:outcomes].first
+    second = subject.call[:outcomes].first
+    assert_equal :success, first[:status]
+    assert_equal :duplicate, second[:status]
+    [first, second].each do |result|
+      assert_equal "coordinator", result[:continuation][:action]
+      assert_equal "8xg.t.mgr.1", result[:continuation][:step_ref]
+      assert_includes result[:message], "ace-herdr dispatch"
+    end
+    assert_equal "done", steps.first.status
+    assert_equal "pending", steps.last.status
+    assert_empty work_on.calls
+  ensure
+    original ? ENV["ACE_LAB_SESSION"] = original : ENV.delete("ACE_LAB_SESSION")
+  end
+
+  def test_isolated_family_continuation_checks_handoff_without_opening_terminal
+    original = ENV["ACE_LAB_SESSION"]
+    ENV["ACE_LAB_SESSION"] = "1"
+    steps = [step("8xg.t.mgr.0", metadata: {"assignment" => "w1"}),
+      step("8xg.t.mgr.1", status: "pending", dependencies: ["8xg.t.mgr.0"])]
+    handoff = FakeHandoff.new
+    subject = processor(events: [report], managers: [manager(steps: steps,
+      metadata: {"project_task" => "8xg.t.prj", "worktree" => ".ace-wt/prj"})], handoff: handoff)
+    outcome = subject.call[:outcomes].first
+    assert_equal [{dry_run: true}], handoff.options
+    assert_equal "coordinator", outcome[:continuation][:action]
+    assert_equal "r1", outcome[:continuation].dig(:next, "assignment")
+    assert_equal "/wt/prj", outcome[:continuation][:worktree_path]
+    assert_includes outcome[:message], "ace-herdr dispatch"
+    refute_includes outcome[:message], "window ensured"
+  ensure
+    original ? ENV["ACE_LAB_SESSION"] = original : ENV.delete("ACE_LAB_SESSION")
+  end
+
+  def test_isolated_continuation_keeps_refused_handoff_blocked_and_completed_sequence_unlaunched
+    original = ENV["ACE_LAB_SESSION"]
+    ENV["ACE_LAB_SESSION"] = "1"
+    [FakeHandoff.new(error: Ace::Overseer::Error.new("executor still active")),
+      FakeHandoff.new(status: "sequence_complete", next_role: nil)].each do |handoff|
+      steps = [step("8xg.t.mgr.0", metadata: {"assignment" => "w1"}),
+        step("8xg.t.mgr.1", status: "pending", dependencies: ["8xg.t.mgr.0"])]
+      work_on = FakeWorkOn.new
+      result = processor(events: [report], managers: [manager(steps: steps,
+        metadata: {"project_task" => "8xg.t.prj", "worktree" => ".ace-wt/prj"})],
+        handoff: handoff, work_on: work_on).call[:outcomes].first
+      continuation = result[:continuation]
+      if continuation[:action] == "blocked"
+        assert_equal "executor still active", continuation[:reason]
+      else
+        assert_equal "coordinator", continuation[:action]
+        assert_equal "sequence_complete", continuation[:status]
+        assert_nil continuation[:next]
+        assert_nil continuation[:start_command]
+      end
+      assert_equal "pending", steps.last.status
+      assert_empty work_on.calls
+      assert_equal [{dry_run: true}], handoff.options
+    end
+  ensure
+    original ? ENV["ACE_LAB_SESSION"] = original : ENV.delete("ACE_LAB_SESSION")
   end
 
   def test_success_report_updates_step_and_starts_next_unblocked_step_via_work_on

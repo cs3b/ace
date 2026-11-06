@@ -8,8 +8,9 @@ module Ace
       # the outcome through the existing ace-task update surface, and
       # continue the queue by reusing the existing start gates —
       # WorkOnOrchestrator for a step without a worktree,
-      # HandoffOrchestrator for the next role in the SAME worktree. No new
-      # state: the processed report ID lives on the step's frontmatter, so
+      # HandoffOrchestrator for the next role in the SAME worktree. Isolated
+      # sessions return a coordinator action after checking readiness instead
+      # of opening a local terminal. No new state: the processed report ID lives on the step's frontmatter, so
       # a repeated delivery is detected from the recorded result instead
       # of re-running anything, and a question or failed report never
       # advances a step.
@@ -148,6 +149,9 @@ module Ace
           end
 
           begin
+            if ENV["ACE_LAB_SESSION"] == "1"
+              return isolated_continuation(manager, next_step)
+            end
             if family_worktree(manager)
               result = @handoff.call(task_ref: manager.metadata["project_task"].to_s)
               {action: "handoff", step_ref: next_step.id.to_s,
@@ -163,6 +167,26 @@ module Ace
             progress.call("Continuation blocked: #{e.message}")
             {action: "blocked", step_ref: next_step.id.to_s, reason: e.message}
           end
+        end
+
+        # Report acceptance never opens an unisolated terminal. The coordinator
+        # commissions the authenticated launcher using the existing allocation;
+        # checking a prepared handoff still runs the complete readiness gate.
+        def isolated_continuation(manager, next_step)
+          unless family_worktree(manager)
+            return {action: "coordinator", step_ref: next_step.id.to_s,
+                    reason: "reconcile existing allocations, prepare this step through ace-coworker if needed, then launch its recorded assignment with ace-herdr dispatch; no executor started"}
+          end
+
+          result = @handoff.call(task_ref: manager.metadata["project_task"].to_s, dry_run: true)
+          reason = if result[:status] == "sequence_complete"
+            "role sequence complete; reconcile remaining coordination steps before closing the managing task"
+          else
+            "handoff readiness checked; use the returned worktree and start config to commission ace-herdr dispatch for this leg; no executor started"
+          end
+          {action: "coordinator", step_ref: next_step.id.to_s, reason: reason,
+           next: result[:next], status: result[:status], worktree_path: result[:worktree_path],
+           start_command: start_command_of(result[:next])}
         end
 
         # The actionable start command for the next handoff leg — exactly
