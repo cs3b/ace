@@ -69,6 +69,7 @@ class PrCommandsTest < AceGitTestCase
         assert_equal 25, parsed["number"]
         assert_equal "forgejo-lab", parsed["server"]
         assert_equal "main", parsed["base_ref"]
+        assert_equal "dev", parsed["author"]
       end
     end
   end

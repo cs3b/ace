@@ -98,6 +98,13 @@ the exact candidate head. Otherwise WITHHOLD the merge and report/escalate.
      verdict says accept.
 
 4. **Consume formal approval, then merge only a ready candidate.**
+   - For every forge issue run the gate with `--require-approval`. Set
+     `--approval-head` and `--approval-by` from the verified approval below,
+     and `--author` from `ace-git pr show PR --format json` on the same
+     server. Without that evidence, the gate stays blocked.
+     Stop before any merge attempt and report the missing handoff through
+     the existing assignment and report. The integrator does not publish
+     a replacement PR or substitute its own approval.
    - A forge issue is delivered through its commissioned PR. Require the
      worker's PR reference and the reviewer's approval for that same PR and
      exact tested HEAD. Verify that the review covers the current forge

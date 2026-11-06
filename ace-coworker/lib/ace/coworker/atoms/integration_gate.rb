@@ -29,9 +29,8 @@ module Ace
         #   "review" => {"head" => String reviewed head, "verdict" => String}
         #   "tests" => {"executed" => bool, "passed" => bool,
         #               "head" => String head the test run covered}
-        #   "approval" => {"head" => String, "by" => String account} (a
-        #     nil/empty approval skips the formal-approval check; lanes
-        #     that require it must supply it)
+        #   "require_approval" => bool (requires approval and author evidence)
+        #   "approval" => {"head" => String, "by" => String account}
         #   "author" => String candidate author account (optional)
         #   "dependencies" => {name => bool (integrated predecessor)}
         # @return [Hash] {verdict: :ready | :blocked, reasons: [String],
@@ -94,7 +93,8 @@ module Ace
           end
 
           approval = hash(input["approval"])
-          unless approval.empty?
+          require_approval = input["require_approval"] == true
+          if require_approval || !approval.empty?
             approval_head = str(approval["head"])
             approved_by = str(approval["by"])
             if approval_head.empty?
@@ -107,6 +107,10 @@ module Ace
               failed << :approval
             end
             author = str(input["author"])
+            if require_approval && author.empty?
+              reasons << "PR author unknown: record the author account to verify independent approval"
+              failed << :approval
+            end
             if approved_by.empty?
               reasons << "formal approval is anonymous: no approving account is recorded — " \
                 "the author≠approver guarantee is vacuous; record the approving lane account"

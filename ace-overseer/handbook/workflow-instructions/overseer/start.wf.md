@@ -96,12 +96,21 @@ Launch the next leg only after accepting the preceding leg's actual report;
 review and test evidence must match the candidate HEAD before integration.
 For delivery from a forge issue, retain the issue link on the project task
 and include its repository, target branch and forge selection in each
-commission. Require the worker report to identify the published PR and tested
-HEAD. Pass that exact PR and HEAD to the reviewer. The integrator commission
-carries the same PR, the reviewer's approval receipt, tested HEAD and the
-project's allowed merge method. Use a merge commit when the forge permits it
-and the project has no other configured preference. Reconcile missing or
-changed evidence with its owner before dispatching the next leg.
+commission. A generic success event is a pointer to assignment evidence.
+Read the exact worker assignment's step reports and inspect the existing PR
+for its branch through the configured forge before deciding that publication
+is missing. Match repository, head branch, base branch and tested HEAD. A
+missing or mismatched PR keeps review pending. Let the active worker finish,
+then resume the worker publication step if necessary. The worker owns this
+handoff even if a prompt to its active session was refused.
+
+Pass the verified PR and tested HEAD to the reviewer. For a forge issue,
+local review acceptance alone leaves the integration leg pending. Require
+the reviewer's formal approval receipt for that PR, verify it against the
+current forge HEAD and the executed tests, and reconcile missing or stale
+approval with the reviewer. The integrator receives the same PR, the verified
+receipt, the tested HEAD and the allowed merge method. Use a merge commit when
+the forge permits it and the project has no other configured preference.
 Record the returned terminal identity and agent name on the coordination task.
 An uncertain dispatch acknowledgement requires reconciling that existing
 session, not creating a second executor. End the turn with eyes armed after
