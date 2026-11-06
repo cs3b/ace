@@ -59,6 +59,28 @@ if (not isinstance(reference, list) or len(reference) != 1 or
         not isinstance(reference[0], dict) or reference[0].get('ref') != 'refs/heads/main' or
         not isinstance(reference[0].get('object'), dict) or reference[0]['object'].get('sha') != expected):
     raise RuntimeError('local forge main does not match the seeded commit')
+
+# Seed the initial commit before enforcing the same delivery boundary the
+# scenario expects agents to use for all subsequent changes.
+protection = api('POST', f'/repos/{OWNER}/{REPO}/branch_protections', owner, {
+    'rule_name': 'main',
+    'enable_push': False,
+    'apply_to_admins': True,
+    'required_approvals': 1,
+    'dismiss_stale_approvals': True,
+    'enable_merge_whitelist': True,
+    'merge_whitelist_usernames': [OWNER],
+    'enable_approvals_whitelist': True,
+    'approvals_whitelist_username': ['e2e-reviewer'],
+})
+if (not isinstance(protection, dict) or protection.get('enable_push') is not False or
+        protection.get('apply_to_admins') is not True or protection.get('required_approvals') != 1 or
+        protection.get('dismiss_stale_approvals') is not True or
+        protection.get('enable_merge_whitelist') is not True or
+        protection.get('merge_whitelist_usernames') != [OWNER] or
+        protection.get('enable_approvals_whitelist') is not True or
+        protection.get('approvals_whitelist_username') != ['e2e-reviewer']):
+    raise RuntimeError('local forge did not enable the required main protection')
 issues = json.loads(Path('/var/lib/ace-e2e/forgejo-input/issues.json').read_text())
 created = {}
 for issue in issues:

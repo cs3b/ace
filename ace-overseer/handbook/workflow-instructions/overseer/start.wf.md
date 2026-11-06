@@ -94,6 +94,14 @@ Use host role `verifier` for the independent reviewer leg and `integrator` for
 the integration leg, each with its own prepared assignment and commission.
 Launch the next leg only after accepting the preceding leg's actual report;
 review and test evidence must match the candidate HEAD before integration.
+For delivery from a forge issue, retain the issue link on the project task
+and include its repository, target branch and forge selection in each
+commission. Require the worker report to identify the published PR and tested
+HEAD. Pass that exact PR and HEAD to the reviewer. The integrator commission
+carries the same PR, the reviewer's approval receipt, tested HEAD and the
+project's allowed merge method. Use a merge commit when the forge permits it
+and the project has no other configured preference. Reconcile missing or
+changed evidence with its owner before dispatching the next leg.
 Record the returned terminal identity and agent name on the coordination task.
 An uncertain dispatch acknowledgement requires reconciling that existing
 session, not creating a second executor. End the turn with eyes armed after

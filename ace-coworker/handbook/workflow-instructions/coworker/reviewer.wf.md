@@ -63,6 +63,10 @@ product decision is escalated to the overseer instead.
      dependencies, or the overseer tree.
 
 2. **Run a review round (forge-neutral).**
+   - A task linked to a forge issue requires the worker's published PR and
+     exact tested HEAD before review starts. Read both from the accepted
+     worker report and reconcile them with the configured forge. If the PR
+     is missing, return the handoff to the overseer for worker publication.
    - Subject: local candidate
      `ace-review --preset code-valid --subject diff:<merge-base>..<head>`, or
      a typed PR reference `--pr IDENTIFIER` (number, `owner/repo#number`, or

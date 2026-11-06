@@ -98,6 +98,12 @@ the exact candidate head. Otherwise WITHHOLD the merge and report/escalate.
      verdict says accept.
 
 4. **Consume formal approval, then merge only a ready candidate.**
+   - A forge issue is delivered through its commissioned PR. Require the
+     worker's PR reference and the reviewer's approval for that same PR and
+     exact tested HEAD. Verify that the review covers the current forge
+     target/merge-base and the full PR delta. Missing or changed scope goes
+     back to the overseer for a renewed review. The local integration route
+     below is reserved for local-only commissions.
    - For PR integration, read the reviewer's receipt from the existing report
      and verify current provider evidence without minting another approval:
      `ace-git pr approval PR --expected-head SHA --review-id REVIEW_ID
@@ -112,7 +118,10 @@ the exact candidate head. Otherwise WITHHOLD the merge and report/escalate.
      copy their token or bypass branch protection. This read does not replace
      the dependency/test/current-head gate or authorize a merge by itself.
 
-   - Verdict `ready`: perform the project-defined integration with the
+   - With verdict `ready` and the verified provider approval, merge the PR via
+     `ace-git pr merge PR --expected-head SHA --method METHOD` with the retained
+     server selection and commissioned merge method.
+   - For local-only commissions with verdict `ready`, perform integration with the
      existing tools (`git` / `ace-git`, scoped to the commissioned paths;
      never force-push; fetch first and resolve conflicts explicitly).
    - If the merge itself changed the candidate or conflicts were resolved,

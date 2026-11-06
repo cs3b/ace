@@ -11,3 +11,8 @@ recorded candidate HEAD, including committed task/coordination records. A range
 based on a local main containing unpublished commits may omit PR changes: compare
 its base and selected files against the actual forge target/merge-base. Reject
 partial worker-only review presented as a full round, even if HEAD matches.
+
+Require a merged Forgejo PR for each of the base, CLI and documentation issues.
+Check that the configured reviewer approved each exact tested candidate and the
+configured integrator merged it. A direct update of main without the matching
+merged PR and effective approval fails this case.
