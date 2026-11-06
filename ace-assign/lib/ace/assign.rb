@@ -47,6 +47,19 @@ module Ace
       end
     end
 
+    # Resolve another project's inventory without changing cwd or the cached
+    # configuration used by this process. Explicit roots override PROJECT_ROOT_PATH.
+    def self.cache_dir_for(project_root:, env: ENV)
+      root = File.expand_path(project_root)
+      override = env["CACHE_BASE"]
+      return File.expand_path(override, root) unless override.to_s.empty?
+
+      gem_root = Gem.loaded_specs["ace-assign"]&.gem_dir || File.expand_path("../..", __dir__)
+      config = Ace::Support::Config.create(start_path: root, gem_path: gem_root,
+        test_mode: false).resolve_namespace("assign").data
+      File.expand_path(config.fetch("cache_dir", ".ace-local/assign"), root)
+    end
+
     # Reset config cache (useful for testing)
     def self.reset_config!
       @config = nil

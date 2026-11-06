@@ -427,3 +427,29 @@ A next-run manifest is staged only in local analysis/candidate109-manifest.json;
 the live tracked manifest has not changed. Existing gem-graph validation confirms
 55 exact gem artifacts satisfy all 7 installation roots. Staging and component
 tests do not establish installed E2E acceptance.
+
+
+## Project observation timeout — owner API integration
+
+Live candidate105 lab projection degraded project:ace with Timeout::Error, while
+an unrestricted direct project observation returned healthy sources and report
+8y551c. Read-only guest profiling: require ace/overseer 4.513s, project tasks
+0.019s, private tasks 0.011s, worktrees 0.036s, coworkers 19.990s across four
+worktrees. Repeated ace-assign process startup exceeded the 20s project budget.
+No VM mutation or tested-agent prompt was made.
+
+Source change: optional start_path in the config owner; explicit-root assignment
+discovery in ace-assign; coworker probe uses that installed owner API, with no
+checkout runtime loading, cwd mutation or second state store. Independent review
+caught a CLI relative CACHE_BASE regression; fixed by resolving its existing
+cache once for inventory and current selection. A nested-cwd regression now
+passes. Reviewer found no further actionable issue. Runtime floors updated for
+ace-assign 0.73.2 and ace-support-config 0.18.4; no publication performed.
+
+Executed full package tests: config325/863 (d744164a-86ac-4e93-b611-799de248f6f5),
+assign643/2531 with2skip (c1908ff8-12e4-4b57-893a-76628f723221), coworker418/1974
+(a7e04826-30df-491f-a49b-9df919564d12), overseer562/2613 with1skip
+(fe900a27-bd0a-4404-866e-95cfa7432072); all zero failures/errors. Installed VM timing
+and end-to-end correctness remain unverified until a fresh candidate run.
+Candidate109 lacks this optimization and is superseded for acceptance; do not
+activate its staged manifest. Active run remains candidate105, acceptance0/2.

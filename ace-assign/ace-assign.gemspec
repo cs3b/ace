@@ -47,7 +47,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "json", ">= 2.20", "< 3"
   spec.add_dependency "ace-support-cli", "~> 0.6", ">= 0.6.10"
   spec.add_dependency "ace-support-core", "~> 0.31"
-  spec.add_dependency "ace-support-config", "~> 0.18"
+  spec.add_dependency "ace-support-config", "~> 0.18", ">= 0.18.4"
   spec.add_dependency "ace-support-nav", "~> 0.28", ">= 0.28.8"
   spec.add_dependency "ace-b36ts", "~> 0.14"
   spec.add_dependency "ace-llm", "~> 0.39"

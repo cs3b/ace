@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.4] - 2026-11-06
+
+### Fixed
+
+- Pass explicit start paths through namespace and general configuration resolution so independent project reads do not depend on process cwd.
+
 
 ## [0.18.3] - 2026-10-20
 

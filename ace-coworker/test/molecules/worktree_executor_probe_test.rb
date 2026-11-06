@@ -6,70 +6,41 @@ module Ace
   module Coworker
     module Molecules
       class WorktreeExecutorProbeTest < AceCoworkerTestCase
-        FakeRunner = Struct.new(:calls) do
-          Status = Struct.new(:success?)
-
-          attr_accessor :out, :err, :success
-
-          def initialize(out: "[]", err: "", success: true)
-            super([])
-            @out = out
-            @err = err
-            @success = success
-          end
-
-          def call(argv, cwd)
-            calls << {argv: argv, cwd: cwd}
-            [out, err, Status.new(success)]
-          end
-        end
-
-        def write_config(dir, content)
+          def write_config(dir, content)
           path = File.join(dir, ".ace-local", "coworker", "config.yml")
           FileUtils.mkdir_p(File.dirname(path))
           File.write(path, content)
           path
         end
 
-        def test_argv_shape_and_cwd
-          Dir.mktmpdir("coworker-exec") do |dir|
-            runner = FakeRunner.new(out: "[]")
-            probe = WorktreeExecutorProbe.new(project_root: dir, runner: runner)
-            probe.probe(dir)
-
-            call = runner.calls.first
-            assert_equal dir, call[:cwd]
-            assert_equal ["ace-assign", "list", "--all", "--format", "json"], call[:argv]
-          end
-        end
-
-        def test_prefers_repo_binstub_when_executable
+        def test_inventory_projects_owner_rows_without_running_checkout_binstubs
           Dir.mktmpdir("coworker-exec") do |dir|
             FileUtils.mkdir_p(File.join(dir, "bin"))
-            binstub = File.join(dir, "bin", "ace-assign")
-            File.write(binstub, "#!/bin/sh\n")
-            FileUtils.chmod(0o755, binstub)
-
-            runner = FakeRunner.new(out: "[]")
-            WorktreeExecutorProbe.new(project_root: dir, runner: runner).probe(dir)
-
-            assert_equal binstub, runner.calls.first[:argv].first
+            File.write(File.join(dir, "bin", "ace-assign"), "raise 'must not run checkout'\n")
+            row = Struct.new(:id, :name, :state, :progress).new("abc123", "work", :running, "1/2")
+            roots = []
+            result = WorktreeExecutorProbe.new(project_root: dir,
+              inventory: ->(root) { roots << root; [row] }).probe(dir)
+            assert_equal [dir], roots
+            assert_equal [{"id" => "abc123", "name" => "work", "state" => "running", "progress" => "1/2"}], result[:assignments]
           end
         end
 
-        def test_parses_assignments_json
+        def test_real_owner_inventory_uses_target_config_without_subprocesses
           Dir.mktmpdir("coworker-exec") do |dir|
-            payload = JSON.generate([
-              {id: "abc123", name: "work", state: "running", progress: "1/2 done",
-               active_steps: ["impl"], next_step: nil, updated_at: "2026-10-18T00:00:00Z",
-               is_current: true}
-            ])
-            result = WorktreeExecutorProbe.new(project_root: dir,
-              runner: FakeRunner.new(out: payload)).probe(dir)
-
-            assert_equal [{"id" => "abc123", "name" => "work", "state" => "running",
-                           "progress" => "1/2 done"}], result[:assignments]
-            assert_nil result[:config]
+            FileUtils.mkdir_p(File.join(dir, ".ace", "assign"))
+            File.write(File.join(dir, ".git"), "")
+            File.write(File.join(dir, ".ace", "assign", "config.yml"), "cache_dir: assignment-records\n")
+            cache = File.join(dir, "assignment-records")
+            owner = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache)
+            assignment = owner.create(name: "real-owner", description: "inventory", source_config: "test")
+            cwd = Dir.pwd
+            Open3.stub(:capture3, ->(*) { flunk "inventory must not spawn a CLI" }) do
+              result = WorktreeExecutorProbe.new(project_root: dir).probe(dir)
+              assert_equal [assignment.id], result[:assignments].map { |row| row["id"] }
+              assert_equal "real-owner", result[:assignments].first["name"]
+            end
+            assert_equal cwd, Dir.pwd
           end
         end
 
@@ -77,7 +48,7 @@ module Ace
           Dir.mktmpdir("coworker-exec") do |dir|
             write_config(dir, "role: worker\ntask: 8xg.t.aaa\nassignment: abc123\n")
             result = WorktreeExecutorProbe.new(project_root: dir,
-              runner: FakeRunner.new(out: "[]")).probe(dir)
+              inventory: ->(_) { [] }).probe(dir)
 
             assert_equal "abc123", result[:config]["assignment"]
           end
@@ -97,7 +68,7 @@ module Ace
             File.write(worker, "role: worker\ntask: 8xg.t.aaa\nassignment: abc123\n")
 
             result = WorktreeExecutorProbe.new(project_root: dir,
-              runner: FakeRunner.new(out: "[]")).probe(dir)
+              inventory: ->(_) { [] }).probe(dir)
 
             assert_equal "abc123", result[:config]["assignment"]
           end
@@ -107,7 +78,7 @@ module Ace
           Dir.mktmpdir("coworker-exec") do |dir|
             write_config(dir, "::: not yaml [\n")
             result = WorktreeExecutorProbe.new(project_root: dir,
-              runner: FakeRunner.new(out: "[]")).probe(dir)
+              inventory: ->(_) { [] }).probe(dir)
 
             assert_equal Atoms::ActiveExecutorRule::UNPARSEABLE, result[:config]
           end
@@ -117,7 +88,7 @@ module Ace
           Dir.mktmpdir("coworker-exec") do |dir|
             write_config(dir, "- just\n- a list\n")
             result = WorktreeExecutorProbe.new(project_root: dir,
-              runner: FakeRunner.new(out: "[]")).probe(dir)
+              inventory: ->(_) { [] }).probe(dir)
 
             assert_equal Atoms::ActiveExecutorRule::UNPARSEABLE, result[:config]
           end
@@ -142,7 +113,7 @@ module Ace
             File.write(worker, "role: worker\ntask: 8xg.t.aaa\nassignment: abc123\n")
 
             result = WorktreeExecutorProbe.new(project_root: worktree,
-              runner: FakeRunner.new(out: "[]")).probe(worktree)
+              inventory: ->(_) { [] }).probe(worktree)
 
             assert_equal "abc123", result[:config]["assignment"]
           end
@@ -168,7 +139,7 @@ module Ace
             File.write(worker, "role: worker\ntask: 8xg.t.aaa\nassignment: abc123\n")
 
             result = WorktreeExecutorProbe.new(project_root: worktree,
-              runner: FakeRunner.new(out: "[]")).probe(worktree)
+              inventory: ->(_) { [] }).probe(worktree)
 
             assert_equal "abc123", result[:config]["assignment"]
           end
@@ -194,7 +165,7 @@ module Ace
             ENV["HOME"] = home
             begin
               result = WorktreeExecutorProbe.new(project_root: worktree,
-                runner: FakeRunner.new(out: "[]")).probe(worktree)
+                inventory: ->(_) { [] }).probe(worktree)
             ensure
               ENV["HOME"] = old_home
             end
@@ -206,7 +177,7 @@ module Ace
         def test_assignments_failure_raises_specific_error
           Dir.mktmpdir("coworker-exec") do |dir|
             probe = WorktreeExecutorProbe.new(project_root: dir,
-              runner: FakeRunner.new(out: "", err: "boom", success: false))
+              inventory: ->(_) { raise IOError, "boom" })
 
             error = assert_raises(Error) { probe.probe(dir) }
             assert_includes error.message, "cannot list assignments"

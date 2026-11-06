@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Read worktree assignment inventories through the installed ace-assign owner API instead of launching one CLI per worktree; preserve per-project configuration and report read errors.
+
+### Fixed
+
 - Report missing or mismatched assignments and failed assignment status probes as not ready in coworker status instead of returning `ready: true` with an assignment error.
 
 - Prepare checkout and assignments without running project setup as the coordinator; report setup as delegated and explicitly assign it to the worker.

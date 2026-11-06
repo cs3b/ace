@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.73.2] - 2026-11-06
+
+### Fixed
+
+- Add explicit-root assignment discovery for cross-worktree observation without process startup or global cwd/config mutation; keep CLI inventory and current selection on the same resolved store.
+
 ## [0.73.1] - 2026-10-20
 
 ### Fixed
