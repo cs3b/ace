@@ -281,3 +281,22 @@ index. Shell syntax passed; monorepo fast103/366 zero failures/errors:
 
 Independent review found no actionable blocker; resource-bound wording corrected
 to distinguish the observed result from a general guarantee.
+
+## Fresh run8y4yean: setup passed, harness deadline failed
+
+After APT fix c8de943fc5f01aeaa9359e9df97008d606526e50, clean VM
+16C84293-3C75-41D6-9D93-16E95CA528A5 completed runtime, native Herdr,
+installed-path checks, Forgejo seed and isolated-session fixture convergence.
+Fixture ef61b5025ad13ffa is ready; runtime fingerprint
+d4120149b05bc3dfdadb893fc4775c8d5e23bd2e5a328b38dddddb020e034974.
+Lab terminal term_65f90470728032 received the goal, armed healthy eyes, read
+owner state and created private manager8y5.t.047 with children being created.
+No bootstrap acceptance: runner failed at2026-11-06T00:04:04Z with explicit
+Pi CLI600s deadline. Prior run8y4ul83 had10800s. This invocation omitted the
+CLI override; the scenario itself lacked the required budget. Both VM scenarios
+now declare timeout10800, preserving individual case deadlines and all checks.
+The failed run cannot count toward two clean acceptance pairs.
+
+Timeout fix: fast103/366 passed (f998b619-1895-4f3d-9cf1-193cac6645bc).
+Independent reviewer confirmed loader/orchestrator/executor propagation and no
+actionable findings. Failed-run VM gracefully stopped and preserved.
