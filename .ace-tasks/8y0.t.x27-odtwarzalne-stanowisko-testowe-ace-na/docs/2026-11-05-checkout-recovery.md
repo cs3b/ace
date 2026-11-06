@@ -520,3 +520,11 @@ acceptance. Scenario-contract check2/69 passes (faaaadd5-2812-47cb-aa94-38c3c6d8
 Run `8y50e5a-monorepo-e2e-ts003` terminated with `Ace::LLM::ProviderError`: runner exceeded its original 10800-second deadline at 04:16:55Z. No final acceptance verdict was produced; acceptance remains 0/2. Before termination the project Overseer independently consumed base reviewer report `8y56ct` and dispatched integrator assignment `8y54752`, terminal `term_65f93dcec2502b`, isolated session `35f933cd427f0953`. The integrator started its installed coworker brief; merge was not established. The reviewer ACCEPT is not full-delta proof because its local range omitted part of the Forgejo PR.
 
 The terminated run permits activation of staged candidate111, built twice identically from `97123d7026fc44cfbf3c9ef16e4c0d1cca7cb8b7`. The helper reset is exporting the old owned VM before replacing it. All previous runtime observations remain component evidence, not clean acceptance.
+
+## Candidate111 terminal failure and candidate112 preparation
+
+Run `8y56gj8-monorepo-e2e-ts003` terminated with ERROR: verifier returned an incomplete structured verdict set; its prose documents delivery failure (workers finished, no independent reviews or merges). Eyes stopped at observation-budget120 and never woke on later reports. VM94EBB5DA-6920-486C-8F55-00A845C44097 preserved stopped. Its bootstrap PASS is not accepted: actual manager8y5.t.84n was public, outside _overseer; dependency fields were empty. Acceptance remains0/2.
+
+Fixes: ca2dbc29e explicit private-manager creation/validation;29d569122 one startup checkpoint followed by event-driven wait and one bounded diagnosis watchdog;43cf2adbe renewable paced source observation with independent local deadlines and cadence-aware readiness. Independent review clean. Wake suite passed; full overseer554tests/2551assertions,0failures,1skip.
+
+Candidate112 changes only wake0.2.1.pre.utm112 and overseer0.28.2.pre.utm112, built twice identically from43cf2adbe1fadabf8cb90ecb72c17cb9c44d6ccb. SHA256 wake f4dcec5fce77d266864bf1fa1cfdc8d8ffb2889f58ae78efb94fd79f94353dde;overseer3e99d90871c49b3cd6d0fb4b3e9e565952626ad2881b67661c206b35d1d7f49f. All60cached inputs verified; full gem graph valid. No live acceptance claimed.

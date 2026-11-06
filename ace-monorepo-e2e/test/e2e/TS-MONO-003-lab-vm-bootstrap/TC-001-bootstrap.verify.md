@@ -5,3 +5,11 @@ Require actual separate worker and verifier sessions, assignment-linked reports 
 Use the actual VM/Forgejo state, then `results/tc/01/state.json` and
 `sessions.json`, then the command stdout/stderr/exit captures. Missing, stale or
 contradictory evidence is FAIL. Confirm the fixture identity matches setup.
+
+Verify the manager's actual path is under `/lab/.ace-tasks/_overseer/`,
+Git ignores that path, and the private task listing contains it. A public
+manager with a coordination title or tag is FAIL, even if reports were
+accepted. Verify exactly three direct children and actual dependency fields:
+verification depends on preparation, and confirm-start depends on verification.
+Require authenticated `ready=true` after the project's first completed turn;
+terminal text claiming healthy eyes does not replace this result.
