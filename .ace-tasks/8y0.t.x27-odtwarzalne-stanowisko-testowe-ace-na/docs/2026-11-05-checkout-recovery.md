@@ -371,3 +371,31 @@ Closed the owner-level continuation gap identified above: `ReportProcessor` acce
 Baseline: 19 tests/144 assertions (`94d43335-0765-427d-b032-a17112223e82`). Regression red: two failures demonstrating local work-on and non-dry-run handoff (`824cdaab-2c66-4e3c-bb7b-1f8c51ddaf87`). Full overseer fast suite after fix: 552 tests/2546 assertions, zero failures/errors, one skip (`fe15f749-21b4-4146-b1b1-c44a10809eeb`). Independent reviewer `review_native_repro`: finding resolved, no new actionable finding. Documentation reflects coordinator responsibility and pending-state semantics.
 
 The unchanged candidate105 VM independently launched both workers (base terminal `term_65f92adec789b7`, docs agent `worker-8y5-t-432-23bf6aee`); both were observed working. This is live diagnostic progress, not accepted candidate coverage. Final clean acceptance remains 0/2.
+
+
+## 2026-11-06 — live project delivery routing and suite runtime
+
+Run `8y50e5a-monorepo-e2e-ts003` remains live; no prompts or repairs injected.
+Project Overseer created base/CLI/docs/release tasks and dispatched base/docs workers.
+Base worker reported PR #5 and assignment completion; this is not yet independently
+verified merge evidence. Read-only inspection confirms the project eyes recipient is
+`overseer`, while the prepared base worker config names `lab-overseer`. The project
+start guide now requires explicit `prepare --to` matching armed eyes, resolving the
+configured HITL address and checking every returned leg before dispatch. Existing
+prepare owner tests pass: 25 tests / 187 assertions, report
+`7c0b05d5-88f1-452a-9d2e-80aad3e48ab1`. Live acceptance of the guide is pending.
+
+The docs worker exposed suite worker runtime loss during Bundler version switching.
+The source fix uses the toolchain owner's installed launcher/environment and
+`bundle exec` for development workers; actual test child environments stay hermetic.
+Focused checks: process monitor 7/39, hermetic environment 4/32, fast 204/656 green.
+Full feat is not green: modified 96 tests, 11 failures + 3 errors
+(`bea20f82-a5b9-4fe3-8640-901706373637`); HEAD baseline 95 tests, 15 failures + 3 errors
+(`acc8a46a-e196-4618-994e-ac79a30ffc68`). All 14 modified failing test names also fail
+on baseline; four fixture setup failures are removed. Remaining failures include
+missing websocket-driver in hermetic fixture setup and consequential subprocess
+failures/timeouts. This comparison does not prove a clean full suite. Exact edited
+files were restored after baseline testing and their SHA-256 hashes verified.
+
+Acceptance remains 0/2. The running manifest is unchanged; rebuilt candidate and
+clean reset acceptance are still required.

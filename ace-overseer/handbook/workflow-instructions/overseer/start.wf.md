@@ -52,6 +52,25 @@ Execute these steps in order; the same order applies after a restart.
 - Merge gate: executed tests plus an independent reviewer verdict. CI is
   advisory.
 
+### Bind reports to the commissioning coordinator
+
+Before preparing any leg, read `recipient` from your armed eyes configuration
+(`<project>/.ace-local/overseer/eyes.json`) and resolve it through this project's
+HITL configuration. Pass that recipient explicitly on every preparation:
+
+```bash
+ace-coworker prepare --task <task-ref> --roles worker,reviewer,integrator --to <your-observed-recipient> --format json
+```
+
+The roles must match the commissioned task. Read each returned start config
+from its execution worktree and verify that `overseer` resolves to the same
+address that your eyes observes before dispatching. A missing or mismatched
+address blocks dispatch; report it through HITL. Do not inherit a bootstrap
+worker's `lab-overseer` recipient for work commissioned by the project Overseer.
+Lab bootstrap reports belong to the Lab Overseer; project delivery reports
+belong to the project Overseer. Keep that recipient through reviewer and
+integrator handoffs so each result reaches the coordinator that owns the work.
+
 ### Launching an isolated coworker
 
 When `ACE_LAB_SESSION=1`, launch the prepared leg through `ace-herdr dispatch`.
