@@ -247,9 +247,28 @@ first-turn deadline (`key=confirm-start-<project-id>`, `revision=<terminal-id>`,
 `at=now_unix_ms + 60000`) and end the turn. On a project-session revision or
 that deadline, rerun `ace-overseer start --reconcile` from the lab root once.
 It reuses the existing session and checks its evidence without resending the
-prompt. Cancel the deadline when readiness is confirmed. If the deadline fires
-and readiness remains false, record the unconfirmed start and delegate diagnosis
-or escalate; do not repeatedly rearm deadlines or poll.
+prompt. Cancel the deadline when readiness is confirmed. The deadline is an
+observation checkpoint, not a startup failure threshold. If it fires while
+readiness remains false, reconcile the actual session activity through Herdr's
+public agent state. A matching session still working on its first turn remains
+pending: record that fact, acknowledge the handled project-session revision,
+cancel the consumed deadline and keep project-session observation armed.
+At this first pending checkpoint, arm one separate startup watchdog
+(`key=confirm-stall-<project-id>`, `revision=<terminal-id>`,
+`at=now_unix_ms + 1800000`) and record its identity on confirm-start before ending the turn. Never
+rearm it on subsequent revisions or after session resume. On its expiry,
+reconcile readiness and, if still unconfirmed, delegate diagnosis while
+preserving the existing session; elapsed time alone never authorizes restart.
+Cancel this watchdog when readiness is confirmed or diagnosis takes ownership.
+On the next project-session revision, check authenticated readiness again.
+Do not ask the Captain whether to keep
+waiting for an active session, repeatedly rearm deadlines or poll.
+
+If the session has finished its turn without readiness, exited, or is blocked,
+delegate diagnosis with the observed state and readiness result. Unknown
+activity or unavailable observation is an explicit unresolved state, never
+permission to launch a duplicate or declare success. Escalate only an actual
+decision or missing authority; ordinary first-turn latency needs neither.
 
 Do not read implementation files, inspect another session's private files, or
 infer another agent's eyes from your own `ace_eyes status`. The public readiness
