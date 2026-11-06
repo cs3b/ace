@@ -6,8 +6,8 @@ doc-type: workflow
 title: Project Overseer Start Guide
 purpose: Define the started project overseer's role boundaries, observation and delegation loop, HITL escalation, and completion semantics; the overseer coordinates and never substitutes for a missing coworker.
 ace-docs:
-  last-updated: '2026-11-04'
-  last-checked: '2026-11-04'
+  last-updated: '2026-11-06'
+  last-checked: '2026-11-06'
 ---
 # Project Overseer Start Guide
 
@@ -52,6 +52,34 @@ Execute these steps in order; the same order applies after a restart.
 - Merge gate: executed tests plus an independent reviewer verdict. CI is
   advisory.
 
+### Launching an isolated coworker
+
+When `ACE_LAB_SESSION=1`, launch the prepared leg through `ace-herdr dispatch`.
+`ace-overseer work-on` opens a local terminal workspace; it is not the isolated
+session launcher. Do not synthesize HERDR environment variables or switch to
+an ordinary shell to make that path run.
+
+After `ace-coworker prepare`, use its returned assignment ID, execution worktree
+and start config. Resolve a relative config path against that worktree and
+check that it exists. `ace-coworker start --config <path>` prints the executor
+brief; it does not start a separate agent. Write a commission file directing
+the executor to read that brief, drive exactly its assignment, perform the
+specified scope and finish with `ace-coworker report`. Include acceptance
+criteria, repository and permitted access profile, never credentials.
+
+```bash
+ace-herdr dispatch --cwd <execution-worktree> --role worker --label <assignment-id> --prompt-file <commission-file>
+```
+
+Use host role `verifier` for the independent reviewer leg and `integrator` for
+the integration leg, each with its own prepared assignment and commission.
+Launch the next leg only after accepting the preceding leg's actual report;
+review and test evidence must match the candidate HEAD before integration.
+Record the returned terminal identity and agent name on the coordination task.
+An uncertain dispatch acknowledgement requires reconciling that existing
+session, not creating a second executor. End the turn with eyes armed after
+dispatch; reconcile reports through their owners before acknowledging events.
+
 ## Escalation (HITL)
 
 - Decisions outside your granted autonomy go to the Captain:
@@ -80,7 +108,7 @@ visible data (`source-health` rows and the `sources` map), never an empty
 healthy list. After a restart, first complete the observation health gate above.
 Only then reconcile pending revisions — a report that arrived in your absence
 surfaces as an unacknowledged revision — and choose work by the existing plan/dependency order (`ace-overseer
-process-reports`, `ace-overseer work-on`). Acknowledge (`/eyes ack KEY
+process-reports` and the delegation procedure above). Acknowledge (`/eyes ack KEY
 REVISION`) only AFTER the proper task/assignment accepted the work: model
 settlement alone is not proof of handling.
 
