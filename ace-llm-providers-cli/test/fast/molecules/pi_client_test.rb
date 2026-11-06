@@ -68,20 +68,34 @@ describe "PiClient" do
   end
 
   describe "build_pi_command" do
+    it "delivers a verifier-sized prompt through stdin without putting it in argv" do
+      prompt = "observed evidence\n" * 70_000
+      @client.stub(:pi_available?, true) do
+        @client.stub(:resolve_skills_dir, nil) do
+          Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |command, **kwargs|
+            assert_equal prompt, kwargs.fetch(:stdin_data)
+            refute_includes command, prompt
+            build_capture(stdout: "{\"type\":\"agent_end\",\"messages\":[{\"content\":[{\"type\":\"text\",\"text\":\"ok\"}]}]}\n{\"type\":\"agent_settled\"}\n")
+          }) do
+            @client.generate(prompt)
+          end
+        end
+      end
+    end
+
     it "builds command with default flags" do
-      cmd = @client.send(:build_pi_command, "Test prompt", {})
+      cmd = @client.send(:build_pi_command, {})
 
       assert_equal "pi", cmd[0]
       assert_includes cmd, "-p"
       assert_includes cmd, "--no-session"
       assert_equal "json", cmd.fetch(cmd.index("--mode") + 1)
       assert_includes cmd, "--no-skills"
-      assert cmd.any? { |arg| arg == "Test prompt" }
     end
 
     it "includes provider and model flags from model string" do
       client = Ace::LLM::Providers::CLI::PiClient.new(model: "anthropic/claude-opus-4-6")
-      cmd = client.send(:build_pi_command, "Test", {})
+      cmd = client.send(:build_pi_command, {})
 
       assert_includes cmd, "--provider"
       assert_includes cmd, "anthropic"
@@ -91,7 +105,7 @@ describe "PiClient" do
 
     it "preserves the resolved GLM model and max reasoning in native arguments" do
       client = Ace::LLM::Providers::CLI::PiClient.new(model: "zai/glm-5.3")
-      cmd = client.send(:build_pi_command, "Review", {cli_args: ["--thinking", "max"]})
+      cmd = client.send(:build_pi_command, {cli_args: ["--thinking", "max"]})
       assert_equal "zai", cmd.fetch(cmd.index("--provider") + 1)
       assert_equal "glm-5.3", cmd.fetch(cmd.index("--model") + 1)
       assert_equal "max", cmd.fetch(cmd.index("--thinking") + 1)
@@ -101,20 +115,20 @@ describe "PiClient" do
       client = Ace::LLM::Providers::CLI::PiClient.new(model: "zai/glm-5.3")
       ["--mode", "--model", "--models"].each do |flag|
         assert_raises(Ace::LLM::ProviderError) do
-          client.send(:build_pi_command, "Review", {cli_args: [flag, "other"]})
+          client.send(:build_pi_command, {cli_args: [flag, "other"]})
         end
       end
     end
 
     it "includes system prompt flag when system_prompt provided" do
-      cmd = @client.send(:build_pi_command, "Test", {}, system_prompt: "Be helpful")
+      cmd = @client.send(:build_pi_command, {}, system_prompt: "Be helpful")
 
       assert_includes cmd, "--system-prompt"
       assert_includes cmd, "Be helpful"
     end
 
     it "does not include system prompt flag when none provided" do
-      cmd = @client.send(:build_pi_command, "Test", {})
+      cmd = @client.send(:build_pi_command, {})
 
       refute_includes cmd, "--system-prompt"
     end

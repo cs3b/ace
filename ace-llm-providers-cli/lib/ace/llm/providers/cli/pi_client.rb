@@ -56,8 +56,8 @@ module Ace
             )
             full_prompt = rewrite_skill_commands(full_prompt, working_dir: working_dir)
 
-            cmd = build_pi_command(full_prompt, options, system_prompt: system_prompt)
-            capture = execute_pi_command(cmd, working_dir: working_dir, options: options)
+            cmd = build_pi_command(options, system_prompt: system_prompt)
+            capture = execute_pi_command(cmd, stdin_data: full_prompt, working_dir: working_dir, options: options)
             begin
               capture.raise_unless_success
             rescue Ace::LLM::ProviderError
@@ -181,15 +181,14 @@ module Ace
 
           # Build the pi command array
           #
-          # @param full_prompt [String] The complete prompt
           # @param options [Hash] Generation options
           # @param system_prompt [String, nil] System prompt for --system-prompt flag
           # @return [Array<String>] Command array
-          def build_pi_command(full_prompt, options, system_prompt: nil)
+          def build_pi_command(options, system_prompt: nil)
             cmd = ["pi"]
 
             # Print mode (non-interactive, one-shot)
-            cmd << "-p" << full_prompt.to_s
+            cmd << "-p"
 
             # No session (stateless)
             cmd << "--no-session"
@@ -273,12 +272,12 @@ module Ace
             [parts[0], parts[1]]
           end
 
-          def execute_pi_command(cmd, timeout: nil, working_dir: nil, options: {})
+          def execute_pi_command(cmd, stdin_data:, timeout: nil, working_dir: nil, options: {})
             timeout_val = timeout || @options[:timeout] || 120
             Molecules::SafeCapture.call(
               cmd,
               timeout: timeout_val,
-              stdin_data: "",
+              stdin_data: stdin_data,
               chdir: working_dir,
               env: options[:subprocess_env],
               command_prefix: options[:subprocess_command_prefix],
