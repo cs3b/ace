@@ -176,9 +176,19 @@ class HermeticEnvironmentTest < Minitest::Test
       end
     RUBY
 
+    if (bundle_path = Bundler.settings[:path])
+      FileUtils.mkdir_p(File.join(package, ".bundle"))
+      File.write(File.join(package, ".bundle", "config"), YAML.dump(
+        "BUNDLE_PATH" => File.expand_path(bundle_path, Bundler.root)))
+    end
+
+    # Fixture preparation may reuse the checkout's resolved dependency cache;
+    # the actual runner/test processes below still receive sanitized environments.
     install_env = {
       "PATH" => ENV["PATH"],
       "HOME" => ENV["HOME"],
+      "GEM_HOME" => Gem.dir,
+      "GEM_PATH" => ([Bundler.bundle_path.to_s] + Gem.path).uniq.join(File::PATH_SEPARATOR),
       "TMPDIR" => Dir.tmpdir
     }
     install_output, install_status = Open3.capture2e(

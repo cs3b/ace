@@ -46,6 +46,12 @@ module Ace
             policy: @environment_policy,
             parent_env: ENV.to_h
           ).build
+          # This child is operational ACE, not a test process. Restore only the
+          # selected runtime through its owner; its test children will apply the
+          # hermetic policy again. Never bootstrap installed ACE from a checkout.
+          if Ace::Support::Cli::Toolchain.installed?
+            fixture_environment.env.merge!(Ace::Support::Cli::Toolchain.child_environment)
+          end
           fixture_environment.env[Models::EnvironmentPolicy::SUITE_CHANNEL_KEY] =
             @environment_policy.channel_payload
 
@@ -202,15 +208,14 @@ module Ace
         private
 
         def build_command(package, options)
-          # Run the child with this suite's own Ruby binary and a bundler
-          # bootstrap: the hermetic fixture env blocks RUBYOPT/BUNDLE_/GEM_ and
-          # redirects HOME/XDG, so a PATH-resolved interpreter can fail through
-          # manager shims and children have no dependency surface beyond the
-          # Ruby install's default gem dir. -rbundler/setup makes bundler
-          # discover the checkout Gemfile by walking up from the package cwd,
-          # giving every child the same source-of-truth dependency set without
-          # ambient env or globally installed gems.
-          cmd_parts = [RbConfig.ruby, "-rbundler/setup", ace_test_executable]
+          cmd_parts = if Ace::Support::Cli::Toolchain.installed?
+            [RbConfig.ruby, Ace::Support::Cli::Toolchain.executable("ace-test")]
+          else
+            # Bundler's version switch may re-exec a script without Ruby's -r
+            # options. Its supported exec entrypoint restores setup after that
+            # switch and uses the tested checkout's dependency definition.
+            [RbConfig.ruby, Gem.bin_path("bundler", "bundle"), "exec", RbConfig.ruby, ace_test_executable]
+          end
 
           # Suite package execution intentionally bypasses grouped mode so each
           # package runs its full target scope as one batch under suite orchestration.
