@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Report missing or mismatched assignments and failed assignment status probes as not ready in coworker status instead of returning `ready: true` with an assignment error.
+
 - Prepare checkout and assignments without running project setup as the coordinator; report setup as delegated and explicitly assign it to the worker.
 - Keep bootstrap-worker acceptance within its granted scope; the authorized coordinator confirms full private-task observation.
 

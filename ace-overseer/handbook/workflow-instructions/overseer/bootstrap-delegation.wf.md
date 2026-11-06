@@ -61,6 +61,19 @@ the host or overseer role; private-tree masking is intentional. A worker reports
 missing authority and the exact blocked check instead of repairing host services
 or attempting to access the coordinator's private state. The coordinator proves
 full observation from the authorized project Overseer during confirm-start.
+`ace-coworker status` describes one commissioned executor, not whether a
+project can host an Overseer. A canonical project without a default coworker
+commission is not a bootstrap defect. Do not require or create a canonical
+`.ace-local/coworker/config.yml` merely to make that query ready, and never copy
+a worktree commission into another checkout where its assignment cannot resolve.
+Read an executor's status in its returned worktree with its returned `--config`.
+A configuration parse, exit zero or absence of the words "not ready" is not
+proof of readiness: require the intended identity and resolved assignment.
+Do not require a worker or verifier to rerun `prepare` as an acceptance check
+while its assignment is active. Preparation coordinates executors; its active
+executor conflict is not a configuration validation result. Accept project
+configuration through its own documented schema and installed runtime checks.
+
 The commission must include the target project's eyes configuration path
 `<project>/.ace-local/overseer/eyes.json` and
 the project Overseer's configured HITL recipient for its own eyes, separately
@@ -124,6 +137,12 @@ ace-task update <prepare-step> --set assignment=<worker-assignment> --set role=b
 ace-task update <verify-step> --set assignment=<verifier-assignment> --set role=bootstrap-verifier --set worktree=<returned-worktree>
 ace-task update <confirm-step> --set role=confirm-start
 ```
+
+Start-config paths returned by preparation are relative to the returned
+execution worktree, not the canonical project root. Pass the returned path with
+that worktree as cwd, or join it to that worktree for an absolute path. Verify
+that exact file exists before dispatch; use the same rule for the verifier's
+handoff config. Never replace its base directory with the canonical project.
 
 Read back the steps with `ace-task show` and verify exact returned identities.
 A preparation readiness report is not worker completion. It does not complete

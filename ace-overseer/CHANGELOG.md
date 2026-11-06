@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keep bootstrap acceptance separate from executor status and active preparation; resolve returned worker/verifier configs against their execution worktree.
+
 - Scope report processing to its configured HITL owner using the same strict recipient selection as observation; reject missing or unknown owners.
 
 - Give started overseers one explicit order: arm healthy observation, reconcile reports, then delegate; degraded observation ends the turn before report acceptance or dispatch.

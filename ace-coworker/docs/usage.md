@@ -285,8 +285,14 @@ worktree`).
 ace-coworker status [--config PATH] [--assignment ID] [--format table|json] [-q] [-d]
 ```
 
-Readiness query — always exit `0`. Absent config renders
-`not ready: .ace-local/coworker/config.yml not found`. Otherwise renders the
+Executor readiness query — a rendered state exits `0`, including not-ready.
+Absent config renders `not ready: .ace-local/coworker/config.yml not found`.
+A missing or mismatched assignment, or a failed assignment status probe,
+also renders `not ready: …` and JSON `ready: false`; successful YAML parsing alone is not readiness.
+This describes one commissioned executor, not project bootstrap readiness.
+Use its returned start configuration from its execution worktree; do not copy
+that config to another checkout to make a project-level status appear ready.
+A resolved assignment renders the
 resolved role/task/assignment/overseer, the assignment progress, and the
 completion verdict with remaining-work reasons (empty plan, failed steps,
 pending/active steps).

@@ -8,7 +8,7 @@ module Ace
       # including not-ready, without guessing.
       class StatusOrchestrator
         NotReady = Struct.new(:message, keyword_init: true)
-        Ready = Struct.new(:config, :snapshot, :project_root, :probe_error, :assignment, keyword_init: true)
+        Ready = Struct.new(:config, :snapshot, :project_root, :assignment, keyword_init: true)
 
         def initialize(project_root: nil, config_loader: nil, assignment_metadata: nil,
           assignment_probe: nil, config: nil)
@@ -40,8 +40,7 @@ module Ace
             @assignment_metadata.verify_task_match!(assignment_id, cfg.task)
             snapshot = @assignment_probe.snapshot(assignment_id)
           rescue Error => e
-            return Ready.new(config: cfg, snapshot: nil, project_root: @project_root,
-              probe_error: e.message, assignment: assignment_id)
+            return NotReady.new(message: "not ready: #{e.message}")
           end
 
           Ready.new(config: cfg, snapshot: snapshot, project_root: @project_root, assignment: assignment_id)

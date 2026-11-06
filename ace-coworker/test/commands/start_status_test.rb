@@ -125,6 +125,16 @@ module Ace
             assert_equal true, payload["assignment_status"]["complete"]
           end
 
+          def test_missing_assignment_is_not_ready_in_json_and_table
+            FileUtils.remove_entry(File.join(@dir, ".ace-local", "assign", "abc123"))
+            payload = JSON.parse(capture { command.call(format: "json") })
+            assert_equal false, payload["ready"]
+            assert_includes payload["message"], "assignment 'abc123' not found"
+            out = capture { command.call(format: "table") }
+            assert_includes out, "not ready:"
+            assert_includes out, "assignment 'abc123' not found"
+          end
+
           def test_interrupt_propagates_to_the_exe_wrapper
             # F9 regression: Ctrl-C during status must reach
             # exe/ace-coworker (exit 130), not be swallowed into success.

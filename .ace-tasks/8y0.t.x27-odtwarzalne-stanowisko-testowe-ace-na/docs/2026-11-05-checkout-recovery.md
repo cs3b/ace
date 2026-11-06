@@ -338,3 +338,14 @@ failed first acquisition of cpp-14, logged fresh-process retry at00:14:08,
 completed archive download at00:14:18, then installed offline successfully
 at2026-11-06T00:14:58Z (Result=success, ExecMainStatus=0). This was explicitly
 diagnostic, under768MiB/600s limits, not acceptance. A new clean run is required.
+
+
+## UTM105 live bootstrap: false executor readiness (2026-11-06)
+
+Run `8y50e5a-monorepo-e2e-ts003`, fixture `06abda525a5b4380`, installed candidate unchanged at source `31371192de9a6e6965b075432a66f1e96cba7f08`: lab manager `8y5.t.26n`, executable task `8y5.t.270`, worker `8y529b`, verifier `8y529b1`. Real worker dispatch, worker report `8y52ob`, lab wake/receipt and separate verifier dispatch were observed. These are component evidence, not full acceptance.
+
+The lab commissioned a canonical coworker config as generic project readiness. The worker copied a worktree assignment identity into the canonical checkout; `status` returned ready despite missing local assignment. The verifier accepted absence of the words "not ready" despite the real assignment error. Lab also resolved worktree-relative start configs against the canonical root; both executors corrected the supplied path themselves. A required `prepare --dry-run` conflicted with the running worker's own assignment.
+
+Owner fix: `StatusOrchestrator` returns NotReady for missing/mismatched assignment and typed status probe failures; remove the contradictory Ready/probe_error presentation. The status query still renders states without treating exit zero as readiness. Documentation distinguishes executor readiness from project readiness. Bootstrap workflow forbids the copied-config check and active prepare acceptance loop, and explicitly resolves start configs relative to the returned worktree. No guest patch or prompt was injected; these edits require a new built candidate and fresh acceptance.
+
+Verification: baseline 17 tests/44 assertions (`3f51fc51-16cb-491f-b0cd-ebad1427bf38`); regression red 18 tests/2 failures (`4cb9cc0f-5936-41f9-9694-5bcb521b8fd9`); green 18/50 (`30055036-ede7-4d2e-b8f7-375972c6ec1d`); coworker fast 419/1974, zero failures (`c63f60e0-b775-4d23-98dc-63a11536c459`). Independent review `review_native_repro`: no blocker; narrowed documentation to typed status probe failures because raw filesystem errors still fail the CLI rather than rendering readiness. Guide review: no actionable finding. Overseer fast: 549 tests/2511 assertions, zero failures/errors, one skip (`0471a655-69fc-45c1-864a-e52a7f848928`). Acceptance remains 0/2.
