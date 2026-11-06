@@ -536,3 +536,9 @@ Run `8y5gkvj` completed autonomous bootstrap with ignored manager `8y5.t.ide`, o
 Verifier startup failed with `E2BIG` on a 1,139,135-byte prompt. Host fix `d8bca8014` streams Pi prompts through stdin and drains subprocess output concurrently. Real subprocess regression transferred 1.26 MB despite 256 KiB startup stderr. Targeted tests 92/247, no failures and one skip.
 
 Candidate utm113 pins coworker and overseer from `56b4c719a065927cf78f4a798024d9da003516cd`, reproducible builds and validated graph. Forge issue commissions require a tested PR, independent full-delta approval and provider merge; the fixture protects main. The live protection and both clean TS003/TS004 pairs remain to be verified.
+
+## utm113 failure and utm114 activation
+
+TS-MONO-003 run `8y5qtgr` on fixture `029c075d7896614a` completed the autonomous bootstrap, including the three private coordination steps and readiness of the project overseer. Forgejo issue 1 produced PR 5. The coordinator missed the PR evidence in the worker assignment and commissioned a local review. The integrator advanced the PR source branch but Forgejo refused merge for lack of formal approval. The coordinator reopened the reviewer assignment for approval. Its repository-bound token received HTTP 403 on the actor probe at `GET /api/v1/user`. The project overseer escalated to Captain case `8y5uad`. Read-only Forgejo inspection confirmed zero reviews, PR 5 still open, and main still at `731392317e1c998de378f85855915f4dbbeb95dd`. The operator ended this diagnostic runner after the documented escalation. No acceptance credit.
+
+Candidate utm114 pins the revised handoff, the mandatory approval evidence mode and the Forgejo repository-lease approval adapter. Every changed archive was built twice with identical SHA-256 and the complete 55-gem graph was verified. Live approval and both reset-based scenario pairs remain acceptance work.
