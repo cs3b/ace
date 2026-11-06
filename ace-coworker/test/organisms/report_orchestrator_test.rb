@@ -107,6 +107,22 @@ module Ace
           refute @runner_calls.any? { |argv| argv[1] == "send" }
         end
 
+        def test_completed_followup_step_publishes_a_new_success_event
+          first = orchestrator(json: completed_json,
+            script: [{success: true, out: "HITL event created: 8xhq01 x\n"}, {success: true}]).call
+
+          payload = JSON.parse(completed_json)
+          payload.fetch("steps") << {"number" => "030", "name" => "publish-approval", "status" => "done"}
+          payload["progress"] = "3/3 done"
+          followup = orchestrator(json: JSON.generate(payload),
+            script: [{success: true, out: "HITL event created: 8xhq02 x\n"}, {success: true}]).call
+
+          assert_equal "8xhq01", first.event_id
+          assert_equal "8xhq02", followup.event_id
+          assert_equal %w[create send], @runner_calls.map { |argv| argv[1] }
+          assert_includes @runner_calls.first, "publish-approval"
+        end
+
         def test_unavailable_observation_preserves_existing_event_without_creating_another
           config = YAML.safe_load_file(@config_path)
           config["reporting"] = {"delivery" => "observe"}

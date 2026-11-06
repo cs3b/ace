@@ -78,14 +78,15 @@ module Ace
           record_path = record_writer.write(assignment_id,
             Atoms::ReportRecordFormatter.format(outcome, cfg, record_path: relative_record))
 
-          # Rerun rules: same result with an existing event => send-only
-          # redelivery (retrying delivery never retries the assignment).
+          # Retry an unchanged outcome using its existing event. A completed
+          # follow-up step is a new report even when the result stays success.
           state = state_store.read(assignment_id) || {}
           event_id = nil
           created_event = false
           if !report_via_hitl?(cfg, outcome)
             # errors.on_failure=stop: never touch HITL, not even a resend.
-          elsif state["result"] == outcome.result && state["event_id"] && (cfg.reporting_delivery == "observe" ? @reporter.publication_matches?(state["event_id"], cfg, result: outcome.result) : @reporter.event_exists?(state["event_id"]))
+          elsif state["result"] == outcome.result && state.fetch("outcome", outcome.to_h) == outcome.to_h &&
+              state["event_id"] && (cfg.reporting_delivery == "observe" ? @reporter.publication_matches?(state["event_id"], cfg, result: outcome.result) : @reporter.event_exists?(state["event_id"]))
             event_id = state["event_id"]
           elsif report_via_hitl?(cfg, outcome)
             event_id = @reporter.create(outcome, cfg)
@@ -99,7 +100,7 @@ module Ace
             # delivered message; a rerun reuses this ID instead of
             # creating a duplicate.
             state_store.write(assignment_id, {
-              "result" => outcome.result, "event_id" => event_id,
+              "result" => outcome.result, "outcome" => outcome.to_h, "event_id" => event_id,
               "record" => record_path, "delivery" => nil,
               "updated_at" => Time.now.utc.iso8601
             })
@@ -127,7 +128,7 @@ module Ace
           end
 
           state_store.write(assignment_id, {
-            "result" => outcome.result, "event_id" => event_id,
+            "result" => outcome.result, "outcome" => outcome.to_h, "event_id" => event_id,
             "record" => record_path, "delivery" => delivery,
             "updated_at" => Time.now.utc.iso8601
           })

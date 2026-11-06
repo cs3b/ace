@@ -104,11 +104,18 @@ missing or mismatched PR keeps review pending. Let the active worker finish,
 then resume the worker publication step if necessary. The worker owns this
 handoff even if a prompt to its active session was refused.
 
-Pass the verified PR and tested HEAD to the reviewer. For a forge issue,
+Pass the verified PR and tested HEAD to the reviewer. Before dispatch for
+a forge issue, prepare a final `publish-approval` step through `ace-assign`
+in the reviewer's assignment. The step finishes only with the formal
+receipt recorded alongside the tests. For a forge issue,
 local review acceptance alone leaves the integration leg pending. Require
 the reviewer's formal approval receipt for that PR, verify it against the
 current forge HEAD and the executed tests, and reconcile missing or stale
-approval with the reviewer. The integrator receives the same PR, the verified
+approval with the reviewer. If the reviewer prematurely completed the
+assignment, add the missing step to that assignment and reconcile its
+existing session. Ask it to finish that step with the verified receipt.
+A repeated success report for an unchanged assignment may reuse its event.
+The integrator receives the same PR, the verified
 receipt, the tested HEAD and the allowed merge method. Use a merge commit when
 the forge permits it and the project has no other configured preference.
 Record the returned terminal identity and agent name on the coordination task.

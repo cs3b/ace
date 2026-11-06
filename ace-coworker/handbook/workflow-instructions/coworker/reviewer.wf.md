@@ -42,6 +42,12 @@ product decision is escalated to the overseer instead.
 - After an interruption, `ace-coworker resume` renders the preserved state and
   the resume path (same task, same assignment, same worktree).
 
+For a forge issue, ensure the pinned assignment has a final
+`publish-approval` step before starting review. Add it through `ace-assign add`
+if the commission has not prepared it. Keep that step open while reviewing
+and testing. The round verdict `accept` completes review rounds only. An
+assignment with an open publication step cannot produce a success report.
+
 ## Project Context Loading
 
 - Read and follow: `ace-bundle wfi://bundle`
@@ -191,6 +197,11 @@ product decision is escalated to the overseer instead.
      `--default-server` selection). Keep the report and returned receipt in the
      existing task/review/assignment artifacts. Use one stable REVIEW_ID for
      this repository/PR publication; changed report/head needs a new publication.
+   - Finish the `publish-approval` step with the verified receipt and
+     executed test evidence in its assignment step report. Then run
+     `ace-coworker report`. The approval receipt and its forge-verified
+     reviewer identity are the handoff. The worker's PR description does
+     not have to be editable by the reviewer.
    - A comment, local acceptance or `pr ready` is not formal approval. Confirm
      the receipt's exact repo/PR/head/reviewer/evidence digest and effective
      approval. Missing permission, unsupported capability or unknown outcome
