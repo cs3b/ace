@@ -46,10 +46,31 @@ describe("event-driven eyes", () => {
     assert.equal(f.sends.length, 0); assert.equal(f.saved.breaker.reason, "quota-or-budget");
     await f.eyes.resume(); assert.equal(f.sends.length, 1);
   });
-  it("observation failures fail closed without losing pending", async () => {
-    const f = fixture(); f.fail = true;
+  it("observation failures retain pending and recover without a new model turn", async () => {
+    const f = fixture();
+    f.eyes.start({maxObservationsPerHour: 11});
+    f.rows = [event()];
+    f.eyes.canDeliver = () => false;
+    await f.eyes.tick();
+    f.fail = true;
+    f.eyes = f.build();
     for (let i = 0; i < 10; i++) await f.eyes.tick();
-    assert.equal(f.saved.breaker.reason, "observation-or-delivery-failure"); assert.equal(f.sends.length,0);
+    assert.equal(f.saved.breaker, null);
+    assert.equal(f.saved.observationUnavailable, true);
+    assert.equal(f.saved.pending[event().key].revision, event().revision);
+    assert.equal(f.sends.length, 0);
+    f.eyes = f.build();
+    f.fail = false;
+    await f.eyes.tick({scheduled: true});
+    assert.equal(f.sends.length, 0, "a tick without acquisition cannot deliver stale pending work");
+    assert.equal(f.observations, 11, "failed acquisitions consume the same persisted allowance");
+    f.time = 3600000;
+    await f.eyes.tick({scheduled: true});
+    assert.equal(f.saved.observationUnavailable, false);
+    assert.equal(f.sends.length, 1);
+    f.eyes.ack(event().key, event().revision);
+    await f.eyes.tick();
+    assert.equal(f.sends.length, 1);
   });
   it("explicit deadline fires once and cancel/change invalidates old pending", async () => {
     const f = fixture(); f.eyes.deadline("review", 100, "head-a"); await f.eyes.tick(); assert.equal(f.sends.length,0);

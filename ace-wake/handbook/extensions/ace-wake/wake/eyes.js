@@ -24,7 +24,7 @@ export function validateConfig(input) {
 /** Observation/delivery bookkeeping in the existing Pi session, not a work
  * queue. It never starts tasks or accepts reports on behalf of their owner. */
 export class Eyes {
-  constructor({ snapshot, save, observe, deliver, now = Date.now, status = () => {}, deliveryStatus = () => "accepted", canDeliver = () => true, onObserved = () => {} }) {
+  constructor({ snapshot, save, observe, deliver, now = Date.now, status = () => {}, deliveryStatus = () => "accepted", canDeliver = () => true, onObserved = () => {}, onObservationUnavailable = () => {} }) {
     this.s = structuredClone(snapshot || { enabled: false, retired: false, config: defaults,
       pending: {}, acknowledged: {}, deadlines: {}, breaker: null, errors: 0, window: null });
     this.s.config = validateConfig(this.s.config);
@@ -34,6 +34,7 @@ export class Eyes {
         !Number.isInteger(this.s.errors) || this.s.errors < 0) throw new Error("Invalid persisted eyes state");
     this.save = save; this.observe = observe; this.deliver = deliver; this.now = now; this.status = status;
     this.deliveryStatus = deliveryStatus; this.canDeliver = canDeliver; this.onObserved = onObserved;
+    this.onObservationUnavailable = onObservationUnavailable;
     this.busy = null; this.delivering = false; this.disposed = false;
     // A process restart does not imply receipt acknowledgement. Reconcile the
     // same pending revisions; business-effect idempotence remains with .5.4.
@@ -43,7 +44,9 @@ export class Eyes {
   }
   persist() { this.save(structuredClone(this.s)); this.status(this.summary()); }
   summary() { return { enabled: this.s.enabled, retired: this.s.retired, pending: Object.keys(this.s.pending).length,
-    breaker: this.s.breaker, errors: this.s.errors, observations: this.s.window?.count || 0, wakes: this.s.window?.wakes || 0,
+    breaker: this.s.breaker, errors: this.s.errors + Number(this.s.observationUnavailable === true),
+    observationUnavailable: this.s.observationUnavailable === true,
+    observations: this.s.window?.count || 0, wakes: this.s.window?.wakes || 0,
     wakeLimitedUntil: this.wakeLimitedUntil() }; }
   wakeLimitedUntil() {
     const window = this.s.window;
@@ -74,6 +77,7 @@ export class Eyes {
     if (this.disposed || generation !== this.generation) throw new Error("Observer changed during resume");
     this.validate(result);
     this.onObserved(result);
+    this.s.observationUnavailable = false;
     this.s.breaker = null; this.s.errors = 0; this.s.window = null; this.inflight = false;
     this.s.enabled = true; this.persist();
     await this.tick();
@@ -132,9 +136,29 @@ export class Eyes {
         this.s.window.count++;
         this.s.window.lastAttemptAt = now;
         this.persist(); // Attempts and allowance survive restart.
-        const result = await this.observe(this.s.config);
+        let result;
+        try {
+          result = await this.observe(this.s.config);
+        } catch {
+          if (generation === this.generation && !this.disposed) {
+            // Reading again is safe. Retain pending work, but do not deliver
+            // it against stale evidence. The next scheduled acquisition uses
+            // the same cadence and hourly allowance.
+            this.s.observationUnavailable = true;
+            this.onObservationUnavailable();
+            this.persist();
+          }
+          return;
+        }
         if (generation !== this.generation || this.disposed) return;
-        this.validate(result);
+        try {
+          this.validate(result);
+        } catch (error) {
+          this.s.observationUnavailable = true;
+          this.onObservationUnavailable();
+          throw error;
+        }
+        this.s.observationUnavailable = false;
         this.onObserved(result);
         for (const e of result.settled || []) {
           this.s.acknowledged[e.key] = e.revision;
@@ -147,6 +171,7 @@ export class Eyes {
         }
         observed = true;
       }
+      if (this.s.observationUnavailable) return;
       for (const [name, deadline] of Object.entries(this.s.deadlines)) {
         const { at, operationRevision } = deadline;
         const key = `deadline:${name}`, revision = hash([name, at, operationRevision]);

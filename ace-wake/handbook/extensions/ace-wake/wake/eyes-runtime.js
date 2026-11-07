@@ -80,7 +80,7 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
         } });
       },
       status: (state) => {
-        ctx.ui?.setStatus?.("ace-eyes", `eyes ${state.retired ? "retired" : state.breaker?.reason || (state.enabled ? "observing" : "off")} pending:${state.pending}`);
+        ctx.ui?.setStatus?.("ace-eyes", `eyes ${state.retired ? "retired" : state.breaker?.reason || (state.observationUnavailable ? "observation-unavailable" : state.enabled ? "observing" : "off")} pending:${state.pending}`);
         if (state.breaker || state.retired) stopTimer();
       },
       observe: (config) => observe(ctx.cwd, config),
@@ -88,6 +88,9 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
       // the observer generation is still current.
       onObserved: (result) => {
         if (generation === bindingGeneration) { observedSources = result.sources; observedAt = now(); }
+      },
+      onObservationUnavailable: () => {
+        if (generation === bindingGeneration) clearEvidence();
       },
       // Do not queue a follow-up while the current turn can still handle and
       // acknowledge the same revision. Polling retains it until the agent is

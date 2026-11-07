@@ -8,6 +8,44 @@ import { startSession } from "./session-harness.mjs";
 import { observeHitl } from "../handbook/extensions/ace-wake/wake/eyes-runtime.js";
 const key="a".repeat(64), revision="b".repeat(64);
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
+it("clears stale readiness during acquisition failure and recovers on the scheduled read", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ace-eyes-retry-"));
+  const host = createFakeHost(), tools = new Map();
+  host.pi.registerTool = (tool) => tools.set(tool.name, tool);
+  let unavailable = false;
+  const session = await startSession(host, {eyes: {
+    now: host.clock.now, schedule: host.setIntervalFn, cancel: host.clearIntervalFn,
+    observe: async () => {
+      if (unavailable) throw new Error("observe timed out");
+      return {schema: "ace.hitl.observation/v1", events: [], sources: {tasks: {status: "ok"}}};
+    }
+  }});
+  try {
+    const file = path.join(dir, "eyes.json");
+    fs.writeFileSync(file, "{}");
+    const tool = tools.get("ace_eyes");
+    const status = async () => (await tool.execute("status", {action: "status"})).details;
+    await tool.execute("start", {action: "start", configPath: file}, null, null, host.commandContext);
+    assert.deepEqual((await status()).sources, {tasks: {status: "ok"}});
+    unavailable = true;
+    for (let i = 0; i < 4; i++) { host.clock.advance(30000); await flush(); }
+    assert.equal((await status()).observationUnavailable, true);
+    assert.equal((await status()).breaker, null);
+    assert.equal((await status()).sources, undefined);
+    const evidence = host.sessionEntries.filter(e => e.customType === "ace-wake-eyes").at(-1).data.observerEvidence;
+    assert.equal(evidence.observedAt, null);
+    unavailable = false;
+    host.clock.advance(30000);
+    await flush();
+    assert.deepEqual((await status()).sources, {tasks: {status: "ok"}});
+    assert.equal((await status()).errors, 0);
+    assert.equal(host.sends.length, 0);
+  } finally {
+    await session.shutdown();
+    fs.rmSync(dir, {recursive: true, force: true});
+  }
+});
+
 it("does not record source health from an invalid observation", async()=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-invalid-"));
   const host=createFakeHost(), tools=new Map();
