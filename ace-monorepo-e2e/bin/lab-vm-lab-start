@@ -85,10 +85,11 @@ begin
           start["root"] == "/lab" && terminal.to_s.match?(/\Aterm_[0-9a-f]+\z/)
         raise "public start did not confirm a new isolated lab coordinator"
       end
+      goal = "Przygotuj projekt ACE wskazany w konfiguracji laba i doprowadź jego nadzorcę do gotowości. " \
+        "Stanowisko używa lokalnego HITL i lokalnego Forgejo. Transport Hermes i Telegram są poza zakresem."
       receipt.merge!("terminal" => terminal, "workspace" => start.fetch("workspace"),
-        "status" => "prompt_pending", "ready" => false)
+        "status" => "prompt_pending", "ready" => false, "goal" => goal)
       save_start_receipt(output_path, receipt)
-      goal = "Przygotuj projekt ACE wskazany w konfiguracji laba i doprowadź jego nadzorcę do gotowości."
       reply = guest_json(uuid, "herdr", "agent", "prompt", terminal, goal)
       unless reply.dig("result", "type") == "agent_prompted" &&
           reply.dig("result", "agent", "terminal_id") == terminal

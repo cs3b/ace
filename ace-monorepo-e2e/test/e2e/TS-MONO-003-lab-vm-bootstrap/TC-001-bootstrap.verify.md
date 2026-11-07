@@ -13,3 +13,6 @@ accepted. Verify exactly three direct children and actual dependency fields:
 verification depends on preparation, and confirm-start depends on verification.
 Require authenticated `ready=true` after the project's first completed turn;
 terminal text claiming healthy eyes does not replace this result.
+Confirm the prepared project uses local folder HITL and no Hermes/Telegram
+route or eyes sync route. Configuring an external transport exceeds this
+fixture's bootstrap scope.

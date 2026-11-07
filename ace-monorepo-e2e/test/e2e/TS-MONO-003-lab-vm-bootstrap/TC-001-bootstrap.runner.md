@@ -13,3 +13,5 @@ last observations and record the failed prerequisite.
 
 Capture `results/tc/01/commands.stdout`, `commands.stderr`, `commands.exit`,
 `state.json` and `sessions.json` as declared by the runner contract.
+Capture the delivered goal from the start receipt and verify the project's
+final HITL and eyes configuration uses local folders and no sync route.

@@ -120,6 +120,12 @@ begin
     FileUtils.mkdir_p(File.join(repository, ".ace/hitl"))
     FileUtils.cp(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/fixtures/ace/.ace/hitl/config.yml"),
       File.join(repository, ".ace/hitl/config.yml"))
+    legacy_route = ".ace/hitl/native-route.json"
+    route_path = File.join(repository, legacy_route)
+    if File.exist?(route_path) || File.symlink?(route_path)
+      File.unlink(route_path)
+      receipt["excluded_paths"] << legacy_route
+    end
     FileUtils.mkdir_p(File.join(repository, ".ace/coworker"))
     File.write(File.join(repository, ".ace/coworker/config.yml"), <<~YAML)
       reporting:
