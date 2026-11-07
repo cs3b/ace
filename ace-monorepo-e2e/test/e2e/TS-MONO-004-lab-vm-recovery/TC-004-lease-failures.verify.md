@@ -4,6 +4,10 @@ Require actual Forgejo access before revocation and rejection afterwards, termin
 
 Check that the crash targeted only the issuer's main process and that the
 installed `ExecStopPost` ran. Capture evidence for startup recovery separately.
+For expiry and crash, require the operator probe's actual HTTP 200 and
+populated command cgroup before the fault, followed by HTTP 401 or 403 for
+the same credential, empty or absent command cgroup and terminal cleanup.
+An issuer CLI refusal alone does not establish remote revocation.
 To prove session isolation, require denial for a distinct isolated session
 while the owner's lease is live. Record any dependent units stopped by systemd
 and their public recovery. A denial after revocation by itself does not prove

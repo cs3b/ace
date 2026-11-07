@@ -290,6 +290,20 @@ Restore each injected fault before advancing to the next case; record its
 start/end and exact affected session/file. Never repair the commissioned
 project or create tasks/reviews/merges using operator instrumentation.
 
+For a live disposable Forgejo worker lease, run the expiry or issuer crash
+probe through the same operator channel:
+
+```bash
+ace-monorepo-e2e/bin/lab-vm-guest operator "$run_id" /usr/bin/python3 -c \
+  "$(cat ace-monorepo-e2e/lab-vm/lease-fault-evidence.py)" expiry "$lease_id"
+```
+
+Use `crash` in place of `expiry` to kill the issuer's main process after
+the live check. Run the crash probe only after the distinct live session's
+access denial has been captured. The probe keeps the test credential in
+guest operator process memory. It reports HTTP status and owner state and
+requires confirmed cleanup. It leaves issuer restart to the runner.
+
 Scenarios share one working VM per acceptance set: run TS-MONO-003 first, then
 TS-MONO-004 against its fixture receipt. Reset before repeating the pair with
 identical release-manifest bytes. A failure preserves the VM and evidence;
