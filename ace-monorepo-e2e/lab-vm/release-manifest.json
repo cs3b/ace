@@ -90,10 +90,10 @@
     },
     {
       "name": "ace-hitl",
-      "version": "0.25.1.pre.utm105",
-      "sha256": "c0ea457f9868a2c4a4f022cc02f05f1498e19405638940dfa65e152531945fe3",
+      "version": "0.25.1.pre.utm119",
+      "sha256": "08ce8fd3a35b7975784c6ed4ac0fd129420bebd356ee5789ab9661fe190c96ee",
       "source": "local",
-      "source_commit": "5c4fe32aab57ebddeb850eaa033d436494898521"
+      "source_commit": "fd90918aec1cbe505902b9b5ece381885772c2f8"
     },
     {
       "name": "ace-hitl-contract",
@@ -128,10 +128,10 @@
     },
     {
       "name": "ace-overseer",
-      "version": "0.28.2.pre.utm118",
-      "sha256": "977cd5d694adbf0b02ccd56099d647766d047dfa58e54879ca4266dd5af08701",
+      "version": "0.28.2.pre.utm119.2",
+      "sha256": "9f3c9ab553b5baae40de5339bb8d94d780bac1afac2bb04b8eb39887e87f4c62",
       "source": "local",
-      "source_commit": "9c4c8b210b023b651c517dd9e49f5dade9234c36"
+      "source_commit": "0a6ee67ec292f478f4a9b2def15aee9c760a097a"
     },
     {
       "name": "ace-review",
