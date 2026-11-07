@@ -6,7 +6,9 @@ Check both Overseers. A live Herdr server or an unchanged terminal does
 not establish observation health. An actual breaker, including a sticky
 `wake-budget` status, fails the case even if an older tool response says
 the queue was empty. Evidence must show current observation with zero
-pending revisions at both endpoints.
+pending revisions at both endpoints. Check the latest sanitized
+`ace-wake-eyes` records for the matching native processes, successful
+samples progressing over the interval and no unavailable state or breaker.
 
 Use the actual VM/Forgejo state, then `results/tc/03/state.json` and
 `sessions.json`, then the command stdout/stderr/exit captures. Missing, stale or
