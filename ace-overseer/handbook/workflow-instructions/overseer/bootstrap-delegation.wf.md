@@ -234,7 +234,10 @@ IDs or infer completion from a report file alone.
 Record the actual accepted HITL event ID and result in step metadata through
 `ace-task update <step> --set processed_report=<event-id> --set report_result=<result>`
 using the lab task owner.
-Mark done only after acceptance; errors keep the step open. Receipt notes in
+Mark done only after acceptance; errors keep the step open. If the executor
+observation loses the recorded terminal while its assignment is incomplete,
+verify the absence in Herdr and record the interruption before reconciling
+that assignment. A disappeared session cannot complete a bootstrap leg. Receipt notes in
 the path returned by `ace-task show` supplement these fields, never replace them.
 Read back the recorded identity before acknowledging the eyes revision.
 Never put a preparation readiness ID on a worker, verifier or confirm-start step.

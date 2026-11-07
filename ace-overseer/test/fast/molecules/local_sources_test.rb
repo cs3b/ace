@@ -44,15 +44,50 @@ module Molecules
       end
     end
 
-    def sources(tasks: {}, worktrees: [], worktree_error: nil, probe: nil)
+    def sources(tasks: {}, worktrees: [], worktree_error: nil, probe: nil, **options)
       no_project_sessions = Object.new
       def no_project_sessions.configured? = false
       Ace::Overseer::Molecules::LocalSources.new(
         task_manager: FakeTaskManager.new(tasks),
         worktree_manager: FakeWorktreeManager.new(worktrees, error: worktree_error),
         probe_factory: ->(_path) { probe || FakeProbe.new({config: nil, assignments: []}) },
-        project_sessions: no_project_sessions
+        project_sessions: no_project_sessions, **options
       )
+    end
+
+    def test_isolated_executor_disappearance_revises_the_worktree_without_assignment_change
+      worktree = Worktree.new("/lab/ace/.ace-wt/task-1", "work", false)
+      worker = {"terminal_id" => "term_123abc", "cwd" => worktree.path,
+        "isolated_session" => {"role" => "worker", "project" => "ace"}, "agent_status" => "working"}
+      agents = [worker, worker.merge("terminal_id" => "term_456def", "cwd" => "/lab/other")]
+      response = Struct.new(:parsed_json).new({"result" => {"agents" => agents}})
+      herdr = Object.new
+      herdr.define_singleton_method(:agent_list) { response }
+      observer = sources(worktrees: [worktree], herdr: herdr, env: {"ACE_LAB_SESSION" => "1"})
+      executor = -> { observer.call.fetch("events").find { |row| row["type"] == "executor" } }
+
+      running = executor.call
+      assert_equal [{"terminal" => "term_123abc", "role" => "worker"}], running.fetch("sessions")
+      worker["agent_status"] = "done"
+      assert_equal running, executor.call, "transient turn status is not executor disappearance"
+
+      agents.delete(worker)
+      stopped = executor.call
+      assert_equal running.fetch("key"), stopped.fetch("key")
+      refute_equal running.fetch("revision"), stopped.fetch("revision")
+      assert_empty stopped.fetch("sessions")
+      assert_equal stopped, executor.call
+    end
+
+    def test_unavailable_isolated_inventory_degrades_instead_of_reporting_all_executors_absent
+      worktree = Worktree.new("/lab/ace/.ace-wt/task-1", "work", false)
+      response = Struct.new(:parsed_json).new({"error" => {"code" => "server_not_running"}})
+      herdr = Object.new
+      herdr.define_singleton_method(:agent_list) { response }
+      result = sources(worktrees: [worktree], herdr: herdr, env: {"ACE_LAB_SESSION" => "1"}).call
+
+      assert_equal "degraded", result.dig("sources", "coworkers", "status")
+      refute result.fetch("events").any? { |row| row["type"] == "executor" }
     end
 
     def test_projects_task_worktree_executor_and_assignment_rows_with_stable_revisions

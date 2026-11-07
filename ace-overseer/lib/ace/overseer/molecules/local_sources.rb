@@ -3,6 +3,8 @@
 require "digest"
 require "json"
 require_relative "../atoms/observation_sources"
+require_relative "isolated_runtime"
+require "ace/herdr/molecules/herdr_executor"
 
 module Ace
   module Overseer
@@ -22,13 +24,18 @@ module Ace
       # (an identical repeated failure never re-wakes; a new failure mode
       # wakes once), while the healthy sources keep projecting.
       class LocalSources
-        def initialize(task_manager: nil, worktree_manager: nil, probe_factory: nil, project_sessions: nil)
+        EXECUTOR_ROLES = %w[worker verifier integrator].freeze
+
+        def initialize(task_manager: nil, worktree_manager: nil, probe_factory: nil, project_sessions: nil,
+          herdr: Ace::Herdr::Molecules::HerdrExecutor.new, env: ENV)
           @tasks = task_manager || Ace::Task::Organisms::TaskManager.new
           @worktrees = worktree_manager || Ace::Git::Worktree::Organisms::WorktreeManager.new
           @probe_factory = probe_factory || ->(path) {
             Ace::Coworker::Molecules::WorktreeExecutorProbe.new(project_root: path)
           }
           @project_sessions = project_sessions || ProjectSessions.new
+          @herdr = herdr
+          @env = env
         end
 
         # @return [Hash] {"events" => Array<{key, revision, type, ...}>,
@@ -125,19 +132,19 @@ module Ace
           result = @worktrees.list_all
           raise Error, result[:error] || "failed to list worktrees" unless result[:success]
 
-          Array(result[:worktrees]).reject(&:bare).flat_map do |worktree|
+          worktrees = Array(result[:worktrees]).reject(&:bare)
+          sessions = worktrees.empty? ? {} : executor_sessions
+          worktrees.flat_map do |worktree|
             probe = @probe_factory.call(worktree.path)
             report = probe.probe(worktree.path)
             verdict = Ace::Coworker::Atoms::ActiveExecutorRule.evaluate(
               config: report[:config], assignments: report[:assignments]
             )
             identity = Digest::SHA256.hexdigest(worktree.path)
-            executor = {"key" => "executor:#{identity}",
-                        "revision" => revision({"path" => worktree.path,
-                                                "active" => verdict[:active],
-                                                "evidence" => verdict[:evidence]}),
-                        "type" => "executor", "path" => worktree.path,
-                        "active" => verdict[:active], "evidence" => verdict[:evidence]}
+            payload = {"path" => worktree.path, "active" => verdict[:active],
+              "evidence" => verdict[:evidence], "sessions" => sessions.fetch(worktree.path, [])}
+            executor = {"key" => "executor:#{identity}", "revision" => revision(payload),
+              "type" => "executor"}.merge(payload)
             assignments = report[:assignments].map do |assignment|
               {"key" => "assignment:#{assignment["id"]}",
                "revision" => revision({"id" => assignment["id"], "state" => assignment["state"],
@@ -147,6 +154,31 @@ module Ace
             end
             [executor] + assignments
           end
+        end
+
+        # Native sessions can disappear without writing an assignment report.
+        # Project their presence on the existing stable worktree row so that
+        # even an interruption before the first assignment step is visible.
+        def executor_sessions
+          return {} unless IsolatedRuntime.enabled?(env: @env)
+
+          response = @herdr.agent_list.parsed_json
+          agents = response.is_a?(Hash) && !response.key?("error") && response.dig("result", "agents")
+          raise Error, "isolated native executor inventory is unavailable" unless agents.is_a?(Array)
+
+          sessions = Hash.new { |index, cwd| index[cwd] = [] }
+          agents.each do |agent|
+            role = agent.dig("isolated_session", "role")
+            next unless EXECUTOR_ROLES.include?(role)
+
+            terminal, cwd = agent.values_at("terminal_id", "cwd")
+            unless terminal.is_a?(String) && terminal.match?(/\Aterm_[0-9a-f]+\z/) &&
+                cwd.is_a?(String) && cwd.start_with?("/")
+              raise Error, "isolated executor session identity is invalid"
+            end
+            sessions[cwd] << {"terminal" => terminal, "role" => role}
+          end
+          sessions.transform_values { |rows| rows.sort_by { |row| row.fetch("terminal") } }
         end
       end
     end

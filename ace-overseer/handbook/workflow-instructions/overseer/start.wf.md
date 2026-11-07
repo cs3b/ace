@@ -124,6 +124,11 @@ The integrator receives the same PR, the verified
 receipt, the tested HEAD and the allowed merge method. Use a merge commit when
 the forge permits it and the project has no other configured preference.
 Record the returned terminal identity and agent name on the coordination task.
+When an executor observation loses that terminal, check Herdr and the pinned
+assignment. If the terminal is gone and the assignment is incomplete, record
+the interruption and keep its result pending or blocked. Reconcile that
+assignment before any retry. Terminal disappearance is never a success
+report.
 An uncertain dispatch acknowledgement requires reconciling that existing
 session, not creating a second executor. End the turn with eyes armed after
 dispatch; reconcile reports through their owners before acknowledging events.
