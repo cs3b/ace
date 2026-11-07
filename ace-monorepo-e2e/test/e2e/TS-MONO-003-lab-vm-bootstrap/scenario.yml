@@ -6,8 +6,8 @@ priority: high
 tags: [utm, arm64, forgejo, autonomy, installed]
 cost-tier: extended
 # ARM64 dependency setup and serial worker/reviewer/integrator legs are real work.
-# Budget includes bootstrap plus the 180-minute delivery case and idle verification.
-timeout: 18000
+# Budget includes bootstrap, 180-minute delivery and one hourly idle drain window.
+timeout: 21600
 tool-under-test: ace-overseer
 automation-candidate: false
 e2e-justification: >
