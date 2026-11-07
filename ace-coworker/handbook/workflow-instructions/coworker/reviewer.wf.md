@@ -82,8 +82,19 @@ assignment with an open publication step cannot produce a success report.
      forge selection `--server NAME` or `--default-server` (mutually
      exclusive) - never infer a forge from a hostname or the caller's
      identity.
-   - For a commissioned PR, review the **full forge PR delta**. Prefer its
-     typed PR reference. If using a local diff range, first resolve the actual
+   - In an isolated lab session, use the **local diff range** for review. Use
+     short, separately leased Forgejo operations to read the PR metadata and
+     diff and fetch its base and source refs. Supply one argument per repeated
+     `--cmd` option to `ace-lab auth exec`, for example
+     `--cmd git --cmd fetch --cmd origin --cmd <ref>`. Each lease authorizes
+     one execution. Keep `ace-review`, provider calls, local analysis and
+     tests in the normal installed reviewer session, outside `auth exec`.
+     This preserves the session's configured provider and avoids tying model
+     execution to the forge lease TTL. Publish the approval with a fresh
+     reviewer lease after verifying the tested candidate.
+   - For a commissioned PR, review the **full forge PR delta**. Outside the
+     isolated lab, prefer its typed PR reference. If using a local diff
+     range, first resolve the actual
      target branch and candidate HEAD from the configured forge, fetch those
      exact refs through your granted access, and compute their merge-base.
      Record the full base and head SHAs and compare the selected files with the
@@ -153,7 +164,9 @@ assignment with an open publication step cannot produce a success report.
      to that branch without force and re-read the PR to verify its HEAD.
      An unexpected remote change or denied push blocks this handoff.
    - Run a FULL round over the whole current candidate with the retained
-     forge selection and the verified forge base and HEAD. Recompute the
+     forge selection and the verified forge base and HEAD. In the isolated
+     lab, repeat the lease-scoped forge reads followed by local diff review.
+     Recompute the
      merge-base if either changes. A fix-only diff or scoped delta is
      separate from a full round. A committed task edit also changes the
      candidate and requires renewed review and test evidence.
