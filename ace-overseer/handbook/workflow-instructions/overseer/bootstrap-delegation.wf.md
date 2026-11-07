@@ -178,10 +178,15 @@ The task must be present in the execution worktree before any agent starts.
 it does NOT launch an agent. In the isolated lab use public `ace-herdr dispatch`
 with `--cwd <returned-worktree>`, `--role worker` (or `verifier` for independent
 verification), `--label <assignment-id>` and `--prompt-file <commission-file>`.
-The host selects the installed runtime and standing role instructions. The
-commission directs that worker to read its returned start brief, drive exactly
-its assignment and finish with `ace-coworker report`. The bootstrap role allows
-changes to the commissioned canonical project configuration; ordinary product
+The host selects the installed runtime and standing role instructions. For
+each leg write a separate prompt file named for its assignment. Its first
+lines must name the bootstrap role, exact assignment ID and exact returned
+start-config path. Direct the executor to read that config with
+`ace-coworker start --config <path>`, drive that assignment and finish
+with `ace-coworker report --config <path>`. Keep the shared task commission
+as context referenced by the prompt. Before dispatch, verify the prompt,
+config, assignment label and host role all refer to the same leg. The bootstrap
+role allows changes to the commissioned canonical project configuration; ordinary product
 worker/reviewer roles stay within their task worktree.
 
 The dispatcher waits only until the terminal can accept input, submits the
@@ -199,11 +204,19 @@ completion waits or polling. The already armed eyes observes assignment,
 report and session changes without additional model turns while unchanged.
 
 On wake, inspect the recorded terminal once with `herdr agent get <terminal>`.
-A working state attributable to that prompt, or a matching assignment step
-report, proves execution began. Cancel the corresponding eyes deadline once
-confirmed. Prompt acceptance alone is not first-turn proof. If the deadline
-fires without evidence, record an unconfirmed start and escalate through HITL;
-never take over the work or treat the slow session as a free slot.
+Read the pinned assignment through its owner in the returned worktree.
+An active step or a step report for that exact assignment proves execution
+began. A busy terminal without progress on the pinned assignment is only
+evidence that Pi is running. Cancel the corresponding eyes deadline once
+confirmed. If the deadline fires and the session is idle with the pinned
+assignment untouched, verify the prompt/config binding. If it was wrong
+and the private step has no correction attempt, record
+`prompt_correction=attempted` on that step before sending the corrected
+leg-specific prompt to the same session. Arm one new deadline after
+confirmed delivery. In every other case, including a correct prompt with
+no assignment progress or uncertain delivery, record the unconfirmed
+assignment start and escalate through HITL. Never take over the work or
+treat the session as a free slot.
 
 End the overseer's turn immediately after dispatch. The eyes timer observes
 assignment and HITL revisions without invoking the model on unchanged state.
@@ -230,8 +243,10 @@ From the target project root, use `ace-overseer handoff --dry-run --task <task>`
 the existing role handoff gate and returned start configuration for the independent reviewer after
 worker completion. As with the worker, a printed start command is not a live
 agent: launch the reviewer separately with its own returned role/config, using
-the same nonblocking prompt and its own first-turn deadline keyed to the
-reviewer assignment. Do not launch a second
+a new verifier-only prompt file with the verifier assignment and verifier
+start config, plus its own first-turn deadline keyed to that assignment.
+The worker prompt and the shared task commission are invalid as verifier
+dispatch prompts. Do not launch a second
 executor while an earlier one is active or its state is unknown. On repeated delivery, reconcile existing
 assignments and agents instead of dispatching again.
 
