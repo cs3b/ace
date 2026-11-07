@@ -16,6 +16,11 @@ it and refuses dispatch, or for at most five minutes. Restore the exact
 original permissions. Moving the store away alone can expose a healthy
 empty source and does not inject this fault. Use host-only operator fault
 instrumentation. Restore each original file or unit condition before advancing.
+For the runtime fault, capture the installed executable path before hiding
+it. While it is hidden, run the normal public start from the project root
+with the installed toolchain and capture the refusal and unchanged native
+session inventory. Source degradation alone does not prove launch refusal.
+After restoring the executable, verify its installed path and health.
 If the next fault's prerequisites are unmet,
 record which prerequisite failed. Do not fix project work for the agents.
 
