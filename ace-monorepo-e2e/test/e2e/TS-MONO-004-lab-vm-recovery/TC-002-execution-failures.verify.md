@@ -6,7 +6,8 @@ For interruption, require the owner to respond within ten minutes of the
 stop and without another user goal. An unchanged paused assignment or a
 retry after an unrelated prompt does not establish recovery on wake. For
 the source fault, require evidence of the owner's dispatch refusal while
-the source is degraded. For the runtime fault, require the installed public
+the source is degraded and a wake on its recovery without a new goal or
+unrelated work event. For the runtime fault, require the installed public
 start failure and unchanged native session inventory while the executable
 is unavailable.
 

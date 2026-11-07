@@ -4,10 +4,73 @@ require "ace/overseer/molecules/event_observation"
 require "open3"
 
 class OverseerEventObservationTest < AceOverseerTestCase
+  def test_source_recovery_revises_the_same_wire_event_even_when_work_is_unchanged
+    failing = false
+    hitl = lambda do |**|
+      raise Errno::EACCES, "case store" if failing
+
+      {"schema" => "ace.hitl.observation/v1", "events" => []}
+    end
+    tasks = Object.new
+    def tasks.list(**) = []
+    observer = Ace::Overseer::Molecules::EventObservation.new(hitl: hitl,
+      task_manager: tasks, local_sources: no_local_sources, config: {})
+    healthy_projection = observer.call(owner: "self")
+    failing = true
+    degraded_projection = observer.call(owner: "self")
+    failing = false
+    recovered_projection = observer.call(owner: "self")
+    healthy, degraded, recovered = [healthy_projection, degraded_projection, recovered_projection].map do |projection|
+      projection.fetch("events").find { |row| row["source_key"] == "source:hitl" }
+    end
+
+    assert_equal "degraded", degraded.fetch("status")
+    assert_equal "ok", recovered.fetch("status")
+    assert_equal degraded.fetch("key"), recovered.fetch("key")
+    refute_equal degraded.fetch("revision"), recovered.fetch("revision")
+    assert_equal healthy, recovered
+
+    source = File.expand_path("../ace-wake/handbook/extensions/ace-wake/wake/eyes.js", Ace::Overseer.gem_root)
+    script = <<~JS
+      import assert from 'node:assert/strict';
+      import {pathToFileURL} from 'node:url';
+      const {Eyes} = await import(pathToFileURL(process.argv[1]));
+      let data = ''; for await (const chunk of process.stdin) data += chunk;
+      const [healthy, degraded, recovered] = JSON.parse(data);
+      const deliveries = [];
+      let current, saved;
+      const observer = () => new Eyes({snapshot: saved, save: (snapshot) => { saved = snapshot; },
+        observe: async () => current, deliver: async (batch) => { deliveries.push(batch); return true; }});
+      let eyes = observer();
+      eyes.start({});
+      for (current of [healthy, healthy, degraded, degraded, recovered, recovered, degraded]) {
+        if (current === recovered && deliveries.length === 2) {
+          eyes.dispose();
+          eyes = observer();
+        }
+        const previous = deliveries.length;
+        await eyes.tick();
+        if (deliveries.length > previous) {
+          const [[key, {revision}]] = deliveries.at(-1);
+          eyes.ack(key, revision);
+        }
+      }
+      assert.deepEqual(deliveries.map(([[, {revision}]]) => revision),
+        [healthy, degraded, recovered, degraded].map(p => p.events[0].revision));
+    JS
+    _, err, status = Open3.capture3("node", "--input-type=module", "-e", script, source,
+      stdin_data: JSON.generate([healthy_projection, degraded_projection, recovered_projection]))
+    assert status.success?, err
+  end
+
   # Local sources stubbed off for the HITL-adoption semantics; the merged
   # projection has its own tests below.
   def no_local_sources
     -> { {"events" => [], "sources" => {}} }
+  end
+
+  def work_events(projection)
+    projection.fetch("events").reject { |row| row["type"] == "source-health" }
   end
 
   def test_actual_task_adoption_keeps_unaccepted_and_incomplete_continuation_but_suppresses_closed_history
@@ -25,15 +88,15 @@ class OverseerEventObservationTest < AceOverseerTestCase
       observer = Ace::Overseer::Molecules::EventObservation.new(hitl: projection, task_manager: tasks,
         local_sources: no_local_sources)
       original = observer.call(owner: "self")
-      assert_equal [event.id], original["events"].map { |row| row["id"] }
+      assert_equal [event.id], work_events(original).map { |row| row["id"] }
       # Adoption alone is not continuation: retain the original semantic revision.
       tasks.update(step.id, set: {"processed_report" => event.id, "report_result" => "success"})
       assert_equal original, observer.call(owner: "self")
       tasks.update(step.id, set: {"status" => "done"})
       # Auto-archive/parent closure belongs to TaskManager, not the observer.
       assert_equal "done", tasks.show(manager.id).status
-      assert_empty observer.call(owner: "self")["events"]
-      assert_equal original["events"], observer.call(owner: "self")["settled"]
+      assert_empty work_events(observer.call(owner: "self"))
+      assert_equal work_events(original), observer.call(owner: "self")["settled"]
       assert_equal "success", tasks.show(step.id).metadata["report_result"]
     end
   end
@@ -52,12 +115,12 @@ class OverseerEventObservationTest < AceOverseerTestCase
       projects = ->(**) { {"events" => [event], "sources" => {"project:ace:hitl" => {"status" => "ok"}}} }
       observer = Ace::Overseer::Molecules::EventObservation.new(hitl: hitl, task_manager: tasks,
         local_sources: no_local_sources, project_observations: projects)
-      assert_equal [event], observer.call(owner: "overseer")["events"]
+      assert_equal [event], work_events(observer.call(owner: "overseer"))
       tasks.update(step.id, set: {"processed_report" => "report-1", "report_result" => "success"})
-      assert_equal [event], observer.call(owner: "overseer")["events"]
+      assert_equal [event], work_events(observer.call(owner: "overseer"))
       tasks.update(step.id, set: {"status" => "done"})
       settled = observer.call(owner: "overseer")
-      assert_empty settled["events"]
+      assert_empty work_events(settled)
       assert_equal [event], settled["settled"]
       assert_equal "/lab/ace", settled["settled"].first["project_root"]
     end
@@ -108,7 +171,7 @@ class OverseerEventObservationTest < AceOverseerTestCase
 
       assert_equal "degraded", result["sources"]["hitl"]["status"]
       assert_match(/unknown recipient/, result["sources"]["hitl"]["error"])
-      marker = result["events"].find { |row| row["type"] == "source-health" }
+      marker = result["events"].find { |row| row["type"] == "source-health" && row["status"] == "degraded" }
       assert_equal "source:hitl", marker["source_key"]
       # the healthy local source still projects
       assert_includes result["events"].map { |row| row["source_key"] || row["key"] }, "task:8xs.t.zz9"
@@ -156,7 +219,7 @@ class OverseerEventObservationTest < AceOverseerTestCase
         config: {"observe" => {"remote" => {"issues" => [{"server" => "forge"}]}}})
 
       result = observer.call(owner: "self")
-      row = result.fetch("events").fetch(0)
+      row = work_events(result).fetch(0)
       assert_equal "issues:forge", row.fetch("source_key")
       assert_match(/\A[a-f0-9]{64}\z/, row.fetch("key"))
       assert_equal [7], row.fetch("issue_numbers")

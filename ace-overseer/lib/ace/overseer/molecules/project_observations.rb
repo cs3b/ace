@@ -60,14 +60,21 @@ module Ace::Overseer::Molecules
           events.concat(rows)
           sources.merge!(health)
           sources[source] = {"status" => "ok"}
+          events << project_health(root, id, "ok")
         rescue StandardError => error
           sources[source] = {"status" => "degraded", "error" => error.class.name}
-          key = Digest::SHA256.hexdigest("#{root}:project-observation")
-          events << {"key" => key, "id" => key, "revision" => Digest::SHA256.hexdigest(error.class.name),
-            "type" => "source-health", "status" => "degraded", "project" => id, "project_root" => root}
+          events << project_health(root, id, "degraded", error.class.name)
         end
       end
       {"events" => events, "sources" => sources}
+    end
+
+    private
+
+    def project_health(root, id, status, revision = status)
+      key = Digest::SHA256.hexdigest("#{root}:project-observation")
+      {"key" => key, "id" => key, "revision" => Digest::SHA256.hexdigest(revision),
+       "type" => "source-health", "status" => status, "project" => id, "project_root" => root}
     end
   end
 end

@@ -12,9 +12,12 @@ unavailable and then one required installed executable unavailable. For HITL,
 record the configured store's original permissions and temporarily deny
 directory access to the project Overseer. Confirm the actual observation
 reports `hitl: degraded`. Keep the fault active until the Overseer observes
-it and refuses dispatch, or for at most five minutes. Restore the exact
-original permissions. Moving the store away alone can expose a healthy
-empty source and does not inject this fault. Use host-only operator fault
+it, refuses dispatch and acknowledges the health revision, or for at most
+five minutes. Restore the exact
+original permissions. Capture the recovery revision and Overseer's response
+without sending a new goal or creating another work event. Moving the store
+away alone can expose a healthy empty source and does not inject this fault.
+Use host-only operator fault
 instrumentation. Restore each original file or unit condition before advancing.
 For the runtime fault, capture the installed executable path before hiding
 it. While it is hidden, run the normal public start from the project root

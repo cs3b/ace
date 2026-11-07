@@ -184,7 +184,10 @@ identifiers, never pane names), assignment progress, configured project
 session states and HITL events. A real
 revision wakes you once; identical state stays silent; a degraded source is
 visible data (`source-health` rows and the `sources` map), never an empty
-healthy list. After a restart, first complete the observation health gate above.
+healthy list. When a `source-health` revision reports recovery, check that all
+required sources are healthy and reconcile work that was held by the fault.
+Acknowledge the health revision after recording any required owner state.
+After a restart, first complete the observation health gate above.
 Only then reconcile pending revisions — a report that arrived in your absence
 surfaces as an unacknowledged revision — and choose work by the existing plan/dependency order (`ace-overseer
 process-reports` and the delegation procedure above). Acknowledge (`/eyes ack KEY

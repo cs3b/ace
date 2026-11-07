@@ -60,14 +60,15 @@ module Ace
           if projection.nil?
             # A degraded HITL source degrades only itself: the local
             # sources keep projecting and the failure is visible data.
-            events = local.fetch("events") + remote.fetch("events") + [health_marker(Atoms::ObservationSources::HITL, hitl_error)]
-            sources = local.fetch("sources").merge(remote.fetch("sources")).merge(projects.fetch("sources")).merge(
+            sources = local.fetch("sources").merge(remote.fetch("sources")).merge(
               Atoms::ObservationSources::HITL => {"status" => "degraded", "error" => "#{hitl_error.class}: #{hitl_error.message}"}
             )
+            events = local.fetch("events") + remote.fetch("events") + healthy_markers(sources) +
+              [health_marker(Atoms::ObservationSources::HITL, hitl_error)]
             ensure_budget!(events.length + projects.fetch("events").length, limit)
             return {"schema" => "ace.hitl.observation/v1",
                     "events" => (wire_events(events) + projects.fetch("events")).sort_by { |row| row["key"] },
-                    "settled" => [], "sources" => sources}
+                    "settled" => [], "sources" => sources.merge(projects.fetch("sources"))}
           end
 
           settled, pending = (projection.fetch("events") + projects.fetch("events")).partition do |event|
@@ -81,12 +82,14 @@ module Ace
             manager && ([manager] + Array(manager.subtasks)).all? { |task| Ace::Task::Atoms::TaskValidationRules.terminal_status?(task.status.to_s) }
           end
 
-          ensure_budget!(pending.length + settled.length + local.fetch("events").length + remote.fetch("events").length, limit)
-          projection.merge("events" => (pending + wire_events(local.fetch("events") + remote.fetch("events")))
+          sources = local.fetch("sources").merge(remote.fetch("sources")).merge(
+            Atoms::ObservationSources::HITL => {"status" => "ok"})
+          events = local.fetch("events") + remote.fetch("events") + healthy_markers(sources)
+          ensure_budget!(pending.length + settled.length + events.length, limit)
+          projection.merge("events" => (pending + wire_events(events))
               .sort_by { |row| row["key"] },
             "settled" => settled,
-            "sources" => local.fetch("sources").merge(remote.fetch("sources")).merge(projects.fetch("sources"))
-              .merge(Atoms::ObservationSources::HITL => {"status" => "ok"}))
+            "sources" => sources.merge(projects.fetch("sources")))
         end
 
         private
@@ -125,6 +128,17 @@ module Ace
            "revision" => Digest::SHA256.hexdigest("degraded:#{error.class}"),
            "type" => "source-health", "status" => "degraded",
            "error" => "#{error.class}: #{error.message}"}
+        end
+
+        # The healthy row shares the degraded row's key. An acknowledged
+        # failure can then wake the owner when only source health recovers.
+        def healthy_markers(sources)
+          sources.filter_map do |name, source|
+            next unless source["status"] == "ok"
+
+            {"key" => "source:#{name}", "revision" => Digest::SHA256.hexdigest("ok"),
+             "type" => "source-health", "status" => "ok"}
+          end
         end
       end
     end

@@ -192,7 +192,9 @@ silence consumes zero model turns), and a real change wakes the observer once.
 A failing source degrades ONLY itself — it contributes a `source-health` row
 whose revision is keyed by the failure class (an identical repeated failure
 never re-wakes; a new failure mode wakes once) while the healthy sources keep
-projecting. `sources` maps each source to `ok`/`degraded`. After a restart,
+projecting. Recovery revises the same row to `ok` and wakes the observer
+even if the work is unchanged. `sources` maps each source to
+`ok`/`degraded`. After a restart,
 pending revisions reconcile before new work is chosen, so a report that
 arrived during the overseer's absence is recognized exactly once.
 
@@ -237,8 +239,8 @@ state projects identical revisions — zero model turns.
 A failing forge (401/403, rate limit, timeout, malformed payload) degrades
 only its source (`source-health` marker keyed by failure class: one wake per
 failure mode, never an empty healthy list); retry/backoff stays inside the
-provider adapters. After access returns, the changed state is recognized
-through its normal revision. Remote data stays data: re-read the current
+provider adapters. After access returns, the source health revision wakes
+the observer. Remote data stays data: re-read the current
 state and evidence before any merge decision. CI check changes are
 information, never a merge gate.
 

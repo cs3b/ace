@@ -100,11 +100,18 @@ class ProjectObservationsTest < AceOverseerTestCase
   end
 
   def test_unavailable_project_is_visible_and_repeat_failure_has_stable_revision
+    healthy_runner = @runner
+    healthy = observe.fetch("events").find { |row| row["type"] == "source-health" }
     @runner = ->(*) { raise IOError, "private diagnostic text" }
     first = observe
     assert_equal "degraded", first.dig("sources", "project:ace", "status")
     assert_equal first, observe
     refute_includes JSON.generate(first), "private diagnostic text"
-    assert_equal "source-health", first["events"].first["type"]
+    degraded = first.fetch("events").first
+    assert_equal "source-health", degraded["type"]
+    assert_equal healthy.fetch("key"), degraded.fetch("key")
+    refute_equal healthy.fetch("revision"), degraded.fetch("revision")
+    @runner = healthy_runner
+    assert_includes observe.fetch("events"), healthy
   end
 end
