@@ -115,7 +115,7 @@ module Ace
 
         def list(status: nil, kind: nil, type: nil, delivery: nil, in_folder: "next", tags: [], scope: nil, limit: nil, strict: false)
           effective_scope = @scope_resolver.effective_scope(scope)
-          scan_results = scan_results_for_scope(effective_scope, in_folder: in_folder)
+          scan_results = scan_results_for_scope(effective_scope, in_folder: in_folder, strict: strict)
           raise ArgumentError, "observation exceeds configured event budget" if limit && scan_results.size > limit
           events = load_events(scan_results)
           raise ArgumentError, "incomplete HITL observation" if strict && events.size != scan_results.size
@@ -838,11 +838,12 @@ module Ace
           }
         end
 
-        private def scan_results_for_scope(scope, in_folder:)
+        private def scan_results_for_scope(scope, in_folder:, strict:)
           total = 0
           folder_counts = Hash.new(0)
 
           results = hitl_roots_for_scope(scope).uniq.flat_map do |hitl_root|
+            verify_observation_root!(hitl_root) if strict
             scanner = Molecules::HitlScanner.new(hitl_root)
             scoped_results = scanner.scan_in_folder(in_folder)
             total += scanner.last_scan_total.to_i
@@ -853,6 +854,16 @@ module Ace
           @last_list_total = total
           @last_folder_counts = folder_counts
           results
+        end
+
+        private def verify_observation_root!(path)
+          return if File.stat(path).directory?
+
+          raise Errno::ENOTDIR, path
+        rescue Errno::ENOENT
+          # A worktree can legitimately have no events and no store yet.
+          # A dangling symlink, however, explicitly points at a lost source.
+          raise if File.symlink?(path)
         end
 
         private def load_events(scan_results)

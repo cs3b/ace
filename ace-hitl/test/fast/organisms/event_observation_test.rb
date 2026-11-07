@@ -3,6 +3,46 @@ require_relative "../../test_helper"
 require "ace/hitl/molecules/event_observation"
 
 class EventObservationTest < AceHitlTestCase
+  def test_observation_distinguishes_uncreated_and_unavailable_roots
+    with_hitl_dir do |parent|
+      root = File.join(parent, "events")
+      manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: root, config: {"hitl" => {"root_dir" => root}})
+      observer = Ace::Hitl::Molecules::EventObservation.new(manager: manager)
+
+      assert_empty observer.call.fetch("events")
+      File.write(root, "not a directory")
+      assert_raises(Errno::ENOTDIR) { observer.call }
+      File.unlink(root)
+
+      File.symlink(File.join(parent, "unavailable"), root)
+      assert_raises(Errno::ENOENT) { observer.call }
+      File.unlink(root)
+
+      target = File.join(parent, "target")
+      Dir.mkdir(target)
+      File.symlink(target, root)
+      assert_empty observer.call.fetch("events")
+
+      Dir.rmdir(target)
+      File.write(target, "not a directory")
+      assert_raises(Errno::ENOTDIR) { observer.call }
+    end
+  end
+
+  def test_observation_refuses_an_unreadable_store
+    skip "root bypasses store permissions" if Process.euid.zero?
+
+    with_hitl_dir do |root|
+      manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: root, config: {"hitl" => {"root_dir" => root}})
+      observer = Ace::Hitl::Molecules::EventObservation.new(manager: manager)
+      original_mode = File.stat(root).mode & 0o777
+      File.chmod(0, root)
+      assert_raises(Errno::EACCES) { observer.call }
+    ensure
+      File.chmod(original_mode, root) if original_mode
+    end
+  end
+
   def test_semantic_changes_ignore_poll_delivery_metadata_and_mtime_but_keep_answer
     with_hitl_dir do |root|
       manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: root, config: {"hitl" => {"root_dir" => root}})
