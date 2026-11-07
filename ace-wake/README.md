@@ -40,8 +40,9 @@ The effective observation interval is the larger of `intervalSeconds` and
 Local deadlines are checked on timer ticks even when source reads are throttled.
 Extra observations can consume the remaining hourly allowance; the timer stays
 armed and observation resumes automatically in the next window, including
-after restart. This local read limit does not reset provider quota, wake-budget
-or failure breakers, which still require their explicit recovery procedure.
+after restart. The hourly wake allowance limits delivery while observation
+continues to coalesce pending revisions. Delivery resumes with the next
+window. Provider quota and failure breakers still require explicit recovery.
 
 ## Mount-aware poll fallback
 

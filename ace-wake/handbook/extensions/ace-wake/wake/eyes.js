@@ -43,7 +43,15 @@ export class Eyes {
   }
   persist() { this.save(structuredClone(this.s)); this.status(this.summary()); }
   summary() { return { enabled: this.s.enabled, retired: this.s.retired, pending: Object.keys(this.s.pending).length,
-    breaker: this.s.breaker, errors: this.s.errors, observations: this.s.window?.count || 0, wakes: this.s.window?.wakes || 0 }; }
+    breaker: this.s.breaker, errors: this.s.errors, observations: this.s.window?.count || 0, wakes: this.s.window?.wakes || 0,
+    wakeLimitedUntil: this.wakeLimitedUntil() }; }
+  wakeLimitedUntil() {
+    const window = this.s.window;
+    if (!window || (window.wakes || 0) < this.s.config.maxWakesPerHour) return null;
+
+    const until = window.start + 3600000;
+    return this.now() < until ? until : null;
+  }
   start(config) {
     if (this.disposed) throw new Error("Disposed observer cannot start");
     if (this.delivering) throw new Error("Observer cannot reconfigure during delivery");
@@ -151,10 +159,10 @@ export class Eyes {
       if (this.inflight && this.deliveryStatus() === "uncertain") {
         this.block("notification-unconfirmed"); return;
       }
-      if (!this.inflight && !this.s.breaker && Object.keys(this.s.pending).length && this.canDeliver()) {
+      if (!this.inflight && !this.s.breaker && Object.keys(this.s.pending).length && this.canDeliver() &&
+          this.wakeLimitedUntil() === null) {
         // Retain identities before attempting delivery. A rejected send leaves
         // pending intact; acceptance by Pi is not application acknowledgement.
-        if ((this.s.window.wakes || 0) >= this.s.config.maxWakesPerHour) { this.block("wake-budget"); return; }
         this.s.window.wakes = (this.s.window.wakes || 0) + 1;
         this.persist(); // Includes uncertain notification attempts, never token billing.
         const batch = Object.entries(this.s.pending).slice(0, 20);

@@ -77,11 +77,33 @@ it("retirement during in-flight observation prevents a late wake", async () => {
   await tick;assert.equal(f.sends.length,0);
 });
 
-it("semantic event storms hit a durable wake budget without resetting on restart", async () => {
-  const f=fixture();f.eyes.start({maxWakesPerHour:1});f.rows=[event()];await f.eyes.tick();
-  f.eyes.ack(event().key,event().revision);f.eyes=f.build();f.rows=[event("a","c")];await f.eyes.tick();
-  assert.equal(f.sends.length,1);assert.equal(f.saved.breaker.reason,"wake-budget");
-  assert.equal(f.saved.pending[event().key].revision,"c".repeat(64));
+it("hourly wake allowance survives restart, keeps observing, and delivers in the next window", async () => {
+  const f = fixture();
+  f.eyes.start({maxWakesPerHour: 1});
+  f.rows = [event()];
+  await f.eyes.tick();
+  f.eyes.ack(event().key, event().revision);
+  f.eyes = f.build();
+  f.rows = [event("a", "c")];
+  await f.eyes.tick();
+  assert.equal(f.sends.length, 1);
+  assert.equal(f.saved.breaker, null);
+  assert.equal(f.eyes.summary().wakeLimitedUntil, 3600000);
+
+  f.time = 30000;
+  f.rows = [event("a", "d")];
+  await f.eyes.tick();
+  assert.equal(f.observations, 3);
+  assert.equal(f.sends.length, 1);
+  assert.equal(f.saved.pending[event().key].revision, event("a", "d").revision);
+
+  f.time = 3600000;
+  await f.eyes.tick();
+  assert.equal(f.sends.length, 2);
+  assert.equal(f.sends[1][0][1].revision, event("a", "d").revision);
+  f.eyes.ack(event().key, event("a", "d").revision);
+  await f.eyes.tick();
+  assert.equal(f.sends.length, 2);
 });
 
 it("canonical terminal settlement suppresses pending after crash without model notification", async()=>{
