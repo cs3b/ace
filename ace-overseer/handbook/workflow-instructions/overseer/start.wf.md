@@ -154,7 +154,17 @@ dispatch; reconcile reports through their owners before acknowledging events.
 - Decisions outside your granted autonomy go to the Captain:
   `ace-hitl create` with a precise question, then end your turn armed for the
   wake. Blocking wait is an emergency path only.
-- Answers return through the same case; apply them once and close the case.
+- On an answered-case wake, read the exact case with `ace-hitl show CASE`.
+  Check its application record and the effect owner's state. If the effect
+  is already recorded for this case, reuse that evidence without repeating
+  the operation. Otherwise apply the decision once and record the case ID
+  and effect through the task, assignment or forge owner.
+- After verifying the effect, record it with
+  `ace-hitl apply CASE --ref OWNER_REF` (for example `task:<task-id>`), then
+  run `ace-hitl close CASE` and verify closure. The answer being received
+  does not record an effect. A closed case needs no further action on
+  redelivery. Acknowledge the answered revision after closure or after
+  recording a concrete blocker through the existing owner.
 
 ## Standing observation
 
