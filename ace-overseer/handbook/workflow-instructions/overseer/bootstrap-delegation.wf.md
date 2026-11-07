@@ -189,34 +189,40 @@ config, assignment label and host role all refer to the same leg. The bootstrap
 role allows changes to the commissioned canonical project configuration; ordinary product
 worker/reviewer roles stay within their task worktree.
 
-The dispatcher waits only until the terminal can accept input, submits the
+Before dispatch, record the commission path on the private step and arm the
+startup deadline. Use `ace_eyes` action `deadline`, key
+`bootstrap-<assignment-id>`, revision `<assignment-id>` and
+`at=now_unix_ms + 300000`. Keep it armed if acknowledgement is uncertain.
+Allow the dispatch tool call up to 180 seconds. The dispatcher waits until the terminal can accept input, submits the
 commission once and returns the real terminal and normalized agent name.
 Record those returned identities on the matching private step. An existing
 name or uncertain acknowledgement means preserve and reconcile that session;
 never retry by inventing another name or using a plain shell start.
 
-After successful dispatch, arm one first-turn deadline with `ace_eyes`:
-`action=deadline`, `key=bootstrap-<assignment-id>` (letters, digits, underscore
-or hyphen only), `revision=<assignment-id>`, and `at=now_unix_ms + 60000`.
-If this fails, retain the launched worker and report the observation blocker;
-do not launch another worker. End the supervisor turn. Do not use sleep,
+If the deadline cannot be armed, report the observation blocker before
+dispatch. End the supervisor turn after recording the dispatch outcome. Do not use sleep,
 completion waits or polling. The already armed eyes observes assignment,
 report and session changes without additional model turns while unchanged.
 
 On wake, inspect the recorded terminal once with `herdr agent get <terminal>`.
+If dispatch did not return one, use `herdr agent list` to find the unique
+assignment-labelled session with the expected role and worktree. Record and
+use its full `term_…` ID. Pane indexes such as `p5` are display identifiers.
 Read the pinned assignment through its owner in the returned worktree.
 An active step or a step report for that exact assignment proves execution
 began. A busy terminal without progress on the pinned assignment is only
 evidence that Pi is running. Cancel the corresponding eyes deadline once
 confirmed. If the deadline fires and the session is idle with the pinned
-assignment untouched, verify the prompt/config binding. If it was wrong
-and the private step has no correction attempt, record
-`prompt_correction=attempted` on that step before sending the corrected
-leg-specific prompt to the same session. Arm one new deadline after
-confirmed delivery. In every other case, including a correct prompt with
-no assignment progress or uncertain delivery, record the unconfirmed
-assignment start and escalate through HITL. Never take over the work or
-treat the session as a free slot.
+assignment untouched, verify the prompt/config binding. Allow a correction
+when that binding was wrong, or a recovery when delivery was uncertain and
+the session is interactive-ready with no completed turn. In either case,
+require that the private step has no earlier correction attempt. Record
+`prompt_correction=attempted` before sending the corrected or original
+leg-specific prompt to the same session with `herdr agent prompt`. Arm one
+new deadline `bootstrap-recovery-<assignment-id>` after confirmed delivery.
+Cancel it on activity of that assignment or a report. If it expires,
+delivery remains uncertain, or confirmed delivery produced no assignment
+activity, record the unconfirmed start and escalate through HITL.
 
 End the overseer's turn immediately after dispatch. The eyes timer observes
 assignment and HITL revisions without invoking the model on unchanged state.

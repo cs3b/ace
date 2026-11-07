@@ -91,9 +91,19 @@ the executor to read that brief, drive exactly its assignment, perform the
 specified scope and finish with `ace-coworker report`. Include acceptance
 criteria, repository and permitted access profile, never credentials.
 
+Before dispatch, record the assignment, worktree, host role and commission
+path on the private coordination leg. Arm one startup deadline in `ace_eyes`
+with key `dispatch-<id>`, revision `<id>` and `at` set to the current Unix time
+in milliseconds plus 300000. Keep this deadline even if the dispatch
+acknowledgement is uncertain.
+If observation cannot arm it, record the blocker before dispatch.
+
 ```bash
 ace-herdr dispatch --cwd <execution-worktree> --role worker --label <assignment-id> --prompt-file <commission-file>
 ```
+
+Allow the dispatch tool call up to 180 seconds for launch, input readiness
+and prompt acknowledgement. End your turn once you have recorded its result.
 
 Use host role `verifier` for the independent reviewer leg and `integrator` for
 the integration leg, each with its own prepared assignment and commission.
@@ -128,26 +138,37 @@ A repeated success report for an unchanged assignment may reuse its event.
 The integrator receives the same PR, the verified
 receipt, the tested HEAD and the allowed merge method. Use a merge commit when
 the forge permits it and the project has no other configured preference.
-Immediately record the binding on the private coordination task or its
-exact leg as structured task fields, including for one-off commissions:
+Immediately add the returned terminal and agent to the private coordination
+leg as structured task fields, including for one-off commissions:
 
 ```bash
 ace-task update <coordination-step> --set assignment=<id> --set worktree=<path> --set terminal=<returned-terminal> --set agent=<returned-agent>
 ```
 
-Arm one startup deadline in `ace_eyes` with key `dispatch-<id>`, revision
-`<id>` and `at` set to the current Unix time in milliseconds plus 300000.
 Cancel it when the pinned assignment has an active step or a report.
 When an executor observation lists the recorded terminal in
-`missing_sessions`, or the deadline fires, check Herdr and the pinned
-assignment. If the terminal is still live, record the actual assignment
-state and acknowledge the deadline without scheduling a repeat. If the terminal is gone and the assignment is incomplete, record
-the interruption and keep its result pending or blocked. Reconcile that
-assignment before any retry. Terminal disappearance is never a success
-report.
-An uncertain dispatch acknowledgement requires reconciling that existing
-session, not creating a second executor. End the turn with eyes armed after
-dispatch; reconcile reports through their owners before acknowledging events.
+`missing_sessions`, the deadline fires, or a blocked transport recovers,
+check Herdr and the pinned assignment. If dispatch did not return a terminal,
+use `herdr agent list` to find the unique assignment-labelled agent with the
+expected worktree and isolated role. Record its full `term_…` ID. Use that
+ID with `herdr agent get` and `herdr agent prompt` for all isolated recovery.
+Pane indexes such as `p5` are display identifiers.
+
+At the startup deadline, reconcile any uncertain dispatch acknowledgement.
+If the exact session is still idle, interactive-ready, has no
+completed turn, and the pinned assignment has no activity or report, record
+one recovery attempt before sending the original commission to that same
+terminal. The commission must still name that exact assignment and role.
+Never submit a second dispatch or prompt a session that has begun work.
+After confirmed recovery delivery, arm one follow-up deadline
+`dispatch-recovery-<id>` with the same assignment revision and a fresh
+300000-millisecond window. Cancel it on assignment activity or a report.
+If it expires without progress, escalate. Do not rearm it.
+If delivery stays uncertain, the session is missing, or the binding is
+ambiguous, record the blocker and escalate through HITL. Do the same when
+delivery was confirmed but the assignment still has no activity at the
+deadline. Keep the unfinished assignment pending or blocked. Reconcile
+reports through their owners before acknowledging events.
 
 ## Escalation (HITL)
 
