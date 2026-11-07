@@ -45,9 +45,13 @@ module Ace
           events = []
 
           collect(sources, events, Atoms::ObservationSources::PROJECT_TASKS) { project_task_events }
-          collect(sources, events, Atoms::ObservationSources::OVERSEER_TASKS) { overseer_task_events }
+          overseer_tasks = []
+          collect(sources, events, Atoms::ObservationSources::OVERSEER_TASKS) do
+            overseer_tasks = @tasks.list(in_folder: "_overseer")
+            task_events(overseer_tasks, "overseer-task")
+          end
           collect(sources, events, Atoms::ObservationSources::WORKTREES) { worktree_events }
-          collect(sources, events, Atoms::ObservationSources::COWORKERS) { coworker_events }
+          collect(sources, events, Atoms::ObservationSources::COWORKERS) { coworker_events(overseer_tasks) }
           if @project_sessions.configured?
             collect(sources, events, Atoms::ObservationSources::PROJECT_SESSIONS) { @project_sessions.call }
             failed_sessions = events.select { |event| event["type"] == "project-session" && event["state"] == "unavailable" }
@@ -93,10 +97,6 @@ module Ace
           task_events(@tasks.list(in_folder: "next"), "task")
         end
 
-        def overseer_task_events
-          task_events(@tasks.list(in_folder: "_overseer"), "overseer-task")
-        end
-
         # Task rows revision on real lifecycle facts (status, dependency
         # set, subtask statuses) — not on cosmetic frontmatter churn.
         def task_events(tasks, type)
@@ -128,12 +128,14 @@ module Ace
         # ids, never pane names), the ActiveExecutorRule decides live vs
         # stale, and each in-flight assignment projects its own progress
         # row so a step report revises that assignment only.
-        def coworker_events
+        def coworker_events(overseer_tasks)
           result = @worktrees.list_all
           raise Error, result[:error] || "failed to list worktrees" unless result[:success]
 
           worktrees = Array(result[:worktrees]).reject(&:bare)
-          sessions = worktrees.empty? ? {} : executor_sessions
+          isolated = !worktrees.empty? && IsolatedRuntime.enabled?(env: @env)
+          sessions = isolated ? executor_sessions : {}
+          bindings = isolated ? executor_bindings(overseer_tasks) : {}
           worktrees.flat_map do |worktree|
             probe = @probe_factory.call(worktree.path)
             report = probe.probe(worktree.path)
@@ -141,8 +143,13 @@ module Ace
               config: report[:config], assignments: report[:assignments]
             )
             identity = Digest::SHA256.hexdigest(worktree.path)
+            visible = sessions.fetch(worktree.path, [])
+            completed = report[:assignments].filter_map { |row| row["id"] if row["state"] == "completed" }
+            missing = bindings.fetch(worktree.path, []).reject do |binding|
+              completed.include?(binding["assignment"]) || visible.any? { |session| session["terminal"] == binding["terminal"] }
+            end
             payload = {"path" => worktree.path, "active" => verdict[:active],
-              "evidence" => verdict[:evidence], "sessions" => sessions.fetch(worktree.path, [])}
+              "evidence" => verdict[:evidence], "sessions" => visible, "missing_sessions" => missing}
             executor = {"key" => "executor:#{identity}", "revision" => revision(payload),
               "type" => "executor"}.merge(payload)
             assignments = report[:assignments].map do |assignment|
@@ -156,12 +163,26 @@ module Ace
           end
         end
 
+        # A coordinator's durable binding also detects a session that
+        # started and exited between two native observations.
+        def executor_bindings(tasks)
+          tasks.flat_map { |task| [task, *Array(task.subtasks)] }.filter_map do |step|
+            next if %w[done canceled cancelled].include?(step.status)
+
+            metadata = step.metadata || {}
+            worktree, assignment, terminal = metadata.values_at("worktree", "assignment", "terminal")
+            next unless worktree.is_a?(String) && worktree.start_with?("/") &&
+              assignment.is_a?(String) && assignment.match?(/\A[a-zA-Z0-9_-]+\z/) &&
+              terminal.is_a?(String) && terminal.match?(/\Aterm_[0-9a-f]+\z/)
+
+            [worktree, {"task" => step.id, "assignment" => assignment, "terminal" => terminal}]
+          end.group_by(&:first).transform_values { |rows| rows.map(&:last).sort_by { |row| row.fetch("task") } }
+        end
+
         # Native sessions can disappear without writing an assignment report.
         # Project their presence on the existing stable worktree row so that
         # even an interruption before the first assignment step is visible.
         def executor_sessions
-          return {} unless IsolatedRuntime.enabled?(env: @env)
-
           response = @herdr.agent_list.parsed_json
           agents = response.is_a?(Hash) && !response.key?("error") && response.dig("result", "agents")
           raise Error, "isolated native executor inventory is unavailable" unless agents.is_a?(Array)

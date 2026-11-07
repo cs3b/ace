@@ -7,7 +7,7 @@ module Molecules
   # source classes from their owners with stable keys/revisions, and a
   # failing source degrades only itself.
   class LocalSourcesTest < Minitest::Test
-    FakeTask = Struct.new(:id, :status, :title, :dependencies, :subtasks, keyword_init: true)
+    FakeTask = Struct.new(:id, :status, :title, :dependencies, :subtasks, :metadata, keyword_init: true)
 
     class FakeTaskManager
       def initialize(tasks)
@@ -77,6 +77,33 @@ module Molecules
       refute_equal running.fetch("revision"), stopped.fetch("revision")
       assert_empty stopped.fetch("sessions")
       assert_equal stopped, executor.call
+    end
+
+    def test_expected_executor_missing_without_observing_its_live_session
+      worktree = Worktree.new("/lab/ace/.ace-wt/task-1", "work", false)
+      binding = {"worktree" => worktree.path, "assignment" => "job-7", "terminal" => "term_123abc"}
+      step = FakeTask.new(id: "step-1", status: "pending", metadata: {})
+      manager = FakeTask.new(id: "manager", status: "pending", subtasks: [step])
+      response = Struct.new(:parsed_json).new({"result" => {"agents" => []}})
+      herdr = Object.new
+      herdr.define_singleton_method(:agent_list) { response }
+      assignments = [{"id" => "job-7", "state" => "paused"}]
+      probe = FakeProbe.new({config: nil, assignments: assignments})
+      observer = sources(tasks: {"_overseer" => [manager]}, worktrees: [worktree],
+        herdr: herdr, probe: probe, env: {"ACE_LAB_SESSION" => "1"})
+      executor = -> { observer.call.fetch("events").find { |row| row["type"] == "executor" } }
+
+      before = executor.call
+      assert_empty before.fetch("missing_sessions")
+      step.metadata.merge!(binding)
+      after = executor.call
+      assert_equal before.fetch("key"), after.fetch("key")
+      refute_equal before.fetch("revision"), after.fetch("revision")
+      assert_equal [{"task" => "step-1", "assignment" => "job-7", "terminal" => "term_123abc"}],
+        after.fetch("missing_sessions")
+
+      assignments[0]["state"] = "completed"
+      assert_empty executor.call.fetch("missing_sessions")
     end
 
     def test_unavailable_isolated_inventory_degrades_instead_of_reporting_all_executors_absent

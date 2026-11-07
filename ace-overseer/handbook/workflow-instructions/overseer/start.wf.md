@@ -128,9 +128,20 @@ A repeated success report for an unchanged assignment may reuse its event.
 The integrator receives the same PR, the verified
 receipt, the tested HEAD and the allowed merge method. Use a merge commit when
 the forge permits it and the project has no other configured preference.
-Record the returned terminal identity and agent name on the coordination task.
-When an executor observation loses that terminal, check Herdr and the pinned
-assignment. If the terminal is gone and the assignment is incomplete, record
+Immediately record the binding on the private coordination task or its
+exact leg as structured task fields, including for one-off commissions:
+
+```bash
+ace-task update <coordination-step> --set assignment=<id> --set worktree=<path> --set terminal=<returned-terminal> --set agent=<returned-agent>
+```
+
+Arm one startup deadline in `ace_eyes` with key `dispatch-<id>`, revision
+`<id>` and `at` set to the current Unix time in milliseconds plus 300000.
+Cancel it when the pinned assignment has an active step or a report.
+When an executor observation lists the recorded terminal in
+`missing_sessions`, or the deadline fires, check Herdr and the pinned
+assignment. If the terminal is still live, record the actual assignment
+state and acknowledge the deadline without scheduling a repeat. If the terminal is gone and the assignment is incomplete, record
 the interruption and keep its result pending or blocked. Reconcile that
 assignment before any retry. Terminal disappearance is never a success
 report.
