@@ -24,3 +24,14 @@ a synthetic component probe or a task marked done alone. Missing evidence is
 FAIL. Never infer acceptance from artifact existence. Check source SHA, manifest
 hash and native artifact provenance against the setup receipt. Render a verdict
 and cite concrete evidence for each case, then the passed/total count.
+Use exactly one parser-compatible section per case, numbered in order:
+
+```markdown
+## Goal 1 — Case title
+**Verdict**: PASS or FAIL
+**Category**: failure category when applicable
+**Evidence**: specific records and values
+```
+
+Use one literal verdict token. Include every case even when a prerequisite
+fails or the runner did not reach the case.

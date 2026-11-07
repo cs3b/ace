@@ -8,5 +8,16 @@ for fixture receipts or expose host paths; issue content comes from Forgejo.
 Do not include auth commands, task decomposition, role choices or execution
 steps in the goal. Those must come from the installed product contracts.
 
+After the delivery, verify the integrated behavior from a separate temporary
+checkout of the local Forgejo `main` ref, under the fixture operator's test
+authority. If anonymous Git access is refused, read the fixture's actual
+bare Forgejo repository as the forge service account through the documented
+operator helper. Clone only its `main` branch. Record the bare ref SHA and
+the checkout HEAD and require them to match. Run the fixture CLI as the
+unprivileged guest user from that checkout. Capture a valid sequence of
+increments and an invalid increment, including actual stdout and exit codes.
+Remove the temporary checkout. Do not change the project's checkout, merge
+anything or reuse a worker worktree for this check.
+
 Capture `results/tc/02/commands.stdout`, `commands.stderr`, `commands.exit`,
 `state.json` and `sessions.json` as declared by the runner contract.
