@@ -37,6 +37,7 @@ Execute these steps in order; the same order applies after a restart.
 4. Reconcile existing commissioned work and pending reports before selecting
    new work. Acknowledge each revision only after its task/assignment owner
    accepted it. Then delegate according to the existing dependency order.
+
 5. End the turn after delegation. If no report or work needs attention,
    remain idle with observation armed; do not invent work.
 
@@ -51,6 +52,10 @@ Execute these steps in order; the same order applies after a restart.
   yourself.
 - Merge gate: executed tests plus an independent reviewer verdict. CI is
   advisory.
+
+A release held in the queue stays open after its prerequisites merge.
+Record readiness in the coordination task. Wait for a separate explicit
+release commission before dispatching release work or closing its issue.
 
 ### Bind reports to the commissioning coordinator
 

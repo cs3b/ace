@@ -27,6 +27,7 @@ issues:
     kind: release
     depends_on: [base, cli, docs]
     body: |
-      Record this release as pending until {{issue:base}}, {{issue:cli}},
-      and {{issue:docs}} have been integrated. Do not publish a release or
-      package during this scenario.
+      Release prerequisites: {{issue:base}}, {{issue:cli}}, and {{issue:docs}}.
+      Keep this issue open and queued after all prerequisites are integrated.
+      A separate explicit release commission is required to start this work.
+      This scenario authorizes no release publication or closure of this issue.
