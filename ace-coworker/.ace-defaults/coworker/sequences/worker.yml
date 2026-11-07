@@ -7,7 +7,7 @@ role: worker
 description: "Worker process for task {{task}}"
 outcome: >-
   Verified implementation of task {{task}} on the task branch: every
-  modified package passes its required tests (bin/ace-test <pkg> all) and
+  modified package passes its required tests with the selected runtime and
   the work is committed.
 steps:
   - name: work-on-task
@@ -17,5 +17,10 @@ steps:
       - "Acceptance: the required tests of every modified package pass; failed required tests block success (ace-assign fail), never a forced done."
   - name: verify-test
     instructions:
-      - "Run bin/ace-test <package> all for every modified package and record the real test counts in the task results file."
+      - "Run ace-test <package> all from the installed toolchain in installed mode, or bin/ace-test <package> all in checkout mode. Record the real test counts for every modified package in the task results file."
       - "Acceptance: 0 failures across all modified packages."
+  - name: publish-pr
+    instructions:
+      - "For a forge issue, publish the tested branch and create or reconcile its non-draft PR against the commissioned base."
+      - "Finish this step with the forge-verified PR identity, source branch, base and tested HEAD. For local-only work record the tested commit and that no PR applies."
+      - "Missing or uncertain PR publication keeps a forge-linked assignment incomplete."

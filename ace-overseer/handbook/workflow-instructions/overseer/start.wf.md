@@ -100,9 +100,13 @@ commission. A generic success event is a pointer to assignment evidence.
 Read the exact worker assignment's step reports and inspect the existing PR
 for its branch through the configured forge before deciding that publication
 is missing. Match repository, head branch, base branch and tested HEAD. A
-missing or mismatched PR keeps review pending. Let the active worker finish,
-then resume the worker publication step if necessary. The worker owns this
-handoff even if a prompt to its active session was refused.
+missing or mismatched PR keeps review pending. Before dispatching the worker,
+verify the assignment has a final `publish-pr` step. If a project override
+omitted it, add it through `ace-assign`. If the worker already completed the
+assignment without publication, add the missing step and reconcile its
+existing session. The worker finishes the step with the verified PR and
+then reports its new outcome. Repeating the old report cannot signal that
+publication finished.
 
 Pass the verified PR and tested HEAD to the reviewer. Before dispatch for
 a forge issue, verify the reviewer's assignment has a final

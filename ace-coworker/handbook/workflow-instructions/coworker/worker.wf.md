@@ -74,15 +74,23 @@ false "work done".
        error outcome naming the cause.
 
 5. **Finish and report.**
+   - Keep the final `publish-pr` step open while implementing and testing.
+     If a forge-linked assignment lacks that step, add it through
+     `ace-assign add` before completing the test step.
    - For a task linked to a forge issue, publish the tested candidate on a
      source branch and create or reconcile its pull request against the
      commissioned target branch. Use the worker's scoped access and the
      configured forge. Use `ace-git pr create --head BRANCH --base TARGET
-     --expected-head SHA --title TITLE --body-file BODY` with the retained
+     --expected-head SHA --title TITLE --body-file BODY --no-draft` with the retained
      server selection. Link the originating issue in the PR body. The full
      pushed HEAD must match the tested HEAD. Record the PR reference, target
      branch and exact HEAD in the worker report. If publication is unavailable
      or uncertain, report the impediment and reconcile before retrying.
+     If the existing PR is a draft, use `ace-git pr ready PR --expected-head
+     SHA` and re-read it. Finish `publish-pr` only after verifying the
+     open, non-draft PR at
+     the exact tested HEAD. Record the evidence in that step's report.
+     For local-only work record the tested commit and that no PR applies.
    - Run `ace-coworker report`. The outcome is derived from the ace-assign
      verdict: reporting a forced success on an incomplete assignment is
      refused by the tool. Never send a false "work done"; when in doubt, the

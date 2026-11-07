@@ -337,9 +337,10 @@ module Ace
           entries = @composer.call(task: "8xg.t.aaa", roles: %w[worker])
           files = step_files(entries[0]["assignment"])
 
-          assert_equal 2, files.length
+          assert_equal 3, files.length
           assert_includes File.basename(files[0]), "010"
           assert_includes File.basename(files[1]), "020"
+          assert_includes File.basename(files[2]), "030-publish-pr"
           first = File.read(files[0])
           assert_includes first, "status: pending"
           assert_includes first, "workflow: wfi://coworker/worker"
