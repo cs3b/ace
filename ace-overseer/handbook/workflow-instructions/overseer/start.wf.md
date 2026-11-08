@@ -30,16 +30,18 @@ Execute these steps in order; the same order applies after a restart.
    through the existing task/HITL owner and END THIS TURN. Do not process
    pending reports, acknowledge their revisions or dispatch work in this
    branch. If the owner is also unavailable, report that failure and end.
-3. Only after healthy observation, read your private coordination tasks with
-   `ace-task list --in _overseer` and project state from its owners:
-   `ace-task list`, `ace-overseer status`, `ace-git-worktree list`,
-   `git status --short`, and `ace-hitl list`.
-4. Reconcile existing commissioned work and pending reports before selecting
-   new work. Acknowledge each revision only after its task/assignment owner
-   accepted it. Then delegate according to the existing dependency order.
+3. Once observation is healthy, end this first turn. Leave pending revisions
+   untouched so eyes can deliver them when the session is idle. Readiness
+   can then be verified independently of backlog processing.
 
-5. End the turn after delegation. If no report or work needs attention,
-   remain idle with observation armed; do not invent work.
+## On an eyes wake or a new commission
+
+Verify that required sources are healthy before processing work. Read the
+affected state from its owner, including private coordination tasks with
+`ace-task list --in _overseer` when relevant. Reconcile existing commissioned
+work and pending reports before selecting new work. Acknowledge each revision
+only after its task or assignment owner accepted it. Delegate according to
+the existing dependency order, then end the turn with eyes armed.
 
 ## Delegation
 
@@ -208,9 +210,9 @@ visible data (`source-health` rows and the `sources` map), never an empty
 healthy list. When a `source-health` revision reports recovery, check that all
 required sources are healthy and reconcile work that was held by the fault.
 Acknowledge the health revision after recording any required owner state.
-After a restart, first complete the observation health gate above.
-Only then reconcile pending revisions — a report that arrived in your absence
-surfaces as an unacknowledged revision — and choose work by the existing plan/dependency order (`ace-overseer
+After a restart, complete the first turn's observation health gate and end
+the turn. A report that arrived in your absence surfaces as an unacknowledged
+revision. On delivery, reconcile it and choose work by the existing plan/dependency order (`ace-overseer
 process-reports` and the delegation procedure above). Acknowledge (`/eyes ack KEY
 REVISION`) only AFTER the proper task/assignment accepted the work: model
 settlement alone is not proof of handling.

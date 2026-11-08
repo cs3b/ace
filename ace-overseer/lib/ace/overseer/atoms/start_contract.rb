@@ -17,9 +17,11 @@ module Ace
           unavailable or degraded, record its exact error through the existing
           task/HITL owner and END THIS TURN without processing pending reports.
           If that owner is unavailable, report its failure and end the turn.
-          When observation is healthy, reconcile existing commissioned work
-          before choosing new work. Acknowledge revisions only after their
-          owner accepted them. Do not diagnose implementation, inspect host
+          When observation is healthy, follow the role's first-turn protocol
+          through its stopping point. When that protocol calls for work,
+          reconcile existing commissions before choosing new work and
+          acknowledge revisions only after their owner accepted them.
+          Do not diagnose implementation, inspect host
           credential stores, probe transports or repeat status/help commands.
           Installation, configuration and diagnosis belong to workers.
           End the turn after delegation; remain idle when there is no work.
