@@ -13,6 +13,11 @@ accepted. Verify exactly three direct children and actual dependency fields:
 verification depends on preparation, and confirm-start depends on verification.
 Require authenticated `ready=true` after the project's first completed turn;
 terminal text claiming healthy eyes does not replace this result.
+Check elapsed time from the delivered goal in the Lab Overseer's Pi session
+to that session's first successful authenticated reconcile result. Use the
+recorded timestamps. Missing timestamps, readiness preceding the goal, or
+readiness later than 45 minutes after delivery fail this case, regardless
+of a runner's deadline flag.
 Confirm the prepared project uses local folder HITL and no Hermes/Telegram
 route or eyes sync route. Configuring an external transport exceeds this
 fixture's bootstrap scope.

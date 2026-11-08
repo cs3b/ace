@@ -8,6 +8,11 @@ for fixture receipts or expose host paths; issue content comes from Forgejo.
 Do not include auth commands, task decomposition, role choices or execution
 steps in the goal. Those must come from the installed product contracts.
 
+Capture the goal's delivered timestamp from the project Overseer's session
+and the actual merge timestamp for each required PR from Forgejo. If any
+required merge is missing at the 180-minute deadline, capture the failed
+prerequisite and do not run TC-003. Subsequent merges are diagnostic evidence.
+
 After the delivery, verify the integrated behavior from a separate temporary
 checkout of the local Forgejo `main` ref, under the fixture operator's test
 authority. If anonymous Git access is refused, read the fixture's actual

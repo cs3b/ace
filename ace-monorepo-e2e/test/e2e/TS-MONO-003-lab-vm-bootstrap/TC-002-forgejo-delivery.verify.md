@@ -16,3 +16,8 @@ Require a merged Forgejo PR for each of the base, CLI and documentation issues.
 Check that the configured reviewer approved each exact tested candidate and the
 configured integrator merged it. A direct update of main without the matching
 merged PR and effective approval fails this case.
+Compute elapsed time from the goal delivery timestamp in the project
+Overseer's session to the latest required Forgejo merge timestamp. Missing
+timestamps, any required merge preceding the goal, or a merge later than
+180 minutes after delivery fail this case, regardless of a runner's
+deadline flag.

@@ -54,7 +54,10 @@ false "work done".
      worktree configuration for after-create hooks, toolchain trust and bootstrap;
      perform the setup needed by this assignment under your worker identity.
      Preserve installed ACE as the operational runtime while preparing project
-     development dependencies separately. Record executed or inapplicable phases;
+     development dependencies separately. Check the commissioned test command
+     and its prerequisites before installing development dependencies. A checkout
+     Gemfile or binstub alone does not require `bundle install` in installed mode.
+     Record executed or inapplicable phases;
      the standalone bootstrap command does not replay after-create hooks.
    - Work only inside this worktree. Mark checkboxes and step states only when
      the underlying work is verified.
@@ -64,8 +67,12 @@ false "work done".
    - Follow repository conventions (AGENTS.md, ATOM architecture, style).
 
 4. **Verify - required tests (completion gate).**
-   - For every changed package run `bin/ace-test <changed-package> all`.
-   - When the task requires monorepo validation, run `bin/ace-test-suite`.
+   - For every changed package run `ace-test <changed-package> all` with
+     `ACE_TOOLCHAIN=installed`. When the task requires monorepo validation,
+     run installed `ace-test-suite`. Use the assignment's worktree as cwd.
+     If a required installed test tool is missing, report the readiness failure.
+   - In ACE development mode use the checkout's `bin/ace-test` and
+     `bin/ace-test-suite` for the same checks.
    - **Failed required tests block success.** On a failing required test:
      - fix and rerun within this assignment; record the failure and the fix;
      - while the failure stands, the step is failed (`ace-assign fail` with

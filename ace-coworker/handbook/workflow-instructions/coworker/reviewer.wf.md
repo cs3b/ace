@@ -92,6 +92,12 @@ assignment with an open publication step cannot produce a success report.
      This preserves the session's configured provider and avoids tying model
      execution to the forge lease TTL. Publish the approval with a fresh
      reviewer lease after verifying the tested candidate.
+   - Run the affected checks with installed `ace-test` from the assignment
+     worktree when `ACE_TOOLCHAIN=installed`. Check the commissioned test
+     command and its prerequisites before installing development dependencies.
+     A checkout binstub or Gemfile alone does not require `bundle install`.
+     If a required installed test tool is missing, report the readiness failure.
+     In ACE development mode use the checkout's `bin/ace-test`.
    - For a commissioned PR, review the **full forge PR delta**. Outside the
      isolated lab, prefer its typed PR reference. If using a local diff
      range, first resolve the actual
@@ -137,12 +143,12 @@ assignment with an open publication step cannot produce a success report.
          instructions: |
            Fix the confirmed review finding <feedback-id> in the delivered
            change. Apply the minimal correct fix, run the affected checks
-           (bin/ace-test <package>), and record what changed.
+           with the selected toolchain, and record what changed.
      ```
      (`--step <name>` only selects a step definition that already exists
      in the preset catalog - it cannot mint a new fix-step name);
      (b) implement the fix on the task branch in this worktree; (c) run
-     the affected checks (`bin/ace-test <package> ...` - a failed required
+     the affected checks with the selected toolchain (a failed required
      test blocks); (d) commit scoped (`ace-git-commit <paths>` after
      checking `git status`); (e) only after the fix is verified:
      `ace-review-feedback resolve <id> --resolution "Fixed in <sha>"`.

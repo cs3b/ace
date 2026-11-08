@@ -69,9 +69,10 @@ the exact candidate head. Otherwise WITHHOLD the merge and report/escalate.
      `.ace-local/coworker/review-rounds/<assignment>.json`
      (`ace-coworker rounds` verdict `accept`). The reviewed head is the head
      that verdict covers.
-   - **Test evidence**: executed `bin/ace-test <package> all` results named
-     in the worker/reviewer reports (counts, failures) - only real executed
-     runs count; CI status is ADVISORY and never a merge blocker.
+   - **Test evidence**: executed `ace-test <package> all` results named in
+     the worker/reviewer reports (counts, failures). Installed mode uses the
+     installed executable, and ACE development mode uses `bin/ace-test`.
+     Only executed runs count. CI status is advisory.
    - **Dependency states**: for each leaf the candidate depends on, whether
      its result was RECEIVED AND INTEGRATED (merged predecessor), not merely
      finished or reviewed.
@@ -132,8 +133,8 @@ the exact candidate head. Otherwise WITHHOLD the merge and report/escalate.
      existing tools (`git` / `ace-git`, scoped to the commissioned paths;
      never force-push; fetch first and resolve conflicts explicitly).
    - If the merge itself changed the candidate or conflicts were resolved,
-     the result is a NEW candidate: re-run the affected checks
-     (`bin/ace-test <package> all`) and RENEW the review for the changed
+     the result is a NEW candidate: re-run the affected checks with the
+     selected toolchain and RENEW the review for the changed
      result (reviewer role) before treating it as integrated - never mix
      acceptance of the old candidate with new code (step 4 of the lab's execution-order contract). Then re-evaluate the gate.
    - After merging, verify the actual outcome (branch state, merged head)
