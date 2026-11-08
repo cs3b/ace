@@ -61,8 +61,9 @@ or treat a successful worker report as proof that the manager is private.
 Create the executable bootstrap task through `ace-task` in the target project's
 canonical root, linking it as the private lab manager's `project_task` and
 recording `project_root`. Keep its specification in its project task folder.
-Run task creation, coworker preparation and role handoff from that project;
-run private coordination-task updates from the lab root. The worker receives
+Run executable-task creation, lookup, coworker preparation and role handoff
+from that project. Run private coordination-task updates from the lab root.
+Shell calls do not retain a preceding call's working directory. The worker receives
 only the project mount and cannot read lab-private tasks. The lab's installed
 observation reads configured project assignments and reports from their owners;
 records remain in the project rather than being copied into lab state. Include the canonical target repository path, required
@@ -115,16 +116,25 @@ Put all commission and supporting files in the executable task's own tracked
 folder, never in the private `_overseer` tree. Before preparing its worktree,
 commit those files and the task specification using the task/commit tools.
 
-Resolve the task file through `ace-task show <ref> --path` and use its parent
-directory. Check `git status --short -- <task-directory>`: uncommitted or
-untracked supporting files will not appear in the new worktree.
+Resolve the executable task in its owner checkout and use the returned
+file's parent directory:
+
+```bash
+cd "<canonical-project-root>" && ace-task show "<project-task-id>" --path
+```
+
+If lookup reports not found, check the command's working directory and the
+task ID from the create result. Correct the lookup once. If it still fails,
+record the blocker on the private coordination task and end the turn.
+Check `git status --short -- <task-directory>` in the project: uncommitted
+or untracked supporting files will not appear in the new worktree.
 
 After preparation, verify every referenced commission file exists in the
 returned worktree before launch. If one is missing, report a preparation
 failure and keep the worker unstarted.
-Workers must not edit the private coordination tree. Resolve each task folder
-from `ace-task show <ref>` before writing commission, dispatch or receipt notes;
-never construct a folder from a guessed or expanded title slug.
+Workers must not edit the private coordination tree. Resolve each task
+folder from its owner's checkout before writing commission, dispatch or
+receipt notes. Use the returned path even when it differs from the title slug.
 
 Explicit `ACE_TOOLCHAIN=installed` remains installed in every subprocess,
 worker and resumed session. The project checkout is domain data. Never modify
