@@ -110,12 +110,14 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
           "Read ace-overseer observe and the original state owners; adopt reports through ace-overseer process-reports and existing task/assignment gates. " +
           "Reconcile uncertain effects; never repeat external actions on wake alone. After handling each exact revision, " +
           "acknowledge with the ace_eyes tool (action ack, key, revision). Settlement alone is not acknowledgement.";
+        const previous = attempt;
         attempt = { text, accepted: false };
         const result = pi.sendUserMessage(text, { deliverAs: "followUp" });
         // Some hosts expose a promise, the standard ExtensionAPI exposes void.
         // Neither completion nor void is proof of message consumption.
-        if (result?.then) await result;
-        return result !== false;
+        const submitted = await result;
+        if (submitted === false) attempt = previous;
+        return submitted !== false;
       } });
     arm();
     if (eyes.s.enabled) void eyes.tick();

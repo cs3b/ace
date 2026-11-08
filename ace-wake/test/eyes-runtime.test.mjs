@@ -162,6 +162,48 @@ it("does not queue a stale wake for work handled during an active turn", async()
   } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
 });
 
+it("delivers recovery after the accepted turn settles without repeating held work", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ace-eyes-partial-"));
+  const host = createFakeHost(), tools = new Map();
+  host.pi.registerTool = (tool) => tools.set(tool.name, tool);
+  const held = {key, revision, id: "held"};
+  const health = {key: "c".repeat(64), revision: "d".repeat(64), id: "health"};
+  const recovered = {...health, revision: "e".repeat(64)};
+  let rows = [];
+  const session = await startSession(host, {eyes: {
+    now: host.clock.now, schedule: host.setIntervalFn, cancel: host.clearIntervalFn,
+    observe: async () => ({schema: "ace.hitl.observation/v1", events: rows})
+  }});
+  try {
+    const file = path.join(dir, "eyes.json");
+    fs.writeFileSync(file, "{}");
+    const tool = tools.get("ace_eyes");
+    await tool.execute("start", {action: "start", configPath: file}, null, null, host.commandContext);
+    rows = [held, health];
+    host.clock.advance(30000);
+    await flush();
+    assert.equal(host.sends.length, 1);
+    await session.emit("message_start", {message: {role: "user", content: host.sends[0].text}});
+    host.setIdle(false);
+    await session.agentStart();
+    await tool.execute("ack", {action: "ack", key: health.key, revision: health.revision});
+    rows = [held, recovered];
+    host.clock.advance(30000);
+    await flush();
+    assert.equal(host.sends.length, 1);
+    host.setIdle(true);
+    await session.settle();
+    host.clock.advance(30000);
+    await flush();
+    assert.equal(host.sends.length, 2);
+    assert.ok(host.sends[1].text.includes(recovered.revision));
+    assert.ok(!host.sends[1].text.includes(held.revision));
+  } finally {
+    await session.shutdown();
+    fs.rmSync(dir, {recursive: true, force: true});
+  }
+});
+
 it("waits for other pending host messages before delivering an eyes wake", async()=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-queue-"));
   const host=createFakeHost(), tools=new Map();

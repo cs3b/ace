@@ -80,7 +80,11 @@ permissions. Validate the prepared configuration, installed CLI/gem paths and
 owned project files. Do not require host-wide `ace-lab verify`, host D-Bus or
 systemd inspection, reading either overseer's private task tree, or a healthy
 full `ace-overseer observe` projection from a worker session. Those checks need
-the host or overseer role; private-tree masking is intentional. A worker reports
+the host or overseer role; private-tree masking is intentional.
+`ace-task doctor` from the canonical project root also enumerates the masked
+`.ace-tasks/_overseer` directory. Commission any task-store check for the
+worker or verifier in the execution worktree. The authorized project Overseer
+can audit the canonical task store after start. A worker reports
 missing authority and the exact blocked check instead of repairing host services
 or attempting to access the coordinator's private state. The coordinator proves
 full observation from the authorized project Overseer during confirm-start.

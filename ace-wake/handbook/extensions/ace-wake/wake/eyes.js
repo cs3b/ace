@@ -181,23 +181,29 @@ export class Eyes {
         this.block("retention-budget"); return;
       }
       this.persist();
-      if (this.inflight && this.deliveryStatus() === "uncertain") {
+      const delivery = this.inflight ? this.deliveryStatus() : "accepted";
+      if (delivery === "uncertain") {
         this.block("notification-unconfirmed"); return;
       }
-      if (!this.inflight && !this.s.breaker && Object.keys(this.s.pending).length && this.canDeliver() &&
+      // An accepted turn may deliberately leave work unacknowledged while a
+      // source is degraded. A fresh revision must still reach the idle owner.
+      const batch = Object.entries(this.s.pending)
+        .filter(([key, value]) => this.sent.get(key) !== value.revision).slice(0, 20);
+      if (delivery === "accepted" && !this.s.breaker && batch.length && this.canDeliver() &&
           this.wakeLimitedUntil() === null) {
         // Retain identities before attempting delivery. A rejected send leaves
         // pending intact; acceptance by Pi is not application acknowledgement.
         this.s.window.wakes = (this.s.window.wakes || 0) + 1;
         this.persist(); // Includes uncertain notification attempts, never token billing.
-        const batch = Object.entries(this.s.pending).slice(0, 20);
         this.delivering = true;
         let delivered;
         try { delivered = await this.deliver(batch); } finally { this.delivering = false; }
         if (generation !== this.generation || this.disposed) return;
-        this.inflight = Boolean(delivered);
-        if (this.inflight) this.sent = new Map(batch.map(([key, value]) => [key, value.revision]));
-        if (!this.inflight) throw new Error("wake delivery refused");
+        if (!delivered) throw new Error("wake delivery refused");
+        for (const [key, value] of batch) {
+          if (this.s.pending[key]?.revision === value.revision) this.sent.set(key, value.revision);
+        }
+        this.inflight = this.sent.size > 0;
       }
       if (observed && this.s.errors && (!this.inflight || this.deliveryStatus() === "accepted")) { this.s.errors = 0; this.persist(); }
     } catch {

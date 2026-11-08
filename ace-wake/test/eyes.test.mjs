@@ -18,8 +18,10 @@ describe("event-driven eyes", () => {
   });
   it("coalesces revisions while active without accepting on settlement", async () => {
     const f = fixture(); f.rows = [event()]; await f.eyes.tick();
+    f.eyes.canDeliver = () => false;
     f.rows = [event(), event("c")]; await f.eyes.tick();
     assert.equal(f.sends.length, 1); assert.equal(Object.keys(f.saved.pending).length, 2);
+    f.eyes.canDeliver = () => true;
     f.eyes.ack(event().key, event().revision); await f.eyes.tick();
     assert.equal(f.sends.length, 2); assert.equal(f.sends[1][0][0], event("c").key);
     f.eyes.ack(event("c").key, event("c").revision); await f.eyes.tick();
@@ -34,8 +36,10 @@ describe("event-driven eyes", () => {
   });
   it("new revision racing old acknowledgement is retained", async () => {
     const f = fixture(); f.rows = [event()]; await f.eyes.tick();
+    f.eyes.canDeliver = () => false;
     f.rows = [event("a", "c")]; await f.eyes.tick();
     f.eyes.ack(event().key,event().revision);
+    f.eyes.canDeliver = () => true;
     await f.eyes.tick();
     assert.equal(f.sends.length,2);
     assert.equal(f.saved.pending[event().key].revision, "c".repeat(64));
@@ -139,6 +143,23 @@ it("partial batch acknowledgement never requeues the other already delivered mem
   f.eyes.ack(event().key,event().revision);await f.eyes.tick();assert.equal(f.sends.length,1);
   f.eyes.ack(event("c").key,event("c").revision);await f.eyes.tick();assert.equal(f.sends.length,1);
 });
+it("a recovered source wakes an idle owner even with accepted work awaiting acknowledgement", async () => {
+  const f = fixture();
+  const held = event("a"), degraded = event("c"), recovered = event("c", "d");
+  f.rows = [held, degraded];
+  await f.eyes.tick();
+  f.eyes.ack(degraded.key, degraded.revision);
+  f.rows = [held, recovered];
+  await f.eyes.tick();
+  assert.deepEqual(f.sends[1], [[recovered.key, {id: recovered.id, revision: recovered.revision}]]);
+  assert.equal(f.saved.pending[held.key].revision, held.revision);
+  await f.eyes.tick();
+  assert.equal(f.sends.length, 2, "unchanged delivered revisions do not wake again");
+  f.eyes.ack(held.key, held.revision);
+  f.eyes.ack(recovered.key, recovered.revision);
+  assert.deepEqual(f.saved.pending, {});
+});
+
 it("cancelling an in-flight deadline releases coalesced actual events", async()=>{
   const f=fixture();f.eyes.deadline("review",0,"head-a");await f.eyes.tick();
   f.rows=[event()];await f.eyes.tick();f.eyes.cancelDeadline("review");await f.eyes.tick();
