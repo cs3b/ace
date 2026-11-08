@@ -386,11 +386,15 @@ module LabVm
               set res to get result of proc
               if exited of res then exit repeat
             on error errorMessage number errorNumber
-              -- QGA can transiently return a malformed poll response. Keep
-              -- observing the existing process; never execute it a second time.
-              if errorMessage does not contain "Invalid parameter type for 'command.return', expected: object" then
+              -- QGA can fail while reading the result of an already submitted
+              -- process. Keep its handle and let the caller's deadline bound
+              -- the retries. Submission itself is outside this retry handler.
+              set malformedPoll to errorMessage contains "Invalid parameter type for 'command.return', expected: object"
+              set rpcTimeout to errorNumber is -2700 and errorMessage is "Timed out waiting for RPC."
+              if not (malformedPoll or rpcTimeout) then
                 error errorMessage number errorNumber
               end if
+              delay 1
             end try
             delay 0.2
           end repeat
