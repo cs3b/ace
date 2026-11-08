@@ -50,6 +50,13 @@ or rewrite existing project dependency declarations. A product/tool defect
 requires a separate code-change commission. Use the existing configuration
 and installation tools; do not invent a second configuration owner.
 
+`ace-lab prepare`, `ace-lab install` and `ace-lab verify` are host deployment
+commands in every directory. Do not run them, even in dry-run mode. Validate
+the commissioned project files and the effective installed runtime directly.
+If the assignment requires a host deployment command, fail the step and
+report the exact conflicting check to the commissioning Overseer for
+correction. End the turn after reporting.
+
 Verify the requested configuration and installed dependency readiness. Record
 before/after state and exact checks without secrets. Do not start another
 project overseer yourself: after independent verification the lab coordinator

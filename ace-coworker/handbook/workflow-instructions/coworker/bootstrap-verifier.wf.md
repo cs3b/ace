@@ -49,6 +49,10 @@ the actual target files and installed runtime independently. Verify requested
 configuration, allowed-change boundaries, executable resolution and dependency
 readiness with the task's explicit checks; compare actual results with the
 worker's claims. Do not repair the target or accept your own preparation.
+`ace-lab prepare`, `ace-lab install` and `ace-lab verify` are host deployment
+commands in every directory. Do not run them, even in dry-run mode. If the
+assignment requires one, fail the step and report the exact conflicting check
+to the commissioning Overseer for correction. End the turn after reporting.
 Independently check the commissioned eyes configuration and its configured
 HITL recipient using checks available to the verifier role. Do not require full
 observation of private overseer tasks, host systemd or host-wide verification:

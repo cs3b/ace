@@ -78,10 +78,17 @@ those are the coordinator's confirm-start checks after verification. Workers
 must not start the project Overseer themselves. This prevents a circular gate.
 Worker/verifier checks must be executable with their commissioned session's
 permissions. Validate the prepared configuration, installed CLI/gem paths and
-owned project files. Do not require host-wide `ace-lab verify`, host D-Bus or
-systemd inspection, reading either overseer's private task tree, or a healthy
-full `ace-overseer observe` projection from a worker session. Those checks need
-the host or overseer role; private-tree masking is intentional.
+owned project files. `ace-lab prepare`, `ace-lab install` and `ace-lab verify`
+operate on the host deployment manifest even from the project directory.
+The host operator owns them. Never include these commands in a project
+commission or dispatch prompt, including as a dry run or acceptance check.
+Name the exact project configuration files to prepare or validate and the
+installed executable paths to check. If host convergence is required, record
+the missing capability and route it to the host operator.
+Do not require host D-Bus or systemd inspection, reading either overseer's
+private task tree, or a healthy full `ace-overseer observe` projection from a
+worker session. Those checks need the host or overseer role; private-tree
+masking is intentional.
 `ace-task doctor` from the canonical project root also enumerates the masked
 `.ace-tasks/_overseer` directory. Commission any task-store check for the
 worker or verifier in the execution worktree. The authorized project Overseer
@@ -196,10 +203,12 @@ The host selects the installed runtime and standing role instructions. For
 each leg write a separate prompt file named for its assignment. Its first
 lines must name the bootstrap role, exact assignment ID and exact returned
 start-config path. Direct the executor to read that config with
-`ace-coworker start --config <path>`, drive that assignment and finish
-with `ace-coworker report --config <path>`. Keep the shared task commission
+`ace-coworker start --config <path>`, read the brief's resolved role
+instructions before acting, drive that assignment and finish with
+`ace-coworker report --config <path>`. Keep the shared task commission
 as context referenced by the prompt. Before dispatch, verify the prompt,
-config, assignment label and host role all refer to the same leg. The bootstrap
+config, assignment label and host role all refer to the same leg, and that
+neither commission file requires a host deployment command. The bootstrap
 role allows changes to the commissioned canonical project configuration; ordinary product
 worker/reviewer roles stay within their task worktree.
 
