@@ -128,10 +128,10 @@
     },
     {
       "name": "ace-overseer",
-      "version": "0.28.2.pre.utm120.1",
-      "sha256": "a890bdb69b3c990c24e60de1e5f61290e94ed0ae4ea63f4e4dfe2699644859f1",
+      "version": "0.28.2.pre.utm122",
+      "sha256": "e018902b3449926e51234532d8b74fda230780e9d41dbcccfeeca8edeb0266d7",
       "source": "local",
-      "source_commit": "6b929a143ed724ace1c979a3ff60dd7d6de82165"
+      "source_commit": "ad6d5eed690df73c1d4be42602211b15c85201f2"
     },
     {
       "name": "ace-review",
@@ -230,10 +230,10 @@
     },
     {
       "name": "ace-wake",
-      "version": "0.2.1.pre.utm120.2",
-      "sha256": "217b3f6918e51ea430644c703f36ddd345d749f49cfc2e298eb2cae06054b6ef",
+      "version": "0.2.1.pre.utm122",
+      "sha256": "89654b9bf7001d972a330e547988aeb88e35371da96d703c16eefd393afca69c",
       "source": "local",
-      "source_commit": "71e104263a3abbfe18a83e6bda333f766112e9f5"
+      "source_commit": "ad6d5eed690df73c1d4be42602211b15c85201f2"
     },
     {
       "name": "addressable",
