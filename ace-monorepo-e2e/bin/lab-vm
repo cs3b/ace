@@ -147,21 +147,32 @@ module LabVm
     end
   end
 
-  def self.status
-    out, err, result = Open3.capture3(UTMCTL, "list")
-    raise "UTM inventory failed: #{err.strip}" unless result.success?
+  def self.registered_vm(role, record, inventory)
+    return unless record
+    unless record.is_a?(Hash) && record["uuid"].to_s.match?(UUID) &&
+        record["name"].to_s.match?(/\Aace-e2e-#{role}-[A-Za-z0-9-]+\z/)
+      raise "invalid #{role} VM identity"
+    end
+    matches = inventory.select { |item| item["uuid"].casecmp?(record["uuid"]) }
+    raise "ambiguous #{role} VM identity in UTM" if matches.length > 1
+    actual = matches.first
+    raise "#{role} VM identity disagrees with UTM" if actual && actual["name"] != record["name"]
+    actual
+  end
 
+  # Per-command fixture routing uses the ready receipt and the registered VM
+  # identity. Reset and deletion additionally verify the on-disk package.
+  def self.registered_work
+    registered_vm("work", read_state["work"], parse_inventory(utm_call("list")))
+  end
+
+  def self.status
     saved = read_state
-    registered = parse_inventory(out)
+    registered = parse_inventory(utm_call("list"))
     owned = %w[base work].to_h do |role|
       record = saved[role]
       next [role, nil] unless record
-      unless record.is_a?(Hash) && record["uuid"].to_s.match?(UUID) &&
-          record["name"].to_s.match?(/\Aace-e2e-#{role}-[A-Za-z0-9-]+\z/)
-        raise "invalid #{role} VM identity"
-      end
-      actual = registered.find { |item| item["uuid"].casecmp?(record["uuid"]) }
-      raise "#{role} VM identity disagrees with UTM" if actual && actual["name"] != record["name"]
+      actual = registered_vm(role, record, registered)
       verify_package!(role, record) if actual
       [role, actual || {"uuid" => record["uuid"], "status" => "missing", "name" => record["name"]}]
     end

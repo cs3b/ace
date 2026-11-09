@@ -12,7 +12,7 @@ begin
     path = File.join(LabVm.local_dir, "runs", run_id, "fixture.json")
     raise "unsafe fixture receipt" if File.symlink?(File.dirname(path)) || File.symlink?(path) || !File.file?(path)
     receipt = JSON.parse(File.read(path))
-    work = LabVm.status.fetch("work")
+    work = LabVm.registered_work
     unless receipt["schema"] == "ace-e2e-forgejo-fixture/v1" && receipt["run_id"] == run_id &&
         receipt["status"] == "ready" && work && work["status"] == "started" &&
         receipt.fetch("vm_uuid").casecmp?(work.fetch("uuid"))

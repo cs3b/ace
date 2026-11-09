@@ -35,6 +35,24 @@ class LabVmIdentityTest < AceMonorepoE2eTestCase
     assert_equal File.realpath(@package), LabVm.verify_package!("work", @record, root: @root)
   end
 
+  def test_fixture_routing_requires_one_registered_vm_matching_saved_identity
+    row = @record.merge("status" => "started")
+    inventory = ->(*args) do
+      assert_equal ["list"], args
+      "UUID Status Name\n#{row.values_at('uuid', 'status', 'name').join(' ')}\n"
+    end
+    LabVm.stub(:read_state, {"work" => @record}) do
+      LabVm.stub(:utm_call, inventory) do
+        LabVm.stub(:verify_package!, ->(*) { flunk "fixture routing opened a VM package" }) do
+          assert_equal row, LabVm.registered_work
+        end
+      end
+    end
+    assert_nil LabVm.registered_vm("work", @record, [row.merge("uuid" => "00000000-0000-0000-0000-000000000000")])
+    assert_raises(RuntimeError) { LabVm.registered_vm("work", @record, [row.merge("name" => "another-vm")]) }
+    assert_raises(RuntimeError) { LabVm.registered_vm("work", @record, [row, row]) }
+  end
+
   def test_refuses_traversal_mismatched_uuid_and_wrong_role
     [{"name" => "ace-e2e-work-../other", "uuid" => UUID},
       {"name" => @name, "uuid" => "00000000-0000-0000-0000-000000000000"},
