@@ -62,7 +62,10 @@ commands in every directory. Do not run them, even in dry-run mode. If the
 assignment requires one, fail the step and report the exact conflicting check
 to the commissioning Overseer for correction. End the turn after reporting.
 Independently check the commissioned eyes configuration and its configured
-HITL recipient using checks available to the verifier role. Do not require full
+HITL recipient using checks available to the verifier role. Check the file
+with the installed ace-wake validator. The project Overseer start scope is
+`project`; the eyes JSON observes its current project with `"scope": "current"`.
+Do not require full
 observation of private overseer tasks, host systemd or host-wide verification:
 the authorized coordinator confirms those sources at final project acceptance.
 Record any incidental restricted-source results without treating expected access

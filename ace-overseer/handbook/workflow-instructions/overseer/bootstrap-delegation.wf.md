@@ -116,6 +116,12 @@ from the lab recipient that receives bootstrap reports: the worker prepares the 
 and the independent verifier checks it before project start. Missing or
 ambiguous recipient information is a blocker, never a guessed address. The
 project Overseer arms the prepared configuration; it does not create or edit it.
+Describe the required project observation and recipient in the commission.
+Leave configuration syntax to the executor and its installed validator.
+`scope: project` belongs to the Overseer start configuration. For the eyes
+JSON, use `"scope": "current"` to observe the current project and set
+`"recipient"` to that project's configured recipient. Add sync routes only
+when the commission requires them.
 The project's private task directory is `<project>/.ace-tasks/_overseer`;
 never require or create a top-level `<project>/_overseer` directory.
 

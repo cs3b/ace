@@ -71,7 +71,11 @@ project overseer yourself: after independent verification the lab coordinator
 owns reconcile/start. Leave unrelated work and live services untouched.
 Prepare the commissioned project eyes configuration using its explicit path
 and actual configured HITL recipient. Validate its schema and the runtime paths
-available to your worker role. Full observation includes private overseer tasks:
+available to your worker role. The Overseer start configuration uses
+`scope: project`. The eyes JSON uses `"scope": "current"` for this project
+and `"recipient"` for its configured recipient. Validate the candidate JSON
+against the installed ace-wake validator before writing it to the target path.
+Full observation includes private overseer tasks:
 the authorized coordinator confirms all sources after independent verification
 and project start. Do not require access to that private tree, host systemd or
 host-wide verification to complete your scoped preparation. Report missing
