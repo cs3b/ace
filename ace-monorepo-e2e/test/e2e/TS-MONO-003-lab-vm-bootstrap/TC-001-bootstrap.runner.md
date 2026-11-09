@@ -11,6 +11,14 @@ Lab Overseer's terminal/session to obtain the actual reconcile result.
 Do not run reconcile on its behalf. If the deadline expires, preserve the
 last observations and record the failed prerequisite.
 
+Use the source's `ace-monorepo-e2e/bin/lab-vm-bootstrap-timing RUN_ID` to
+measure the deadline. It reads the exact goal and reconcile result from
+the Lab Overseer's bound Pi session. Exit 3 means keep observing, exit 4
+means the deadline expired. A helper failure is missing timing evidence.
+Capture the helper's JSON as `results/tc/01/bootstrap-timing.json`. Only
+exit 0 permits TC-002. Do not replace the helper's timestamps with the
+worker's prompt time or your own estimate.
+
 Capture `results/tc/01/commands.stdout`, `commands.stderr`, `commands.exit`,
 `state.json` and `sessions.json` as declared by the runner contract.
 Capture the delivered goal from the start receipt and verify the project's

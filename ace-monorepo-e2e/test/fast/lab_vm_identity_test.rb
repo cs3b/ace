@@ -53,6 +53,42 @@ class LabVmIdentityTest < AceMonorepoE2eTestCase
     assert_raises(RuntimeError) { LabVm.registered_vm("work", @record, [row, row]) }
   end
 
+  def test_bootstrap_timing_uses_exact_goal_and_successful_reconcile_result
+    script = File.expand_path("../../lab-vm/bootstrap-timing.py", __dir__)
+    session = File.join(@root, "session.jsonl")
+    rows = [
+      ["09:20:00", {"role" => "user", "content" => "initialization"}],
+      ["09:25:00", {"role" => "user", "content" => [{"type" => "text", "text" => "bootstrap goal"}]}],
+      ["09:36:00", {"role" => "user", "content" => "dispatch worker"}],
+      ["10:08:00", {"role" => "assistant", "content" => [{"type" => "toolCall", "id" => "first",
+        "name" => "bash", "arguments" => {"command" => "ace-overseer start --reconcile"}}]}],
+      ["10:09:00", {"role" => "toolResult", "toolCallId" => "first", "isError" => false,
+        "content" => [{"type" => "text", "text" => "ace-overseer start: partial\nWait for ready=true."}]}],
+      ["10:10:00", {"role" => "assistant", "content" => [{"type" => "toolCall", "id" => "second",
+        "name" => "bash", "arguments" => {"command" => "ace-overseer start --reconcile"}}]}]
+    ]
+    ready = {"role" => "toolResult", "toolCallId" => "second", "isError" => false,
+      "content" => [{"type" => "text", "text" => "ace-overseer start: ready\n  project ace: reused (/lab/ace, pane: term_abcd)"}]}
+    ["cat old-report # ace-overseer start --reconcile",
+      "printf '%s' 'ace-overseer start --reconcile'"].each_with_index do |command, index|
+      id = "replay-#{index}"
+      rows.insert(3, ["09:50:00", {"role" => "assistant", "content" => [{"type" => "toolCall", "id" => id,
+        "name" => "bash", "arguments" => {"command" => command}}]}],
+        ["09:50:01", ready.merge("toolCallId" => id)])
+    end
+    {"10:10:00" => "within_limit", "10:10:01" => "expired"}.each do |finish, expected|
+      File.write(session, (rows + [[finish, ready]]).map do |time, message|
+        JSON.generate({"timestamp" => "2020-01-01T#{time}Z", "message" => message})
+      end.join("\n") + "\n")
+      stdout, stderr, status = Open3.capture3("python3", script, session, "bootstrap goal")
+      assert status.success?, stderr
+      result = JSON.parse(stdout)
+      assert_equal expected, result["status"]
+      assert_equal "term_abcd", result["project_terminal"]
+      assert_equal "2020-01-01T09:25:00+00:00", result["goal_delivered_at"]
+    end
+  end
+
   def test_refuses_traversal_mismatched_uuid_and_wrong_role
     [{"name" => "ace-e2e-work-../other", "uuid" => UUID},
       {"name" => @name, "uuid" => "00000000-0000-0000-0000-000000000000"},

@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+"""Collect the TC-001 deadline from the actual Lab Overseer session."""
+
+import json
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[1]
+
+
+def guest(role, run, *args):
+    return subprocess.check_output([str(HERE / "lab-vm-guest"), role, run, *args], text=True)
+
+
+def main(run):
+    if not re.fullmatch(r"[0-9a-f]{16}", run):
+        raise ValueError("invalid fixture run")
+    path = ROOT / ".ace-local" / "lab-vm" / "runs" / run / "lab-start.json"
+    if path.is_symlink() or path.parent.is_symlink():
+        raise ValueError("unsafe bootstrap receipt")
+    receipt = json.loads(path.read_text())
+    terminal = receipt["terminal"]
+    if (receipt["schema"] != "ace-e2e-lab-start/v1" or receipt["run_id"] != run
+            or receipt["status"] != "prompt_delivered" or not re.fullmatch(r"term_[0-9a-f]+", terminal)):
+        raise ValueError("bootstrap goal was not delivered for this run")
+    agent = json.loads(guest("mo", run, "herdr", "agent", "get", terminal))["result"]["agent"]
+    session = agent["agent_session"]
+    if (agent["terminal_id"] != terminal or agent["cwd"] != "/lab"
+            or agent["isolated_session"] != {"project": "lab", "role": "lab-overseer"}
+            or session["agent"] != "pi" or session["kind"] != "path"
+            or not re.fullmatch(r"/run/ace-auth-[0-9a-f]{16}/pi/sessions/--lab--/[a-zA-Z0-9_.-]+\.jsonl", session["value"])):
+        raise ValueError("native agent is not the fixture's Lab Overseer")
+    script = (HERE.parent / "lab-vm" / "bootstrap-timing.py").read_text()
+    timing = json.loads(guest("operator", run, "/usr/bin/python3", "-c", script, session["value"], receipt["goal"]))
+    print(json.dumps({"run_id": run, "vm_uuid": receipt["vm_uuid"], "lab_terminal": terminal, **timing}))
+    return {"within_limit": 0, "waiting": 3, "expired": 4}[timing["status"]]
+
+
+if __name__ == "__main__":
+    try:
+        if len(sys.argv) != 2:
+            raise ValueError("usage: lab-vm-bootstrap-timing RUN_ID")
+        sys.exit(main(sys.argv[1]))
+    except (KeyError, OSError, ValueError, subprocess.CalledProcessError) as error:
+        print(f"lab-vm-bootstrap-timing: {error}", file=sys.stderr)
+        sys.exit(1)

@@ -30,6 +30,7 @@ sandbox-layout:
   results/tc/01/commands.exit: "Actual captured commands.exit; never a synthetic verdict"
   results/tc/01/state.json: "Actual captured state.json; never a synthetic verdict"
   results/tc/01/sessions.json: "Actual captured sessions.json; never a synthetic verdict"
+  results/tc/01/bootstrap-timing.json: "Actual lab-vm-bootstrap-timing output for the delivered goal and bound native session"
   results/tc/02/commands.stdout: "Actual captured commands.stdout; never a synthetic verdict"
   results/tc/02/commands.stderr: "Actual captured commands.stderr; never a synthetic verdict"
   results/tc/02/commands.exit: "Actual captured commands.exit; never a synthetic verdict"

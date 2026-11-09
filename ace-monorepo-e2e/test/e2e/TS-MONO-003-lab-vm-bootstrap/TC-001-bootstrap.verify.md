@@ -13,6 +13,10 @@ accepted. Verify exactly three direct children and actual dependency fields:
 verification depends on preparation, and confirm-start depends on verification.
 Require authenticated `ready=true` after the project's first completed turn;
 terminal text claiming healthy eyes does not replace this result.
+Require the actual `results/tc/01/bootstrap-timing.json` output from
+`lab-vm-bootstrap-timing` for this VM and Lab Overseer terminal. Match the
+project terminal to the native first-turn evidence. Only `within_limit`
+can pass. Missing helper evidence fails this case.
 Check elapsed time from the delivered goal in the Lab Overseer's Pi session
 to that session's first successful authenticated reconcile result. Use the
 recorded timestamps. Missing timestamps, readiness preceding the goal, or
