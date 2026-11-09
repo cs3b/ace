@@ -151,8 +151,12 @@ do not patch installed gems. Preserve unrelated changes.
 
 ## Arm eyes before dispatch
 
-Use the lab's existing eyes JSON configuration, including its configured project observations. The `ace_eyes` tool accepts
-`{"action":"start","configPath":"<absolute eyes JSON path>"}`.
+Use the lab's existing eyes JSON configuration, including its configured
+project observations. Start it once with the `ace_eyes` tool using
+`{"action":"start","configPath":"<absolute eyes JSON path>"}`. If eyes is
+already armed for the same configuration, read `{"action":"status"}`
+and reuse the running observer. A worker-to-verifier handoff does not
+require rearming an observer that remains healthy.
 Inspect the returned state: enabled=true, breaker=null, errors=0 and at least
 one observation. Read pending revisions from their original owners, reconcile
 existing commissions, and ack each exact key/revision only after acceptance.
@@ -170,6 +174,16 @@ folder-form addresses. A relative `.ace-local/hitl` repeated across roots does
 not identify which coordinator owns the report. The task specification, `--to`, and returned start configs
 must agree; do not invent an address or append a machine suffix. If no valid
 recipient is configured, report a blocking gap before dispatch.
+
+The isolated bootstrap uses `reporting.delivery: observe`. The recipient is
+an address, not a writable directory in the executor's mount. Executors publish
+with `ace-coworker report` in their assignment worktree. Lab eyes observes that
+publication on the project side and the Lab Overseer accepts it. Neither
+commission may require the worker or verifier to find, touch, or write the
+Lab Overseer's inbox (for example `/lab/.ace-local/hitl`). Check the configured
+address in the start brief, and prove publication and acceptance at the
+report handoff after execution. Do not turn inbox access into a prerequisite
+for project preparation.
 
 From the target project root, use `ace-coworker prepare --task <executable-task> --roles bootstrap-worker,bootstrap-verifier
 --to <configured-lab-recipient> --format json`. Read its returned worktree,

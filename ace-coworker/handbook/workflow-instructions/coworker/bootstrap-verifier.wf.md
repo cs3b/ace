@@ -15,6 +15,8 @@ Use its pinned assignment ID for every ace-assign operation. Read the executable
 lab task and its explicit canonical target path, allowed configuration paths,
 operations, runtime selection and acceptance criteria. Missing or ambiguous
 scope is an error report, never a guessed directory or permission.
+The prepared commission and assignment define this leg. Execute them directly;
+do not start a separate `ace-task plan` turn for the commissioned work.
 
 The assignment and evidence belong to the prepared lab task worktree. This
 operational role may act on the explicitly commissioned canonical target
@@ -39,6 +41,12 @@ it prints a file path, read that file. Never use the exit status of `head`, anot
 Failed, unavailable or inconclusive required checks block success.
 Use `ace-coworker report --config <returned path>` for the truthful assignment
 outcome. A process exit, prepared config or printed CLI brief is not completion.
+For `reporting.delivery: observe`, publish from the assignment worktree.
+The Lab Overseer's inbox is outside your mount by design. Validate the
+configured recipient address, never try to read, create or write its folder.
+Publication returns an event ID and leaves acceptance to the Lab Overseer.
+If the commission asks for a destination-folder write probe, report the
+conflicting check to the coordinator instead of attempting the write.
 After interruption, read current state before repeating any external effect;
 resume the same assignment, never silently create a replacement.
 
