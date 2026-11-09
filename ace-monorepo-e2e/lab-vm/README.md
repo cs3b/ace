@@ -20,9 +20,18 @@ base VM; `reset` creates a working clone. The base contains an SSH operator and
 QEMU guest agent but no ACE or provider credentials. `reset` exports and
 verifies the existing working VM before deleting its registered identity and
 cloning the frozen base; the export is retained locally for diagnostics.
-`--rebuild-base` also exports the prior base. `destroy` removes only identities
-in the private state file after checking UTM inventory, package path and UUID;
-it retains verified exports. Lifecycle operations hold a single-writer lock.
+`--rebuild-base` also exports the prior base. `destroy` removes only registered
+VMs whose UUID and name match the private state file. Before removal, UTM
+exports the stopped VM to a fresh directory under the worktree's private
+evidence path. The helper verifies the exported identity and self-contained
+disks, records the full package fingerprint, then rechecks the stopped
+registration. It retains verified exports. Lifecycle operations hold a
+single-writer lock.
+
+UTM owns the original package path. The helper uses UTM's registered identity
+and verifies the location and contents of the export in the worktree. It
+does not read UTM's protected App Data directory. The first AppleScript
+invocation may still need macOS Automation consent for UTM.
 Provisioning requires at least 25 GiB of free host disk.
 
 `bin/lab-vm-artifacts` downloads the release manifest's public gem, Ruby, Node,

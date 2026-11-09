@@ -13,19 +13,20 @@ require "securerandom"
 require "fileutils"
 require "tmpdir"
 require "uri"
+require_relative "../lab-vm/utm-export"
 
 module LabVm
   ROOT = File.expand_path("../..", __dir__)
   PROFILE = File.join(ROOT, "ace-monorepo-e2e/lab-vm/profile.yml")
   STATE = File.join(ROOT, ".ace-local/lab-vm/state.json")
   UTMCTL = "/Applications/UTM.app/Contents/MacOS/utmctl"
-  UTM_ROOT = File.expand_path("~/Library/Containers/com.utmapp.UTM/Data/Documents")
   UUID = /\A[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}\z/
   RUNTIME_INPUTS = %w[
     ace-monorepo-e2e/bin/lab-vm
     ace-monorepo-e2e/bin/lab-vm-artifacts
     ace-monorepo-e2e/bin/lab-vm-build-gem
     ace-monorepo-e2e/bin/lab-vm-runtime
+    ace-monorepo-e2e/lab-vm/utm-export.rb
     ace-monorepo-e2e/lab-vm/profile.yml
     ace-monorepo-e2e/lab-vm/release-manifest.json
     ace-monorepo-e2e/lab-vm/provision-runtime.sh
@@ -36,27 +37,6 @@ module LabVm
     ace-monorepo-e2e/lab-vm/pi/package.json
     ace-monorepo-e2e/lab-vm/pi/package-lock.json
   ].freeze
-
-  # Validate the UUID against both UTM inventory and the on-disk package.
-  # Neither a matching display name nor a user-writable state file is enough.
-  def self.verify_package!(role, record, root: UTM_ROOT)
-    name, uuid = record.values_at("name", "uuid")
-    unless name.is_a?(String) && name.match?(/\Aace-e2e-#{Regexp.escape(role)}-[A-Za-z0-9-]+\z/) &&
-        uuid.is_a?(String) && uuid.match?(UUID)
-      raise "invalid #{role} VM identity"
-    end
-    root = File.realpath(root)
-    package = File.join(root, "#{name}.utm")
-    raise "VM package is a symlink" if File.symlink?(package)
-    raise "VM package is missing" unless File.directory?(package)
-    raise "VM package escapes UTM root" unless File.dirname(File.realpath(package)) == root
-    config = File.join(package, "config.plist")
-    raise "VM configuration is not a regular file" unless File.file?(config) && !File.symlink?(config)
-    out, err, result = Open3.capture3("/usr/bin/plutil", "-extract", "Information.UUID", "raw", "-o", "-", config)
-    raise "cannot read VM identity: #{err.strip}" unless result.success?
-    raise "VM package UUID disagrees with saved identity" unless out.strip.casecmp?(uuid)
-    package
-  end
 
   def self.local_dir
     root = File.realpath(ROOT)
@@ -173,7 +153,6 @@ module LabVm
       record = saved[role]
       next [role, nil] unless record
       actual = registered_vm(role, record, registered)
-      verify_package!(role, record) if actual
       [role, actual || {"uuid" => record["uuid"], "status" => "missing", "name" => record["name"]}]
     end
     {"profile" => PROFILE, "state" => STATE, "base" => owned["base"], "work" => owned["work"],
@@ -231,55 +210,41 @@ module LabVm
     end
   end
 
-  def self.export_vm(role, record)
-    uuid = record.fetch("uuid")
-    source = verify_package!(role, record)
-    dest = File.join(evidence_dir, "#{uuid}.utm")
-    raise "evidence destination is a symlink" if File.symlink?(dest)
-    unless File.exist?(dest)
-      script = <<~APPLESCRIPT
-        on run argv
-          set vmId to item 1 of argv
-          set outputPath to POSIX file (item 2 of argv)
-          tell application "UTM" to export virtual machine id vmId to outputPath
-        end run
-      APPLESCRIPT
-      out, err, result = Open3.capture3("osascript", "-e", script, "--", uuid, dest)
-      raise "UTM export failed: #{err.strip} #{out.strip}" unless result.success?
-    end
-    raise "export did not produce a VM package" unless File.directory?(dest)
-    raise "exported VM differs from original; refusing deletion" unless package_fingerprint(source) == package_fingerprint(dest)
-    dest
-  end
-
-  def self.remove_work(state, current)
-    if (work = current["work"])
-      record = state.fetch("work")
-      if work["status"] == "missing"
-        evidence = File.join(evidence_dir, "#{record.fetch('uuid')}.utm")
-        unless record["phase"] == "exported" && File.directory?(evidence) && !File.symlink?(evidence) &&
-            record["evidence_fingerprint"] == package_fingerprint(evidence)
-          raise "work VM is missing without a verified export; preserve state and investigate"
-        end
-      else
-        verify_package!("work", record)
-        if work["status"] != "stopped"
-          utm_call("stop", work.fetch("uuid"), "--request")
-          wait_stopped("work")
-        end
-        evidence = export_vm("work", record)
-        record["phase"] = "exported"
-        record["evidence_fingerprint"] = package_fingerprint(evidence)
-        save_state(state) # The verified export is durable before deletion.
-        raise "work VM changed state during export" unless status.dig("work", "status") == "stopped"
-        utm_call("delete", work.fetch("uuid"))
-        if parse_inventory(utm_call("list")).any? { |item| item["uuid"].casecmp?(work.fetch("uuid")) }
-          raise "work VM deletion was not confirmed"
-        end
+  def self.remove_vm(role, state, current)
+    vm = current[role]
+    return unless vm
+    record = state.fetch(role)
+    evidence = File.join(evidence_dir, "#{record.fetch('uuid')}.utm")
+    if vm["status"] == "missing"
+      unless record["phase"] == "exported" && File.directory?(evidence) && !File.symlink?(evidence) &&
+          record["evidence_fingerprint"] == export_fingerprint(evidence, record)
+        raise "#{role} VM is missing without a verified export; preserve state and investigate"
       end
-      state.delete("work")
-      save_state(state)
+    else
+      if vm["status"] != "stopped"
+        utm_call("stop", vm.fetch("uuid"), "--request")
+        wait_stopped(role)
+      end
+      with_utm_export(role, record) do |package, digest|
+        raise "evidence destination is a symlink" if File.symlink?(evidence)
+        if File.exist?(evidence)
+          raise "existing evidence differs from the fresh export" unless export_fingerprint(evidence, record) == digest
+        else
+          File.rename(package, evidence)
+        end
+        File.open(evidence_dir, File::RDONLY, &:fsync)
+        record["phase"] = "exported"
+        record["evidence_fingerprint"] = digest
+        save_state(state)
+      end
+      assert_stopped_registration!(role, record)
+      utm_call("delete", vm.fetch("uuid"))
+      if parse_inventory(utm_call("list")).any? { |item| item["uuid"].casecmp?(vm.fetch("uuid")) }
+        raise "#{role} VM deletion was not confirmed"
+      end
     end
+    state.delete(role)
+    save_state(state)
   end
 
   def self.reset
@@ -289,11 +254,10 @@ module LabVm
     base = current.fetch("base")
     raise "base VM is not ready and stopped" unless base && base["status"] == "stopped" && state.dig("base", "phase") == "ready"
     raise "base VM configuration changed; rebuild it before reset" unless state.dig("base", "configuration_fingerprint") == base_configuration_fingerprint
-    base_path = verify_package!("base", state.fetch("base"))
-    digest = package_fingerprint(base_path)
+    digest = with_utm_export("base", state.fetch("base")) { |_, fingerprint| fingerprint }
     expected = state.dig("base", "fingerprint")
     raise "base VM has changed; rebuild it before reset" unless expected && digest == expected
-    remove_work(state, current)
+    remove_vm("work", state, current)
 
     name = state["pending_work_name"] || "ace-e2e-work-#{SecureRandom.hex(8)}"
     raise "invalid pending work name" unless name.match?(/\Aace-e2e-work-[a-f0-9]{16}\z/)
@@ -303,12 +267,13 @@ module LabVm
     matches = registered.select { |row| row["name"] == name }
     raise "ambiguous pending VM name" if matches.size > 1
     if matches.empty?
+      assert_stopped_registration!("base", state.fetch("base"))
       utm_call("clone", base.fetch("uuid"), "--name", name)
       matches = parse_inventory(utm_call("list")).select { |row| row["name"] == name }
     end
     raise "clone creation was not confirmed" unless matches.size == 1
     record = {"uuid" => matches.first.fetch("uuid"), "name" => name, "phase" => "created"}
-    verify_package!("work", record)
+    raise "clone identity or state is invalid" if record["uuid"].casecmp?(base.fetch("uuid")) || matches.first["status"] != "stopped"
     state["work"] = record
     state.delete("pending_work_name")
     save_state(state)
@@ -319,34 +284,8 @@ module LabVm
     state = read_state
     raise "pending VM creation must be reconciled before destruction" if state["pending_base_name"] || state["pending_work_name"]
     current = status
-    remove_work(state, current)
-    if (base = current["base"])
-      record = state.fetch("base")
-      if base["status"] == "missing"
-        evidence = File.join(evidence_dir, "#{record.fetch('uuid')}.utm")
-        unless record["phase"] == "exported" && File.directory?(evidence) && !File.symlink?(evidence) &&
-            record["evidence_fingerprint"] == package_fingerprint(evidence)
-          raise "base VM is missing without a verified export; preserve state and investigate"
-        end
-      else
-        verify_package!("base", record)
-        if base["status"] != "stopped"
-          utm_call("stop", base.fetch("uuid"), "--request")
-          wait_stopped("base")
-        end
-        evidence = export_vm("base", record)
-        record["phase"] = "exported"
-        record["evidence_fingerprint"] = package_fingerprint(evidence)
-        save_state(state)
-        raise "base VM changed state during export" unless status.dig("base", "status") == "stopped"
-        utm_call("delete", base.fetch("uuid"))
-        if parse_inventory(utm_call("list")).any? { |item| item["uuid"].casecmp?(base.fetch("uuid")) }
-          raise "base VM deletion was not confirmed"
-        end
-      end
-      state.delete("base")
-      save_state(state)
-    end
+    remove_vm("work", state, current)
+    remove_vm("base", state, current)
     {"destroyed" => true, "evidence_dir" => evidence_dir}
   end
 
@@ -571,7 +510,7 @@ module LabVm
     end
     raise "base creation was not confirmed" unless rows.size == 1
     record = {"uuid" => rows.first.fetch("uuid"), "name" => name, "phase" => "provisioning", "configuration_fingerprint" => config_fingerprint}
-    verify_package!("base", record)
+    raise "base must be stopped after creation" unless rows.first["status"] == "stopped"
     state["base"] = record
     state.delete("pending_base_name")
     state.delete("pending_base_configuration")
@@ -613,7 +552,7 @@ module LabVm
     saved = read_state
     if saved.fetch("base")["phase"] == "ready" && current["status"] == "stopped"
       expected = saved.fetch("base")["fingerprint"]
-      actual = package_fingerprint(verify_package!("base", saved.fetch("base")))
+      actual = with_utm_export("base", saved.fetch("base")) { |_, fingerprint| fingerprint }
       raise "base VM fingerprint is missing or changed" unless expected && expected == actual
       return {"base" => current, "ready" => true}
     end
@@ -649,7 +588,7 @@ module LabVm
       sleep 1
     end
     saved.fetch("base")["phase"] = "ready"
-    saved.fetch("base")["fingerprint"] = package_fingerprint(verify_package!("base", saved.fetch("base")))
+    saved.fetch("base")["fingerprint"] = with_utm_export("base", saved.fetch("base")) { |_, fingerprint| fingerprint }
     save_state(saved)
     {"base" => status.fetch("base"), "ready" => true}
   end

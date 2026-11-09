@@ -31,10 +31,6 @@ class LabVmIdentityTest < AceMonorepoE2eTestCase
     assert_empty LabVm.parse_inventory("UUID Status Name\n")
   end
 
-  def test_accepts_package_with_matching_uuid_beneath_utm_root
-    assert_equal File.realpath(@package), LabVm.verify_package!("work", @record, root: @root)
-  end
-
   def test_fixture_routing_requires_one_registered_vm_matching_saved_identity
     row = @record.merge("status" => "started")
     inventory = ->(*args) do
@@ -43,9 +39,7 @@ class LabVmIdentityTest < AceMonorepoE2eTestCase
     end
     LabVm.stub(:read_state, {"work" => @record}) do
       LabVm.stub(:utm_call, inventory) do
-        LabVm.stub(:verify_package!, ->(*) { flunk "fixture routing opened a VM package" }) do
-          assert_equal row, LabVm.registered_work
-        end
+        assert_equal row, LabVm.registered_work
       end
     end
     assert_nil LabVm.registered_vm("work", @record, [row.merge("uuid" => "00000000-0000-0000-0000-000000000000")])
@@ -89,11 +83,30 @@ class LabVmIdentityTest < AceMonorepoE2eTestCase
     end
   end
 
-  def test_refuses_traversal_mismatched_uuid_and_wrong_role
-    [{"name" => "ace-e2e-work-../other", "uuid" => UUID},
-      {"name" => @name, "uuid" => "00000000-0000-0000-0000-000000000000"},
-      {"name" => "ace-e2e-base-fixture", "uuid" => UUID}].each do |record|
-      assert_raises(RuntimeError) { LabVm.verify_package!("work", record, root: @root) }
+  def test_export_validates_identity_and_every_pinned_drive
+    data = File.join(@package, "Data")
+    FileUtils.mkdir_p(data)
+    disks = %w[base.qcow2 seed.qcow2]
+    disks.each { |disk| File.write(File.join(data, disk), disk) }
+    config = {"Information" => {"UUID" => UUID, "Name" => @name},
+      "Backend" => "QEMU", "System" => {"Architecture" => "aarch64"},
+      "Drive" => disks.map { |disk| {"ImageName" => disk, "ImageType" => "Disk"} }}
+    response = ->(command, *args) do
+      if command == "/usr/bin/plutil"
+        JSON.generate(config)
+      else
+        assert_equal "qemu-img", command
+        JSON.generate(args.last.end_with?("seed.qcow2") && @external ? {"backing-filename" => "/outside"} : {})
+      end
+    end
+    LabVm.stub(:checked_command, response) do
+      assert_equal LabVm.package_fingerprint(@package), LabVm.export_fingerprint(@package, @record)
+      assert_raises(RuntimeError) { LabVm.export_fingerprint(@package, @record.merge("name" => "another-vm")) }
+      @external = true
+      assert_raises(RuntimeError) { LabVm.export_fingerprint(@package, @record) }
+      @external = false
+      File.unlink(File.join(data, "seed.qcow2"))
+      assert_raises(RuntimeError) { LabVm.export_fingerprint(@package, @record) }
     end
   end
 
@@ -170,13 +183,13 @@ class LabVmIdentityTest < AceMonorepoE2eTestCase
     state = {"work" => @record.merge("phase" => "created")}
     current = {"work" => @record.merge("status" => "missing")}
     LabVm.stub(:evidence_dir, @root) do
-      assert_raises(RuntimeError) { LabVm.remove_work(state, current) }
+      assert_raises(RuntimeError) { LabVm.remove_vm("work", state, current) }
       assert_equal UUID, state.dig("work", "uuid")
 
       FileUtils.cp_r(@package, File.join(@root, "#{UUID}.utm"))
       state["work"]["phase"] = "exported"
       state["work"]["evidence_fingerprint"] = "incorrect"
-      assert_raises(RuntimeError) { LabVm.remove_work(state, current) }
+      assert_raises(RuntimeError) { LabVm.remove_vm("work", state, current) }
       assert_equal UUID, state.dig("work", "uuid")
     end
   end
@@ -190,12 +203,58 @@ class LabVmIdentityTest < AceMonorepoE2eTestCase
     saved = nil
     LabVm.stub(:evidence_dir, @root) do
       LabVm.stub(:save_state, ->(value) { saved = value.dup }) do
-        LabVm.remove_work(state, current)
+        LabVm.stub(:export_fingerprint, record.fetch("evidence_fingerprint")) do
+          LabVm.remove_vm("work", state, current)
+        end
       end
     end
     assert_equal({}, state)
     assert_equal({}, saved)
     assert File.directory?(exported)
+  end
+
+  def test_work_is_kept_when_export_fails_or_existing_evidence_differs
+    current = {"work" => @record.merge("status" => "stopped")}
+    evidence = File.join(@root, "#{UUID}.utm")
+    [{}, {"different_export" => true}].each do |setup|
+      state = {"work" => @record.dup}
+      FileUtils.mkdir_p(evidence) if setup["different_export"]
+      exporter = lambda do |*_, &block|
+        raise "export failed" unless setup["different_export"]
+        block.call(@package, "new-digest")
+      end
+      LabVm.stub(:evidence_dir, @root) do
+        LabVm.stub(:with_utm_export, exporter) do
+          LabVm.stub(:export_fingerprint, "old-digest") do
+            LabVm.stub(:utm_call, ->(*) { flunk "work was deleted before evidence verification" }) do
+              assert_raises(RuntimeError) { LabVm.remove_vm("work", state, current) }
+              assert_equal UUID, state.dig("work", "uuid")
+              assert_nil state.dig("work", "phase")
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def test_work_is_kept_when_registration_changes_after_export
+    state = {"work" => @record.dup}
+    current = {"work" => @record.merge("status" => "stopped")}
+    saved = []
+    LabVm.stub(:evidence_dir, @root) do
+      LabVm.stub(:with_utm_export, ->(*_, &block) { block.call(@package, "verified") }) do
+        LabVm.stub(:save_state, ->(value) { saved << value.fetch("work").dup }) do
+          LabVm.stub(:assert_stopped_registration!, ->(*) { raise "registration changed" }) do
+            LabVm.stub(:utm_call, ->(*) { flunk "changed registration was deleted" }) do
+              assert_raises(RuntimeError) { LabVm.remove_vm("work", state, current) }
+            end
+          end
+        end
+      end
+    end
+    assert_equal "exported", saved.fetch(0).fetch("phase")
+    assert_equal "verified", saved.fetch(0).fetch("evidence_fingerprint")
+    assert File.directory?(File.join(@root, "#{UUID}.utm"))
   end
 
   def test_reset_rejects_changed_base_before_touching_work
@@ -206,11 +265,9 @@ class LabVmIdentityTest < AceMonorepoE2eTestCase
     touched = false
     LabVm.stub(:read_state, state) do
       LabVm.stub(:status, current) do
-        LabVm.stub(:verify_package!, @package) do
-          LabVm.stub(:package_fingerprint, "changed") do
-            LabVm.stub(:remove_work, ->(*) { touched = true }) do
-              assert_raises(RuntimeError) { LabVm.reset }
-            end
+        LabVm.stub(:with_utm_export, ->(*_, &block) { block.call(@package, "changed") }) do
+          LabVm.stub(:remove_vm, ->(*) { touched = true }) do
+            assert_raises(RuntimeError) { LabVm.reset }
           end
         end
       end
@@ -267,11 +324,11 @@ class LabVmIdentityTest < AceMonorepoE2eTestCase
     FileUtils.rm_rf(@package)
     Dir.mktmpdir("outside-vm") do |outside|
       File.symlink(outside, @package)
-      assert_raises(RuntimeError) { LabVm.verify_package!("work", @record, root: @root) }
+      assert_raises(RuntimeError) { LabVm.export_fingerprint(@package, @record) }
     end
     File.unlink(@package)
     FileUtils.mkdir_p(@package)
     File.symlink("/dev/null", File.join(@package, "config.plist"))
-    assert_raises(RuntimeError) { LabVm.verify_package!("work", @record, root: @root) }
+    assert_raises(RuntimeError) { LabVm.export_fingerprint(@package, @record) }
   end
 end
