@@ -4,12 +4,13 @@ Commission an isolated worker to validate its granted Forgejo access using publi
 `ace-lab auth request/status/exec/revoke`. Observe a successful scoped operation
 and normal confirmed revocation.
 
-Test a one-minute lease expiry and an issuer crash with separate leases. Before
-each fault, capture the lease ID, issuer invocation ID, worker unit and invocation
-ID, and the populated execution cgroup for the active authorized command. For
-the crash, also check that a different live isolated session cannot use the
-issued lease or access its credential projection while the owner can use it.
-Denial for an expired or already revoked lease alone cannot prove isolation.
+Test a one-minute lease expiry and an issuer crash with separate leases. For the
+crash, use a second live isolated session to check that the issued lease's
+credential projection is unreadable and that `ace-lab auth exec` refuses the
+different principal. Capture this refusal while the lease is live and unused.
+Confirm that it remains issued, then start the authorized command as the owner.
+Before each fault, capture the lease ID, issuer invocation ID, worker unit and
+invocation ID, and the populated execution cgroup for the active command.
 
 Run the host-only lease evidence probe once for each active lease, with
 `expiry` or `crash` and its exact lease ID. The helper checks live Forgejo

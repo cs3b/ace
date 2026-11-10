@@ -7,11 +7,13 @@ installed `ExecStopPost` ran. Capture evidence for startup recovery separately.
 For expiry and crash, require the operator probe's actual HTTP 200 and
 populated command cgroup before the fault, followed by HTTP 401 or 403 for
 the same credential, empty or absent command cgroup and terminal cleanup.
-An issuer CLI refusal alone does not establish remote revocation.
-To prove session isolation, require denial for a distinct isolated session
-while the owner's lease is live. Record any dependent units stopped by systemd
-and their public recovery. A denial after revocation by itself does not prove
-session isolation.
+Require a revoked lease with cleanup `revoked` or `already_invalid` and the
+probe's remote HTTP evidence.
+To prove session isolation, require a different-principal execution refusal
+and an unreadable credential projection from a distinct live isolated session
+while the owner's lease is issued and unused. The owner must then use that
+same lease to start the command observed by the crash probe. Record any
+dependent units stopped by systemd and their public recovery.
 
 Use the actual VM/Forgejo state, then `results/tc/04/state.json` and
 `sessions.json`, then the command stdout/stderr/exit captures. Missing, stale or
