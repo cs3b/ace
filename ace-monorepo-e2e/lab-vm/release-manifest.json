@@ -135,9 +135,10 @@
     },
     {
       "name": "ace-review",
-      "version": "0.62.2",
-      "sha256": "e8a63a5b77dbce25f4f7d1e9eaa1687577b671c83a7113097ab8b8cbf8ce426c",
-      "source": "https://rubygems.org"
+      "version": "0.62.3.pre.utm129",
+      "sha256": "ac432abe28573fad63a71cdfdb0e39c1a764694ef533620730cefcf5a638d900",
+      "source": "local",
+      "source_commit": "9e59575e82cda8a42108cd7bf6e369730ee75858"
     },
     {
       "name": "ace-runtime",
