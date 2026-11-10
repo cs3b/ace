@@ -67,9 +67,12 @@ false "work done".
    - Follow repository conventions (AGENTS.md, ATOM architecture, style).
 
 4. **Verify - required tests (completion gate).**
-   - For every changed package run `ace-test <changed-package> all` with
-     `ACE_TOOLCHAIN=installed`. When the task requires monorepo validation,
-     run installed `ace-test-suite`. Use the assignment's worktree as cwd.
+   - Run the task's required checks from the assignment worktree. If the
+     task and project leave the test scope unspecified, run
+     `ace-test <changed-package> all` for every changed package. Use
+     installed `ace-test` when `ACE_TOOLCHAIN=installed`. When the task
+     requires monorepo validation, run installed `ace-test-suite`.
+     Record the required commands and their results for the reviewer.
      If a required installed test tool is missing, report the readiness failure.
    - In ACE development mode use the checkout's `bin/ace-test` and
      `bin/ace-test-suite` for the same checks.

@@ -77,7 +77,7 @@ module Ace
               end
               yield({"XDG_DATA_HOME" => dir, "GIT_ASKPASS" => ASKPASS, "GIT_TERMINAL_PROMPT" => "0",
                 "GIT_CONFIG_COUNT" => "2", "GIT_CONFIG_KEY_0" => "credential.helper", "GIT_CONFIG_VALUE_0" => "",
-                "GIT_CONFIG_KEY_1" => "credential.useHttpPath", "GIT_CONFIG_VALUE_1" => "false", "LC_ALL" => "C",
+                "GIT_CONFIG_KEY_1" => "credential.useHttpPath", "GIT_CONFIG_VALUE_1" => "false", "LC_ALL" => "C.UTF-8",
                 "ACE_LAB_FORGEJO_ORIGIN" => "#{url.scheme}://#{authority}", "ACE_LAB_FORGEJO_SCHEME" => url.scheme,
                 "ACE_LAB_FORGEJO_AUTHORITY" => authority, "ACE_LAB_FORGEJO_ACCOUNT" => account})
             end

@@ -92,9 +92,11 @@ assignment with an open publication step cannot produce a success report.
      This preserves the session's configured provider and avoids tying model
      execution to the forge lease TTL. Publish the approval with a fresh
      reviewer lease after verifying the tested candidate.
-   - Run the affected checks with installed `ace-test` from the assignment
-     worktree when `ACE_TOOLCHAIN=installed`. Check the commissioned test
-     command and its prerequisites before installing development dependencies.
+   - Run the task's required checks from the assignment worktree on the
+     candidate you will approve. Confirm the scope against the issue and
+     project requirements, and record the executed commands and results.
+     Use installed `ace-test` when `ACE_TOOLCHAIN=installed`. Check the
+     test commands and their prerequisites before installing development dependencies.
      A checkout binstub or Gemfile alone does not require `bundle install`.
      If a required installed test tool is missing, report the readiness failure.
      In ACE development mode use the checkout's `bin/ace-test`.

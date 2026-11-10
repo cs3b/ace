@@ -261,7 +261,8 @@ when that binding was wrong, or a recovery when delivery was uncertain and
 the session is interactive-ready with no completed turn. In either case,
 require that the private step has no earlier correction attempt. Record
 `prompt_correction=attempted` before sending the corrected or original
-leg-specific prompt to the same session with `herdr agent prompt`. Arm one
+leg-specific prompt with `herdr agent prompt <terminal> "<text>"`. The guarded
+route accepts the terminal and text only. Arm one
 new deadline `bootstrap-recovery-<assignment-id>` after confirmed delivery.
 Cancel it on activity of that assignment or a report. If it expires,
 delivery remains uncertain, or confirmed delivery produced no assignment

@@ -7,6 +7,8 @@ issues:
       Add a small Ruby counter primitive under ace-monorepo-e2e/lab-fixture.
       It must start at zero, accept integer increments and expose the value.
       Include executable tests for the initial value and multiple increments.
+      Put those tests in ace-monorepo-e2e/test/fast/lab_fixture_counter_test.rb.
+      Run `ace-test ace-monorepo-e2e test/fast/lab_fixture_counter_test.rb --direct` on the candidate.
       Use the repository's normal task, test, review and PR workflow.
   - key: cli
     title: Add a counter command-line interface
@@ -16,12 +18,19 @@ issues:
       to the counter. It must accept a sequence of integer increments and
       print the resulting value. Include executable tests for valid input and
       an invalid increment. This task depends on {{issue:base}}.
+      Put the CLI tests in ace-monorepo-e2e/test/fast/lab_fixture_counter_cli_test.rb.
+      Run both required checks on the candidate.
+
+      - `ace-test ace-monorepo-e2e test/fast/lab_fixture_counter_test.rb --direct`
+      - `ace-test ace-monorepo-e2e test/fast/lab_fixture_counter_cli_test.rb --direct`
   - key: docs
     title: Document the counter fixture
     body: |
       Add concise documentation describing the purpose and expected usage of
       the counter fixture under ace-monorepo-e2e/lab-fixture. The documentation
       must explain that this is a disposable E2E fixture, not a product API.
+      Run `git diff --check` over the full proposed PR range. Verify that the
+      examples reflect a counter starting at zero and accumulating integer increments.
   - key: release
     title: Release the integrated counter fixture
     kind: release

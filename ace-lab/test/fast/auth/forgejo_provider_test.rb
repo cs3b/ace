@@ -146,6 +146,7 @@ module Ace
             provider.stub(:linux_xdg?, true) do
               provider.with_exec_environment(profile: profile, credential: credential) do |env|
                 projection = env.fetch("XDG_DATA_HOME")
+                assert_equal "C.UTF-8", env.fetch("LC_ALL"), "leased tools need UTF-8 and stable Git prompts"
                 path = File.join(projection, "forgejo-cli", "keys.json")
                 data = JSON.parse(File.read(path))
                 assert_equal({"forge.example.com" => {"type" => "Application", "token" => "LEASE-TOKEN"}}, data["hosts"])
