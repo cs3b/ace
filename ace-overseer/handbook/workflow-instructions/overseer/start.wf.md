@@ -40,8 +40,11 @@ Verify that required sources are healthy before processing work. Read the
 affected state from its owner, including private coordination tasks with
 `ace-task list --in _overseer` when relevant. Reconcile existing commissioned
 work and pending reports before selecting new work. Acknowledge each revision
-only after its task or assignment owner accepted it. Delegate according to
-the existing dependency order, then end the turn with eyes armed.
+only after its task or assignment owner accepted it. Use the issue and task
+dependencies to select ready work. Advance independent ready tasks in
+separate worktrees while other tasks await reports, tests or approvals. Keep
+one active executor per worktree. Record a concrete prerequisite or conflict
+when it blocks a task. End the turn with eyes armed.
 
 ## Delegation
 

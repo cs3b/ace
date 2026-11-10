@@ -17,7 +17,13 @@ class LabVmLeaseEvidenceTest < AceMonorepoE2eTestCase
       group = '/sys/fs/cgroup/' + unit + '/ace-exec-' + 'c' * 32
       issuer_id, session_id = 'd' * 32, 'e' * 32
       token = 'f' * 40
-      now = datetime.datetime.now(datetime.timezone.utc)
+      now = datetime.datetime(2026, 11, 10, 10, 28, 0, 990000, tzinfo=datetime.timezone.utc)
+
+      class FixtureDateTime(datetime.datetime):
+          @classmethod
+          def now(cls, tz):
+              return now.astimezone(tz)
+
       use_until = now + datetime.timedelta(seconds=180)
       record = dict(id=lease, session_unit=unit, role='worker', repos=[module['REPOSITORY']],
                     issuer_invocation=issuer_id, session_id=session_id, state='issued',
@@ -41,7 +47,8 @@ class LabVmLeaseEvidenceTest < AceMonorepoE2eTestCase
                   return status
 
               kill = Mock(side_effect=lambda *_args, **_kwargs: path.write_text(json.dumps(final)))
-              probe.__globals__.update(LEASES=directory, subprocess=type('Systemctl', (), {'run': kill}),
+              probe.__globals__.update(LEASES=directory, datetime=FixtureDateTime,
+                  subprocess=type('Systemctl', (), {'run': kill}),
                   os=type('Root', (), {'geteuid': lambda: 0, 'path': os.path}),
                   populated=Mock(side_effect=[True, True, True, False] if mode == 'crash'
                                  else [True, True, False]),

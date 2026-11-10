@@ -17,8 +17,8 @@ steps:
       - "Acceptance: the required tests of every modified package pass; failed required tests block success (ace-assign fail), never a forced done."
   - name: verify-test
     instructions:
-      - "Run ace-test <package> all from the installed toolchain in installed mode, or bin/ace-test <package> all in checkout mode. Record the real test counts for every modified package in the task results file."
-      - "Acceptance: 0 failures across all modified packages."
+      - "Run the required checks from the worker workflow on the committed candidate with the selected runtime. Record the executed commands, results and exact HEAD in the task results file."
+      - "Acceptance: every required check has run and passed."
   - name: publish-pr
     instructions:
       - "For a forge issue, publish the tested branch and create or reconcile its non-draft PR against the commissioned base."
