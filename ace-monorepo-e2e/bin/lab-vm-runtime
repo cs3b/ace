@@ -135,6 +135,8 @@ begin
         pi --version
         test "$(command -v rg)" = /usr/bin/rg
         rg --version
+        test "$(command -v fdfind)" = /usr/bin/fdfind
+        fdfind --version
       SH
       code, output = LabVm.guest_exec(uuid, "/usr/sbin/runuser", "-u", "mo", "--", "/bin/sh", "-c", probe)
       puts output

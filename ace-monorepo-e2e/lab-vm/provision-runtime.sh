@@ -72,7 +72,7 @@ for archive, suite, key in [('debian', 'trixie', 'debian_release_sha256'),
 open('/var/lib/ace-e2e/debian-snapshot.list', 'w').writelines(lines)
 PY
 /bin/sh "$input/install-system-packages.sh" /var/lib/ace-e2e/debian-snapshot.list \
-  build-essential ca-certificates curl git libssl-dev zlib1g-dev \
+  build-essential ca-certificates curl fd-find git libssl-dev zlib1g-dev \
   libyaml-dev libreadline-dev libffi-dev libgdbm-dev libncurses-dev libgmp-dev \
   pkg-config ripgrep xz-utils musl-tools libnss-systemd
 # Isolated sessions rely on the same kernel restriction as ace-runtime's
