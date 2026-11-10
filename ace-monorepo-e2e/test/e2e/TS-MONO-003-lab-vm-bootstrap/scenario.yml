@@ -11,15 +11,14 @@ timeout: 21600
 tool-under-test: ace-overseer
 automation-candidate: false
 e2e-justification: >
-  Requires native ARM64 Herdr/Pi, isolated Linux systemd sessions, the real
-  scoped issuer and local Forgejo. Mocks cannot prove delegation, lifecycle,
+  Requires native ARM64 Herdr/Pi, separate worktrees and processes,
+  project-scoped credentials and local Forgejo. Mocks cannot prove delegation, lifecycle,
   independent review, ordered integration or absence of idle model turns.
 e2e-evidence-strength: command-output
 e2e-false-positive-risk: high
 unit-coverage-reviewed:
-  - ace-lab/test/fast/auth/issuer_install_integration_test.rb
-  - ace-lab/test/fast/auth/session_launcher_test.rb
-  - ace-herdr/test/fast/organisms/isolated_dispatcher_test.rb
+  - ace-lab/test/fast/auth/service_test.rb
+  - ace-herdr/test/fast/organisms/dispatcher_test.rb
   - ace-overseer/test/fast/organisms/event_observation_test.rb
 requires:
   tools: [ruby, git, ssh, scp]
@@ -44,4 +43,4 @@ sandbox-layout:
 setup:
   - run: |
       source_root="${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}"
-      "$source_root/ace-monorepo-e2e/bin/lab-vm-scenario-setup" fresh "$PWD/results/setup"
+      "$source_root/ace-monorepo-e2e/bin/lab-vm-scenario-setup" "${ACE_E2E_VM_SETUP:-repeat}" "$PWD/results/setup"

@@ -87,12 +87,12 @@ installed executable paths to check. If host convergence is required, record
 the missing capability and route it to the host operator.
 Do not require host D-Bus or systemd inspection, reading either overseer's
 private task tree, or a healthy full `ace-overseer observe` projection from a
-worker session. Those checks need the host or overseer role; private-tree
-masking is intentional.
-`ace-task doctor` from the canonical project root also enumerates the masked
-`.ace-tasks/_overseer` directory. Commission any task-store check for the
-worker or verifier in the execution worktree. The authorized project Overseer
-can audit the canonical task store after start. A worker reports
+worker session. Those checks belong to the host or overseer role. The private
+task tree is the coordinator's responsibility; ordinary same-user sessions do
+not promise operating-system isolation from it.
+Commission task-store checks for the worker or verifier in the execution
+worktree. The project Overseer can audit its canonical private task store
+after start. A worker reports
 missing authority and the exact blocked check instead of repairing host services
 or attempting to access the coordinator's private state. The coordinator proves
 full observation from the authorized project Overseer during confirm-start.
@@ -181,8 +181,8 @@ not identify which coordinator owns the report. The task specification, `--to`, 
 must agree; do not invent an address or append a machine suffix. If no valid
 recipient is configured, report a blocking gap before dispatch.
 
-The isolated bootstrap uses `reporting.delivery: observe`. The recipient is
-an address, not a writable directory in the executor's mount. Executors publish
+Bootstrap uses `reporting.delivery: observe`. The recipient is
+a report address, not permission to edit the coordinator's private tasks. Executors publish
 with `ace-coworker report` in their assignment worktree. Lab eyes observes that
 publication on the project side and the Lab Overseer accepts it. Neither
 commission may require the worker or verifier to find, touch, or write the
@@ -215,61 +215,18 @@ Only a separate, explicitly commissioned planner preparation allocation may
 accept an unassigned readiness report.
 The task must be present in the execution worktree before any agent starts.
 
-`ace-coworker start --config <returned-path>` validates and prints a brief;
-it does NOT launch an agent. In the isolated lab use public `ace-herdr dispatch`
-with `--cwd <returned-worktree>`, `--role worker` (or `verifier` for independent
-verification), `--label <assignment-id>` and `--prompt-file <commission-file>`.
-The host selects the installed runtime and standing role instructions. For
-each leg write a separate prompt file named for its assignment. Its first
-lines must name the bootstrap role, exact assignment ID and exact returned
-start-config path. Direct the executor to read that config with
-`ace-coworker start --config <path>`, read the brief's resolved role
-instructions before acting, drive that assignment and finish with
-`ace-coworker report --config <path>`. Keep the shared task commission
-as context referenced by the prompt. Before dispatch, verify the prompt,
-config, assignment label and host role all refer to the same leg, and that
-neither commission file requires a host deployment command. The bootstrap
-role allows changes to the commissioned canonical project configuration; ordinary product
-worker/reviewer roles stay within their task worktree.
+`ace-coworker start --config <returned-path>` validates and prints a brief.
+Launch the first prepared leg with `ace-overseer handoff --task <executable-task>
+--runtime herdr` from the target project. This operation starts the actual
+process in the returned worktree with the role's explicit environment and
+records its native identity on the existing commission. No prompt file,
+service setup or shell workaround is needed from the coordinator.
 
-Before dispatch, record the commission path on the private step and arm the
-startup deadline. Use `ace_eyes` action `deadline`, key
-`bootstrap-<assignment-id>`, revision `<assignment-id>` and
-`at=now_unix_ms + 300000`. Keep it armed if acknowledgement is uncertain.
-Allow the dispatch tool call up to 180 seconds. The dispatcher waits until the terminal can accept input, submits the
-commission once and returns the real terminal and normalized agent name.
-Record those returned identities on the matching private step. An existing
-name or uncertain acknowledgement means preserve and reconcile that session;
-never retry by inventing another name or using a plain shell start.
-
-If the deadline cannot be armed, report the observation blocker before
-dispatch. End the supervisor turn after recording the dispatch outcome. Do not use sleep,
-completion waits or polling. The already armed eyes observes assignment,
-report and session changes without additional model turns while unchanged.
-
-On wake, inspect the recorded terminal once with `herdr agent get <terminal>`.
-If dispatch did not return one, use `herdr agent list` to find the unique
-assignment-labelled session with the expected role and worktree. Record and
-use its full `term_…` ID. Pane indexes such as `p5` are display identifiers.
-Read the pinned assignment through its owner in the returned worktree.
-An active step or a step report for that exact assignment proves execution
-began. A busy terminal without progress on the pinned assignment is only
-evidence that Pi is running. Cancel the corresponding eyes deadline once
-confirmed. If the deadline fires and the session is idle with the pinned
-assignment untouched, verify the prompt/config binding. Allow a correction
-when that binding was wrong, or a recovery when delivery was uncertain and
-the session is interactive-ready with no completed turn. In either case,
-require that the private step has no earlier correction attempt. Record
-`prompt_correction=attempted` before sending the corrected or original
-leg-specific prompt with `herdr agent prompt <terminal> "<text>"`. The guarded
-route accepts the terminal and text only. Arm one
-new deadline `bootstrap-recovery-<assignment-id>` after confirmed delivery.
-Cancel it on activity of that assignment or a report. If it expires,
-delivery remains uncertain, or confirmed delivery produced no assignment
-activity, record the unconfirmed start and escalate through HITL.
-
-End the overseer's turn immediately after dispatch. The eyes timer observes
-assignment and HITL revisions without invoking the model on unchanged state.
+Record the returned terminal and assignment on the matching private step.
+End the turn with eyes armed. A repeated command reuses recorded work or
+reports an explicit blocker; an uncertain start must not be bypassed by
+another dispatch. Worker or observation failure is delegated/escalated,
+never repaired by the Lab Overseer.
 
 ## Receive, verify, start
 
@@ -292,21 +249,16 @@ the path returned by `ace-task show` supplement these fields, never replace them
 Read back the recorded identity before acknowledging the eyes revision.
 Never put a preparation readiness ID on a worker, verifier or confirm-start step.
 
-From the target project root, use `ace-overseer handoff --dry-run --task <task>` to read
-the existing role handoff gate and returned start configuration for the independent reviewer after
-worker completion. As with the worker, a printed start command is not a live
-agent: launch the reviewer separately with its own returned role/config, using
-a new verifier-only prompt file with the verifier assignment and verifier
-start config, plus its own first-turn deadline keyed to that assignment.
-The worker prompt and the shared task commission are invalid as verifier
-dispatch prompts. Do not launch a second
-executor while an earlier one is active or its state is unknown. On repeated delivery, reconcile existing
-assignments and agents instead of dispatching again.
+After accepting the worker's report, use `ace-overseer process-reports` to
+retire its recorded executor and continue the prepared sequence. Preserve
+the exact report and assignment identity before starting the verifier.
+Do not launch a second executor while a predecessor is active or unknown.
+Repeated reports reconcile the same commission; they do not repeat the work.
 
 Only after accepted worker completion and independent verification does the
 overseer perform this commission's project-start coordination operation `ace-overseer start --reconcile`. Confirm the target's session, first
-turn and active eyes through that command's authenticated readiness result.
-For the target project, `ready=true` proves the matching isolated session's
+turn and active eyes through that command's native-session readiness result.
+For the target project, `ready=true` proves the matching session's
 first turn and active eyes; a terminal's `done` or `interactive_ready` alone
 does not. Record the returned target identity and readiness on confirm-start.
 

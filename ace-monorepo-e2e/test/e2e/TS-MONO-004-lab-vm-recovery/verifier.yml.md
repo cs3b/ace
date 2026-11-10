@@ -1,5 +1,5 @@
 ---
-description: "Autonomous recovery and isolated lease lifecycle: verifier"
+description: "Autonomous recovery and scoped credential lifecycle: verifier"
 bundle:
   embed_document_source: true
   params:
@@ -12,7 +12,7 @@ bundle:
     - ./TC-004-lease-failures.verify.md
 ---
 
-# Autonomous recovery and isolated lease lifecycle
+# Autonomous recovery and scoped credential lifecycle
 
 Read `results/setup/fixture.json` for this exact VM/run and source path. The
 source's `ace-monorepo-e2e/lab-vm/README.md` documents host instrumentation.

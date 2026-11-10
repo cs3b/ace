@@ -174,6 +174,33 @@ it("unconfirmed host delivery persists a breaker across restart without automati
   await f.eyes.resume();assert.equal(f.sends.length,2,"only explicit owner resume can retry after reconciliation");
 });
 
+it("explicit reconciliation retries uncertain delivery in the same process",async()=>{
+  const f=fixture();f.rows=[event()];f.eyes.deliveryStatus=()=>"uncertain";
+  await f.eyes.tick();await f.eyes.tick();
+  assert.equal(f.saved.breaker.reason,"notification-unconfirmed");
+  for(let i=0;i<10;i++)await f.eyes.tick();
+  assert.equal(f.sends.length,1,"never retry without explicit reconciliation");
+  f.eyes.deliveryStatus=()=>"accepted";
+  await f.eyes.resume();await f.eyes.tick();
+  assert.equal(f.sends.length,2);
+  assert.equal(Object.keys(f.saved.pending).length,1);
+  await f.eyes.resume();await f.eyes.tick();
+  assert.equal(f.sends.length,2,"confirmed delivery remains suppressed without an ack");
+});
+
+it("reconciliation retries only the uncertain batch, retaining earlier confirmed suppression",async()=>{
+  const f=fixture();f.rows=[event()];await f.eyes.tick();
+  f.rows=[event(),event("c")];await f.eyes.tick();
+  assert.equal(f.sends.length,2);
+  f.eyes.deliveryStatus=()=>"uncertain";await f.eyes.tick();
+  assert.equal(f.saved.breaker.reason,"notification-unconfirmed");
+  f.eyes.deliveryStatus=()=>"accepted";
+  await f.eyes.resume();await f.eyes.tick();
+  assert.equal(f.sends.length,3);
+  assert.deepEqual(f.sends[2].map(([key])=>key),[event("c").key]);
+  assert.equal(Object.keys(f.saved.pending).length,2,"delivery does not acknowledge either revision");
+});
+
 // The real installed ARM64 lab needed 17 seconds to read two worktrees.
 it("uses a bounded observation timeout by default and validates overrides", async () => {
   const f = fixture();

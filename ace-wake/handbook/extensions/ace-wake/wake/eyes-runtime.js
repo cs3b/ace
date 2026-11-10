@@ -1,25 +1,38 @@
 import fs from "node:fs";
 import path from "node:path";
-import { execFile } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
 import { promisify } from "node:util";
 import { Eyes, EYES_ENTRY } from "./eyes.js";
 
 const execute = promisify(execFile);
 export const EYES_BINDING = "ace-wake-eyes-binding";
 
-// The existing Pi session owns eyes state. Attach the process birth identity
-// to that state so an old enabled snapshot cannot prove a restarted observer
-// is live. Other platforms remain unverified until they have an equivalent.
+// Birth identity is immutable for this process. Probe once at session binding,
+// never during observation polling. Darwin uses the same native libproc owner
+// as the Ruby readiness reader; second-resolution ps timestamps are insufficient.
+let ownIdentity;
 export function eyesProcessIdentity() {
-  if (process.platform !== "linux") return null;
+  if (ownIdentity === undefined) ownIdentity = readEyesProcessIdentity();
+  return ownIdentity;
+}
+
+export function readEyesProcessIdentity({ platform = process.platform, pid = process.pid,
+  readFile = fs.readFileSync, run = execFileSync } = {}) {
   try {
-    const stat = fs.readFileSync(`/proc/${process.pid}/stat`, "utf8");
+    if (platform === "darwin") {
+      const birth = run("ruby", ["-r", "ace/runtime/molecules/process_identity", "-e",
+        "print Ace::Runtime::Molecules::ProcessIdentity.new.native_birth(Integer(ARGV.fetch(0)))", String(pid)],
+        { encoding: "utf8", timeout: 2000, killSignal: "SIGKILL", maxBuffer: 1024, stdio: ["ignore", "pipe", "pipe"] }).trim();
+      return /^darwin:[1-9][0-9]*:[0-9]{1,6}$/.test(birth) ? { pid, startedAt: birth } : null;
+    }
+    if (platform !== "linux") return null;
+    const stat = readFile(`/proc/${pid}/stat`, "utf8");
     const end = stat.lastIndexOf(") ");
     if (end < 0) return null;
     const ticks = stat.slice(end + 2).trim().split(/\s+/)[19];
-    const boot = fs.readFileSync("/proc/sys/kernel/random/boot_id", "utf8").trim();
+    const boot = readFile("/proc/sys/kernel/random/boot_id", "utf8").trim();
     if (!/^[1-9][0-9]*$/.test(ticks) || !/^[0-9a-f-]{36}$/.test(boot)) return null;
-    return { pid: process.pid, startedAt: `linux:${boot}:${ticks}` };
+    return { pid, startedAt: `linux:${boot}:${ticks}` };
   } catch { return null; }
 }
 

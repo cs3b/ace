@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **Simple delegated sessions (8y0.t.x27):** prepare ACE workers as worktrees and ordinary Herdr processes with explicit installed environments and project credentials. Real executor bindings, observation-driven report acceptance, independent review and exact-HEAD integration share the existing state owners. Remove the experimental system issuer and mount isolation requirement. Prepare 19 coordinated packages plus native Herdr; local deterministic verification and artifact rehearsal are distinct from the still-open UTM autonomy acceptance. TS-MONO-003/004 retain local Forgejo and can repeat fixtures without reinstalling the OS.
+
 ### Added
 - **Delegated lab bootstrap:** `ace-overseer v0.28.0` preserves installed runtime, stable session ownership and eyes-compatible observation; `ace-coworker v0.8.0` adds scoped bootstrap worker/verifier roles; `ace-wake v0.2.0` lets the agent arm observation without an interactive slash command. Live lab acceptance remains a separate required gate.
 

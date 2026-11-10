@@ -16,7 +16,7 @@ module Molecules
       :url, :path, :line, :head_sha, :resolved, :thread_id)
     Evidence = Data.define(:server_name, :repository_url, :pr_number, :head_sha,
       :comments, :reviews)
-    Issue = Data.define(:server_name, :number, :title, :state, :author, :url, :labels)
+    Issue = Ace::Git::ProviderIssue
 
     class FakeProvider
       def initialize(pr:, evidence: nil)
@@ -153,6 +153,10 @@ module Molecules
       original = observer.call(pull_requests: [], issues: config)
       provider.define_singleton_method(:recent_issues) { |limit:| [b, a.with(labels: ["a", "b"])] }
       assert_equal original, observer.call(pull_requests: [], issues: config)
+      provider.define_singleton_method(:recent_issues) { |limit:| [a.with(body: "Depends on #2"), b] }
+      refute_equal original, observer.call(pull_requests: [], issues: config)
+      provider.define_singleton_method(:recent_issues) { |limit:| [a.with(labels: ["blocked"]), b] }
+      refute_equal original, observer.call(pull_requests: [], issues: config)
       provider.define_singleton_method(:recent_issues) { |limit:| [b] }
       changed = observer.call(pull_requests: [], issues: config)
       refute_equal original["events"].first["revision"], changed["events"].first["revision"]

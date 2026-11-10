@@ -18,13 +18,7 @@ module Ace
         module_function
 
         def arguments(env: ENV, manifest: MANIFEST, manifest_dir: MANIFEST_DIR, platform: RUBY_PLATFORM)
-          if env["ACE_LAB_SESSION"] == "1" && (env["ACE_TOOLCHAIN"] != "installed" || !platform.include?("linux"))
-            raise ExecutorUnavailableError, "isolated lab sessions require the installed Linux runtime"
-          end
           return [] unless env["ACE_TOOLCHAIN"] == "installed" && platform.include?("linux")
-          if env["ACE_LAB_SESSION"] == "1" && !File.exist?(manifest_dir) && !File.symlink?(manifest_dir)
-            raise ExecutorUnavailableError, "isolated lab session requires the protected install manifest"
-          end
           return [] unless File.exist?(manifest_dir) || File.symlink?(manifest_dir)
 
           guard = Ace::Runtime::Molecules::ProtectedSocket

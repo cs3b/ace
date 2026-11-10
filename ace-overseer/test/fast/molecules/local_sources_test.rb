@@ -55,19 +55,19 @@ module Molecules
       )
     end
 
-    def test_isolated_executor_disappearance_revises_the_worktree_without_assignment_change
+    def test_native_executor_disappearance_revises_the_worktree_without_assignment_change
       worktree = Worktree.new("/lab/ace/.ace-wt/task-1", "work", false)
       worker = {"terminal_id" => "term_123abc", "cwd" => worktree.path,
-        "isolated_session" => {"role" => "worker", "project" => "ace"}, "agent_status" => "working"}
+        "name" => "coworker-job-7", "agent_status" => "working"}
       agents = [worker, worker.merge("terminal_id" => "term_456def", "cwd" => "/lab/other")]
       response = Struct.new(:parsed_json).new({"result" => {"agents" => agents}})
       herdr = Object.new
       herdr.define_singleton_method(:agent_list) { response }
-      observer = sources(worktrees: [worktree], herdr: herdr, env: {"ACE_LAB_SESSION" => "1"})
+      observer = sources(worktrees: [worktree], herdr: herdr, env: {"ACE_RUNTIME" => "herdr"})
       executor = -> { observer.call.fetch("events").find { |row| row["type"] == "executor" } }
 
       running = executor.call
-      assert_equal [{"terminal" => "term_123abc", "role" => "worker"}], running.fetch("sessions")
+      assert_equal [{"terminal" => "term_123abc", "agent" => "coworker-job-7"}], running.fetch("sessions")
       worker["agent_status"] = "done"
       assert_equal running, executor.call, "transient turn status is not executor disappearance"
 
@@ -90,7 +90,7 @@ module Molecules
       assignments = [{"id" => "job-7", "state" => "paused"}]
       probe = FakeProbe.new({config: nil, assignments: assignments})
       observer = sources(tasks: {"_overseer" => [manager]}, worktrees: [worktree],
-        herdr: herdr, probe: probe, env: {"ACE_LAB_SESSION" => "1"})
+        herdr: herdr, probe: probe, env: {"ACE_RUNTIME" => "herdr"})
       executor = -> { observer.call.fetch("events").find { |row| row["type"] == "executor" } }
 
       before = executor.call
@@ -106,12 +106,12 @@ module Molecules
       assert_empty executor.call.fetch("missing_sessions")
     end
 
-    def test_unavailable_isolated_inventory_degrades_instead_of_reporting_all_executors_absent
+    def test_unavailable_native_inventory_degrades_instead_of_reporting_all_executors_absent
       worktree = Worktree.new("/lab/ace/.ace-wt/task-1", "work", false)
       response = Struct.new(:parsed_json).new({"error" => {"code" => "server_not_running"}})
       herdr = Object.new
       herdr.define_singleton_method(:agent_list) { response }
-      result = sources(worktrees: [worktree], herdr: herdr, env: {"ACE_LAB_SESSION" => "1"}).call
+      result = sources(worktrees: [worktree], herdr: herdr, env: {"ACE_RUNTIME" => "herdr"}).call
 
       assert_equal "degraded", result.dig("sources", "coworkers", "status")
       refute result.fetch("events").any? { |row| row["type"] == "executor" }

@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Rebuild a test-only operational artifact from an immutable source commit.
+# Rebuild an operational candidate artifact from an immutable source commit.
 # Manifest hashes were recorded with Ruby 3.4.8 and RubyGems 3.6.9; a
 # different packaging toolchain must reproduce those bytes or be refused.
 require "fileutils"
@@ -21,10 +21,11 @@ begin
   raise "usage: lab-vm-build-gem PACKAGE FULL_COMMIT VERSION" unless ARGV.length == 3
   package, commit, version = ARGV
   namespace = {"ace-support-config" => "support/config", "ace-assign" => "assign", "ace-support-items" => "support/items", "ace-git" => "git", "ace-git-worktree" => "git/worktree", "ace-hitl" => "hitl", "ace-task" => "task", "ace-runtime" => "runtime", "ace-test-runner" => "test_runner", "ace-coworker" => "coworker", "ace-wake" => "wake", "ace-lab" => "lab", "ace-herdr" => "herdr", "ace-git-forgejo" => "git/forgejo",
+    "ace-llm-providers-cli" => "llm/providers/cli", "ace-test-runner-e2e" => "test/end_to_end_runner",
     "ace-overseer" => "overseer", "ace-handbook-integration-pi" => "handbook/integration/pi", "ace-review" => "review"}
     .fetch(package) { raise "unsupported local gem" }
   raise "full commit SHA required" unless commit.match?(/\A[0-9a-f]{40}\z/)
-  raise "invalid test version" unless version.match?(/\A[0-9]+(?:\.[a-zA-Z0-9]+)+\z/)
+  raise "invalid artifact version" unless version.match?(/\A[0-9]+(?:\.[a-zA-Z0-9]+)+\z/)
   actual = checked("git", "rev-parse", "#{commit}^{commit}", chdir: LabVm::ROOT)
   raise "source commit mismatch" unless actual == commit
   epoch = checked("git", "show", "-s", "--format=%ct", commit, chdir: LabVm::ROOT)
@@ -44,7 +45,7 @@ begin
     version_file = File.join(source, "lib/ace/#{namespace}/version.rb")
     original = File.read(version_file)
     updated = original.sub(/VERSION = "[^"]+"/, "VERSION = \"#{version}\"")
-    raise "version declaration not found" if updated == original
+    raise "expected one version declaration" unless original.scan(/^\s*VERSION = "[^"]+"$/).size == 1
     File.write(version_file, updated)
     gemspec = File.join(source, "#{package}.gemspec")
     original = File.read(gemspec)

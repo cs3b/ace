@@ -40,6 +40,7 @@ export class Eyes {
     // same pending revisions; business-effect idempotence remains with .5.4.
     this.inflight = false;
     this.sent = new Map();
+    this.lastDelivery = new Map();
     this.generation = 0;
   }
   persist() { this.save(structuredClone(this.s)); this.status(this.summary()); }
@@ -78,6 +79,14 @@ export class Eyes {
     this.validate(result);
     this.onObserved(result);
     this.s.observationUnavailable = false;
+    // Explicit reconciliation permits retrying an unconfirmed notification.
+    // Keep confirmed deliveries suppressed until their exact revision is acked.
+    if (this.s.breaker?.reason === "notification-unconfirmed") {
+      for (const [key, revision] of this.lastDelivery) {
+        if (this.sent.get(key) === revision) this.sent.delete(key);
+      }
+      this.lastDelivery.clear();
+    }
     this.s.breaker = null; this.s.errors = 0; this.s.window = null; this.inflight = false;
     this.s.enabled = true; this.persist();
     await this.tick();
@@ -200,8 +209,12 @@ export class Eyes {
         try { delivered = await this.deliver(batch); } finally { this.delivering = false; }
         if (generation !== this.generation || this.disposed) return;
         if (!delivered) throw new Error("wake delivery refused");
+        this.lastDelivery = new Map();
         for (const [key, value] of batch) {
-          if (this.s.pending[key]?.revision === value.revision) this.sent.set(key, value.revision);
+          if (this.s.pending[key]?.revision === value.revision) {
+            this.sent.set(key, value.revision);
+            this.lastDelivery.set(key, value.revision);
+          }
         }
         this.inflight = this.sent.size > 0;
       }

@@ -82,16 +82,13 @@ assignment with an open publication step cannot produce a success report.
      forge selection `--server NAME` or `--default-server` (mutually
      exclusive) - never infer a forge from a hostname or the caller's
      identity.
-   - In an isolated lab session, use the **local diff range** for review. Use
-     short, separately leased Forgejo operations to read the PR metadata and
-     diff and fetch its base and source refs. Supply one argument per repeated
-     `--cmd` option to `ace-lab auth exec`, for example
-     `--cmd git --cmd fetch --cmd origin --cmd <ref>`. Each lease authorizes
-     one execution. Keep `ace-review`, provider calls, local analysis and
-     tests in the normal installed reviewer session, outside `auth exec`.
-     This preserves the session's configured provider and avoids tying model
-     execution to the forge lease TTL. Publish the approval with a fresh
-     reviewer lease after verifying the tested candidate.
+   - Use the session's configured project-scoped credentials for forge reads,
+     fetches and approval. When the deployment uses temporary grants, obtain
+     a grant through its configured adapter and use `ace-lab auth exec` for
+     the individual forge operation (one argument per repeated `--cmd`).
+     Keep review, model calls and tests in the ordinary installed session;
+     they do not need a forge grant. A static project token needs no lease
+     service and must not be revoked after each operation.
    - Run the task's required checks from the assignment worktree on the
      candidate you will approve. Confirm the scope against the issue and
      project requirements, and record the executed commands and results.
@@ -100,9 +97,8 @@ assignment with an open publication step cannot produce a success report.
      A checkout binstub or Gemfile alone does not require `bundle install`.
      If a required installed test tool is missing, report the readiness failure.
      In ACE development mode use the checkout's `bin/ace-test`.
-   - For a commissioned PR, review the **full forge PR delta**. Outside the
-     isolated lab, prefer its typed PR reference. If using a local diff
-     range, first resolve the actual
+   - For a commissioned PR, review the **full forge PR delta**. Prefer its
+     typed PR reference. If using a local diff range, first resolve the actual
      target branch and candidate HEAD from the configured forge, fetch those
      exact refs through your granted access, and compute their merge-base.
      Record the full base and head SHAs and compare the selected files with the
@@ -166,15 +162,14 @@ assignment with an open publication step cannot produce a success report.
 6. **Return to full review.**
    - For a forge PR, publish scoped fix commits to the existing PR source
      branch before the next full round. Use the reviewer session's own
-     authorized lease. Read the current PR source repository, branch and
+     project-scoped credentials. Read the current PR source repository, branch and
      HEAD from the forge. Proceed only if that HEAD is the last known PR
      revision and the update is a fast-forward. Push the exact candidate
      to that branch without force and re-read the PR to verify its HEAD.
      An unexpected remote change or denied push blocks this handoff.
    - Run a FULL round over the whole current candidate with the retained
-     forge selection and the verified forge base and HEAD. In the isolated
-     lab, repeat the lease-scoped forge reads followed by local diff review.
-     Recompute the
+     forge selection and the verified forge base and HEAD. Re-read the forge
+     through the configured project access and recompute the
      merge-base if either changes. A fix-only diff or scoped delta is
      separate from a full round. A committed task edit also changes the
      candidate and requires renewed review and test evidence.

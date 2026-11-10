@@ -66,7 +66,7 @@ def evidence(records, goal, now):
         raise ValueError("bootstrap timestamps are out of order")
     status = "within_limit" if elapsed is not None and elapsed <= LIMIT_SECONDS else (
         "expired" if (now - delivered).total_seconds() > LIMIT_SECONDS else "waiting")
-    return {"goal_delivered_at": delivered.isoformat(), "authenticated_ready_at": ready.isoformat() if ready else None,
+    return {"goal_delivered_at": delivered.isoformat(), "session_ready_at": ready.isoformat() if ready else None,
             "elapsed_seconds": elapsed, "limit_seconds": LIMIT_SECONDS, "status": status, "project_terminal": terminal}
 
 

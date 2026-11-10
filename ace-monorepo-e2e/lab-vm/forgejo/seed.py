@@ -28,6 +28,10 @@ owner = (TOKENS / 'e2e-integrator.token').read_text().strip()
 assert admin and owner
 api('POST', '/admin/users/e2e-integrator/repos', admin,
     {'name': REPO, 'private': True, 'auto_init': False, 'default_branch': 'main'})
+# Same owner: a broad integrator credential could read this private repo,
+# while a token restricted to ace must be rejected by Forgejo.
+api('POST', '/admin/users/e2e-integrator/repos', admin,
+    {'name': 'unrelated', 'private': True, 'auto_init': True, 'default_branch': 'main'})
 for account in ('e2e-reviewer', 'e2e-worker'):
     api('PUT', f'/repos/{OWNER}/{REPO}/collaborators/{account}', owner, {'permission': 'write'})
 # The credential file is temporary, readable only by the seeding account and is

@@ -3,8 +3,8 @@ doc-type: bundle
 title: Lab State Owners and Local Flow
 purpose: Canonical state ownership map and executable local flow for the ACE lab
 ace-docs:
-  last-updated: '2026-11-02'
-  last-checked: '2026-11-02'
+  last-updated: '2026-11-10'
+  last-checked: '2026-11-10'
 ---
 
 # Lab State Owners and Local Flow
@@ -30,6 +30,17 @@ session through existing access mechanisms, never permanent broad project
 ownership or shared-group grants. Preserve private file modes during ownership
 changes; published runtime and system configuration stay root-owned.
 
+An executor is an ordinary process in its assigned worktree with explicitly
+selected environment variables. Herdr starts it from a private environment
+file; credentials never appear in terminal command text or prompts. The role
+uses the configured project's token or an existing adapter's temporary grant.
+Static project credentials are not revoked at every session exit. Temporary
+grants are reconciled through the existing `ace-lab auth` owner. A system
+issuer service, DynamicUser and mount namespaces are not launch prerequisites.
+Trusted processes under the same user are not isolated from each other by this
+contract. The private overseer tree is a role responsibility, not such an OS
+security boundary.
+
 ## One Write Location Per Information
 
 | Information | Write location | Owner |
@@ -39,12 +50,12 @@ changes; published runtime and system configuration stay root-owned.
 | Project overseer observation configuration | `<project>/.ace-local/overseer/eyes.json` | the commissioned bootstrap worker prepares it; an independent verifier checks it and the project overseer reads and arms it |
 | Assignment execution plan and step reports | `.ace-local/assign/` | `ace-assign`; steps are not copied into another queue or config |
 | Coworker run configuration (L3) | `.ace-local/coworker/` | reserved in L3: role, instruction source, start prompt, task, assignment reference, overseer address, reporting and error rules |
-| Per-role executor start configs (L4.3) | `.ace-local/coworker/prepare/<role>.yml` in the task worktree | `ace-coworker` (the planner, via `ace-coworker prepare`); one leg config per planned sequence role, written through the `commission` primitive so `start --config` accepts it; `commission` stays the single writer of the default `config.yml` target |
+| Per-role executor start configs (L4.3) | `.ace-local/coworker/prepare/<role>.yml` in the task worktree | `ace-coworker` (the planner, via `ace-coworker prepare`); one leg config per planned sequence role, written through the `commission` primitive so `start --config` accepts it; the same document's `execution` field retains the native agent/pane/session binding and cleanup state, updated under its existing owner lock; no separate session registry |
 | Review-round history per reviewer assignment | `.ace-local/coworker/review-rounds/` | `ace-coworker` (the coworker reviewer role, via `ace-coworker rounds record`); the 3/2/10 convergence evidence — one JSON file per assignment |
 | HITL agent events | `.ace-local/hitl/` | `ace-hitl`; a report needs no answer, a question is answered on the exact case |
 | Project task worktree | `.ace-wt/<task>/` | `ace-git-worktree`; one worktree per project task |
 | Trusted-tier principal grants (deployment document) | `/etc/lab/ace-lab/authorization.yml` `principals` mapping (root-owned, outside the caller-writable cascade) | `ace-lab install` (L8.3), converged from the trusted install manifest; grants only grow, every other section of the document is preserved |
-| Short-lived role-access leases and the auth profile declarations (same trusted document's `auth:` section) | `/var/lib/lab/ace-lab/auth/leases/<id>.json` (minimal lease record: correlation, token REFERENCE, deadlines, cleanup outcome — never secrets, never task progress) | `ace-lab auth` (8xs.t.pu0.7); the ephemeral credential handoff lives under `/run/lab/credentials/` per lease+recipient and carries references, never values |
+| Short-lived role-access leases and the auth profile declarations (same trusted document's `auth:` section) | `/var/lib/lab/ace-lab/auth/leases/<id>.json` (minimal lease record: correlation, token REFERENCE, deadlines, cleanup outcome — never secrets, never task progress) | `ace-lab auth` (8xs.t.pu0.7); the local service runs as the configured executor account with configured writable record/handoff paths (the shown paths are defaults), never as a required daemon; a private temporary credential file may contain a token, but lease records retain only references |
 | Lab topology / project registry (per project) | `<project>/.ace/lab/config.yml` (project tier of the lab-config cascade, committed) | `ace-lab`, via `ace-lab project add` (also driven by `ace-lab install`); the same document every consumer already reads (`ace-lab status`, `ace-lab projects`, `ace-overseer projects`) — no second registry |
 
 Task progress that must survive between turns is written inside that task's own
@@ -115,8 +126,18 @@ does not contain the named task, the executor reports the missing task.
 8. **Ship** — commit with `ace-git-commit`, then open a PR with `ace-git pr create` (a private `_overseer` task is never committed because the folder is gitignored).
 9. **Close** — mark the project task done with `ace-task update <ref> --set status=done` (archive when the family is terminal).
 
-`ace-overseer work-on` / `status` / `prune` is local convenience over the same
-files: it does not introduce another state owner.
+For native Herdr delegation, `ace-overseer work-on --task <project-task>
+--runtime herdr` joins worktree preparation, role assignment, brief validation
+and a real executor start. `ace-coworker start` alone only renders the brief.
+The overseer records returned identifiers on its private coordination step
+and ends the turn. `process-reports` records acceptance before retiring the
+executor and handing off to the next role. Replayed reports reconcile cleanup
+and continuation without launching duplicate work. Readiness requires the
+coordinator's completed first turn and active eyes, so both lab and project
+first turns arm observation and settle before dispatch.
+
+These operations and `status` / `prune` use the same files; they do not
+introduce another state owner.
 
 ## Planned Waves L2-L10 (not available yet)
 
@@ -130,7 +151,7 @@ queue.
 | L3 | `ace-coworker` starts from prepared config, drives its assignment, reports, and resumes | Planned |
 | L4 | Planner accepts work, provides the worktree, and prepares the assignment sequence | Partially shipped — `ace-coworker prepare` (L4.1) ensures the worktree, composes the whole role-sequence assignments (L4.2), writes per-role start configs (L4.3), and reports readiness/gaps to the overseer via ace-hitl (L4.4) |
 | L5 | Worker/reviewer/integrator/spec roles and unambiguous completion rules (3-10 review rounds) | Shipped — worker/spec/reviewer/integrator role presets; the deterministic 3/2/10 round rule (`ace-coworker rounds record`) and the pre-merge integration gate (`ace-coworker gate`) enforce the completion rules |
-| L6 | Private overseer queue: execute unblocked steps, hand off the worktree, process reports | Partially shipped — `ace-overseer work-on` (L6.3) starts only unblocked steps, `ace-overseer handoff` (L6.4) passes the worktree to the next role, and `ace-overseer process-reports` (L6.5) interprets incoming ace-hitl reports and continues the queue; automatic queue wakeup and closing the managing task remain with the overseer role |
+| L6 | Private overseer queue: execute unblocked steps, hand off the worktree, process reports | Partially shipped — `ace-overseer work-on` (L6.3) starts only unblocked steps, `ace-overseer handoff` (L6.4) passes the worktree to the next role, and `ace-overseer process-reports` (L6.5) interprets incoming ace-hitl reports and continues the queue; configured eyes wakes the role on semantic changes; closing the managing task remains with the overseer role |
 | L7 | Overseer status plus pi continuation for already-delegated work | Shipped — `ace-overseer status` aggregates configurable sources (L7.2: worktrees, forge PRs, project/`_overseer` tasks, Herdr, coworker progress) and opens with a derived attention section (L7.4) that separates blockers (unsatisfied dependencies with reasons), failures (source errors, failed/stalled assignments, pending ace-hitl escalations) and missing data (disabled sources, unknown states) from healthy progress; the pi `/continue-work` resume prompt with report-wake wiring continues commissioned work after a message or restart (L7.3) |
 | L8 | Installer and `project add`: prepare accounts, directories, permissions, keys, and a ready project | Partially shipped — `ace-lab prepare` (L8.1) converges accounts, directories, keys, and roles from the trusted install manifest; `ace-lab project add` (L8.2) clones/verifies the project repository, prepares the private `_overseer` folder, and registers the project in its `.ace/lab/config.yml` so status and the overseer/planner chain see it; `ace-lab install` (L8.3) composes prepare and project add from the trusted manifest and converges the trusted-tier principal grants that make the installed projects visible, refusing a ready/foreign lab before any mutation; dedicated interrupted-install resume and target-account readiness verification remain planned |
 | L9 | Full-flow and failure acceptance scenarios on one candidate | Planned |
@@ -138,5 +159,7 @@ queue.
 
 `_overseer` can already be used as a private task list, and the L6.3-L6.5
 gates (`work-on`, `handoff`, `process-reports`) execute the private queue on
-demand; the queue is not yet woken automatically and the managing task is
-closed by the overseer role, not by the tooling.
+demand. Configured eyes wakes the role on changed observations; the managing
+task is closed by that role after verified completion, not by polling or a
+second queue engine. Local component checks do not establish full autonomous
+UTM acceptance; that remains a separate recorded end-to-end result.

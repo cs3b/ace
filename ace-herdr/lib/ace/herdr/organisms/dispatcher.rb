@@ -3,7 +3,6 @@
 require "shellwords"
 require "ace/support/cli/toolchain"
 require "ace/hitl/contract"
-require_relative "isolated_dispatcher"
 
 module Ace
   module Herdr
@@ -42,31 +41,26 @@ module Ace
         # @return [Models::DispatchOutcome]
         # @raise [TargetResolutionError] workspace/pane cannot be resolved
         # @raise [ExecutorError] herdr command failures
-        def dispatch(label:, prompt:, kind: nil, workspace_id: nil, pane: nil, cwd: nil, role: nil)
+        def dispatch(label:, prompt:, kind: nil, workspace_id: nil, pane: nil, cwd: nil, role: nil, env_file: nil, args: [])
           kind ||= @default_agent_kind
           tab_created = false
 
           workspace_id = resolve_workspace(workspace_id)
           validate_token!(workspace_id, "workspace")
-          if ENV["ACE_LAB_SESSION"] == "1"
-            return IsolatedDispatcher.new(executor: @executor).dispatch(label: label, prompt: prompt,
-              kind: kind, workspace_id: workspace_id, pane: pane, cwd: cwd, role: role || "worker")
-          end
-          raise ValidationError, "--role requires an isolated lab session" if role
           unless pane
             pane = create_tab(workspace_id, label, cwd)
             tab_created = true
           end
           validate_token!(pane, "pane")
 
-          @executor.pane_run(
-            pane,
-            Ace::Support::Cli::Toolchain.shell_setup + "export HERDR_SESSION=#{Shellwords.escape(workspace_id)} " \
-            "HERDR_PANE=#{Shellwords.escape(pane)}"
-          )
-          @executor.agent_start(
-            name: label, kind: kind, pane: pane, timeout_ms: @agent_start_timeout_ms
-          )
+          unless env_file
+            @executor.pane_run(pane, Ace::Support::Cli::Toolchain.shell_setup +
+              "export HERDR_SESSION=#{Shellwords.escape(workspace_id)} HERDR_PANE=#{Shellwords.escape(pane)}")
+          end
+          options = {name: label, kind: kind, pane: pane, timeout_ms: @agent_start_timeout_ms}
+          options[:env_file] = env_file if env_file
+          options[:args] = args unless args.empty?
+          @executor.agent_start(**options)
 
           prompted = false
           unless prompt.empty?

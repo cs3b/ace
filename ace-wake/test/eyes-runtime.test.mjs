@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { createFakeHost } from "./fake-pi-host.mjs";
 import { startSession } from "./session-harness.mjs";
-import { observeHitl } from "../handbook/extensions/ace-wake/wake/eyes-runtime.js";
+import { observeHitl, eyesProcessIdentity, readEyesProcessIdentity } from "../handbook/extensions/ace-wake/wake/eyes-runtime.js";
 const key="a".repeat(64), revision="b".repeat(64);
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 it("clears stale readiness during acquisition failure and recovers on the scheduled read", async () => {
@@ -470,4 +470,41 @@ it("runtime delivers a local deadline without spending an exhausted observation 
     assert.match(host.sends[0].text,/deadline:startup/);
     assert.equal(host.intervals.size,1);
   } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
+});
+
+
+it("reads Linux exact boot/ticks without invoking Ruby", () => {
+  const boot = "01234567-89ab-cdef-0123-456789abcdef";
+  const fields = ["S", ...Array(18).fill("0"), "12345"];
+  const identity = readEyesProcessIdentity({platform: "linux", pid: 42,
+    readFile: file => file.endsWith("stat") ? `42 (name with ) parenthesis) ${fields.join(" ")}\n` : boot,
+    run: () => { throw new Error("Linux must not spawn"); }});
+  assert.deepEqual(identity, {pid: 42, startedAt: `linux:${boot}:12345`});
+});
+
+it("reads Darwin microsecond birth through the bounded installed Ruby owner", () => {
+  let observed;
+  const identity = readEyesProcessIdentity({platform: "darwin", pid: 42,
+    run: (...args) => { observed = args; return "darwin:1794000000:123456"; }});
+  assert.deepEqual(identity, {pid: 42, startedAt: "darwin:1794000000:123456"});
+  assert.equal(observed[0], "ruby");
+  assert.equal(observed[1][1], "ace/runtime/molecules/process_identity");
+  assert.equal(observed[1].at(-1), "42");
+  assert.equal(observed[2].timeout, 2000);
+  assert.equal(observed[2].killSignal, "SIGKILL");
+});
+
+it("leaves Darwin evidence unverified if Ruby/runtime is unavailable or birth invalid", () => {
+  for (const run of [() => { throw new Error("runtime missing"); }, () => "", () => "darwin:1:1000000", () => "linux:wrong:42"]) {
+    assert.equal(readEyesProcessIdentity({platform: "darwin", pid: 42, run}), null);
+  }
+  assert.equal(readEyesProcessIdentity({platform: "unknown", pid: 42}), null);
+});
+
+it("binds the real local process once with exact native birth", () => {
+  if (!["linux", "darwin"].includes(process.platform)) return;
+  const identity = eyesProcessIdentity();
+  assert.equal(identity?.pid, process.pid);
+  assert.match(identity.startedAt, /^(linux:[0-9a-f-]{36}:[1-9][0-9]*|darwin:[1-9][0-9]*:[0-9]{1,6})$/);
+  assert.strictEqual(eyesProcessIdentity(), identity);
 });

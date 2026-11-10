@@ -368,10 +368,10 @@
   "herdr": {
     "rust_version": "1.96.1",
     "target": "aarch64-unknown-linux-musl",
-    "selection_sha256": "108bf67cec09a9458b338ecc24fbe64e5ea7eaef9df01e6900e667b9d34e5bc5",
+    "selection_sha256": "3ccd76b253a5b8698cfa756534785dbb969a5ededc92289c461755fac0de65f7",
     "baseline_commit": "7b116c05bfda646af39d2524c54e70c751f57ee8",
-    "artifact_sha256": "6943769804c704fd21f9a942e50f8f1772f70b8aaef839fd8f614044f01ce253",
-    "provenance_sha256": "c7d7a20957556fcb3aca7224ac0f748615c99d1bc515379381b496e368abb5f0"
+    "artifact_sha256": "0ee169b8ec16b4678fd2e1c2b0ee0ff2fb2aca5396419787758884972c82acf6",
+    "provenance_sha256": "9c6ba420622d5db68f26b79a1e94d2cc5b7160c1294f442c7bb2de9556e6453c"
   },
   "pi": {
     "package": "@earendil-works/pi-coding-agent",

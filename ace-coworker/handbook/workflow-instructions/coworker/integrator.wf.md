@@ -194,5 +194,5 @@ less is an error outcome with the cause named.
   Integration decisions persist in the assignment's existing report state
   (ReportStateStore / `<task>/coworker/<assignment>.md` record); no new
   artifact kind is introduced.
-- Inside the ACE repository itself, invoke every tool as `bin/ace-*` (the
-  binstubs pin the checkout's bundle).
+- In ACE development mode, use `bin/ace-*`. With `ACE_TOOLCHAIN=installed`,
+  use installed commands and packaged instructions even inside an ACE checkout.

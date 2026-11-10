@@ -10,13 +10,14 @@ module Ace
       class EyesEvidence
         ENTRY = "ace-wake-eyes"
         BINDING = "ace-wake-eyes-binding"
+        BIRTH = /\A(?:linux:[0-9a-f-]{36}:[1-9][0-9]*|darwin:[1-9][0-9]*:[0-9]{1,6})\z/
 
         def self.ready?(branch:, root:, process:, prompt:, required_sources:, now_ms:)
           return false unless branch.is_a?(Array) && root.is_a?(String) && process.is_a?(Hash) &&
             prompt.is_a?(String) && !prompt.empty? && required_sources.is_a?(Array) &&
             !required_sources.empty? && required_sources.all? { |name| name.is_a?(String) && !name.empty? } &&
             process["pid"].is_a?(Integer) && process["pid"].positive? && process["started_at"].is_a?(String) &&
-            process["started_at"].match?(/\Alinux:[0-9a-f-]{36}:[1-9][0-9]*\z/) && now_ms.is_a?(Integer)
+            process["started_at"].match?(BIRTH) && now_ms.is_a?(Integer)
           eye_index = branch.rindex { |entry| entry.is_a?(Hash) && entry["type"] == "custom" && entry["customType"] == ENTRY }
           return false unless eye_index
 
@@ -55,7 +56,7 @@ module Ace
             prior_identity = entry.is_a?(Hash) && entry.dig("data", "observerEvidence", "process")
             prior_binding = prior_identity.is_a?(Hash) && prior_identity["pid"].is_a?(Integer) &&
               prior_identity["pid"].positive? && prior_identity["startedAt"].is_a?(String) &&
-              prior_identity["startedAt"].match?(/\Alinux:[0-9a-f-]{36}:[1-9][0-9]*\z/) && known_bindings[prior_identity]
+              prior_identity["startedAt"].match?(BIRTH) && known_bindings[prior_identity]
             if complete && prior_binding && snapshot_healthy?(entry, root: root, identity: prior_identity,
                 required_sources: required_sources, now_ms: now_ms, prompt_at: prompt_at, fresh: false)
               # The current binding was found in the prefix before the last

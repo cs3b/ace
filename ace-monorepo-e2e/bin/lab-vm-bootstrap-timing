@@ -29,9 +29,10 @@ def main(run):
     agent = json.loads(guest("mo", run, "herdr", "agent", "get", terminal))["result"]["agent"]
     session = agent["agent_session"]
     if (agent["terminal_id"] != terminal or agent["cwd"] != "/lab"
-            or agent["isolated_session"] != {"project": "lab", "role": "lab-overseer"}
+            or session != receipt["agent_session"]
             or session["agent"] != "pi" or session["kind"] != "path"
-            or not re.fullmatch(r"/run/ace-auth-[0-9a-f]{16}/pi/sessions/--lab--/[a-zA-Z0-9_.-]+\.jsonl", session["value"])):
+            or not isinstance(session["value"], str) or not session["value"].startswith('/')
+            or not session["value"].endswith('.jsonl') or '\x00' in session["value"]):
         raise ValueError("native agent is not the fixture's Lab Overseer")
     script = (HERE.parent / "lab-vm" / "bootstrap-timing.py").read_text()
     timing = json.loads(guest("operator", run, "/usr/bin/python3", "-c", script, session["value"], receipt["goal"]))

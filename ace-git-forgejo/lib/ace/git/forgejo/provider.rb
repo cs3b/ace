@@ -142,8 +142,13 @@ module Ace
             unless entry["user"].nil? || entry["user"].is_a?(Hash)
               raise Ace::Git::ProviderMalformedOutputError, "Forgejo issue listing contains an invalid author"
             end
+            unless (entry["body"].nil? || entry["body"].is_a?(String)) &&
+                (entry["labels"].nil? || entry["labels"].is_a?(Array) && entry["labels"].all? { |label| label.is_a?(Hash) && label["name"].is_a?(String) })
+              raise Ace::Git::ProviderMalformedOutputError, "Forgejo issue listing contains invalid body or labels"
+            end
             Ace::Git::ProviderIssue.new(server_name: server.name, number: number, title: entry["title"],
-              state: :open, author: entry.dig("user", "login"), url: entry["html_url"], labels: nil)
+              state: :open, author: entry.dig("user", "login"), url: entry["html_url"],
+              body: entry["body"], labels: Array(entry["labels"]).map { |label| label.fetch("name") })
           end.sort_by { |issue| -issue.number }.first(limit)
         end
 

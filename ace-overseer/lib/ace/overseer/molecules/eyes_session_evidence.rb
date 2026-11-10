@@ -16,15 +16,17 @@ module Ace
         MAX_ENTRIES = 200_000
         SESSION_PATH = %r{\A/[^\0]*_([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})\.jsonl\z}
 
-        # Read exact Linux birth information without invoking an unbounded
-        # external process. PID reuse, a zombie, and non-Linux fail closed.
-        class LinuxIdentity
+        # Preserve exact kernel birth identity on Linux and Darwin. A stale
+        # PID or zombie never proves observation readiness.
+        class NativeIdentity
           def initialize(birth: Ace::Runtime::Molecules::ProcessIdentity.new)
             @birth = birth
           end
 
           def capture(pid)
-            return nil unless RUBY_PLATFORM.include?("linux") && pid.is_a?(Integer) && pid.positive?
+            return nil unless pid.is_a?(Integer) && pid.positive?
+            return @birth.capture(pid) if RUBY_PLATFORM.include?("darwin")
+            return nil unless RUBY_PLATFORM.include?("linux")
             before = @birth.native_birth(pid)
             return nil unless before
             stat = File.read("/proc/#{pid}/stat")
@@ -38,7 +40,7 @@ module Ace
           end
         end
 
-        def initialize(executor: nil, identity: LinuxIdentity.new,
+        def initialize(executor: nil, identity: NativeIdentity.new,
           clock: -> { (Time.now.to_f * 1000).to_i },
           file_opener: ->(path) { File.open(path, File::RDONLY | File::NOFOLLOW | File::NONBLOCK) })
           @executor, @identity, @clock, @file_opener = executor, identity, clock, file_opener

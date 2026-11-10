@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 
 require_relative "../atoms/start_contract"
-require_relative "isolated_start"
-require_relative "../molecules/isolated_runtime"
 require_relative "../atoms/observation_sources"
 require_relative "../molecules/project_root_resolver"
 require_relative "../molecules/project_bundle"
 require_relative "../molecules/eyes_readiness"
+require_relative "../molecules/session_environment"
 require "ace/herdr"
 require "ace/herdr/molecules/installed_pi_extensions"
 require "ace/lab"
@@ -87,7 +86,6 @@ module Ace
         #   replaced_pane, message}; scope lab additionally carries
         #   {projects: [{id, path, status, ...}], project_count, ready}
         def call(dry_run: false)
-          return isolated_start.call(dry_run: dry_run) if isolated_runtime?
           plan = Atoms::StartContract.normalize(Atoms::StartContract.bootstrap(@config, scope: @scope || "lab"))
           if @scope && plan["scope"] != @scope
             raise Ace::Overseer::Error, "configured start scope '#{plan["scope"]}' conflicts with requested '#{@scope}'; nested lab scopes are refused"
@@ -152,7 +150,6 @@ module Ace
         # Bare start is just the foreground harness entrypoint. It does
         # not discover a terminal, inspect agents or analyze topology.
         def bootstrap(dry_run: false)
-          return isolated_start.call(dry_run: dry_run) if isolated_runtime?
           plan = Atoms::StartContract.normalize(@config)
           unless plan["profile"]["harness"] == "pi"
             raise Ace::Overseer::Error, "foreground start requires the configured pi harness"
@@ -184,7 +181,6 @@ module Ace
         # Explicit tool available to the running Lab agent. This operation
         # manages configured project children, never the coordinator itself.
         def reconcile(dry_run: false)
-          return isolated_start.reconcile(dry_run: dry_run) if isolated_runtime?
           plan = Atoms::StartContract.normalize(@config)
           raise Ace::Overseer::Error, "project reconciliation requires lab scope" unless plan["scope"] == "lab"
 
@@ -192,15 +188,6 @@ module Ace
         end
 
         private
-
-        def isolated_runtime?
-          Molecules::IsolatedRuntime.enabled?(env: @env)
-        end
-
-        def isolated_start
-          IsolatedStart.new(executor: @executor, cwd: @cwd, env: @env, scope: @scope,
-            root_resolver: @root_resolver)
-        end
 
         # --- lab scope (task 8xs.t.pu0.a) -----------------------------------
         # The lab root is its own coordination directory with its own
@@ -593,23 +580,50 @@ module Ace
               "herdr created tab '#{label}' but reported no root pane"
           end
 
-          Molecules::ProjectBundle.with_shell_setup(root, env: @env) do |command, marker|
-            @executor.pane_run(pane, command)
-            @executor.pane_wait_output(pane, pattern: marker, timeout_ms: START_TIMEOUT_MS)
-          end
           args = ["--model", plan["profile"]["model"]]
           if plan["profile"]["thinking"]
             args += ["--thinking", plan["profile"]["thinking"]]
           end
           args += ["--append-system-prompt", instructions_path]
 
-          @executor.agent_start(name: AGENT_NAME, kind: plan["profile"]["harness"],
-            pane: pane, timeout_ms: START_TIMEOUT_MS, args: args)
+          if @env["ACE_TOOLCHAIN"] == "installed"
+            role = plan["scope"] == "lab" ? "lab-overseer" : "project-overseer"
+            start_installed_agent(pane, root, role, plan, args)
+          else
+            Molecules::ProjectBundle.with_shell_setup(root, env: @env) do |command, marker|
+              @executor.pane_run(pane, command)
+              @executor.pane_wait_output(pane, pattern: marker, timeout_ms: START_TIMEOUT_MS)
+            end
+            @executor.agent_start(name: AGENT_NAME, kind: plan["profile"]["harness"],
+              pane: pane, timeout_ms: START_TIMEOUT_MS, args: args)
+          end
           pane
         rescue Ace::Herdr::WaitTimeoutError => e
           raise Ace::Overseer::Error, "runtime setup was not confirmed; agent not started: #{e.message}"
         rescue Ace::Herdr::CommandError => e
           raise Ace::Overseer::Error, "herdr failed to start the overseer session: #{e.message}"
+        end
+
+        # A failed native start can still have created a process. Close the
+        # pane before deleting its credentials; if closure is unconfirmed,
+        # preserve the directory and report that recovery is required.
+        def start_installed_agent(pane, root, role, plan, args)
+          credentials = nil
+          Molecules::SessionEnvironment.new(env: @env).with_environment(root: root, role: role) do |file, directory, _profile|
+            credentials = directory
+            @executor.agent_start(name: AGENT_NAME, kind: plan["profile"]["harness"],
+              pane: pane, timeout_ms: START_TIMEOUT_MS, args: args, env_file: file)
+          end
+        rescue StandardError, Interrupt
+          begin
+            @executor.pane_close(pane)
+          rescue Ace::Herdr::PaneNotFoundError
+            # Native owner confirms there is no surviving pane.
+          rescue Ace::Herdr::ExecutorError => cleanup_error
+            raise Ace::Overseer::Error, "coordinator start failed and pane cleanup is unconfirmed; preserve its credentials and inspect #{pane}: #{cleanup_error.message}"
+          end
+          Molecules::SessionEnvironment.cleanup(credentials)
+          raise
         end
 
         # `agent start` success only means the interactive agent is

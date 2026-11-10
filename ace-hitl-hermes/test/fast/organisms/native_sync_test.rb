@@ -191,7 +191,9 @@ class NativeSyncTest < AceHermesTestCase
         deliver:batch=>{sends.push(batch);return true;}});
       let eyes=build();eyes.start({syncRoutes:[{config:#{File.join(project, '.ace', 'hitl', 'config.yml').to_json},route:#{@route['route'].to_json}}]});
       await eyes.tick();assert.equal(sends.length,1);
-      const [key,value]=sends[0][0];eyes.ack(key,value.revision);
+      assert.equal(sends[0].filter(([,value])=>value.id===#{event.id.to_json}).length,1,
+        "the answered case must be included exactly once alongside source-health revisions");
+      for(const [key,value] of sends[0]) eyes.ack(key,value.revision);
       await eyes.tick();eyes.dispose();eyes=build();await eyes.tick();
       assert.equal(sends.length,1);assert.equal(snapshot.breaker,null);
       assert.ok(!JSON.stringify(snapshot).includes("private-eyes-answer"));

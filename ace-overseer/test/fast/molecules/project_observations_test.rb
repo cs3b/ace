@@ -9,7 +9,14 @@ class ProjectObservationsTest < AceOverseerTestCase
     Dir.mkdir(@project)
     @manifest = File.join(@root, "manifest.yml")
     File.write(@manifest, "fixture")
-    @document = {"coordinator" => {"path" => @root}, "projects" => [{"id" => "ace", "path" => @project}]}
+    @credentials = File.join(@root, "read-env.json")
+    File.write(@credentials, JSON.generate("FORGEJO_TOKEN" => "project-read-token"))
+    File.chmod(0o600, @credentials)
+    @document = {"coordinator" => {"path" => @root},
+      "projects" => [{"id" => "ace", "path" => @project, "environment_files" => {"project-overseer" => @credentials}}],
+      "roles" => [{"id" => "project-overseer", "instructions" => "wfi://overseer/start"}],
+      "gemset" => {"gem_home" => "/installed/gems"},
+      "session_runtime" => {"node" => "/usr/bin/node", "pi" => "/installed/bin/pi", "path" => ["/usr/bin", "/bin"]}}
     @rows = {"schema" => "ace.hitl.observation/v1", "events" => [
       {"key" => "report-key", "id" => "report-id", "revision" => "rev-1", "type" => "report", "result" => "success"}],
       "settled" => [], "sources" => Ace::Overseer::Atoms::ObservationSources::REQUIRED.to_h { |name| [name, {"status" => "ok"}] }}
@@ -42,6 +49,8 @@ class ProjectObservationsTest < AceOverseerTestCase
     argv, options = @calls.first
     assert_equal ["observe", "--owner", "overseer", "--scope", "all", "--limit", "500"], argv.drop(1)
     assert_equal @project, options[:chdir]
+    assert_equal "project-read-token", options[:environment]["FORGEJO_TOKEN"]
+    refute options[:environment].key?("PI_CODING_AGENT_DIR")
     @rows["events"].first["revision"] = "rev-2"
     refute_equal first, observe
   end
@@ -52,11 +61,13 @@ class ProjectObservationsTest < AceOverseerTestCase
       require "json"
       abort "lost runtime" unless ENV["ACE_TOOLCHAIN"] == "installed" && ENV["HOME"] == "/isolated/home"
       abort "source injection" if ENV.key?("RUBYOPT") || ENV.key?("BUNDLE_GEMFILE")
+      abort "wrong credential" unless ENV["FORGEJO_TOKEN"] == "project-read-token"
+      abort "ambient key leaked" if ENV.key?("ADMIN_TOKEN")
       puts #{JSON.generate(@rows).inspect}
     RUBY
     File.chmod(0o755, executable)
     env = {"ACE_TOOLCHAIN" => "installed", "HOME" => "/isolated/home", "RUBYOPT" => "-rmissing",
-      "BUNDLE_GEMFILE" => "/checkout/Gemfile"}
+      "BUNDLE_GEMFILE" => "/checkout/Gemfile", "ADMIN_TOKEN" => "lab-admin", "FORGEJO_TOKEN" => "wrong-project"}
     Ace::Lab.stub(:install_manifest_path, @manifest) do
       Ace::Support::Cli::Toolchain.stub(:executable, executable) do
         Ace::Support::Cli::Toolchain.stub(:child_environment, {"RUBYOPT" => nil, "BUNDLE_GEMFILE" => nil}) do
@@ -67,6 +78,14 @@ class ProjectObservationsTest < AceOverseerTestCase
         end
       end
     end
+  end
+
+
+  def test_missing_configured_read_credential_is_degraded_without_running_child
+    File.unlink(@credentials)
+    result = observe
+    assert_equal "degraded", result.dig("sources", "project:ace", "status")
+    assert_empty @calls
   end
 
   def test_project_observation_does_not_recurse_into_lab

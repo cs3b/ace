@@ -46,6 +46,35 @@ module Ace::Lab::Auth
       end
     end
 
+    def test_reaped_leader_does_not_skip_killing_surviving_descendants
+      command = Class.new(LocalCommand) do
+        private
+
+        # Simulate interruption after wait2 reaps, before reaped=true.
+        def stop_group(pid, reaped:) = super(pid, reaped: false)
+      end.new
+      Dir.mktmpdir do |dir|
+        marker = File.join(dir, "late")
+        script = 'reader, writer = IO.pipe; fork { reader.close; trap("TERM", "IGNORE"); writer.write("ready"); writer.close; sleep 0.4; File.write(ARGV.fetch(0), "escaped") }; writer.close; reader.read; exit 0'
+        assert_equal 0, command.call([RbConfig.ruby, "-e", script, marker], {}, deadline: Time.now + 5)
+        sleep 0.5
+        refute File.exist?(marker)
+      end
+    end
+
+    def test_trap_install_failure_still_cleans_started_process
+      Dir.mktmpdir do |dir|
+        marker = File.join(dir, "late")
+        Signal.stub(:trap, ->(*) { raise ArgumentError, "trap unavailable" }) do
+          assert_raises(ArgumentError) do
+            LocalCommand.new.call([RbConfig.ruby, "-e", 'sleep 0.4; File.write(ARGV.fetch(0), "escaped")', marker], {}, deadline: Time.now + 5)
+          end
+        end
+        sleep 0.5
+        refute File.exist?(marker)
+      end
+    end
+
     def test_stopping_the_launcher_terminates_its_command
       Dir.mktmpdir do |dir|
         ready, late = File.join(dir, "ready"), File.join(dir, "late")

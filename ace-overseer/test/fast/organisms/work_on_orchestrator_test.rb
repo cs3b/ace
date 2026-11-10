@@ -103,6 +103,38 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
     end
   end
 
+  def test_native_delegation_prepares_actual_role_sequence_and_reuses_assignments
+    Dir.mktmpdir("native-work-on") do |root|
+      ref = "8xg.t.abc"
+      folder = File.join(root, ".ace-tasks", "#{ref}-fixture")
+      FileUtils.mkdir_p(folder)
+      File.write(File.join(folder, "#{ref}-fixture.s.md"), "---\nid: #{ref}\nstatus: pending\npriority: medium\n---\n# Fixture\n")
+      calls = []
+      launcher = Object.new
+      launcher.define_singleton_method(:ready!) { true }
+      launcher.define_singleton_method(:recipient) { "lab-overseer" }
+      launcher.define_singleton_method(:call) do |worktree_path:, config_path:|
+        config = YAML.safe_load_file(File.join(worktree_path, config_path))
+        calls << config
+        {"agent" => "worker-#{config['assignment']}", "assignment" => config["assignment"], "state" => "running"}
+      end
+      manager = FakeTaskManager.new(ref => {id: ref, status: "pending", metadata: {}})
+      work_on = Ace::Overseer::Organisms::WorkOnOrchestrator.new(task_loader: manager,
+        lifecycle_exclusion: @exclusion, coworker_launcher: launcher, config: {"runtime" => "herdr"},
+        worktree_provisioner: FakeWorktreeProvisioner.new(worktree_path: root, branch: "fixture", created: false))
+      first = work_on.call(task_ref: ref)
+      second = work_on.call(task_ref: ref)
+      paths = Dir.glob(File.join(root, ".ace-local/coworker/prepare/*.yml"))
+      assert_equal %w[integrator reviewer worker], paths.map { |path| YAML.safe_load_file(path).fetch("role") }.sort
+      assert_equal ["lab-overseer"], paths.map { |path| YAML.safe_load_file(path).fetch("overseer") }.uniq
+      assert_equal 3, Dir.glob(File.join(root, ".ace-local/assign/*/assignment.yaml")).size
+      assert_equal first[:assignment_id], second[:assignment_id]
+      assert_equal true, first[:assignment_created]
+      assert_equal false, second[:assignment_created]
+      assert_equal %w[worker worker], calls.map { |config| config.fetch("role") }
+    end
+  end
+
   def test_resolves_preset_from_task_frontmatter
     Dir.mktmpdir("task.230") do |worktree|
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(

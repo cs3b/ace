@@ -1,0 +1,64 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "json"
+require "digest"
+require "fileutils"
+load File.expand_path("lab-vm", __dir__)
+
+begin
+  raise "usage: lab-vm-fixture-reset RUN_ID EVIDENCE_DIRECTORY" unless ARGV.length == 2 && ARGV[0].match?(/\A[a-f0-9]{16}\z/)
+  run_id, destination = ARGV
+  destination = File.expand_path(destination)
+  raise "unsafe evidence directory" if File.symlink?(destination)
+  FileUtils.mkdir_p(destination, mode: 0o700)
+  LabVm.with_lifecycle_lock do
+    path = File.join(LabVm.local_dir, "runs", run_id, "fixture.json")
+    raise "unsafe fixture receipt" if File.symlink?(File.dirname(path)) || File.symlink?(path) || !File.file?(path)
+    receipt = JSON.parse(File.read(path))
+    work = LabVm.registered_work
+    unless receipt["schema"] == "ace-e2e-forgejo-fixture/v1" && receipt["run_id"] == run_id &&
+        receipt["status"] == "ready" && work && work["status"] == "started" &&
+        receipt.fetch("vm_uuid").casecmp?(work.fetch("uuid"))
+      raise "fixture does not identify the running owned VM"
+    end
+    uuid = work.fetch("uuid")
+    digest = LabVm.runtime_configuration_fingerprint
+    code, = LabVm.guest_exec(uuid, "/bin/sh", "-ec",
+      "test -f /var/lib/ace-e2e/runtime-ready.sha256; test ! -L /var/lib/ace-e2e/runtime-ready.sha256; test \"$(cat /var/lib/ace-e2e/runtime-ready.sha256)\" = '#{digest}'")
+    raise "installed runtime changed; repeat cannot replace a candidate" unless code.zero?
+
+    archive = File.join(destination, "scenario-#{run_id}.tar.gz")
+    raise "scenario evidence already exists" if File.exist?(archive) || File.symlink?(archive)
+    script = File.read(File.join(__dir__, "../lab-vm/reset-fixture.py"))
+    code, output = LabVm.guest_exec(uuid, "/usr/bin/python3", "-c", script, "export", run_id, uuid, timeout_s: 600)
+    raise "scenario export failed; fixture preserved" unless code.zero?
+    exported = JSON.parse(output)
+    unless exported["path"] == "/var/lib/ace-e2e/scenario-export-#{run_id}.tar.gz" && exported["sha256"].to_s.match?(/\A[a-f0-9]{64}\z/)
+      raise "invalid scenario export receipt"
+    end
+    address = LabVm.utm_call("ip-address", uuid).lines.map(&:strip).find { |entry| entry.match?(/\A(?:\d{1,3}\.){3}\d{1,3}\z/) }
+    raise "VM has no IPv4 address" unless address
+    hosts = File.join(LabVm.local_dir, "known-hosts-#{uuid}")
+    raise "verified host key missing" if File.symlink?(hosts) || !File.file?(hosts)
+    options = ["-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "UserKnownHostsFile=#{hosts}",
+      "-i", File.join(LabVm.local_dir, "bootstrap/operator_ed25519")]
+    File.open(archive, File::WRONLY | File::CREAT | File::EXCL | File::NOFOLLOW, 0o600) {}
+    raise "scenario evidence transfer failed; guest export preserved" unless system("scp", "-q", *options,
+      "lab-operator@#{address}:#{exported.fetch('path')}", archive)
+    File.chmod(0o600, archive)
+    raise "scenario evidence checksum mismatch; fixture preserved" unless Digest::SHA256.file(archive).hexdigest == exported.fetch("sha256")
+    code, = LabVm.guest_exec(uuid, "/usr/bin/python3", "-c", script, "clear", run_id, uuid, exported.fetch("sha256"), timeout_s: 300)
+    raise "scenario reset failed; retain exported evidence and inspect VM" unless code.zero?
+    receipt.merge!("status" => "archived", "scenario_export" => archive, "scenario_export_sha256" => exported.fetch("sha256"))
+    temporary = path + ".reset"
+    File.open(temporary, File::WRONLY | File::CREAT | File::EXCL | File::NOFOLLOW, 0o600) do |file|
+      file.write(JSON.pretty_generate(receipt) + "\n"); file.flush; file.fsync
+    end
+    File.rename(temporary, path)
+    puts "Scenario reset; installed runtime retained. Private evidence: #{archive}"
+  end
+rescue StandardError => error
+  warn "lab-vm-fixture-reset: #{error.message}"
+  exit 1
+end

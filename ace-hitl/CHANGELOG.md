@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.1] - 2026-11-10
+
 ### Fixed
 
-- Expose the existing strict incoming-event selection for report consumers so observation and consumption share recipient ownership rules.
+- Share strict recipient selection between observation and report acceptance; preserve observation owner identity across worktrees.
 
 ## [0.25.0] - 2026-10-30
 

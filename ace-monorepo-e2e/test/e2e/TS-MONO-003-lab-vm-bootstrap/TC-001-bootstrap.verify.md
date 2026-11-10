@@ -11,14 +11,14 @@ Git ignores that path, and the private task listing contains it. A public
 manager with a coordination title or tag is FAIL, even if reports were
 accepted. Verify exactly three direct children and actual dependency fields:
 verification depends on preparation, and confirm-start depends on verification.
-Require authenticated `ready=true` after the project's first completed turn;
+Require session-bound `ready=true` after the project's first completed turn;
 terminal text claiming healthy eyes does not replace this result.
 Require the actual `results/tc/01/bootstrap-timing.json` output from
 `lab-vm-bootstrap-timing` for this VM and Lab Overseer terminal. Match the
 project terminal to the native first-turn evidence. Only `within_limit`
 can pass. Missing helper evidence fails this case.
 Check elapsed time from the delivered goal in the Lab Overseer's Pi session
-to that session's first successful authenticated reconcile result. Use the
+to that session's first successful reconcile result bound to the native session. Use the
 recorded timestamps. Missing timestamps, readiness preceding the goal, or
 readiness later than 45 minutes after delivery fail this case, regardless
 of a runner's deadline flag.

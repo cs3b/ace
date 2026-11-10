@@ -7,46 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- Bind project coworker preparations explicitly to the commissioning Overseer’s observed HITL recipient, and verify returned leg recipients before dispatch; bootstrap routing must not capture project delivery reports.
-
-- Keep isolated report continuation on the authenticated dispatch path: accept reports once, check prepared handoff readiness without opening a local terminal, and return the next coordination action without claiming an executor has started.
-
-- Give project overseers the installed isolated-worker dispatch procedure, including prepared assignment/config identities and verifier/integrator roles, instead of directing isolated sessions to the local-terminal `work-on` path.
-
-- Keep bootstrap acceptance separate from executor status and active preparation; resolve returned worker/verifier configs against their execution worktree.
-
-- Scope report processing to its configured HITL owner using the same strict recipient selection as observation; reject missing or unknown owners.
-
-- Give started overseers one explicit order: arm healthy observation, reconcile reports, then delegate; degraded observation ends the turn before report acceptance or dispatch.
-
-- Preserve pending reports and mark private-task observation degraded when manager metadata is inaccessible; bootstrap workers validate only evidence accessible to their role.
-
-- Load protected lab Pi extensions for foreground overseer starts.
+## [0.29.0] - 2026-11-10
 
 ### Added
 
-- Observe configured project Overseer session state changes through the existing lab topology and Herdr.
-- Observe configured Forgejo issue collections through semantic revisions, including closures and visible source failures.
-
-### Fixed
-
-- Show per-project startup failures and pane identities in table output, show
-  the foreground command in dry runs, and report interrupted starts as
-  uncertain rather than silently encouraging a retry.
-- List the registered `start` command in the main CLI help.
-- Do not resend an uncertain first-turn prompt when reusing an idle session; report the missing evidence instead.
-- Delegate project eyes configuration to the bootstrap worker instead of creating it in the Overseer session.
-- Use one explicit project eyes configuration path for preparation and startup.
-- Surface invalid remote PR observation entries as degraded source events without masking valid sources.
-
-- Escalate missing forge access through session-scoped auth instead of searching for or configuring persistent credentials.
-
-- Confirm first-turn activity without waiting for the overseer turn to finish.
-
-- Dispatch bootstrap workers only into idle sessions, without blocking Herdr wait flags, and use an eyes deadline to surface unconfirmed first turns.
-- Correct private task commands, require complete bootstrap commission files in the worker worktree, delegate full installation verification, and reserve project-start checks for the coordinator after independent verification.
+- Start real workers from work-on/handoff, persist native executor identities on existing commissions, and require active observation before delegation. Accept reports before retirement and continuation through worker, reviewer and integrator roles; refuse duplicate or uncertain starts. Build explicit installed environments, select per-project observation credentials, and observe issue bodies/labels plus project sessions. Verify first-turn/eyes evidence on Linux and macOS; delegate configuration and diagnosis in packaged instructions.
 
 ## [0.28.1] - 2026-10-31
 

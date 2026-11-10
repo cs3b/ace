@@ -2,9 +2,9 @@
 
 require_relative "../../test_helper"
 require "ace/overseer/molecules/eyes_session_evidence"
-require "ace/overseer/molecules/eyes_descriptor_evaluator"
 require "fileutils"
 require "timeout"
+require "open3"
 
 class EyesSessionEvidenceTest < Minitest::Test
   Result = Struct.new(:parsed_json)
@@ -55,6 +55,37 @@ class EyesSessionEvidenceTest < Minitest::Test
     assert ready?
   end
 
+  def test_actual_local_process_birth_matches_wake_and_proves_readiness
+    skip "exact birth unsupported on this host" unless RUBY_PLATFORM.match?(/linux|darwin/)
+    extension = File.expand_path("../../../../ace-wake/handbook/extensions/ace-wake/wake/eyes-runtime.js", __dir__)
+    script = "import {eyesProcessIdentity} from #{extension.to_json}; console.log(JSON.stringify(eyesProcessIdentity())); setInterval(()=>{},1000);"
+    Open3.popen3("node", "--input-type=module", "-e", script) do |stdin, stdout, stderr, thread|
+      stdin.close
+      line = Timeout.timeout(5) { stdout.gets }
+      refute_nil line, (line.nil? ? stderr.read : "")
+      emitted = JSON.parse(line)
+      native = Ace::Overseer::Molecules::EyesSessionEvidence::NativeIdentity.new
+      observed = native.capture(thread.pid)
+      refute_nil observed
+      assert_equal({"pid" => observed.fetch("pid"), "startedAt" => observed.fetch("started_at")}, emitted)
+      @executor.processes = [{"pid" => thread.pid}]
+      @records[1]["data"]["process"] = emitted
+      @records.last["data"]["observerEvidence"]["process"] = emitted
+      write_session
+      @reader = Ace::Overseer::Molecules::EyesSessionEvidence.new(executor: @executor, clock: -> { 20_000 })
+      assert ready?
+      Process.kill("TERM", thread.pid)
+      thread.value
+      refute ready?
+    ensure
+      begin
+        Process.kill("TERM", thread.pid) if thread&.alive?
+      rescue Errno::ESRCH
+        nil
+      end
+    end
+  end
+
   def test_injected_descriptor_keeps_validation_and_never_falls_back_to_path_open
     opened = File.open(@path, File::RDONLY)
     requested = []
@@ -71,31 +102,6 @@ class EyesSessionEvidenceTest < Minitest::Test
     refute ready?
   ensure
     opened&.close
-  end
-
-  def test_descriptor_evaluator_requires_owner_prompt_sources_and_exact_process
-    @records[2]["message"]["content"] = Ace::Overseer::Atoms::StartContract::FIRST_TURN_PROMPT
-    sources = Ace::Overseer::Atoms::ObservationSources::REQUIRED.to_h { |key| [key, "ok"] }
-    @records.last["data"]["observerEvidence"]["sources"] = sources
-    write_session
-    input = {"pane" => "w1:p1", "terminal_id" => "term", "root" => "/lab/ace",
-      "session_path" => @path, "process" => @process, "role" => "project-overseer"}
-    evaluator = Ace::Overseer::Molecules::EyesDescriptorEvaluator.new(executor: @executor,
-      identity: @identity, clock: -> { 20_000 })
-    File.open(@path, File::RDONLY) do |file|
-      assert evaluator.call(input, file: file)
-      refute evaluator.call(input.merge("terminal_id" => "foreign"), file: file)
-      refute evaluator.call(input.merge("session_path" => "/other.jsonl"), file: file)
-      refute evaluator.call(input.merge("process" => @process.merge("pid" => 124)), file: file)
-      refute evaluator.call(input.merge("role" => "worker"), file: file)
-      refute evaluator.call(input.merge("role" => "lab-overseer"), file: file)
-      sources["project_sessions"] = "ok"
-      write_session
-      assert evaluator.call(input.merge("role" => "lab-overseer"), file: file)
-      @records[2]["message"]["content"] = "other prompt"
-      write_session
-      refute evaluator.call(input, file: file)
-    end
   end
 
   def test_rejects_replaced_process_or_missing_foreground_agent

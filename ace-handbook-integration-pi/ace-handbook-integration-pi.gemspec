@@ -25,7 +25,7 @@ Gem::Specification.new do |spec|
   spec.executables = []
   spec.require_paths = ["lib"]
   spec.add_dependency "ace-handbook", "~> 0.33"
-  spec.add_dependency "ace-overseer", "~> 0.26"
+  spec.add_dependency "ace-overseer", "~> 0.26", ">= 0.29.0"
   spec.add_dependency "ace-hitl-hermes", "~> 0.9.3"
-  spec.add_dependency "ace-wake", "~> 0.1"
+  spec.add_dependency "ace-wake", "~> 0.1", ">= 0.3.0"
 end

@@ -28,7 +28,7 @@ module Ace
             super()
             @orchestrator = orchestrator
             @config = config
-            @launcher = launcher || ->(argv) { Kernel.exec(*argv) }
+            @launcher = launcher
           end
 
           def call(dry_run: false, format: "table", scope: nil, reconcile: false, **options)
@@ -46,7 +46,7 @@ module Ace
             else
               operation.bootstrap(dry_run: dry_run)
             end
-            return @launcher.call(report.fetch("command")) if report["status"] == "foreground"
+            return launch_foreground(report) if report["status"] == "foreground"
 
             if options[:quiet]
               # quiet still fails loudly on a blocked start
@@ -73,6 +73,25 @@ module Ace
           end
 
           private
+
+          def launch_foreground(report)
+            return @launcher.call(report.fetch("command")) if @launcher
+
+            role = report["scope"] == "lab" ? "lab-overseer" : "project-overseer"
+            directory = nil
+            Molecules::SessionEnvironment.new.with_environment(root: report.fetch("root"), role: role) do |path, credentials, _args|
+              directory = credentials
+              environment = JSON.parse(File.read(path))
+              system(environment, *report.fetch("command"), unsetenv_others: true)
+              status = $?
+              unless status&.success?
+                raise Ace::Support::Cli::Error.new("coordinator process exited unsuccessfully",
+                  exit_code: status&.exitstatus || 1)
+              end
+            end
+          ensure
+            Molecules::SessionEnvironment.cleanup(directory) if directory
+          end
 
           def orchestrator(scope: nil)
             @orchestrator || Organisms::StartOrchestrator.new(config: @config || Ace::Overseer.config, scope: scope)

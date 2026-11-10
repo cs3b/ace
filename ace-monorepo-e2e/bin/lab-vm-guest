@@ -20,7 +20,7 @@ begin
     end
     uuid = work.fetch("uuid")
     # Exact operator argv is deliberate fault instrumentation. No agent can
-    # access this macOS helper or QEMU control channel from its isolated unit.
+    # access this macOS helper or QEMU control channel from its guest process.
     argv = if role == "operator"
       ARGV
     else

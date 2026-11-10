@@ -91,7 +91,7 @@ module Ace
           raise ArgumentError, "too many open issues to observe completely" if issues.length > ISSUE_LIMIT
 
           items = issues.map do |issue|
-            {"number" => issue.number, "title" => issue.title, "state" => issue.state.to_s,
+            {"number" => issue.number, "title" => issue.title, "body" => issue.body, "state" => issue.state.to_s,
              "author" => issue.author, "url" => issue.url, "labels" => Array(issue.labels).map(&:to_s).sort}
           end.sort_by { |item| item.fetch("number") }
           {"key" => "issues:#{server}", "revision" => digest(items), "type" => "issues",

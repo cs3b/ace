@@ -39,7 +39,7 @@ class ForgejoIssueApiTest < AceGitForgejoTestCase
       page = if args[2].include?("page=1")
         [
           {"id" => 1, "number" => 1, "title" => "First", "state" => "open", "user" => {"login" => "alice"},
-           "html_url" => "https://forge.example.com/owner/repo/issues/1"},
+           "html_url" => "https://forge.example.com/owner/repo/issues/1", "body" => "Depends on #3", "labels" => [{"name" => "blocked"}]},
           {"id" => 2, "number" => 2, "title" => "Pull", "pull_request" => {"url" => "api"}},
           {"id" => 3, "number" => 3, "title" => "Newest", "state" => "open", "user" => {"login" => "bob"},
            "html_url" => "https://forge.example.com/owner/repo/issues/3"}
@@ -53,6 +53,8 @@ class ForgejoIssueApiTest < AceGitForgejoTestCase
     issues = provider.recent_issues(limit: 2)
     assert_equal [3, 1], issues.map(&:number)
     assert_equal %w[Newest First], issues.map(&:title)
+    assert_equal "Depends on #3", issues.last.body
+    assert_equal ["blocked"], issues.last.labels
     assert calls.all? { |url| url.start_with?("https://forge.example.com/api/v1/repos/owner/repo/issues?state=open&page=") }
   end
 

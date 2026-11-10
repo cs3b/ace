@@ -148,18 +148,6 @@ class SystemdScopeManagerTest < AceRuntimeTestCase
     end
   end
 
-  def test_retained_session_lifecycle_property_is_a_typed_boolean
-    [true, false].each do |value|
-      @command.typed_response = JSON.generate("type" => "b", "data" => value)
-      assert_equal({"RemainAfterExit" => value}, @manager.typed_properties(
-        unit: "ace-worker.service", interface: "Service", signatures: {"RemainAfterExit" => "b"}))
-    end
-    @command.typed_response = JSON.generate("type" => "b", "data" => "true")
-    assert_raises(Unavailable) do
-      @manager.typed_properties(unit: "ace-worker.service", interface: "Service", signatures: {"RemainAfterExit" => "b"})
-    end
-  end
-
   def test_effective_manager_environment_has_fixed_typed_owner_and_closed_bounds
     @command.typed_response = JSON.generate("type" => "as", "data" => ["PATH=/usr/bin", "LC_ALL="])
     assert_equal ["PATH=/usr/bin", "LC_ALL="], @manager.manager_environment

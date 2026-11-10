@@ -7,16 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-10
+
+### Added
+
+- Publish observation evidence for Linux and macOS. Pace observation budgets, defer notifications until idle, and deliver deadlines after an in-flight observation without stale duplicate wakes.
+
 ### Fixed
 
-- Pace standing observations to their hourly allowance and renew exhausted read limits automatically without stopping eyes or requiring a model turn.
-
-- Defer eyes notifications until the agent is idle so revisions handled during a turn do not leave stale queued wakes.
-- Deliver deadlines that expire while an observation is running in the same observation cycle.
-
-### Changed
-
-- Give each observation command a 60-second default timeout, with an explicit bounded override up to 120 seconds. Existing sessions retain their saved timeout until eyes is restarted with the desired configuration.
+- Explicit reconciliation retries an unconfirmed notification in the same session while keeping confirmed deliveries suppressed until acknowledgment.
 
 ## [0.2.0] - 2026-10-31
 

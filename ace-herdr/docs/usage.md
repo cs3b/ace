@@ -70,21 +70,22 @@ by the number of deliveries.
 
 ## Dispatch, send, capture, wait, close
 
-In an isolated lab session (`ACE_LAB_SESSION=1`), `dispatch` uses the protected
-installed Pi launcher. Choose a configured project root or its task worktree
-with `--cwd`; `--role` selects `worker` (default), `verifier`, or `integrator`.
-The host still chooses the executable, extensions and credentials. For example:
+`dispatch` starts an ordinary process in `--cwd`. For an explicitly selected
+environment, pass `--env-file` with an absolute path to a private (`0600`) JSON
+object of string variables. The native launcher clears ambient variables and
+reads this file without placing its values in terminal commands or prompts.
+`--role` labels the commission; it does not grant operating-system privileges.
 
 ```sh
-ace-herdr dispatch --label review-task --role verifier --cwd /lab/ace/.ace-wt/task-1 --prompt-file commission.md
+ace-herdr dispatch --label review-task --role verifier --cwd /lab/ace/.ace-wt/task-1 --env-file /private/role-environment.json --prompt-file commission.md
 ```
 
-This returns the actual terminal identity after submitting the commission.
-It waits for input readiness, never for completion. Record that identity with
-the assignment and end the supervisor turn; observation handles completion.
-An existing name is a reconciliation request, not permission to repeat the
-prompt. Existing shell panes and alternative agent kinds are refused in this
-mode. `--cwd` does not widen the session's project mount or lease grants.
+Installed Linux deployments use the protected extensions configured by
+`ace-lab`. Missing required runtime or extension files block startup. Sessions
+of the same user are trusted peers, not a hostile-code sandbox. For task work,
+use `ace-overseer work-on` or `handoff`: these own commission identity, duplicate
+protection and report-driven retirement. A low-level dispatch alone is not an
+assignment lifecycle.
 
 
 ```bash

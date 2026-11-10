@@ -113,7 +113,8 @@ false "work done".
 ## Completion Rule
 
 The assignment is complete when the change is implemented, every required
-test for every changed package passes (or the task's monorepo gate passes),
+test declared by the task passes. When the task does not specify checks,
+run each changed package's required suite (or its monorepo gate),
 and the truthful outcome has been recorded and reported. A failing required
 test means the work is NOT done, whatever the local state of the steps.
 

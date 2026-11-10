@@ -63,7 +63,11 @@ module Ace
             "RUSTUP_TOOLCHAIN" => selected.fetch("rust_version"), "ZIG" => tools.fetch("zig"),
             # Panic locations and generated source references otherwise embed
             # the caller's output directory even in stripped release binaries.
-            "CARGO_ENCODED_RUSTFLAGS" => "--remap-path-prefix=#{staging}=/ace-native-build",
+            # Zig supplies target libc/startup objects. Rust's bundled CRT
+            # would otherwise introduce duplicate _start symbols.
+            "CARGO_ENCODED_RUSTFLAGS" => "--remap-path-prefix=#{staging}=/ace-native-build\x1f-Clink-self-contained=no",
+            "ACE_NATIVE_ZIG_TARGET" => target.sub("-unknown", ""),
+            "CC_#{target.tr('-', '_')}" => tools.fetch("linker"),
             "CARGO_TARGET_#{target.upcase.tr("-", "_")}_LINKER" => tools.fetch("linker"))
           run([tools.fetch("cargo"), "build", "--release", "--locked", "--target", target],
             chdir: checkout, environment: compile_environment, timeout_s: BUILD_TIMEOUT_SECONDS)
@@ -87,12 +91,9 @@ module Ace
 
         private
 
-        def validate_native_host!(target)
-          architecture = {"x86_64-unknown-linux-musl" => /\A(?:x86_64|amd64)\z/,
-            "aarch64-unknown-linux-musl" => /\A(?:aarch64|arm64)\z/}.fetch(target)
-          unless RbConfig::CONFIG.fetch("host_os").include?("linux") &&
-              architecture.match?(RbConfig::CONFIG.fetch("host_cpu"))
-            raise Molecules::NativeSource::Error, "native source builds require a matching Linux host; cross builds are unsupported"
+        def validate_native_host!(_target)
+          unless RbConfig::CONFIG.fetch("host_os").match?(/linux|darwin/)
+            raise Molecules::NativeSource::Error, "native source builds require a Linux or macOS build host"
           end
         end
 
@@ -143,13 +144,20 @@ module Ace
             [name, File.realpath(path)]
           end
           tools["zig"] = executable("zig")
-          tools["linker"] = executable("musl-gcc")
+          tools["linker"] = linker_path
+          unless File.file?(tools["linker"]) && File.executable?(tools["linker"])
+            raise Molecules::NativeSource::Error, "packaged Zig target linker is unavailable"
+          end
           unless run([tools.fetch("rustc"), "--version"]).start_with?("rustc #{version} ") &&
               run([tools.fetch("cargo"), "--version"]).start_with?("cargo #{version} ") &&
               run([tools.fetch("zig"), "version"]).strip == @selection.selection.fetch("zig_version")
             raise Molecules::NativeSource::Error, "selected native build tool versions mismatch"
           end
           tools
+        end
+
+        def linker_path
+          File.expand_path("../native_source/zig-linker", __dir__)
         end
 
         def git(checkout, *arguments)

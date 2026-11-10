@@ -9,7 +9,7 @@ verify through HITL that it reused the same event ID and outcome. Capture
 the private step, assignments and session identities before and after.
 Do not create a replacement event or configure a transport adapter.
 
-Restart only the lab Overseer session through the documented native/systemd
+Restart only the lab Overseer session through the documented native Herdr
 lifecycle and public start. Preserve the old session evidence before stopping
 it. Capture the new session's completed first turn, healthy eyes and the
 unchanged accepted report and assignment state. Do not reset the VM or

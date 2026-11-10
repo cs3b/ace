@@ -7,7 +7,7 @@ PATH
       ace-git (~> 0.30)
       ace-herdr (~> 0.6, >= 0.8.1)
       ace-llm (~> 0.39)
-      ace-llm-providers-cli (~> 0.36.1)
+      ace-llm-providers-cli (~> 0.36.1, >= 0.36.3)
       ace-review (~> 0.62.0)
       ace-runtime (~> 0.3)
       ace-support-cli (~> 0.6, >= 0.6.10)
@@ -53,17 +53,17 @@ PATH
 PATH
   remote: ace-coworker
   specs:
-    ace-coworker (0.8.0)
+    ace-coworker (0.9.0)
       ace-assign (~> 0.72, >= 0.73.2)
-      ace-git-worktree (~> 0.27)
-      ace-hitl (~> 0.22)
-      ace-review (~> 0.62.2)
+      ace-git-worktree (~> 0.27, >= 0.27.4)
+      ace-hitl (~> 0.22, >= 0.25.1)
+      ace-review (~> 0.62.2, >= 0.62.3)
       ace-support-cli (~> 0.6, >= 0.6.10)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)
       ace-support-nav (~> 0.28, >= 0.28.8)
-      ace-task (~> 0.41)
+      ace-task (~> 0.41, >= 0.41.1)
 
 PATH
   remote: ace-demo
@@ -118,8 +118,8 @@ PATH
 PATH
   remote: ace-git-forgejo
   specs:
-    ace-git-forgejo (0.8.0)
-      ace-git (~> 0.31)
+    ace-git-forgejo (0.9.0)
+      ace-git (~> 0.31, >= 0.33.0)
       faraday (~> 2.14)
       faraday-retry (~> 2.4)
 
@@ -143,7 +143,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.27.3)
+    ace-git-worktree (0.27.4)
       ace-git (~> 0.29)
       ace-herdr (~> 0.4)
       ace-runtime (~> 0.1)
@@ -156,7 +156,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.32.0)
+    ace-git (0.33.0)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -188,11 +188,11 @@ PATH
 PATH
   remote: ace-handbook-integration-pi
   specs:
-    ace-handbook-integration-pi (0.8.0)
+    ace-handbook-integration-pi (0.8.1)
       ace-handbook (~> 0.33)
       ace-hitl-hermes (~> 0.9.3)
-      ace-overseer (~> 0.26)
-      ace-wake (~> 0.1)
+      ace-overseer (~> 0.26, >= 0.29.0)
+      ace-wake (~> 0.1, >= 0.3.0)
 
 PATH
   remote: ace-handbook
@@ -208,7 +208,7 @@ PATH
   specs:
     ace-herdr (0.10.0)
       ace-hitl-contract (~> 0.3.0)
-      ace-runtime (~> 0.3)
+      ace-runtime (~> 0.3, >= 0.4.2)
       ace-support-cli (~> 0.6, >= 0.6.10)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -232,7 +232,7 @@ PATH
 PATH
   remote: ace-hitl
   specs:
-    ace-hitl (0.25.0)
+    ace-hitl (0.25.1)
       ace-b36ts (~> 0.14)
       ace-hitl-contract (~> 0.3.0)
       ace-runtime (~> 0.3)
@@ -255,10 +255,8 @@ PATH
 PATH
   remote: ace-lab
   specs:
-    ace-lab (0.14.1)
-      ace-git-forgejo (~> 0.7)
-      ace-herdr (~> 0.10)
-      ace-runtime (~> 0.4)
+    ace-lab (0.15.0)
+      ace-git-forgejo (~> 0.7, >= 0.9.0)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -278,7 +276,7 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.36.2)
+    ace-llm-providers-cli (0.36.3)
       ace-llm (~> 0.42)
 
 PATH
@@ -297,21 +295,21 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.28.1)
+    ace-overseer (0.29.0)
       ace-assign (~> 0.70, >= 0.73.1)
-      ace-coworker (~> 0.8)
-      ace-git (~> 0.30)
-      ace-git-worktree (~> 0.27)
+      ace-coworker (~> 0.8, >= 0.9.0)
+      ace-git (~> 0.30, >= 0.33.0)
+      ace-git-worktree (~> 0.27, >= 0.27.4)
       ace-herdr (~> 0.9, >= 0.10.0)
-      ace-hitl (~> 0.24)
-      ace-lab (~> 0.8)
-      ace-review (~> 0.62.2)
-      ace-runtime (~> 0.3)
+      ace-hitl (~> 0.24, >= 0.25.1)
+      ace-lab (~> 0.8, >= 0.15.0)
+      ace-review (~> 0.62.2, >= 0.62.3)
+      ace-runtime (~> 0.3, >= 0.4.2)
       ace-support-cli (~> 0.6, >= 0.6.10)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)
-      ace-task (~> 0.40)
+      ace-task (~> 0.40, >= 0.41.1)
       ace-tmux (~> 0.18)
 
 PATH
@@ -341,7 +339,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.62.2)
+    ace-review (0.62.3)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.45)
       ace-compressor (~> 0.25)
@@ -360,7 +358,7 @@ PATH
 PATH
   remote: ace-runtime
   specs:
-    ace-runtime (0.4.1)
+    ace-runtime (0.4.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -412,7 +410,7 @@ PATH
 PATH
   remote: ace-support-items
   specs:
-    ace-support-items (0.15.16)
+    ace-support-items (0.15.17)
       ace-b36ts (~> 0.14)
       ace-support-core (~> 0.31)
 
@@ -457,7 +455,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.41.0)
+    ace-task (0.41.1)
       ace-b36ts (~> 0.14)
       ace-git (~> 0.27)
       ace-git-forgejo (~> 0.5)
@@ -465,13 +463,13 @@ PATH
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)
-      ace-support-items (~> 0.15)
+      ace-support-items (~> 0.15, >= 0.15.17)
       ace-support-markdown (~> 0.3)
 
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.43.0)
+    ace-test-runner-e2e (0.43.1)
       ace-b36ts (~> 0.14)
       ace-llm (~> 0.42)
       ace-support-cli (~> 0.6)
@@ -482,7 +480,7 @@ PATH
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.28.1)
+    ace-test-runner (0.28.2)
       ace-b36ts (~> 0.14)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -512,7 +510,8 @@ PATH
 PATH
   remote: ace-wake
   specs:
-    ace-wake (0.2.0)
+    ace-wake (0.3.0)
+      ace-runtime (~> 0.4, >= 0.4.2)
 
 GEM
   remote: https://rubygems.org/

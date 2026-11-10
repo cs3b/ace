@@ -1,32 +1,33 @@
-# TC-004: Lease expiry and singleton issuer crash
+# TC-004: Scoped credentials, expiry and interrupted execution
 
-Commission an isolated worker to validate its granted Forgejo access using public
-`ace-lab auth request/status/exec/revoke`. Observe a successful scoped operation
-and normal confirmed revocation.
+Use a separate disposable Forgejo token limited to `e2e-integrator/ace`,
+with profile `e2e-probe` and the worker role. Run these commands as
+`lab-operator` through the existing operator SSH channel, using installed
+`/opt/ace/runtime/bin/ace-lab` and `ACE_TOOLCHAIN=installed`. The operator
+profile is deliberately unavailable to agent role sessions. Exercise the installed public `ace-lab auth`
+request/status/exec/revoke/reconcile commands using the configured local
+credential source. The source is supplied by fixture setup, not by an agent
+requesting root privileges. No issuer daemon or systemd session is involved.
 
-Test a one-minute lease expiry and an issuer crash with separate leases. For the
-crash, use a second live isolated session to check that the issued lease's
-credential projection is unreadable and that `ace-lab auth exec` refuses the
-different principal. Capture this refusal while the lease is live and unused.
-Confirm that it remains issued, then start the authorized command as the owner.
-Before each fault, capture the lease ID, issuer invocation ID, worker unit and
-invocation ID, and the populated execution cgroup for the active command.
+Capture the lease ID, actual command PID and its birth identity, repository,
+role, deadline and public status, without token values. Verify access to the
+intended repository and denial for `e2e-integrator/unrelated` (the second private fixture repository) before any
+fault. Scope is enforced by Forgejo, not by trusting the session environment.
 
-Run the host-only lease evidence probe once for each active lease, with
-`expiry` or `crash` and its exact lease ID. The helper checks live Forgejo
-access and the populated execution cgroup, then waits for expiry or sends
-SIGKILL only to the issuer's main process. It proves that the same
-credential is rejected afterwards. Start the crash probe with more than
-95 seconds remaining on the active lease so natural expiry cannot explain
-the cleanup. Use the invocation in the lab VM README
-and capture both JSON records and the probe exit status. In crash mode this
-is the fault injection itself. Capture the installed `ExecStopPost` journal,
-execution cgroup and lease state before restarting the issuer.
-Restore through the installed service and
-verify that recovery settles old records before new requests. The launcher
-binds session lifetimes to the issuer. If dependent units stop, capture their
-state and resume the Overseers through public start before testing a fresh
-session's access and denial. Never read the credential in the runner.
+Use distinct leases for: normal completion, expiry before exec, and interrupted
+execution. After normal completion require token rejection and removed private
+projection files. Expired access must refuse a new command. Interrupt only the
+identified execution process; inspect its actual descendant exit and use public
+reconcile for interrupted records. An unconfirmed revoke must remain blocked,
+not be reported as cleared. Record what happens on actual process interruption;
+do not claim guaranteed crash cleanup without evidence.
+
+Static project tokens used to start agents are a separate fixture credential:
+ending a session removes its private projection but must not revoke the shared
+static token. Do not test same-UID malicious-agent isolation or expect another
+trusted process to be unable to read every file owned by that same user.
 
 Capture `results/tc/04/commands.stdout`, `commands.stderr`, `commands.exit`,
-`state.json` and `sessions.json` as declared by the runner contract.
+`state.json` and `sessions.json`. No token may occur in these artifacts, argv or
+prompts. Restore all faults before continuing. Provider mocks and component
+probes cannot substitute for the real Forgejo checks.

@@ -32,6 +32,16 @@ class EyesEvidenceTest < Minitest::Test
     assert ready?
   end
 
+  def test_accepts_exact_darwin_identity_and_rejects_mismatched_or_invalid_birth
+    @identity["started_at"] = "darwin:1794000000:123456"
+    @branch.first["data"]["process"]["startedAt"] = @identity["started_at"]
+    @branch.last["data"]["observerEvidence"]["process"]["startedAt"] = @identity["started_at"]
+    assert ready?
+    refute ready?(process: @identity.merge("started_at" => "darwin:1794000000:123457"))
+    refute ready?(process: @identity.merge("started_at" => "darwin:1794000000:1000000"))
+    refute ready?(process: @identity.merge("started_at" => "darwin:0:123456"))
+  end
+
   def test_freshness_uses_budget_limited_observation_cadence
     config = @branch.last.fetch("data").fetch("config")
     config["intervalSeconds"] = 10

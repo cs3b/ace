@@ -7,23 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- Render isolated session status and lists from the issuer-authorized agent inventory instead of requesting forbidden host pane/tab inventories; retain the caller's observed lab workspace.
-
-- Refuse a missing protected manifest or non-installed runtime when a lab session is explicitly marked.
-- In installed Linux labs, start Pi with the protected ace-wake and Herdr extensions and refuse caller-supplied extension overrides.
-
-## [0.10.0] - 2026-11-02
+## [0.10.0] - 2026-11-10
 
 ### Added
 
-- Allow callers to specify the native states that end a prompt wait.
-
-### Fixed
-
-- Allow cold native source builds up to two hours before timeout, including
-  ARM64 builds of Ghostty's native dependencies.
+- Launch ordinary agents with an explicit private JSON environment file, without exposing credentials in terminal commands. Preserve real pane/session identity and refuse cold auto-resume without the original environment. Retain protected installed extensions and package reproducible native source builds for Linux ARM64, including cross-building on macOS.
 
 ## [0.9.0] - 2026-10-30
 

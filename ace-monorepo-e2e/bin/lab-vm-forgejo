@@ -43,7 +43,8 @@ begin
     LabVmForgejoFixture.validate_issues!(issues)
     fixture_paths = %w[ace-monorepo-e2e/bin/lab-vm-forgejo ace-monorepo-e2e/bin/lab-vm-fixture
       ace-monorepo-e2e/bin/lab-vm-lab-start ace-monorepo-e2e/lab-vm/session-fixture.rb ace-monorepo-e2e/lab-vm/forgejo
-      ace-monorepo-e2e/lab-vm/fixtures]
+      ace-monorepo-e2e/lab-vm/fixtures ace-monorepo-e2e/bin/lab-vm-fixture-reset
+      ace-monorepo-e2e/lab-vm/reset-fixture.py ace-monorepo-e2e/bin/lab-vm-scenario-setup]
     changed = checked("git", "status", "--porcelain", "--untracked-files=all", "--", *fixture_paths, chdir: LabVm::ROOT)
     raise "fixture inputs must match the committed source" unless changed.empty?
     cache = File.join(LabVm.local_dir, "downloads")

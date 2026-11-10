@@ -99,15 +99,6 @@ module Ace
           end
         end
 
-        def test_isolated_launch_refusal_never_falls_back_to_ordinary_start
-          executor = StubbedExecutor.new(results: [error_result("isolated_launch_failed", "runtime unavailable")])
-          error = assert_raises(CommandError) do
-            executor.agent_start_isolated(name: "worker", workspace_id: "w1", project: "ace", role: "worker")
-          end
-          assert_includes error.message, "isolated_launch_failed"
-          assert_equal [["herdr", "agent", "start-isolated", "worker", "--workspace", "w1",
-            "--project", "ace", "--role", "worker"]], executor.commands
-        end
 
         def test_agent_start_passes_harness_args_after_separator
           executor = StubbedExecutor.new(binary: "herdr")

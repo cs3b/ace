@@ -3,7 +3,6 @@
 require "digest"
 require "json"
 require_relative "../atoms/observation_sources"
-require_relative "isolated_runtime"
 require "ace/herdr/molecules/herdr_executor"
 
 module Ace
@@ -133,9 +132,9 @@ module Ace
           raise Error, result[:error] || "failed to list worktrees" unless result[:success]
 
           worktrees = Array(result[:worktrees]).reject(&:bare)
-          isolated = !worktrees.empty? && IsolatedRuntime.enabled?(env: @env)
-          sessions = isolated ? executor_sessions : {}
-          bindings = isolated ? executor_bindings(overseer_tasks) : {}
+          native = !worktrees.empty? && (@env["ACE_RUNTIME"] == "herdr" || !@env["HERDR_PANE_ID"].to_s.empty? || !@env["HERDR_PANE"].to_s.empty?)
+          sessions = native ? executor_sessions : {}
+          bindings = native ? executor_bindings(overseer_tasks) : {}
           worktrees.flat_map do |worktree|
             probe = @probe_factory.call(worktree.path)
             report = probe.probe(worktree.path)
@@ -185,19 +184,18 @@ module Ace
         def executor_sessions
           response = @herdr.agent_list.parsed_json
           agents = response.is_a?(Hash) && !response.key?("error") && response.dig("result", "agents")
-          raise Error, "isolated native executor inventory is unavailable" unless agents.is_a?(Array)
+          raise Error, "native executor inventory is unavailable" unless agents.is_a?(Array)
 
           sessions = Hash.new { |index, cwd| index[cwd] = [] }
           agents.each do |agent|
-            role = agent.dig("isolated_session", "role")
-            next unless EXECUTOR_ROLES.include?(role)
+            next unless agent.is_a?(Hash) && agent["name"].to_s.start_with?("coworker-")
 
             terminal, cwd = agent.values_at("terminal_id", "cwd")
             unless terminal.is_a?(String) && terminal.match?(/\Aterm_[0-9a-f]+\z/) &&
                 cwd.is_a?(String) && cwd.start_with?("/")
-              raise Error, "isolated executor session identity is invalid"
+              raise Error, "executor session identity is invalid"
             end
-            sessions[cwd] << {"terminal" => terminal, "role" => role}
+            sessions[cwd] << {"terminal" => terminal, "agent" => agent["name"]}
           end
           sessions.transform_values { |rows| rows.sort_by { |row| row.fetch("terminal") } }
         end

@@ -4,6 +4,7 @@ require "ace/support/cli/toolchain"
 
 require "fileutils"
 require "tmpdir"
+require_relative "../molecules/execution_binding"
 
 module Ace
   module Coworker
@@ -138,20 +139,19 @@ module Ace
             raise Error, "config path '#{relativize(target)}' is a directory; --config must name a file"
           end
 
-          # The exist? -> mv sequence below has a TOCTOU window on the
-          # overwrite refusal: commission is a single-planner local write
-          # primitive, so concurrent writers on the same config are out of
-          # scope by design; this check is a guard, not a hard guarantee.
-          if File.exist?(target) && !force
-            raise Error, "refusing to overwrite '#{relativize(target)}'; use --force"
-          end
-
           FileUtils.mkdir_p(File.dirname(target))
-          content = YAML.safe_dump(config)
-          Dir.mktmpdir(".commission", File.dirname(target)) do |tmp|
-            temp = File.join(tmp, "config.yml")
-            File.write(temp, content)
-            FileUtils.mv(temp, target)
+          Molecules::ExecutionBinding.new.with_lock(target, create: true) do |current, save|
+            if !current.empty? && !force
+              raise Error, "refusing to overwrite '#{relativize(target)}'; use --force"
+            end
+            if current.key?("execution")
+              unless current.reject { |key, _| key == "execution" } == config
+                raise Error, "refusing to replace a commission with an executor binding"
+              end
+              next
+            end
+            current.replace(config)
+            save.call
           end
         end
 

@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.4] - 2026-11-10
+
 ### Fixed
 
-- Support checkout-only preparation for delegated work, including surviving-branch reattachment and dry-run descriptions; defer project hooks, toolchain trust and bootstrap to the executor.
-
+- Prepare checkouts without executing project setup in the coordinator; defer hooks and bootstrap to the commissioned worker, including surviving-branch reattachment.
 
 ## [0.27.3] - 2026-10-20
 

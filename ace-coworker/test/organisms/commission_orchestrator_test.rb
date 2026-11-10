@@ -118,6 +118,22 @@ module Ace
           assert_equal "other@lab", config.overseer
         end
 
+        def test_force_preserves_existing_execution_and_refuses_changing_its_commission
+          orchestrator.call(role: "worker", task: "8xh.t.ccc", assignment: "asg01", overseer: "o@lab")
+          path = File.join(@dir, ".ace-local/coworker/config.yml")
+          Molecules::ExecutionBinding.new.with_lock(path) do |document, save|
+            document["execution"] = {"state" => "running", "terminal_id" => "term_123"}
+            save.call
+          end
+          before = File.read(path)
+          orchestrator.call(role: "worker", task: "8xh.t.ccc", assignment: "asg01", overseer: "o@lab", force: true)
+          assert_equal before, File.read(path)
+          assert_raises(Error) do
+            orchestrator.call(role: "worker", task: "8xh.t.ccc", assignment: "asg01", overseer: "other@lab", force: true)
+          end
+          assert_equal before, File.read(path)
+        end
+
         def test_unknown_role_fails_with_available_list
           error = assert_raises(Error) do
             orchestrator.call(role: "architect", task: "8xh.t.ccc", assignment: "asg01", overseer: "o@lab")

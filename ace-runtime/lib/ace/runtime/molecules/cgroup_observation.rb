@@ -26,10 +26,6 @@ module Ace
             end
           end
 
-          def descriptor_path(handle)
-            File.readlink("/proc/self/fd/#{handle.fileno}")
-          end
-
           def mount_identity(handle)
             info = read("/proc/self/fdinfo/#{handle.fileno}", limit: 4096)
             matches = info.lines.filter_map { |line| /\Amnt_id:\s+([0-9]+)\s*\z/.match(line)&.[](1) }
@@ -73,24 +69,6 @@ module Ace
           {"cgroup_identity" => identity.dup, "populated" => fields.fetch("populated")}
         rescue SystemCallError, IOError, KeyError
           raise RuntimeUnavailableError, "retained scope cannot be observed"
-        end
-
-        # Retirement is stronger than an empty population snapshot: Linux only
-        # removes cgroup-v2 directories without live members or child groups.
-        # Ask procfs about the pinned object, not its reusable pathname. Keep
-        # this separate from observe: a retired object cannot admit new work.
-        def retired?(pinned)
-          handle, identity = pinned.values_at(:handle, :identity)
-          unless handle && !handle.closed? && valid_identity?(identity) &&
-              identity_for(handle, identity.fetch("path")) == identity
-            raise RuntimeUnavailableError, "pinned scope identity changed"
-          end
-          path = @files.descriptor_path(handle)
-          return true if path == identity.fetch("path") + " (deleted)"
-          return false if path == identity.fetch("path")
-          raise RuntimeUnavailableError, "pinned scope moved outside its original path"
-        rescue SystemCallError, IOError, KeyError
-          raise RuntimeUnavailableError, "scope retirement cannot be observed"
         end
 
         # Membership checks use the caller's independently pinned birth policy.

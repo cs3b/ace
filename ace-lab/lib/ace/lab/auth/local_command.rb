@@ -16,8 +16,8 @@ module Ace
 
           pid = Process.spawn(environment, [argv.first, argv.first], *argv.drop(1),
             unsetenv_others: true, pgroup: true)
-          previous = Signal.trap("TERM") { raise SignalException, "TERM" } if Thread.current == Thread.main
           begin
+            previous = Signal.trap("TERM") { raise SignalException, "TERM" } if Thread.current == Thread.main
             _, status = Timeout.timeout(remaining) { Process.wait2(pid) }
             reaped = true
             status.exitstatus || 128 + status.termsig.to_i
@@ -44,7 +44,13 @@ module Ace
           sleep 0.05
           # Darwin reports EPERM when a group contains only our unreaped
           # zombie. Reap it before checking for surviving descendants.
-          reaped ||= !Process.waitpid(pid, Process::WNOHANG).nil?
+          begin
+            reaped ||= !Process.waitpid(pid, Process::WNOHANG).nil?
+          rescue Errno::ECHILD
+            # wait2 may have reaped the leader before an interrupt updated
+            # our flag. Descendants still need the group KILL below.
+            reaped = true
+          end
           Process.kill("KILL", -pid)
           reaped
         rescue Errno::ESRCH

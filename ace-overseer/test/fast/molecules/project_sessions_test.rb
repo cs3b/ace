@@ -26,40 +26,8 @@ class ProjectSessionsTest < Minitest::Test
     FileUtils.remove_entry(@root)
   end
 
-  def isolated_observer(agents)
-    executor = Object.new
-    executor.define_singleton_method(:agent_list) { Struct.new(:parsed_json).new({"result" => {"agents" => agents}}) }
-    control = Object.new
-    control.define_singleton_method(:list_tabs) { raise "isolated observation cannot read host tabs" }
-    resolver = Object.new
-    def resolver.resolve(cwd:) = File.realpath(cwd)
-    Ace::Overseer::Molecules::ProjectSessions.new(root: @root, control: control, root_resolver: resolver,
-      executor: executor, env: {"ACE_LAB_SESSION" => "1", "ACE_TOOLCHAIN" => "installed"})
-  end
 
-  def test_isolated_observation_uses_native_role_identity_and_ignores_worker_or_spoofed_name
-    agent = {"terminal_id" => "term_1234", "cwd" => @project, "agent_status" => "working",
-      "isolated_session" => {"project" => "ace", "role" => "project-overseer"}}
-    agents = [agent.merge("isolated_session" => nil, "name" => "overseer-ace"),
-      agent.merge("isolated_session" => {"project" => "ace", "role" => "worker"})]
-    observer = isolated_observer(agents)
-    absent = observer.call.first
-    assert_equal "absent", absent["state"]
-    agents << agent
-    working = observer.call.first
-    assert_equal "working", working["state"]
-    assert_equal "term_1234", working["pane"]
-    refute_equal absent["revision"], working["revision"]
-    assert_equal working, observer.call.first
-  end
 
-  def test_isolated_observation_rejects_duplicate_owners_and_foreign_root
-    agent = {"terminal_id" => "term_1234", "cwd" => @root, "agent_status" => "idle",
-      "isolated_session" => {"project" => "ace", "role" => "project-overseer"}}
-    assert_equal "unavailable", isolated_observer([agent]).call.first["state"]
-    agent["cwd"] = @project
-    assert_equal "unavailable", isolated_observer([agent, agent.merge("terminal_id" => "term_5678")]).call.first["state"]
-  end
 
   def test_project_session_lifecycle_revises_without_observing_self
     absent = @observer.call.fetch(0)

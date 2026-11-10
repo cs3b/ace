@@ -147,11 +147,10 @@ Worker finishes → reviewer starts → integrator starts, in the same worktree:
   when every earlier leg reached assignment state `completed` and no
   executor holds the worktree. A busy, in-flight, failed, or unreadable
   predecessor refuses with reasons; unknown state is never a free resource.
-  On success it opens the next executor's window in the same worktree and
-  prints `ace-coworker start --config .ace-local/coworker/prepare/<role>.yml`
-  -- the next role starts from the existing start config, nothing is
-  re-prepared. `--dry-run` checks without effects. Use it before every
-  dispatch into a worktree that already served a previous role.
+  With `--runtime herdr`, success starts the actual next executor from the
+  existing start config and records its native identity. The accepted report
+  retires the preceding process before this handoff. `--dry-run` checks without
+  effects; a printed brief or dry-run result is not proof of a running agent.
 
 - Two different tasks may run in parallel in two different worktrees; one
   worktree never has two active executors.

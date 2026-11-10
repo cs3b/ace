@@ -77,18 +77,26 @@ begin
         raise "Herdr server did not become ready (running: #{status["running"].inspect}, compatible: #{status["compatible"].inspect})" if LabVm.uptime >= deadline
         sleep 1
       end
-      # Public start owns workspace selection, trusted isolated admission and
+      # Public start owns workspace selection, ordinary process startup and
       # its initial prompt. The harness supplies only the user's single goal.
       start = guest_json(uuid, "ace-overseer", "start", "--scope", "lab", "--format", "json")
-      terminal = start["pane"]
+      pane = start["pane"]
       unless start["status"] == "started" && start["scope"] == "lab" &&
-          start["root"] == "/lab" && terminal.to_s.match?(/\Aterm_[0-9a-f]+\z/)
-        raise "public start did not confirm a new isolated lab coordinator"
+          start["root"] == "/lab" && pane.to_s.match?(/\A[A-Za-z0-9_.:-]+\z/)
+        raise "public start did not confirm a new lab coordinator"
+      end
+      native = guest_json(uuid, "herdr", "agent", "get", pane).dig("result", "agent")
+      terminal = native && native["terminal_id"]
+      session = native && native["agent_session"]
+      unless native && terminal.to_s.match?(/\Aterm_[0-9a-f]+\z/) && native["cwd"] == "/lab" &&
+          session.is_a?(Hash) && session["agent"] == "pi" && session["kind"] == "path" &&
+          session["value"].is_a?(String) && session["value"].start_with?("/") && session["value"].end_with?(".jsonl")
+        raise "native lab session identity is unavailable"
       end
       goal = "Przygotuj projekt ACE wskazany w konfiguracji laba i doprowadź jego nadzorcę do gotowości. " \
         "Stanowisko używa lokalnego HITL i lokalnego Forgejo. Transport Hermes i Telegram są poza zakresem."
       receipt.merge!("terminal" => terminal, "workspace" => start.fetch("workspace"),
-        "status" => "prompt_pending", "ready" => false, "goal" => goal)
+        "agent_session" => session, "status" => "prompt_pending", "ready" => false, "goal" => goal)
       save_start_receipt(output_path, receipt)
       reply = guest_json(uuid, "herdr", "agent", "prompt", terminal, goal)
       unless reply.dig("result", "type") == "agent_prompted" &&

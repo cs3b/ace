@@ -25,7 +25,7 @@ class CgroupObservationTest < AceRuntimeTestCase
   end
 
   class Files
-    attr_accessor :inode, :mount_id, :events, :membership, :after_read, :filesystem, :mount_root, :descriptor_path_value
+    attr_accessor :inode, :mount_id, :events, :membership, :after_read, :filesystem, :mount_root
     attr_reader :handles, :reads
     def initialize
       @inode, @mount_id = 111, 12
@@ -33,7 +33,6 @@ class CgroupObservationTest < AceRuntimeTestCase
       @events, @membership = "populated 1\nfrozen 0\n", "0::/ace-slot.slice/server.service\n"
       @handles, @reads = [], []
     end
-    def descriptor_path(_handle) = descriptor_path_value || PATH
     def open_directory(_path)
       handle = Handle.new(inode)
       @handles << handle
@@ -70,23 +69,6 @@ class CgroupObservationTest < AceRuntimeTestCase
     assert_equal "/proc/self/fd/42/cgroup.events", @files.reads.last.first
     refute pinned.fetch(:handle).closed?
     assert @files.handles.drop(1).all?(&:closed?), "every transient pathname descriptor is closed"
-  end
-
-  def test_retirement_uses_original_descriptor_not_replacement_path
-    pinned = @observer.pin(PATH)
-    refute @observer.retired?(pinned)
-    @files.descriptor_path_value = PATH + " (deleted)"
-    @files.inode = 999 # A new cgroup can already occupy the old path.
-    assert @observer.retired?(pinned)
-    assert_empty @files.reads
-    @files.descriptor_path_value = "/sys/fs/cgroup/renamed (deleted)"
-    assert_raises(Unavailable) { @observer.retired?(pinned) }
-    @files.descriptor_path_value = PATH + " (deleted)"
-    @files.mount_id = 99
-    assert_raises(Unavailable) { @observer.retired?(pinned) }
-    @files.mount_id = 12
-    pinned.fetch(:handle).close
-    assert_raises(Unavailable) { @observer.retired?(pinned) }
   end
 
   def test_missing_population_duplicate_and_malformed_values_never_become_empty

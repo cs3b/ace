@@ -5,6 +5,7 @@ require_relative "../atoms/observation_sources"
 require "ace/lab/molecules/install_manifest_loader"
 require "ace/herdr/molecules/bounded_process"
 require "ace/support/cli/toolchain"
+require_relative "session_environment"
 
 module Ace::Overseer::Molecules
   # The lab reads the same public projection as each configured project.
@@ -13,14 +14,15 @@ module Ace::Overseer::Molecules
     BUDGET_SECONDS = 20
     def initialize(root: Dir.pwd, env: ENV, loader: -> { Ace::Lab::Molecules::InstallManifestLoader.load },
       runner: Ace::Herdr::Molecules::BoundedProcess.method(:call),
-      clock: -> { Process.clock_gettime(Process::CLOCK_MONOTONIC) })
+      clock: -> { Process.clock_gettime(Process::CLOCK_MONOTONIC) }, environment: nil)
       @root, @env, @loader, @runner, @clock = root, env, loader, runner, clock
+      @environment = environment || SessionEnvironment.new(env: env, manifest_loader: loader)
     end
 
     def call(owner:, scope:, limit:)
       empty = {"events" => [], "sources" => {}}
       return empty unless @env["ACE_TOOLCHAIN"] == "installed" &&
-        (@env["ACE_LAB_SESSION"] == "1" || File.exist?(Ace::Lab.install_manifest_path))
+        File.exist?(Ace::Lab.install_manifest_path)
       document = @loader.call
       return empty unless document.dig("coordinator", "path") == File.realpath(@root)
       events, sources = [], {}
@@ -34,7 +36,7 @@ module Ace::Overseer::Molecules
           raise Timeout::Error, "project observation budget exhausted" unless remaining.positive?
           result = @runner.call([Ace::Support::Cli::Toolchain.executable("ace-overseer"), "observe",
             "--owner", owner, "--scope", scope, "--limit", limit.to_s],
-            environment: @env.to_h.merge(Ace::Support::Cli::Toolchain.child_environment).compact,
+            environment: @environment.observation_environment(root: root),
             chdir: root, timeout_s: remaining, output_limit: 2_097_152, cleanup_group: true)
           raise Ace::Overseer::Error, "project observation failed" unless result.status.success? && !result.oversized
           value = JSON.parse(result.stdout)

@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-10
+
 ### Added
 
-- Expose repository-bound open issue intake to the forge-neutral status
-  collector, excluding pull requests and refusing malformed or foreign data.
+- Observe repository-bound open issues including body and label changes. Support formal approval with repository-scoped credentials and verify the returned reviewer identity.
 
 ## [0.8.0] - 2026-10-23
 

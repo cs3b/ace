@@ -7,20 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
+## [0.9.0] - 2026-11-10
 
-- Require commissioned PR review rounds to cover the full forge delta, verifying base/head and included files rather than assuming local main is the forge base; preserve installed runtime in reviewer instructions.
+### Added
 
-- Read worktree assignment inventories through the installed ace-assign owner API instead of launching one CLI per worktree; preserve per-project configuration and report read errors.
-
-- Report missing or mismatched assignments and failed assignment status probes as not ready in coworker status instead of returning `ready: true` with an assignment error.
-
-- Prepare checkout and assignments without running project setup as the coordinator; report setup as delegated and explicitly assign it to the worker.
-- Keep bootstrap-worker acceptance within its granted scope; the authorized coordinator confirms full private-task observation.
-
-- Include the selected configuration path in the executor's report command.
-- Prepare and independently verify commissioned project eyes configuration before the project Overseer starts.
-- Require direct ACE checks and their actual exit status in bootstrap worker and verifier evidence.
+- Preserve actual executor bindings when preparing or commissioning again; prevent identity replacement. Delegate project setup to workers, retain exact-HEAD review/integration gates, and keep reports tied to the selected commission.
 
 ## [0.8.0] - 2026-10-31
 

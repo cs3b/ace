@@ -105,7 +105,7 @@ begin
         cp -R /home/lab-operator/lab/. /lab/
         chown -R mo:mo /lab/.ace /lab/.gitignore
         test "$(stat -c '%U:%G' /lab)" = mo:mo
-        install -o root -g root -m 0600 /home/lab-operator/ace-e2e-auth.json /etc/lab/ace-lab/pi-auth.json
+        install -o mo -g mo -m 0600 /home/lab-operator/ace-e2e-auth.json /etc/lab/ace-lab/pi-auth.json
         rm -f /home/lab-operator/ace-e2e-auth.json
         install -o root -g root -m 0644 /home/lab-operator/fixture.bundle /tmp/ace-e2e-fixture.bundle
         runuser -u mo -- git -C /lab init -q -b main
@@ -130,7 +130,7 @@ begin
         test ! -e /var/lib/ace-e2e/session-fixture.rb
         install -o root -g root -m 0644 /home/lab-operator/session-fixture.rb /var/lib/ace-e2e/session-fixture.rb
         test "$(sha256sum /var/lib/ace-e2e/session-fixture.rb | cut -d' ' -f1)" = '#{Digest::SHA256.file(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/session-fixture.rb")).hexdigest}'
-        ruby /var/lib/ace-e2e/session-fixture.rb
+        ruby /var/lib/ace-e2e/session-fixture.rb '#{run_id}' '#{uuid}'
         install -d -o root -g root -m 0755 /run/lab
         install -d -o mo -g mo -m 0700 /run/lab/herdr
         printf '%s\n' 'export HERDR_SOCKET_PATH=/run/lab/herdr/herdr.sock' >> /etc/profile.d/ace-e2e.sh
@@ -142,7 +142,11 @@ begin
         test -d /opt/ace/runtime/pi-agent/extensions
         test ! -L /opt/ace/runtime/pi-agent/extensions
         test "$(stat -c '%U:%G' /opt/ace/runtime/pi-agent/extensions)" = root:root
-        test ! -e /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts
+        # Reinstall the pinned embedded asset on repeat; the runtime survives reset.
+        if test -e /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts; then
+          test -f /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts
+          test "$(stat -c '%U:%G' /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts)" = root:root
+        fi
         test ! -L /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts
         HOME=/home/mo PI_CODING_AGENT_DIR=/opt/ace/runtime/pi-agent herdr integration install pi
         test -f /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts

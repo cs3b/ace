@@ -1,20 +1,19 @@
-# TC-004: Lease expiry and singleton issuer crash
+# TC-004: Scoped credentials, expiry and interrupted execution
 
-Require actual Forgejo access before revocation and rejection afterwards, terminated command processes, unchanged unrelated session isolation, and terminal LeaseStore cleanup. An unconfirmed remote revoke remains blocked. Verify request and exec use the same issuer invocation until the injected crash; post-crash recovery reconciles old leases before accepting new ones. Token values must not occur in argv, prompts or reports. Component-only synthetic-provider probes cannot substitute for this case.
+Require real Forgejo access to the configured repository and rejection for a
+second repository, using the same scoped token. Require command exit and
+confirmed revoke after normal temporary-token execution; expired access must
+refuse new execution. For interruption, match the PID and birth identity to the
+executed command and inspect the existing lease record after public reconcile.
+Unknown remote cleanup must remain visibly blocked. Do not infer revocation
+from a missing local file or a process exit.
 
-Check that the crash targeted only the issuer's main process and that the
-installed `ExecStopPost` ran. Capture evidence for startup recovery separately.
-For expiry and crash, require the operator probe's actual HTTP 200 and
-populated command cgroup before the fault, followed by HTTP 401 or 403 for
-the same credential, empty or absent command cgroup and terminal cleanup.
-Require a revoked lease with cleanup `revoked` or `already_invalid` and the
-probe's remote HTTP evidence.
-To prove session isolation, require a different-principal execution refusal
-and an unreadable credential projection from a distinct live isolated session
-while the owner's lease is issued and unused. The owner must then use that
-same lease to start the command observed by the crash probe. Record any
-dependent units stopped by systemd and their public recovery.
+Ending a session must remove its private credential projection without revoking
+a shared static project token. No daemon, systemd invocation ID, cgroup or
+same-UID adversarial-isolation proof is required. Verify credentials are absent
+from captured argv, prompts and reports. A synthetic provider is not Forgejo
+acceptance.
 
-Use the actual VM/Forgejo state, then `results/tc/04/state.json` and
-`sessions.json`, then the command stdout/stderr/exit captures. Missing, stale or
-contradictory evidence is FAIL. Confirm the fixture identity matches setup.
+Use `results/tc/04/state.json`, `sessions.json`, the actual command stdout/stderr
+and exit captures. Missing or contradictory evidence fails the case. Record
+unimplemented or unexecuted subcases as failures, never skipped successes.

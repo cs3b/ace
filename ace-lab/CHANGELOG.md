@@ -7,57 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
+## [0.15.0] - 2026-11-10
 
-- Launch configured roles as ordinary processes with explicit project-scoped
-  environment files; remove the systemd issuer, DynamicUser and mount namespace
-  machinery. Installation and verification no longer require an auth service.
-- Reuse identical read-only gem probes within a single verification pass to avoid repeated dependency traversal subprocesses.
+### Added
 
-### Fixed
-
-- Classify missing or malformed extension projections and preserve dry-run filesystem state; verify directory traversal and reject unsafe receipt paths.
-
-- Require root-controlled extension sources, destinations and receipts in
-  installed mode, and project managed extension files as root.
-- Keep grants with invalid or missing provider-managed expiry pending for
-  revocation instead of exposing an unusable or unbounded live lease.
-- Report a missing live credential handoff and require revocation before
-  issuing a replacement instead of repeatedly returning an unusable lease.
-- Run leased commands with an explicit environment in an ordinary process
-  group, enforce the lease deadline, and terminate descendants on completion
-  or interruption. Keep uncertain cleanup visible instead of claiming success.
-- Persist in-flight execution in the lease record so issuer crashes cannot
-  silently make a running or uncontained command eligible for reuse.
-- Reject empty or malformed commands and malformed environment handoffs;
-  execute argv directly without exposing the environment through `env`.
-- Serialize issuance with revoke and reconciliation for the same lease
-  correlation; report individual recovery failures without masking other leases.
-- Accept confirmed already-invalid credentials as successful cleanup and
-  refuse caller-supplied credential overrides in execution environments.
-- Keep identical repository-scoped credential requests idempotent regardless
-  of the profile's repository order.
-- Preserve confirmed credential revocation when a concurrent execution's
-  cleanup later reports an uncertain provider outcome.
-- Keep an operator-forced terminal outcome distinct from confirmed remote
-  revocation when the revoke command is repeated.
-- Bind lease execution and revocation to the owning principal; only the root
-  operator can force an unconfirmed revocation closed.
-- Keep temporary credential files private from their creation, including when
-  the issuing process has a permissive umask.
-- Resolve role instructions with the installed ACE CLI and a clean child environment when `ACE_TOOLCHAIN=installed`.
-- Recognize explicitly installed prerelease gems when verifying a runtime
-  dependency closure, matching RubyGems activation behavior.
-- Use Forgejo's Basic-authenticated user token API with administrator sudo,
-  and require the response to confirm the requested scopes and repositories.
-  The previously documented administrator-token endpoint is unavailable in
-  Forgejo 15; source credentials stay out of child argv and reports.
-  Reject malformed issuer origins, remote HTTP and invalid token responses.
-- Preserve the selected installed ACE toolchain and gem paths in leased child
-  processes while continuing to strip ambient credential overrides.
-- Project a Forgejo lease into an isolated, temporary `fj` login and Git
-  askpass configuration for the child, and clean up a crashed projection
-  during lease cleanup.
+- Configure ordinary role processes with project-scoped environment files; installation and verification require no session issuer service. Converge protected extension permissions and runtime dependency closure. Execute temporary grants in ordinary process groups with deadlines, cleanup, principal checks and durable interrupted-execution reconciliation; use repository-scoped Forgejo token APIs.
 
 ## [0.14.1] - 2026-10-31
 

@@ -137,6 +137,51 @@ module Organisms
         "--append-system-prompt", File.join(@root, "guide.md")], start[:args]
     end
 
+    def test_failed_installed_agent_start_closes_pane_before_removing_credentials
+      credentials = Dir.mktmpdir("ace-session-")
+      File.write(File.join(credentials, "auth.json"), "{}")
+      environment = Object.new
+      environment.define_singleton_method(:with_environment) do |**_, &block|
+        block.call("/private/environment.json", credentials, [])
+      end
+      executor = FakeExecutor.new(pane_current: {"result" => {"workspace_id" => "ws1"}})
+      executor.define_singleton_method(:agent_start) { |**_| raise Ace::Herdr::WaitTimeoutError, "start timed out" }
+      closed = []
+      executor.define_singleton_method(:pane_close) do |pane|
+        raise "credentials deleted before process closure" unless File.file?(File.join(credentials, "auth.json"))
+        closed << pane
+      end
+      subject = Ace::Overseer::Organisms::StartOrchestrator.new(config: @config, executor: executor,
+        nav_runner: @nav_runner, cwd: @root, env: {"ACE_TOOLCHAIN" => "installed"})
+      Ace::Overseer::Molecules::SessionEnvironment.stub(:new, environment) do
+        report = subject.call
+        assert_equal "blocked", report["status"]
+      end
+      assert_equal ["p1"], closed
+      refute File.exist?(File.join(credentials, "auth.json"))
+    ensure
+      FileUtils.remove_entry(credentials) if credentials && File.exist?(credentials)
+    end
+
+    def test_failed_installed_agent_preserves_credentials_when_closure_is_uncertain
+      credentials = Dir.mktmpdir("ace-session-")
+      environment = Object.new
+      environment.define_singleton_method(:with_environment) { |**_, &block| block.call("/private/environment.json", credentials, []) }
+      executor = FakeExecutor.new(pane_current: {"result" => {"workspace_id" => "ws1"}})
+      executor.define_singleton_method(:agent_start) { |**_| raise Ace::Herdr::WaitTimeoutError, "start timed out" }
+      executor.define_singleton_method(:pane_close) { |_| raise Ace::Herdr::ExecutorError, "owner unavailable" }
+      subject = Ace::Overseer::Organisms::StartOrchestrator.new(config: @config, executor: executor,
+        nav_runner: @nav_runner, cwd: @root, env: {"ACE_TOOLCHAIN" => "installed"})
+      Ace::Overseer::Molecules::SessionEnvironment.stub(:new, environment) do
+        report = subject.call
+        assert_equal "blocked", report["status"]
+        assert_match(/cleanup is unconfirmed/, report["message"])
+      end
+      assert File.directory?(credentials)
+    ensure
+      FileUtils.remove_entry(credentials) if credentials && File.exist?(credentials)
+    end
+
     def test_foreground_start_reports_missing_working_directory
       report = orchestrator(FakeExecutor.new, cwd: File.join(@root, "missing")).bootstrap(dry_run: true)
       assert_equal "blocked", report["status"]

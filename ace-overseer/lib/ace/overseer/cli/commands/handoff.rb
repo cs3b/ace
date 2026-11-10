@@ -50,6 +50,10 @@ module Ace
             end
 
             next_leg = result[:next]
+            if result[:execution]
+              puts "Executor #{result[:execution]['agent']} started for #{next_leg['assignment']}. End the turn; eyes observes its report."
+              return
+            end
             unless next_leg && next_leg["start_config"]
               raise Ace::Support::Cli::Error,
                 "handoff result is missing the next leg start config - refusing to print a guessed command"

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.1] - 2026-11-10
+
+### Fixed
+
+- Mount result parent directories correctly in sandbox pipelines and include bounded setup stdout in failure diagnostics.
+
 ## [0.43.0] - 2026-10-05
 
 ### Added

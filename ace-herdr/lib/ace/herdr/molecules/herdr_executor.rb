@@ -60,23 +60,15 @@ module Ace
         # `args` are harness passthrough arguments forwarded verbatim
         # after `--` (e.g. pi's --model/--thinking/--append-system-prompt;
         # the overseer start contract, 8xs.t.pu0.1).
-        def agent_start(name:, kind:, pane:, timeout_ms:, args: [])
+        def agent_start(name:, kind:, pane:, timeout_ms:, args: [], env_file: nil)
           managed = kind == "pi" ? InstalledPiExtensions.arguments : []
           InstalledPiExtensions.reject_override!(args) unless managed.empty?
           args = managed + args
           cmd = [@binary, "agent", "start", name, "--kind", kind,
             "--pane", pane, "--timeout", timeout_ms.to_s]
+          cmd += ["--env-file", env_file] if env_file
           cmd += ["--", *args] unless args.empty?
           run!(cmd)
-        end
-
-        # The protected host selects the runtime from project/role. Success
-        # is process admission only; first-turn and eyes readiness are separate.
-        def agent_start_isolated(name:, workspace_id:, project:, role:, cwd: nil)
-          args = [@binary, "agent", "start-isolated", name, "--workspace", workspace_id,
-            "--project", project, "--role", role]
-          args += ["--cwd", cwd] if cwd
-          run!(args)
         end
 
         # Submit a prompt to the agent in a pane (push delivery). herdr

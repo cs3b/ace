@@ -27,7 +27,7 @@ module Ace
         SERVICE_EXEC_SIGNATURES = {
           **%w[Type User Group Restart KillMode ProtectSystem RootDirectory RootImage NetworkNamespacePath Slice StandardInput TTYPath StandardOutput StandardError WorkingDirectory RuntimeDirectoryPreserve DevicePolicy PAMName].to_h { |key| [key, "s"] },
           **%w[SupplementaryGroups ReadWritePaths ReadOnlyPaths Environment PassEnvironment UnsetEnvironment Sockets InaccessiblePaths ExtensionDirectories RuntimeDirectory].to_h { |key| [key, "as"] },
-          **%w[SendSIGKILL Delegate ProtectControlGroups NoNewPrivileges PrivateIPC PrivateDevices DynamicUser RemainAfterExit RootEphemeral MountAPIVFS PrivateTmp ProtectKernelTunables BindLogSockets].to_h { |key| [key, "b"] },
+          **%w[SendSIGKILL Delegate ProtectControlGroups NoNewPrivileges PrivateIPC PrivateDevices DynamicUser RootEphemeral MountAPIVFS PrivateTmp ProtectKernelTunables BindLogSockets].to_h { |key| [key, "b"] },
           **%w[CapabilityBoundingSet AmbientCapabilities RestrictNamespaces].to_h { |key| [key, "t"] },
           "RuntimeDirectoryMode" => "u", "UMask" => "u", "RootImageOptions" => "a(ss)", "TemporaryFileSystem" => "a(ss)", "MountImages" => "a(ssba(ss))",
           "ExtensionImages" => "a(sba(ss))", "EnvironmentFiles" => "a(sb)", "RestartForceExitStatus" => "(aiai)", "RestrictAddressFamilies" => "(bas)",

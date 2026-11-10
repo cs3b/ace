@@ -39,7 +39,7 @@ reason to delegate, not a reason to investigate before creating the task.
 ## First turn after start
 
 On a configured lab host, `ace-overseer start` selects the lab or project from
-its canonical directory and starts an isolated Pi session through native Herdr.
+its canonical directory and starts an ordinary Pi process with an explicit environment through native Herdr.
 The protected host deployment selects the installed runtime and standing role;
 project files do not select a different runtime. A start acknowledgement means
 admission or prompt submission, not completed readiness. Readiness requires the
@@ -51,8 +51,8 @@ for the Captain to write YAML. Missing protected runtime or host authority is a
 concrete host blocker; never replace it with a project bundle or source checkout.
 
 The Captain's latest instruction outranks this guide and stored tasks or plans.
-On this first turn, commission any missing configuration and project
-preparation through workers before resuming unrelated stored backlog. Read old
+After first-turn observation is ready, prioritize missing configuration and
+project preparation through workers before unrelated stored backlog. Read old
 `_overseer` tasks as context; do not dispatch old auth, publication or full
 acceptance work while the current instruction is bootstrap and project start.
 Report scope conflicts to the host operator instead of negotiating away a new
@@ -61,8 +61,9 @@ Captain order.
 1. Read the lab topology, current private tasks and real assignment/session
    state. Resume this commissioned bootstrap before unrelated backlog. Resolve
    actual project paths; ask only about ambiguous scope or missing authority.
-2. Read `wfi://overseer/bootstrap-delegation` through `ace-bundle` and follow
-   its complete task → worker → observation → verification → start procedure.
+2. Read `wfi://overseer/bootstrap-delegation` through `ace-bundle` to understand
+   the task → worker → observation → verification → start procedure. Do not
+   dispatch during this initialization turn.
 3. Arm observation with the `ace_eyes` tool, action `start`, using the lab's
    eyes configuration path. Check enabled=true, breaker=null, errors=0 and
    a successful observation with every required source healthy before dispatch.
@@ -71,7 +72,17 @@ Captain order.
    turn; if that owner is unavailable, report its failure and end the turn.
    Do not inspect host files or probe transport to find the cause yourself.
    Writing `/eyes` in prose does not arm observation.
-4. For a preparation commission, read existing readiness/session state; use
+4. Once observation is healthy, END THIS TURN. Do not dispatch or process
+   pending reports yet. Leave initial revisions pending so eyes can wake you
+   after the completed first turn proves readiness. This avoids requiring a
+   completed first turn from inside that same turn.
+
+## On an eyes wake or a new commission
+
+Verify that every required observation source is healthy; otherwise record the
+blocker and end the turn. Reconcile existing work before dispatching new work.
+
+1. For a preparation commission, read existing readiness/session state; use
    a startup dry run only if needed to establish an otherwise unknown status.
    Do not investigate its implementation or reproduce the failure yourself.
    Once the symptom is known, create/reconcile the task and dispatch its
@@ -79,7 +90,7 @@ Captain order.
    accepted worker completion and independent verification. Bare
    `ace-overseer start` targets the calling scope; do not recursively start
    your own coordinator. Use the returned project session identity.
-5. After dispatch, record the real assignment and agent identity and END YOUR
+2. After dispatch, record the real assignment and agent identity and END YOUR
    TURN. Do not sleep-poll, run repeated status commands, or wait synchronously
    for the worker. A semantic change wakes you; unchanged state stays silent.
 

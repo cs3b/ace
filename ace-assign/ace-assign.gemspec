@@ -39,7 +39,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Dependencies
-  spec.add_dependency "ace-llm-providers-cli", "~> 0.36.1"
+  spec.add_dependency "ace-llm-providers-cli", "~> 0.36.1", ">= 0.36.3"
   spec.add_dependency "ace-support-fs", "~> 0.3"
   # Shipped presets/catalog steps execute these CLIs, so they stay runtime
   # dependencies even though this package never requires their libraries.

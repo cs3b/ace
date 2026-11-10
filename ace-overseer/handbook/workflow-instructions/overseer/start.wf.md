@@ -81,39 +81,32 @@ Lab bootstrap reports belong to the Lab Overseer; project delivery reports
 belong to the project Overseer. Keep that recipient through reviewer and
 integrator handoffs so each result reaches the coordinator that owns the work.
 
-### Launching an isolated coworker
+### Launching a coworker
 
-When `ACE_LAB_SESSION=1`, launch the prepared leg through `ace-herdr dispatch`.
-`ace-overseer work-on` opens a local terminal workspace; it is not the isolated
-session launcher. Do not synthesize HERDR environment variables or switch to
-an ordinary shell to make that path run.
+Use `ace-overseer work-on --task <project-task> --runtime herdr` for a new
+ordinary delivery sequence. It prepares the worktree and role assignments,
+validates the brief, starts the actual worker and records its native identity.
+For an already prepared sequence (including bootstrap), use
+`ace-overseer handoff --task <project-task> --runtime herdr`. Without
+`--dry-run`, handoff starts the next eligible role; the returned execution
+binding is evidence of a start, not merely an opened window.
 
-After `ace-coworker prepare`, use its returned assignment ID, execution worktree
-and start config. Resolve a relative config path against that worktree and
-check that it exists. `ace-coworker start --config <path>` prints the executor
-brief; it does not start a separate agent. Write a commission file directing
-the executor to read that brief, drive exactly its assignment, perform the
-specified scope and finish with `ace-coworker report`. Include acceptance
-criteria, repository and permitted access profile, never credentials.
+The environment is prepared from the installed runtime and the selected
+project/role credential source. A role has its own process and worktree;
+OS users, systemd units and an authorization service are not prerequisites.
+`ace-coworker start` still renders a brief; do not mistake its output for a
+running agent or write a second launch script around it.
 
-Before dispatch, record the assignment, worktree, host role and commission
-path on the private coordination leg. Arm one startup deadline in `ace_eyes`
-with key `dispatch-<id>`, revision `<id>` and `at` set to the current Unix time
-in milliseconds plus 300000. Keep this deadline even if the dispatch
-acknowledgement is uncertain.
-If observation cannot arm it, record the blocker before dispatch.
+Record returned assignment, worktree, terminal and role on the matching
+private coordination step, then END THE TURN. Eyes observes the result.
+On replay, reconcile the recorded execution. An uncertain launch blocks a new
+start; never invent another name to bypass it. A missing observer, runtime or
+credential source is a concrete blocker to report, not a repair for you to do.
 
-```bash
-ace-herdr dispatch --cwd <execution-worktree> --role worker --label <assignment-id> --prompt-file <commission-file>
-```
+After accepting the worker report, `process-reports` retires that executor
+and uses the same handoff operation for independent review, then integration.
+Executed tests and independent review must bind to the current candidate HEAD.
 
-Allow the dispatch tool call up to 180 seconds for launch, input readiness
-and prompt acknowledgement. End your turn once you have recorded its result.
-
-Use host role `verifier` for the independent reviewer leg and `integrator` for
-the integration leg, each with its own prepared assignment and commission.
-Launch the next leg only after accepting the preceding leg's actual report;
-review and test evidence must match the candidate HEAD before integration.
 For delivery from a forge issue, retain the issue link on the project task
 and include its repository, target branch and forge selection in each
 commission. A generic success event is a pointer to assignment evidence.
@@ -155,8 +148,8 @@ When an executor observation lists the recorded terminal in
 `missing_sessions`, the deadline fires, or a blocked transport recovers,
 check Herdr and the pinned assignment. If dispatch did not return a terminal,
 use `herdr agent list` to find the unique assignment-labelled agent with the
-expected worktree and isolated role. Record its full `term_…` ID. Use that
-ID with `herdr agent get` and `herdr agent prompt` for all isolated recovery.
+expected worktree and recorded role. Record its full `term_…` ID. Use that
+ID with `herdr agent get` and `herdr agent prompt` for recovery.
 Pane indexes such as `p5` are display identifiers.
 For a permitted recovery, submit `herdr agent prompt <terminal> "<text>"`.
 The guarded route accepts the terminal and text only. Use eyes for the
@@ -228,7 +221,8 @@ settlement alone is not proof of handling.
 - One overseer per project: you own the session label you were started with.
   Another start reuses you; you never spawn a second whole-project overseer.
 - Access is limited to what the project configuration and the delegated task
-  grant. Credentials and OTP values never enter prompts, reports, or files.
+  grant. Credentials and OTP values never enter prompts, reports or tracked
+  files. Configured credential files must remain private (`0600`).
   When forge access is missing, do not search host credential stores or set up
   a persistent `fj` login yourself. Request the existing session-scoped auth
   handoff for the required role and repository using the procedure below; if
@@ -242,42 +236,21 @@ settlement alone is not proof of handling.
   producer on the host) are explicitly not available in this slice; do not
   simulate them. Missing capability is a reported gap, not a workaround.
 
-## Session-scoped forge access
+## Project-scoped forge access
 
-A missing ambient `fj` login is expected in an isolated session. Use the
-installed `ace-lab auth --help` interface before declaring forge access missing.
-The root-owned `/etc/lab/ace-lab/authorization.yml` contains public profile
-metadata under `auth.profiles`: allowed roles, principals, repositories and TTL.
-Read that configuration to choose a profile explicitly permitting your actual
-session role and target repository. Do not read any referenced issuer password
-or credential file, search the filesystem for tokens, or modify this policy.
-If the policy is unreadable or no profile permits the operation, report that
-specific capability gap through HITL.
+The session starts with the selected project's read or role credential in its
+environment or private provider config. Use that configured forge normally.
+Continuous observation needs a read credential valid for the observer's
+lifetime. An unavailable login is a visible configuration blocker; do not
+read host administrator credentials or invent another login method.
 
-Create/reuse the private coordination task for the requested goal first. Bind
-the request to that real task and the actual recorded coordination assignment;
-never borrow a worker's assignment or impersonate its role. If the commission
-has no assignment identity, establish a coordination-only assignment through
-the existing assignment owner before requesting access. Its steps cover issue
-reading, planning and dispatch; do not use an implementation preset or assign
-installation, code changes, review or merge to yourself. Request only the repositories and TTL needed:
+When the deployment explicitly configures a temporary credential provider,
+use the existing `ace-lab auth request/status/exec/revoke` procedure. These
+commands run locally; they do not depend on a service. Request only the named
+repository and role. `auth exec` gives its child the credential and reports
+execution and cleanup separately. An unconfirmed revoke remains unresolved.
+Static shared project credentials are not revoked when one worker exits.
 
-```bash
-ace-lab auth request --profile <allowed-profile> --role <actual-session-role> --task <task-id> --assignment <assignment-id> --repo <owner/repository> --ttl <minutes>
-ace-lab auth exec <returned-lease-id> --cmd <installed-command> --cmd <argument> --cmd <argument>
-ace-lab auth status <returned-lease-id>
-```
-
-Each `--cmd` supplies exactly one argument. Run these commands directly, without
-pipes or output redirection. `auth exec` provides the ephemeral Forgejo login
-to its child and revokes access on completion; outside that child, `fj` remains
-unauthenticated. Read the returned execution and cleanup outcomes. Request a
-new lease for a later operation; never reuse a consumed lease. Revoke an unused
-lease with `ace-lab auth revoke <lease-id>`. Unconfirmed cleanup is a blocker.
-
-Issue reading and coordination may use the overseer's permitted profile.
-Implementation, review and integration belong to their separate executors,
-which request their own session-bound leases. Pass repository, scope and
-required role in the commission, never a token or another session's lease ID.
-Read real issue content from the forge; test fixture receipts and host files
-are not a substitute for that content.
+Pass repository, role, scope and acceptance criteria in the commission,
+never tokens. Workers implement, reviewers independently review, and
+integrators merge; the coordinator never borrows those roles to do their work.

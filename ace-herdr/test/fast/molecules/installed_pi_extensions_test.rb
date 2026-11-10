@@ -24,20 +24,6 @@ class InstalledPiExtensionsTest < Minitest::Test
     end
   end
 
-  def test_isolated_session_requires_installed_linux_runtime_and_manifest
-    Dir.mktmpdir do |dir|
-      absent = File.join(dir, "absent")
-      [
-        [{"ACE_LAB_SESSION" => "1"}, "linux"],
-        [{"ACE_LAB_SESSION" => "1", "ACE_TOOLCHAIN" => "installed"}, "darwin"],
-        [{"ACE_LAB_SESSION" => "1", "ACE_TOOLCHAIN" => "installed"}, "linux"]
-      ].each do |env, platform|
-        assert_raises(Ace::Herdr::ExecutorUnavailableError) do
-          Extensions.arguments(env: env, platform: platform, manifest_dir: absent)
-        end
-      end
-    end
-  end
 
   def test_extension_overrides_are_refused
     %w[--no-extensions -ne --extension --extension=/tmp/x -e -e/tmp/x].each do |argument|

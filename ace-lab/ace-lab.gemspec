@@ -48,7 +48,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-config", "~> 0.18"
   # The retained Forgejo merge adapter delegates provider transport and
   # authentication to the forgejo provider.
-  spec.add_dependency "ace-git-forgejo", "~> 0.7"
+  spec.add_dependency "ace-git-forgejo", "~> 0.7", ">= 0.9.0"
 
   # Development dependencies
   spec.add_development_dependency "ace-support-test-helpers", "~> 0.14"
