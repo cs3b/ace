@@ -133,6 +133,8 @@ begin
         ace-overseer --version
         herdr --version
         pi --version
+        test "$(command -v rg)" = /usr/bin/rg
+        rg --version
       SH
       code, output = LabVm.guest_exec(uuid, "/usr/sbin/runuser", "-u", "mo", "--", "/bin/sh", "-c", probe)
       puts output

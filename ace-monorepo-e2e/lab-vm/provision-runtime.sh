@@ -74,7 +74,7 @@ PY
 /bin/sh "$input/install-system-packages.sh" /var/lib/ace-e2e/debian-snapshot.list \
   build-essential ca-certificates curl git libssl-dev zlib1g-dev \
   libyaml-dev libreadline-dev libffi-dev libgdbm-dev libncurses-dev libgmp-dev \
-  pkg-config xz-utils musl-tools libnss-systemd
+  pkg-config ripgrep xz-utils musl-tools libnss-systemd
 # Isolated sessions rely on the same kernel restriction as ace-runtime's
 # protected peer checks. This is applied only to disposable working clones.
 printf '%s\n' 'kernel.yama.ptrace_scope = 2' > /etc/sysctl.d/90-ace-e2e.conf
