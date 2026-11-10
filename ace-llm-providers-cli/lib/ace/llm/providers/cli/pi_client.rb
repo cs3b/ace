@@ -309,13 +309,10 @@ module Ace
               raise capture.provider_error("Pi CLI failed: #{error_msg}")
             end
 
-            text, usage, finish_reason = parse_ndjson(capture.stdout)
-            if text.to_s.strip.empty?
-              # Clean exit without a final response: an incomplete session,
-              # not a completed answer.
-              raise capture.with_no_response_evidence(
-                Ace::LLM::ProviderError.new("Pi CLI produced no final message")
-              )
+            begin
+              text, usage, finish_reason = parse_ndjson(capture.stdout)
+            rescue Ace::LLM::ProviderError => error
+              raise capture.with_no_response_evidence(error)
             end
             response = {"usage" => normalize_usage(usage), "finish_reason" => finish_reason}
 

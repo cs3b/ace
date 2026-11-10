@@ -536,6 +536,20 @@ describe "PiClient" do
     end
   end
 
+  it "marks a settled stream without assistant text as uncertain execution" do
+    ndjson = <<~NDJSON
+      {"type":"agent_end","messages":[{"role":"assistant","content":[],"stopReason":"error"}]}
+      {"type":"agent_settled"}
+    NDJSON
+
+    error = assert_raises(Ace::LLM::ProviderError) do
+      @client.send(:parse_pi_response, build_capture(stdout: ndjson), "Review", {})
+    end
+    assert_match(/no final assistant message/, error.message)
+    assert_equal :no_response, error.execution_evidence&.outcome
+    assert error.execution_evidence.uncertain_execution?
+  end
+
   describe "normalize_usage" do
     it "normalizes Pi field names to standard format" do
       usage = {"input" => 10, "output" => 5}
