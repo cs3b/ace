@@ -155,6 +155,9 @@ use `herdr agent list` to find the unique assignment-labelled agent with the
 expected worktree and isolated role. Record its full `term_…` ID. Use that
 ID with `herdr agent get` and `herdr agent prompt` for all isolated recovery.
 Pane indexes such as `p5` are display identifiers.
+For a permitted recovery, submit `herdr agent prompt <terminal> "<text>"`.
+The guarded route accepts the terminal and text only. Use eyes for the
+resulting change and end the turn after recording the submission.
 
 At the startup deadline, reconcile any uncertain dispatch acknowledgement.
 If the exact session is still idle, interactive-ready, has no

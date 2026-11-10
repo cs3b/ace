@@ -69,10 +69,11 @@ the exact candidate head. Otherwise WITHHOLD the merge and report/escalate.
      `.ace-local/coworker/review-rounds/<assignment>.json`
      (`ace-coworker rounds` verdict `accept`). The reviewed head is the head
      that verdict covers.
-   - **Test evidence**: executed `ace-test <package> all` results named in
-     the worker/reviewer reports (counts, failures). Installed mode uses the
-     installed executable, and ACE development mode uses `bin/ace-test`.
-     Only executed runs count. CI status is advisory.
+   - **Test evidence**: commands and results from the worker and reviewer
+     reports for all checks required by the issue and project. Compare the
+     test scope with those requirements before accepting the reports.
+     Installed mode uses installed `ace-test`, and ACE development mode
+     uses `bin/ace-test`. Only executed checks count. CI status is advisory.
    - **Dependency states**: for each leaf the candidate depends on, whether
      its result was RECEIVED AND INTEGRATED (merged predecessor), not merely
      finished or reviewed.
