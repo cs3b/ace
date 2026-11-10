@@ -147,7 +147,7 @@ module Ace
               ids[1], "steps", "*.md")).map { |p| File.read(p) }.join
             integrator_steps = Dir.glob(File.join(worktree, ".ace-local", "assign",
               ids[2], "steps", "*.md")).map { |p| File.read(p) }.join
-            assert_includes worker_steps, "bin/ace-test"
+            assert_includes worker_steps, "required checks from the worker workflow"
             assert_includes worker_steps, "publish-pr"
             assert_includes worker_steps, @task_ref
             assert_includes reviewer_steps, "3/2/10"

@@ -81,7 +81,8 @@ module Ace
           refute_equal worker_steps, reviewer_steps
           worker_all = worker_steps.join
           reviewer_all = reviewer_steps.join
-          assert_includes worker_all, "bin/ace-test"
+          assert_includes worker_steps.fetch(1), "required checks from the worker workflow"
+          refute_includes worker_steps.fetch(1), "ace-test <package> all"
           assert_includes reviewer_all, "3/2/10"
           assert_includes reviewer_all, "ace-coworker rounds record"
           refute_includes worker_all, "3/2/10"
