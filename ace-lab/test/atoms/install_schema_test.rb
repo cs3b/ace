@@ -19,6 +19,24 @@ module Atoms
       }.merge(overrides)
     end
 
+    def test_session_runtime_is_explicit_and_rejects_ambient_or_unknown_fields
+      runtime = {"node" => "/opt/node/bin/node", "pi" => "/opt/pi/cli.js",
+        "path" => ["/usr/bin", "/bin"], "provider" => "zai", "model" => "glm-5.3",
+        "credentials" => "/etc/lab/pi-auth.json"}
+      assert_equal runtime, normalize(manifest("session_runtime" => runtime))["session_runtime"]
+      endpoint = {"account" => "mo", "socket" => "/run/lab/herdr.sock"}
+      assert_equal endpoint, normalize(manifest("session_runtime" => runtime.merge("herdr" => endpoint)))["session_runtime"]["herdr"]
+      assert_nil normalize(manifest)["session_runtime"]
+      [{"node" => "node"}, {"pi" => "/opt/../tmp/pi"}, {"path" => ["/tmp:/usr/bin"]},
+        {"path" => ["/bin", "/bin"]}, {"provider" => "--override"}, {"command" => ["sh"]},
+        {"credentials" => "/etc/lab/key\n"}, {"herdr" => {"account" => "mo", "socket" => "relative"}},
+        {"herdr" => {"account" => "mo", "socket" => "/run/herdr.sock", "command" => "sh"}}].each do |change|
+        assert_raises(Ace::Lab::InvalidConfigurationError) do
+          normalize(manifest("session_runtime" => runtime.merge(change)))
+        end
+      end
+    end
+
     def test_full_manifest_normalizes_with_defaults
       result = normalize(manifest)
 
@@ -35,6 +53,39 @@ module Atoms
       assert_equal "ed25519", key["type"]
       assert_equal "/home/ace-worker/.ssh/id_ed25519", key["path"]
       assert_equal "wfi://assign/work", result["roles"].first["instructions"]
+    end
+
+    def test_coordinator_is_a_distinct_grantable_scope
+      coordinator = {"id" => "lab", "path" => "/lab"}
+      document = manifest("coordinator" => coordinator, "projects" => [{"id" => "ace", "path" => "/lab/ace"}],
+        "grants" => {"ace-worker" => ["lab", "ace"]})
+      result = normalize(document)
+      assert_equal coordinator, result["coordinator"]
+      assert_equal ["ace"], result["projects"].map { |entry| entry["id"] }
+      assert_equal %w[lab ace], result["grants"]["ace-worker"]
+      [{"id" => "ace"}, {"path" => "/lab/ace"}, {"path" => "/"}, {"path" => "/lab/../lab"},
+        {"path" => "/lab\n"}, {"path" => "/etc"}, {"path" => "/lab/ace/nested"},
+        {"command" => "sh"}, {"id" => ""}].each do |change|
+        assert_raises(Ace::Lab::InvalidConfigurationError) do
+          normalize(document.merge("coordinator" => coordinator.merge(change)))
+        end
+      end
+    end
+
+    def test_project_and_coordinator_environment_files_are_role_scoped_paths
+      project = {"id" => "ace", "path" => "/lab/ace",
+        "environment_files" => {"worker" => "/home/mo/.config/ace/worker.json"}}
+      coordinator = {"id" => "lab", "path" => "/lab",
+        "environment_files" => {"lab-overseer" => "/home/mo/.config/ace/lab.json"}}
+      result = normalize(manifest("projects" => [project], "coordinator" => coordinator))
+      assert_equal project["environment_files"], result["projects"].first["environment_files"]
+      assert_equal coordinator["environment_files"], result["coordinator"]["environment_files"]
+      [{"worker" => "relative.json"}, {"worker" => "/tmp/../secret.json"},
+        {"root" => "/tmp/env.json"}, {"worker" => "secret-value"}, []].each do |invalid|
+        assert_raises(Ace::Lab::InvalidConfigurationError) do
+          normalize(manifest("projects" => [project.merge("environment_files" => invalid)]))
+        end
+      end
     end
 
     def test_darwin_platform_defaults_home_under_users

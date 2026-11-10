@@ -72,6 +72,20 @@ class TaskWorktreeOrchestratorTest < Minitest::Test
     end
   end
 
+  def test_deferred_setup_preview_does_not_plan_hooks
+    task = {id: "8vb.t.vz8", path: ".ace-tasks/8vb.t.vz8-task/spec.s.md", title: "Task", status: "pending"}
+    config = @orchestrator.instance_variable_get(:@config)
+    config.stub(:after_create_hooks, [{"command" => "exit 1"}]) do
+      @orchestrator.stub(:fetch_task_data, task) do
+        result = @orchestrator.dry_run_create(task[:id], defer_setup: true)
+        assert result[:success], result.inspect
+        assert_equal 0, result.dig(:would_create, :hooks_count)
+        assert_equal "delegated", result.dig(:would_create, :project_setup)
+        refute result[:steps_planned].any? { |step| step.match?(/execute_.*_hooks/) }
+      end
+    end
+  end
+
   def test_snapshot_dirty_state_returns_structured_dirty_hash
     dirty = @orchestrator.send(:snapshot_dirty_state)
     assert dirty.key?(:staged)

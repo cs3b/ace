@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require_relative "../molecules/coworker_launcher"
 
 module Ace
   module Overseer
@@ -8,7 +9,7 @@ module Ace
         SUBTASK_PATTERN = /^[0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}\.[a-z0-9]$/
 
         def initialize(worktree_provisioner: nil, window_opener: nil, assignment_launcher: nil,
-          task_loader: nil, config: nil, assignment_detector: nil, lifecycle_exclusion: nil)
+          task_loader: nil, config: nil, assignment_detector: nil, lifecycle_exclusion: nil, coworker_launcher: nil)
           @worktree_provisioner = worktree_provisioner || Molecules::WorktreeProvisioner.new
           @window_opener = window_opener || Molecules::WindowOpener.new
           @task_manager = task_loader || Ace::Task::Organisms::TaskManager.new
@@ -16,6 +17,7 @@ module Ace
           @config = config || Ace::Overseer.config
           @assignment_detector = assignment_detector
           @lifecycle_exclusion = lifecycle_exclusion
+          @coworker_launcher = coworker_launcher
         end
 
         def call(task_ref:, task_refs: nil, cli_preset: nil, on_progress: nil, runtime: nil)
@@ -39,6 +41,10 @@ module Ace
           primary_task = resolved_refs.first[:task]
 
           guard_dependencies_satisfied!(resolved_refs)
+          if native_delegation?(runtime)
+            raise Error, "delegate one task per worktree" unless resolved_refs.size == 1
+            return delegate(resolved_refs.first, progress: progress)
+          end
 
           preset_name = Atoms::PresetResolver.resolve(
             task_frontmatter: primary_task.respond_to?(:metadata) ? (primary_task.metadata || {}) : {},
@@ -117,6 +123,42 @@ module Ace
         end
 
         private
+
+        def native_delegation?(runtime)
+          selected = Atoms::RuntimeSetting.normalize(runtime || @config["runtime"]) || ENV["ACE_RUNTIME"]
+          selected == "herdr" || selected.to_s.empty? && Ace::Runtime::Atoms::Detector.detect == :herdr
+        end
+
+        def delegate(entry, progress:)
+          launcher = @coworker_launcher || Molecules::CoworkerLauncher.new
+          launcher.ready!
+          ref = entry.fetch(:ref)
+          task = entry.fetch(:task)
+          lifecycle_exclusion.with_shared(lifecycle_exclusion.task_key(ref), reset_removed: true) do
+            lifecycle_exclusion.with_exclusive("delegate:#{ref}") do
+              worktree = @worktree_provisioner.provision(ref)
+              root = worktree.fetch(:worktree_path)
+              roles = task.metadata["roles"] || (task.metadata["role"] ? [task.metadata["role"]] : %w[worker reviewer integrator])
+              sequence = Ace::Coworker::Molecules::RoleSequenceComposer.new(project_root: root).call(task: task.id, roles: roles)
+              configs = Ace::Coworker::Organisms::StartConfigWriter.new(worktree_path: root).call(
+                task: task.id, sequence: sequence, overseer: @config["owner"] || launcher.recipient)
+              state = Molecules::HandoffProbe.new.probe(root, task_id: task.id)
+              leg = state.fetch(:legs).find { |candidate| candidate["state"] != "completed" }
+              raise Error, "all prepared roles are complete; reconcile the task instead of starting again" unless leg
+              unless %w[paused empty running].include?(leg["state"])
+                raise Error, "assignment #{leg['assignment']} is #{leg['state']}; investigate before dispatch"
+              end
+              config = configs.find { |row| row["assignment"] == leg["assignment"] }
+              raise Error, "prepared role has no start configuration" unless config
+              execution = launcher.call(worktree_path: root, config_path: config.fetch("path"))
+              progress.call("Executor #{execution['agent']} bound to assignment #{leg['assignment']}")
+              {task_ref: task.id, task_refs: [task.id], worktree_path: root, branch: worktree[:branch],
+               worktree_created: worktree[:created], assignment_id: leg["assignment"],
+               assignment_created: sequence.find { |row| row["assignment"] == leg["assignment"] }["disposition"] == "created",
+               execution: execution}
+            end
+          end
+        end
 
         # Overseer queue rule (L6.3): only steps whose recorded dependencies
         # are satisfied may start. Satisfaction requires a predecessor status

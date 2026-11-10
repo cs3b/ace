@@ -353,15 +353,15 @@ module Ace
         # @return [String] Extracted JSON string
         def extract_json_from_response(response)
           cleaned = response.to_s.strip
+          return cleaned if cleaned.start_with?("{")
 
-          # Try to extract JSON from markdown code fence (handles text before/after fence)
-          if (match = cleaned.match(/```(?:json)?\s*(.*?)\s*```/m))
+          # Only fence lines wrap the response. Findings can contain literal backticks.
+          if (match = cleaned.match(/^```(?:json)?[ \t]*\r?\n(.*?)^```[ \t]*\r?$/m))
             return match[1].strip
           end
 
-          # No code fence - try to find JSON object directly
-          # This handles cases where JSON is embedded in text without fences
-          if cleaned !~ /\A\s*\{/ && (json_match = cleaned.match(/(\{.*\})/m))
+          # This handles JSON embedded in text without a wrapping fence.
+          if (json_match = cleaned.match(/(\{.*\})/m))
             return json_match[1]
           end
 

@@ -26,9 +26,11 @@ module Ace
           executor: Molecules::HerdrExecutor.new,
           preset_loader: Molecules::PresetLoader.new,
           default_agent_kind: "pi",
-          agent_start_timeout_ms: 60_000
+          agent_start_timeout_ms: 60_000,
+          env: ENV
         )
           @executor = executor
+          @env = env
           @preset_loader = preset_loader
           @default_agent_kind = default_agent_kind
           @agent_start_timeout_ms = agent_start_timeout_ms
@@ -76,8 +78,9 @@ module Ace
 
         # Live workspaces (tmux sessions analogue)
         def list_workspaces
-          result_rows(@executor.workspace_list.parsed_json, "workspaces")
+          rows = result_rows(@executor.workspace_list.parsed_json, "workspaces")
             .map { |row| normalize_workspace(row) }
+          rows
         end
 
         # --- capture ------------------------------------------------------------

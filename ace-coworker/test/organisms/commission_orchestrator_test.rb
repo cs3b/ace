@@ -76,6 +76,18 @@ module Ace
           assert_empty Dir.glob(File.join(@dir, ".ace-local", "coworker", ".commission*"))
         end
 
+        def test_observation_mode_survives_commission_load_and_assignment_copy
+          @loader.presets["worker"]["reporting_delivery"] = "observe"
+          orchestrator.call(role: "worker", task: "8xh.t.ccc", assignment: "asg01", overseer: "lab")
+          config = Molecules::ConfigLoader.new(project_root: @dir).load
+          assert_equal "observe", config.reporting_delivery
+          assert_equal "observe", config.with(assignment: "asg02").reporting_delivery
+          assert_equal "observe", config.to_h.dig("reporting", "delivery")
+          raw = config.to_h
+          raw["reporting"]["delivery"] = "silent"
+          refute_empty Atoms::ConfigSchema.errors(raw)
+        end
+
         def test_start_prompt_option_overrides_the_preset_template
           orchestrator.call(role: "worker", task: "8xh.t.ccc", assignment: "asg01",
             overseer: "overseer@lab", start_prompt: "Custom literal prompt.")
@@ -104,6 +116,22 @@ module Ace
             overseer: "other@lab", force: true)
           config = Molecules::ConfigLoader.new(project_root: @dir).load
           assert_equal "other@lab", config.overseer
+        end
+
+        def test_force_preserves_existing_execution_and_refuses_changing_its_commission
+          orchestrator.call(role: "worker", task: "8xh.t.ccc", assignment: "asg01", overseer: "o@lab")
+          path = File.join(@dir, ".ace-local/coworker/config.yml")
+          Molecules::ExecutionBinding.new.with_lock(path) do |document, save|
+            document["execution"] = {"state" => "running", "terminal_id" => "term_123"}
+            save.call
+          end
+          before = File.read(path)
+          orchestrator.call(role: "worker", task: "8xh.t.ccc", assignment: "asg01", overseer: "o@lab", force: true)
+          assert_equal before, File.read(path)
+          assert_raises(Error) do
+            orchestrator.call(role: "worker", task: "8xh.t.ccc", assignment: "asg01", overseer: "other@lab", force: true)
+          end
+          assert_equal before, File.read(path)
         end
 
         def test_unknown_role_fails_with_available_list

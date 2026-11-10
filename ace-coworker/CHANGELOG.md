@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-10
+
+### Added
+
+- Preserve actual executor bindings when preparing or commissioning again; prevent identity replacement. Delegate project setup to workers, retain exact-HEAD review/integration gates, and keep reports tied to the selected commission.
+
 ## [0.8.0] - 2026-10-31
 
 ### Added

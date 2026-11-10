@@ -1,7 +1,7 @@
 From 7a2e78b4e92d2b694bd8a06c1ef4943915c399b2 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 7 Oct 2026 00:43:20 +0100
-Subject: [PATCH] feat: guard and permanently drain original-terminal input
+Subject: [PATCH 1/6] feat: guard and permanently drain original-terminal input
 
 ---
  docs/next/api/herdr-api.schema.json           |  338 ++++++
@@ -3491,3 +3491,1779 @@ index 9171340..a971ef6 100644
      pub fn queue_user_input_submission(
          &self,
          text: Bytes,
+-- 
+2.54.0 (Apple Git-157)
+
+
+From 78b571c45ebe80425d8e69bc6f19e16357043131 Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 02:57:12 +0000
+Subject: [PATCH 2/6] fix: validate Pi report acknowledgements before accepting
+ delivery
+
+---
+ .../assets/herdr-agent-state.test.ts          | 28 +++++++++++++------
+ .../assets/pi/herdr-agent-state.ts            | 17 +++++++++--
+ src/integration/mod.rs                        |  2 +-
+ 3 files changed, 35 insertions(+), 12 deletions(-)
+
+diff --git a/src/integration/assets/herdr-agent-state.test.ts b/src/integration/assets/herdr-agent-state.test.ts
+index abfeb0e..7657c2c 100644
+--- a/src/integration/assets/herdr-agent-state.test.ts
++++ b/src/integration/assets/herdr-agent-state.test.ts
+@@ -119,8 +119,9 @@ async function startRecordingServer(name: string): Promise<unknown[]> {
+       if (newline === -1) {
+         return;
+       }
+-      requests.push(JSON.parse(input.slice(0, newline)));
+-      socket.end("{}\n");
++      const request = JSON.parse(input.slice(0, newline));
++      requests.push(request);
++      socket.end(JSON.stringify({ id: request.id, result: { type: "ok" } }) + "\n");
+     });
+   });
+   server = recordingServer;
+@@ -424,10 +425,10 @@ test("Pi waits for a replacement session report before publishing state", async
+       const request = JSON.parse(input.slice(0, newline));
+       requests.push(request);
+       if (isRecord(request) && request.method === "pane.report_agent_session") {
+-        acknowledgeSessionReport = () => socket.end("{}\n");
++        acknowledgeSessionReport = () => socket.end(JSON.stringify({ id: request.id, result: { type: "ok" } }) + "\n");
+         return;
+       }
+-      socket.end("{}\n");
++      socket.end(JSON.stringify({ id: request.id, result: { type: "ok" } }) + "\n");
+     });
+   });
+   server = recordingServer;
+@@ -481,7 +482,7 @@ test("Pi waits for a replacement session report before publishing state", async
+   ]);
+ });
+ 
+-async function startDroppedFirstResponseServer(name: string) {
++async function startDroppedFirstResponseServer(name: string, firstResponse = "unanswered") {
+   const recordingSocketPath = join(tmpdir(), `herdr-${name}-${process.pid}.sock`);
+   socketPath = recordingSocketPath;
+   await rm(recordingSocketPath, { force: true });
+@@ -503,10 +504,16 @@ async function startDroppedFirstResponseServer(name: string) {
+       const request = JSON.parse(input.slice(0, newline));
+       attemptedRequests.push(request);
+       if (connectionNumber === 1) {
++        if (firstResponse === "error") socket.end(JSON.stringify({id: request.id, error: {code: "pane_not_found"}}) + "\n");
++        if (firstResponse === "wrong-id") socket.end(JSON.stringify({id: "unrelated", result: {type: "ok"}}) + "\n");
++        if (firstResponse === "malformed") socket.end("not-json\n");
++        if (firstResponse === "oversized") socket.end("x".repeat(65_537) + "\n");
+         return;
+       }
+       deliveredRequests.push(request);
+-      socket.end("{}\n");
++      const response = JSON.stringify({ id: request.id, result: { type: "ok" } }) + "\n";
++      socket.write(response.slice(0, 5));
++      setTimeout(() => socket.end(response.slice(5)), 5);
+     });
+   });
+   server = recordingServer;
+@@ -592,9 +599,10 @@ test("Oh My Pi keeps working when a turn ends with a scheduled continuation", as
+   expect(requestStates(requests)).toEqual(["idle", "working", "idle"]);
+ });
+ 
+-test("Pi retries working state after an unanswered socket attempt", async () => {
++for (const firstResponse of ["unanswered", "error", "wrong-id", "malformed", "oversized"]) {
++test(`Pi retries working state after ${firstResponse} acknowledgement`, async () => {
+   const { attemptedRequests, deliveredRequests, connectionCount } =
+-    await startDroppedFirstResponseServer("pi-retry");
++    await startDroppedFirstResponseServer("pi-retry", firstResponse);
+   const { handlers, pi } = createExtensionHarness();
+ 
+   const { default: install } = await importFresh("./pi/herdr-agent-state.ts");
+@@ -629,12 +637,14 @@ test("Pi retries working state after an unanswered socket attempt", async () =>
+     await Bun.sleep(5);
+   }
+ 
+-  expect(connectionCount()).toBeGreaterThanOrEqual(2);
++  expect(connectionCount()).toBe(2);
+   expect(attemptedRequests.length).toBeGreaterThanOrEqual(2);
+   expect(attemptedRequests[1]).toEqual(attemptedRequests[0]);
+   expect(reportedWorking()).toBe(true);
+ });
+ 
++}
++
+ function completionHandlers(handlers: Map<string, Handler>): string[] {
+   return ["agent_end", "agent_settled"].filter((event) => handlers.has(event));
+ }
+diff --git a/src/integration/assets/pi/herdr-agent-state.ts b/src/integration/assets/pi/herdr-agent-state.ts
+index 276c964..0c0970a 100644
+--- a/src/integration/assets/pi/herdr-agent-state.ts
++++ b/src/integration/assets/pi/herdr-agent-state.ts
+@@ -2,7 +2,7 @@
+ // managed by herdr; reinstalling or updating the integration overwrites this file.
+ // add custom hooks/plugins beside this file instead of editing it.
+ // HERDR_INTEGRATION_ID=pi
+-// HERDR_INTEGRATION_VERSION=9
++// HERDR_INTEGRATION_VERSION=10
+ // @ts-nocheck
+ 
+ import net from "node:net";
+@@ -40,7 +40,20 @@ function sendRequestAttempt(request: unknown, timeoutMs: number): Promise<boolea
+     const socket = net.createConnection(socketEndpoint!);
+     socket.on("error", () => finish(false));
+     socket.on("connect", () => socket.write(`${JSON.stringify(request)}\n`));
+-    socket.on("data", () => finish(true));
++    let reply = Buffer.alloc(0);
++    socket.on("data", (chunk) => {
++      reply = Buffer.concat([reply, chunk]);
++      if (reply.length > 65_536) return finish(false);
++      const newline = reply.indexOf(10);
++      if (newline === -1) return;
++      try {
++        const response = JSON.parse(reply.subarray(0, newline).toString("utf8"));
++        finish(newline === reply.length - 1 && response?.id === (request as any)?.id &&
++          response?.result != null && !Object.hasOwn(response, "error"));
++      } catch {
++        finish(false);
++      }
++    });
+     socket.on("end", () => finish(false));
+     timeout = setTimeout(() => finish(false), timeoutMs);
+     timeout.unref?.();
+diff --git a/src/integration/mod.rs b/src/integration/mod.rs
+index 673225a..546289d 100644
+--- a/src/integration/mod.rs
++++ b/src/integration/mod.rs
+@@ -35,7 +35,7 @@ pub(crate) const EXPERIMENTAL_INTEGRATION_TARGET_LABELS: &[&str] = &["letta"];
+ 
+ const PI_EXTENSION_INSTALL_NAME: &str = "herdr-agent-state.ts";
+ const PI_EXTENSION_ASSET: &str = include_str!("assets/pi/herdr-agent-state.ts");
+-const PI_INTEGRATION_VERSION: u32 = 9;
++const PI_INTEGRATION_VERSION: u32 = 10;
+ const OMP_EXTENSION_INSTALL_NAME: &str = "herdr-omp-agent-state.ts";
+ const OMP_EXTENSION_ASSET: &str = include_str!("assets/omp/herdr-agent-state.ts");
+ const OMP_INTEGRATION_VERSION: u32 = 10;
+-- 
+2.54.0 (Apple Git-157)
+
+
+From 27ff0cfe4255c3b31c81e8e42964b318f1d8fbd4 Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 4 Nov 2026 04:17:44 +0000
+Subject: [PATCH 3/6] fix: resolve agent queries by immutable terminal identity
+
+---
+ src/app/terminal_targets.rs | 35 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
+
+diff --git a/src/app/terminal_targets.rs b/src/app/terminal_targets.rs
+index 658eeaa..003c30c 100644
+--- a/src/app/terminal_targets.rs
++++ b/src/app/terminal_targets.rs
+@@ -93,6 +93,16 @@ impl App {
+         &self,
+         target: &str,
+     ) -> Result<TerminalTarget, TerminalTargetError> {
++        if target.starts_with("term_") {
++            let resolved = self.resolve_guarded_agent_target(target)?;
++            return if self.target_is_agent(&resolved) {
++                Ok(resolved)
++            } else {
++                Err(TerminalTargetError::NotFound {
++                    target: target.into(),
++                })
++            };
++        }
+         if let Some((ws_idx, pane_id)) = self.parse_current_public_pane_id(target) {
+             if let Some(resolved) = self
+                 .terminal_target_for_pane(ws_idx, pane_id)
+@@ -225,6 +235,31 @@ mod tests {
+         )
+     }
+ 
++    #[test]
++    fn isolated_agent_target_is_exact_terminal_without_name_fallback() {
++        let mut app = test_app();
++        app.state = AppState::test_with_adversarial_identity_state();
++        let targets = app.terminal_targets();
++        let first = &targets[0];
++        app.state
++            .terminals
++            .get_mut(first.terminal_id.as_str())
++            .unwrap()
++            .set_agent_name("term_missing".into());
++        assert_eq!(
++            app.resolve_agent_target(&first.terminal_id).unwrap(),
++            *first
++        );
++        assert!(matches!(
++            app.resolve_agent_target("term_missing"),
++            Err(TerminalTargetError::NotFound { .. })
++        ));
++        assert!(matches!(
++            app.resolve_agent_target(&targets[1].terminal_id),
++            Err(TerminalTargetError::NotFound { .. })
++        ));
++    }
++
+     #[test]
+     fn named_targets_follow_terminal_identity_after_pane_and_tab_reordering() {
+         let mut app = test_app();
+-- 
+2.54.0 (Apple Git-157)
+
+
+From 18242eabb417277aa2ab987c000e63c6ffc208e2 Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Tue, 10 Nov 2026 22:59:15 +0000
+Subject: [PATCH 4/6] feat: launch ordinary agents with private explicit
+ environments
+
+---
+ docs/next/api/herdr-api.schema.json |  55 +++++++++
+ src/api/mod.rs                      |   1 +
+ src/api/schema.rs                   |   2 +
+ src/api/schema/agents.rs            |   9 ++
+ src/api/schema/tests.rs             |  10 ++
+ src/api/server.rs                   |   1 +
+ src/app/agents.rs                   |  20 ++-
+ src/app/api.rs                      |   3 +
+ src/app/api/agents.rs               | 102 +++++++++-------
+ src/app/api/panes.rs                |  79 +++++++++++-
+ src/cli/agent.rs                    |  41 +++++--
+ src/pane.rs                         |  66 +++++++---
+ src/platform/guarded_prompt.rs      |   7 +-
+ src/platform/mod.rs                 |   1 +
+ src/platform/process_environment.rs | 182 ++++++++++++++++++++++++++++
+ tests/cli/agents.rs                 |  79 ++++++++++++
+ tests/process_environment.rs        |  74 +++++++++++
+ 17 files changed, 652 insertions(+), 80 deletions(-)
+ create mode 100644 src/platform/process_environment.rs
+ create mode 100644 tests/process_environment.rs
+
+diff --git a/docs/next/api/herdr-api.schema.json b/docs/next/api/herdr-api.schema.json
+index 022c899..2ee5fb4 100644
+--- a/docs/next/api/herdr-api.schema.json
++++ b/docs/next/api/herdr-api.schema.json
+@@ -1475,6 +1475,45 @@
+           ],
+           "type": "object"
+         },
++        "AgentStartWithEnvParams": {
++          "description": "Explicit environment support has its own method so older servers refuse it\ninstead of ignoring an unknown field and inheriting ambient credentials.",
++          "properties": {
++            "args": {
++              "items": {
++                "type": "string"
++              },
++              "type": "array"
++            },
++            "env_file": {
++              "type": "string"
++            },
++            "kind": {
++              "type": "string"
++            },
++            "name": {
++              "type": "string"
++            },
++            "pane_id": {
++              "type": "string"
++            },
++            "timeout_ms": {
++              "description": "Startup timeout in milliseconds. Values must be greater than 3000 and at most 300000.",
++              "format": "uint64",
++              "minimum": 0,
++              "type": [
++                "integer",
++                "null"
++              ]
++            }
++          },
++          "required": [
++            "name",
++            "kind",
++            "pane_id",
++            "env_file"
++          ],
++          "type": "object"
++        },
+         "AgentStatus": {
+           "enum": [
+             "idle",
+@@ -5589,6 +5628,22 @@
+           ],
+           "type": "object"
+         },
++        {
++          "properties": {
++            "method": {
++              "const": "agent.start_with_env",
++              "type": "string"
++            },
++            "params": {
++              "$ref": "#/schemas/request/$defs/AgentStartWithEnvParams"
++            }
++          },
++          "required": [
++            "method",
++            "params"
++          ],
++          "type": "object"
++        },
+         {
+           "properties": {
+             "method": {
+diff --git a/src/api/mod.rs b/src/api/mod.rs
+index 39638a0..08ea114 100644
+--- a/src/api/mod.rs
++++ b/src/api/mod.rs
+@@ -50,6 +50,7 @@ pub(crate) fn request_changes_ui(request: &Request) -> bool {
+             | Method::AgentViewClear(_)
+             | Method::AgentFocus(_)
+             | Method::AgentStart(_)
++            | Method::AgentStartWithEnv(_)
+             | Method::AgentPrompt(_)
+             | Method::TerminalInhibitInput(_)
+             | Method::AgentSendKeys(_)
+diff --git a/src/api/schema.rs b/src/api/schema.rs
+index d7ea332..c770da2 100644
+--- a/src/api/schema.rs
++++ b/src/api/schema.rs
+@@ -135,6 +135,8 @@ pub enum Method {
+     AgentFocus(AgentTarget),
+     #[serde(rename = "agent.start")]
+     AgentStart(AgentStartParams),
++    #[serde(rename = "agent.start_with_env")]
++    AgentStartWithEnv(AgentStartWithEnvParams),
+     #[serde(rename = "agent.prompt")]
+     AgentPrompt(AgentPromptParams),
+     #[serde(rename = "terminal.inhibit_input")]
+diff --git a/src/api/schema/agents.rs b/src/api/schema/agents.rs
+index a5c3007..0b09221 100644
+--- a/src/api/schema/agents.rs
++++ b/src/api/schema/agents.rs
+@@ -175,6 +175,15 @@ pub struct AgentStartParams {
+     pub timeout_ms: Option<u64>,
+ }
+ 
++/// Explicit environment support has its own method so older servers refuse it
++/// instead of ignoring an unknown field and inheriting ambient credentials.
++#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
++pub struct AgentStartWithEnvParams {
++    #[serde(flatten)]
++    pub start: AgentStartParams,
++    pub env_file: String,
++}
++
+ #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+ #[serde(deny_unknown_fields)]
+ pub struct AgentPromptParams {
+diff --git a/src/api/schema/tests.rs b/src/api/schema/tests.rs
+index 2199451..968b2af 100644
+--- a/src/api/schema/tests.rs
++++ b/src/api/schema/tests.rs
+@@ -92,6 +92,16 @@ fn workspace_close_group_intent_defaults_false_and_round_trips() {
+     assert_eq!(serde_json::from_value::<Request>(json).unwrap(), explicit);
+ }
+ 
++#[test]
++fn agent_environment_start_is_an_explicit_method() {
++    let json = serde_json::json!({"id":"start", "method":"agent.start_with_env", "params":{
++        "name":"worker", "kind":"pi", "pane_id":"w1:p1", "env_file":"/tmp/private.json"
++    }});
++    let request: Request = serde_json::from_value(json.clone()).unwrap();
++    assert!(matches!(&request.method, Method::AgentStartWithEnv(_)));
++    assert_eq!(serde_json::to_value(request).unwrap(), json);
++}
++
+ #[test]
+ fn agent_start_and_prompt_requests_round_trip() {
+     let start = Request {
+diff --git a/src/api/server.rs b/src/api/server.rs
+index 5f698c0..35deffc 100644
+--- a/src/api/server.rs
++++ b/src/api/server.rs
+@@ -626,6 +626,7 @@ pub(crate) fn api_method_name(method: &Method) -> &'static str {
+         Method::AgentViewClear(_) => "agent.view.clear",
+         Method::AgentFocus(_) => "agent.focus",
+         Method::AgentStart(_) => "agent.start",
++        Method::AgentStartWithEnv(_) => "agent.start_with_env",
+         Method::AgentPrompt(_) => "agent.prompt",
+         Method::TerminalInhibitInput(_) => "terminal.inhibit_input",
+         Method::AgentWait(_) => "agent.wait",
+diff --git a/src/app/agents.rs b/src/app/agents.rs
+index fd2a58e..9bbfb31 100644
+--- a/src/app/agents.rs
++++ b/src/app/agents.rs
+@@ -145,6 +145,14 @@ impl App {
+     pub(super) fn start_agent(
+         &mut self,
+         params: AgentStartParams,
++    ) -> Result<(crate::api::schema::AgentInfo, Vec<String>), AgentStartError> {
++        self.start_agent_with_environment(params, None)
++    }
++
++    pub(super) fn start_agent_with_environment(
++        &mut self,
++        params: AgentStartParams,
++        env_file: Option<&str>,
+     ) -> Result<(crate::api::schema::AgentInfo, Vec<String>), AgentStartError> {
+         let name = params.name;
+         if !valid_agent_name(&name) {
+@@ -196,7 +204,12 @@ impl App {
+ 
+         let mut argv = vec![crate::detect::interactive_agent_executable(kind).to_string()];
+         argv.extend(params.args);
+-        let command = crate::platform::interactive_shell_command(&argv, &shell_name)
++        let launch_argv = match env_file {
++            Some(path) => crate::platform::process_environment::launch_argv(path, &argv)
++                .map_err(|_| AgentStartError::InvalidEnvironment)?,
++            None => argv.clone(),
++        };
++        let command = crate::platform::interactive_shell_command(&launch_argv, &shell_name)
+             .ok_or(AgentStartError::InvalidArgument)?;
+         let bytes = crate::app::api_helpers::encode_api_submission(runtime, &command);
+         let timeout = Duration::from_millis(
+@@ -248,6 +261,10 @@ impl App {
+                 code: "invalid_agent_argument".into(),
+                 message: "agent arguments cannot be encoded safely for the target shell".into(),
+             },
++            AgentStartError::InvalidEnvironment => crate::api::schema::ErrorBody {
++                code: "invalid_agent_environment".into(),
++                message: "agent environment requires a private regular JSON file on this host".into(),
++            },
+             AgentStartError::InvalidTimeout => crate::api::schema::ErrorBody {
+                 code: "invalid_agent_timeout".into(),
+                 message: INVALID_AGENT_TIMEOUT_MESSAGE.into(),
+@@ -447,6 +464,7 @@ fn live_runtime_agent(runtime: &crate::terminal::TerminalRuntime) -> Option<crat
+ }
+ 
+ pub(super) enum AgentStartError {
++    InvalidEnvironment,
+     InvalidName,
+     UnsupportedKind(String),
+     InvalidArgument,
+diff --git a/src/app/api.rs b/src/app/api.rs
+index 54132f2..fdcd9a2 100644
+--- a/src/app/api.rs
++++ b/src/app/api.rs
+@@ -1087,6 +1087,9 @@ impl App {
+                 return self.handle_agent_view_clear(request.id, params);
+             }
+             Method::AgentStart(params) => return self.handle_agent_start(request.id, params),
++            Method::AgentStartWithEnv(params) => {
++                return self.handle_agent_start_with_env(request.id, params)
++            }
+             Method::TerminalInhibitInput(_) => {
+                 return agents::input_drain_error(
+                     request.id,
+diff --git a/src/app/api/agents.rs b/src/app/api/agents.rs
+index 17ce8c1..e119df0 100644
+--- a/src/app/api/agents.rs
++++ b/src/app/api/agents.rs
+@@ -11,6 +11,13 @@ use crate::platform::guarded_prompt::{GuardedPromptError, GuardedPromptOrigin};
+ 
+ use super::responses::{encode_error, encode_error_body, encode_success};
+ 
++type QueuedGuardedPrompt = (
++    String,
++    crate::api::schema::AgentInfo,
++    GuardedPromptOrigin,
++    std::sync::mpsc::Receiver<Result<(), GuardedPromptError>>,
++);
++
+ const AGENT_PROMPT_SUBMIT_DELAY: Duration = Duration::from_millis(300);
+ // A missing completion never authorizes drain; inhibition remains installed.
+ const INPUT_DRAIN_ACK_TIMEOUT: Duration = Duration::from_secs(5);
+@@ -82,6 +89,19 @@ impl App {
+         encode_success(id, ResponseResult::AgentStarted { agent, argv })
+     }
+ 
++    pub(super) fn handle_agent_start_with_env(
++        &mut self,
++        id: String,
++        params: crate::api::schema::AgentStartWithEnvParams,
++    ) -> String {
++        let (agent, argv) =
++            match self.start_agent_with_environment(params.start, Some(&params.env_file)) {
++                Ok(started) => started,
++                Err(err) => return encode_error_body(id, self.agent_start_error_body(err)),
++            };
++        encode_success(id, ResponseResult::AgentStarted { agent, argv })
++    }
++
+     pub(crate) fn handle_deferred_agent_api_request(
+         &mut self,
+         request: crate::api::schema::Request,
+@@ -199,15 +219,7 @@ impl App {
+         &mut self,
+         id: String,
+         params: AgentPromptParams,
+-    ) -> Result<
+-        (
+-            String,
+-            crate::api::schema::AgentInfo,
+-            GuardedPromptOrigin,
+-            std::sync::mpsc::Receiver<Result<(), GuardedPromptError>>,
+-        ),
+-        String,
+-    > {
++    ) -> Result<QueuedGuardedPrompt, String> {
+         let expected = params
+             .validate_guarded()
+             .map_err(|error| guarded_error(id.clone(), error))?;
+@@ -547,6 +559,42 @@ fn agent_not_found(id: String, target: &str) -> String {
+     )
+ }
+ 
++fn guarded_error(id: String, error: GuardedPromptError) -> String {
++    serde_json::json!(crate::api::schema::GuardedPromptErrorResponse {
++        id,
++        error: crate::api::schema::GuardedPromptErrorBody {
++            code: error.code().to_owned(),
++            message: "guarded prompt did not complete".to_owned(),
++            phase: error.phase().to_owned(),
++        },
++    })
++    .to_string()
++}
++
++pub(super) fn input_drain_error(
++    id: String,
++    error: crate::platform::guarded_prompt::InputDrainError,
++) -> String {
++    serde_json::json!(crate::api::schema::InputDrainErrorResponse {
++        id,
++        error: crate::api::schema::InputDrainErrorBody {
++            code: match error {
++                crate::platform::guarded_prompt::InputDrainError::GuardMismatch => {
++                    crate::api::schema::InputDrainCode::GuardMismatch
++                }
++                crate::platform::guarded_prompt::InputDrainError::OriginUnavailable => {
++                    crate::api::schema::InputDrainCode::OriginUnavailable
++                }
++                crate::platform::guarded_prompt::InputDrainError::Unavailable => {
++                    crate::api::schema::InputDrainCode::Unavailable
++                }
++            },
++            phase: crate::api::schema::InputDrainPhase::Unconfirmed,
++        },
++    })
++    .to_string()
++}
++
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+@@ -986,39 +1034,3 @@ mod tests {
+         }
+     }
+ }
+-
+-fn guarded_error(id: String, error: GuardedPromptError) -> String {
+-    serde_json::json!(crate::api::schema::GuardedPromptErrorResponse {
+-        id,
+-        error: crate::api::schema::GuardedPromptErrorBody {
+-            code: error.code().to_owned(),
+-            message: "guarded prompt did not complete".to_owned(),
+-            phase: error.phase().to_owned(),
+-        },
+-    })
+-    .to_string()
+-}
+-
+-pub(super) fn input_drain_error(
+-    id: String,
+-    error: crate::platform::guarded_prompt::InputDrainError,
+-) -> String {
+-    serde_json::json!(crate::api::schema::InputDrainErrorResponse {
+-        id,
+-        error: crate::api::schema::InputDrainErrorBody {
+-            code: match error {
+-                crate::platform::guarded_prompt::InputDrainError::GuardMismatch => {
+-                    crate::api::schema::InputDrainCode::GuardMismatch
+-                }
+-                crate::platform::guarded_prompt::InputDrainError::OriginUnavailable => {
+-                    crate::api::schema::InputDrainCode::OriginUnavailable
+-                }
+-                crate::platform::guarded_prompt::InputDrainError::Unavailable => {
+-                    crate::api::schema::InputDrainCode::Unavailable
+-                }
+-            },
+-            phase: crate::api::schema::InputDrainPhase::Unconfirmed,
+-        },
+-    })
+-    .to_string()
+-}
+diff --git a/src/app/api/panes.rs b/src/app/api/panes.rs
+index 5ca1830..c5e4601 100644
+--- a/src/app/api/panes.rs
++++ b/src/app/api/panes.rs
+@@ -521,7 +521,11 @@ impl App {
+         id: String,
+         params: PaneProcessInfoParams,
+     ) -> String {
+-        let Some((ws_idx, pane_id)) = self.resolve_optional_pane(params.pane_id.as_deref()) else {
++        let target = match params.pane_id.as_deref() {
++            Some(target) => self.resolve_report_pane(target),
++            None => self.resolve_optional_pane(None),
++        };
++        let Some((ws_idx, pane_id)) = target else {
+             return encode_error(id, "pane_not_found", "pane not found");
+         };
+         let Some((runtime, _workspace_id)) = self.lookup_runtime(ws_idx, pane_id) else {
+@@ -1554,12 +1558,24 @@ impl App {
+         )
+     }
+ 
++    // Root-bound isolated sessions report the immutable terminal identity.
++    // Keep this exact: a missing terminal must never resolve as an agent name
++    // or a recycled pane alias. Ordinary pane reports retain their API.
++    fn resolve_report_pane(&self, target: &str) -> Option<(usize, PaneId)> {
++        if target.starts_with("term_") {
++            self.state.terminals.get(target)?;
++            let resolved = self.resolve_guarded_agent_target(target).ok()?;
++            return Some((resolved.ws_idx, resolved.pane_id));
++        }
++        self.parse_pane_id(target)
++    }
++
+     pub(super) fn handle_pane_report_agent(
+         &mut self,
+         id: String,
+         params: PaneReportAgentParams,
+     ) -> String {
+-        let Some((ws_idx, pane_id)) = self.parse_pane_id(&params.pane_id) else {
++        let Some((ws_idx, pane_id)) = self.resolve_report_pane(&params.pane_id) else {
+             return pane_not_found(id, &params.pane_id);
+         };
+         let Some(agent_label) = normalize_reported_agent_label(&params.agent) else {
+@@ -1604,7 +1620,7 @@ impl App {
+         id: String,
+         params: PaneReportAgentSessionParams,
+     ) -> String {
+-        let Some((ws_idx, pane_id)) = self.parse_pane_id(&params.pane_id) else {
++        let Some((ws_idx, pane_id)) = self.resolve_report_pane(&params.pane_id) else {
+             return pane_not_found(id, &params.pane_id);
+         };
+         let Some(agent_label) = normalize_reported_agent_label(&params.agent) else {
+@@ -2342,6 +2358,63 @@ mod tests {
+         (app, public_pane_id)
+     }
+ 
++    #[tokio::test]
++    async fn isolated_process_info_resolves_exact_terminal_without_alias_fallback() {
++        let (mut app, _) = app_with_test_workspace();
++        let pane = app.state.workspaces[0].tabs[0].root_pane;
++        let terminal = app.state.workspaces[0].terminal_id(pane).unwrap().clone();
++        let (runtime, _rx) = crate::terminal::TerminalRuntime::test_with_channel(80, 24);
++        app.state.insert_test_runtime(pane, runtime);
++        let response = app.handle_pane_process_info(
++            "process".into(),
++            PaneProcessInfoParams {
++                pane_id: Some(terminal.to_string()),
++            },
++        );
++        serde_json::from_str::<SuccessResponse>(&response).unwrap();
++        app.state
++            .public_pane_id_aliases
++            .insert("term_missing".into(), pane);
++        let response = app.handle_pane_process_info(
++            "missing".into(),
++            PaneProcessInfoParams {
++                pane_id: Some("term_missing".into()),
++            },
++        );
++        assert!(serde_json::from_str::<serde_json::Value>(&response)
++            .unwrap()
++            .get("error")
++            .is_some());
++    }
++
++    #[test]
++    fn isolated_report_target_is_exact_and_never_falls_back_to_an_alias() {
++        let (mut app, public_pane_id) = app_with_test_workspace();
++        let pane = app.state.workspaces[0].tabs[0].root_pane;
++        let terminal = app.state.workspaces[0].terminal_id(pane).unwrap().clone();
++        assert_eq!(app.resolve_report_pane(terminal.as_str()), Some((0, pane)));
++        assert_eq!(app.resolve_report_pane(&public_pane_id), Some((0, pane)));
++        let state_response = app.handle_pane_report_agent("state".into(), serde_json::from_value(
++            serde_json::json!({"pane_id": terminal.as_str(), "agent": "pi", "source": "herdr:pi", "state": "working", "seq": 1})
++        ).unwrap());
++        serde_json::from_str::<SuccessResponse>(&state_response).unwrap();
++        let session_response = app.handle_pane_report_agent_session("session".into(), serde_json::from_value(
++            serde_json::json!({"pane_id": terminal.as_str(), "agent": "pi", "source": "herdr:pi", "agent_session_id": "isolated-session", "seq": 2})
++        ).unwrap());
++        serde_json::from_str::<SuccessResponse>(&session_response).unwrap();
++        app.state
++            .terminals
++            .get_mut(&terminal)
++            .unwrap()
++            .set_agent_name("term_missing".into());
++        app.state
++            .public_pane_id_aliases
++            .insert("term_missing".into(), pane);
++        assert_eq!(app.resolve_report_pane("term_missing"), None);
++        app.state.terminals.remove(&terminal);
++        assert_eq!(app.resolve_report_pane(terminal.as_str()), None);
++    }
++
+     #[test]
+     fn pane_input_set_changes_only_the_target_pane() {
+         let (mut app, public_pane_id) = app_with_test_workspace();
+diff --git a/src/cli/agent.rs b/src/cli/agent.rs
+index 5a941b7..6c7d6f2 100644
+--- a/src/cli/agent.rs
++++ b/src/cli/agent.rs
+@@ -2,8 +2,9 @@ use std::time::{Duration, Instant};
+ 
+ use crate::api::schema::{
+     AgentPromptParams, AgentPromptWaitOptions, AgentReadParams, AgentRenameParams,
+-    AgentSendKeysParams, AgentStartParams, AgentTarget, AgentWaitParams, EmptyParams, ErrorBody,
+-    ErrorResponse, Method, PaneProcessInfoParams, PaneTarget, ReadFormat, ReadSource, Request,
++    AgentSendKeysParams, AgentStartParams, AgentStartWithEnvParams, AgentTarget, AgentWaitParams,
++    EmptyParams, ErrorBody, ErrorResponse, Method, PaneProcessInfoParams, PaneTarget, ReadFormat,
++    ReadSource, Request,
+ };
+ 
+ const AGENT_START_POLL_INTERVAL: Duration = Duration::from_millis(100);
+@@ -26,6 +27,7 @@ pub(super) fn run_agent_command(args: &[String]) -> std::io::Result<i32> {
+         "wait" => agent_wait(&args[1..]),
+         "attach" => agent_attach(&args[1..]),
+         "start" => agent_start(&args[1..]),
++        "exec-env" => crate::platform::process_environment::exec(&args[1..]),
+         "explain" => agent_explain(&args[1..]),
+         "help" | "--help" | "-h" => {
+             print_agent_help();
+@@ -288,7 +290,7 @@ fn matched_rule_region_preview<'a>(
+ 
+ fn agent_start(args: &[String]) -> std::io::Result<i32> {
+     let Some(name) = args.first() else {
+-        eprintln!("usage: herdr agent start <name> --kind KIND --pane ID [--timeout MS] [-- <agent-args...>]");
++        eprintln!("usage: herdr agent start <name> --kind KIND --pane ID [--timeout MS] [--env-file PATH] [-- <agent-args...>]");
+         return Ok(2);
+     };
+     let separator = args
+@@ -298,9 +300,18 @@ fn agent_start(args: &[String]) -> std::io::Result<i32> {
+     let mut kind = None;
+     let mut pane_id = None;
+     let mut timeout_ms = None;
++    let mut env_file = None;
+     let mut index = 1;
+     while index < separator {
+         match args[index].as_str() {
++            "--env-file" => {
++                let Some(value) = args.get(index + 1).filter(|_| index + 1 < separator) else {
++                    eprintln!("missing value for --env-file");
++                    return Ok(2);
++                };
++                env_file = Some(value.clone());
++                index += 2;
++            }
+             "--kind" => {
+                 let Some(value) = args.get(index + 1).filter(|_| index + 1 < separator) else {
+                     eprintln!("missing value for --kind");
+@@ -369,15 +380,23 @@ fn agent_start(args: &[String]) -> std::io::Result<i32> {
+             }
+         }
+ 
++        let start = AgentStartParams {
++            name: name.clone(),
++            kind: kind.clone(),
++            pane_id: pane_id.clone(),
++            args: agent_args.clone(),
++            timeout_ms,
++        };
++        let method = match &env_file {
++            Some(path) => Method::AgentStartWithEnv(AgentStartWithEnvParams {
++                start,
++                env_file: path.clone(),
++            }),
++            None => Method::AgentStart(start),
++        };
+         let response = super::send_request(&Request {
+             id: "cli:agent:start".into(),
+-            method: Method::AgentStart(AgentStartParams {
+-                name: name.clone(),
+-                kind: kind.clone(),
+-                pane_id: pane_id.clone(),
+-                args: agent_args.clone(),
+-                timeout_ms,
+-            }),
++            method,
+         })?;
+         if response.get("error").is_none() {
+             break response;
+@@ -942,7 +961,7 @@ fn print_agent_help() {
+     eprintln!("  herdr agent wait <target> [--until STATUS]... [--timeout MS]");
+     eprintln!("  herdr agent attach <target> [--takeover]");
+     eprintln!(
+-        "  herdr agent start <name> --kind KIND --pane ID [--timeout MS] [-- <agent-args...>]"
++        "  herdr agent start <name> --kind KIND --pane ID [--timeout MS] [--env-file PATH] [-- <agent-args...>]"
+     );
+     eprintln!("  herdr agent explain <target> [--json|--format text|json] [--verbose]");
+     eprintln!(
+diff --git a/src/pane.rs b/src/pane.rs
+index 7b296da..eebd3ef 100644
+--- a/src/pane.rs
++++ b/src/pane.rs
+@@ -3536,11 +3536,18 @@ impl PaneRuntime {
+         terminal_id: &str,
+     ) -> Option<crate::platform::guarded_prompt::GuardedPromptOrigin> {
+         #[cfg(unix)]
+-        if let PaneRuntimeIo::Actor(actor) = &self.io {
+-            return actor.guarded_origin(terminal_id);
++        {
++            match &self.io {
++                PaneRuntimeIo::Actor(actor) => actor.guarded_origin(terminal_id),
++                #[cfg(test)]
++                PaneRuntimeIo::TestChannel { .. } => None,
++            }
++        }
++        #[cfg(not(unix))]
++        {
++            let _ = terminal_id;
++            None
+         }
+-        let _ = terminal_id;
+-        None
+     }
+ 
+     pub(crate) fn captured_input_origin(
+@@ -3548,11 +3555,18 @@ impl PaneRuntime {
+         terminal_id: &str,
+     ) -> Option<crate::platform::guarded_prompt::GuardedPromptOrigin> {
+         #[cfg(unix)]
+-        if let PaneRuntimeIo::Actor(actor) = &self.io {
+-            return actor.captured_input_origin(terminal_id);
++        {
++            match &self.io {
++                PaneRuntimeIo::Actor(actor) => actor.captured_input_origin(terminal_id),
++                #[cfg(test)]
++                PaneRuntimeIo::TestChannel { .. } => None,
++            }
++        }
++        #[cfg(not(unix))]
++        {
++            let _ = terminal_id;
++            None
+         }
+-        let _ = terminal_id;
+-        None
+     }
+     pub(crate) fn inhibit_input(
+         &self,
+@@ -3562,11 +3576,20 @@ impl PaneRuntime {
+         crate::platform::guarded_prompt::InputDrainError,
+     > {
+         #[cfg(unix)]
+-        if let PaneRuntimeIo::Actor(actor) = &self.io {
+-            return actor.inhibit_input(expected);
++        {
++            match &self.io {
++                PaneRuntimeIo::Actor(actor) => actor.inhibit_input(expected),
++                #[cfg(test)]
++                PaneRuntimeIo::TestChannel { .. } => {
++                    Err(crate::platform::guarded_prompt::InputDrainError::OriginUnavailable)
++                }
++            }
++        }
++        #[cfg(not(unix))]
++        {
++            let _ = expected;
++            Err(crate::platform::guarded_prompt::InputDrainError::OriginUnavailable)
+         }
+-        let _ = expected;
+-        Err(crate::platform::guarded_prompt::InputDrainError::OriginUnavailable)
+     }
+     pub(crate) fn queue_guarded_submission(
+         &self,
+@@ -3579,11 +3602,22 @@ impl PaneRuntime {
+         crate::platform::guarded_prompt::GuardedPromptError,
+     > {
+         #[cfg(unix)]
+-        if let PaneRuntimeIo::Actor(actor) = &self.io {
+-            return actor.queue_guarded_submission(text, enter, delay, expected);
++        {
++            match &self.io {
++                PaneRuntimeIo::Actor(actor) => {
++                    actor.queue_guarded_submission(text, enter, delay, expected)
++                }
++                #[cfg(test)]
++                PaneRuntimeIo::TestChannel { .. } => {
++                    Err(crate::platform::guarded_prompt::GuardedPromptError::OriginUnavailable)
++                }
++            }
++        }
++        #[cfg(not(unix))]
++        {
++            let _ = (text, enter, delay, expected);
++            Err(crate::platform::guarded_prompt::GuardedPromptError::OriginUnavailable)
+         }
+-        let _ = (text, enter, delay, expected);
+-        Err(crate::platform::guarded_prompt::GuardedPromptError::OriginUnavailable)
+     }
+ 
+     pub fn queue_user_input_submission(
+diff --git a/src/platform/guarded_prompt.rs b/src/platform/guarded_prompt.rs
+index d8c2848..e35245d 100644
+--- a/src/platform/guarded_prompt.rs
++++ b/src/platform/guarded_prompt.rs
+@@ -201,6 +201,7 @@ impl GuardedWriteState {
+     }
+ }
+ 
++#[cfg(any(target_os = "linux", test))]
+ pub(crate) fn parse_linux_child_identity(
+     pid: u32,
+     status: &str,
+@@ -259,10 +260,8 @@ pub(crate) fn parse_linux_child_identity(
+                     values.dedup();
+                     groups = Some(values);
+                 }
+-                "PPid" => {
+-                    if values.len() != 1 || ppid.replace(values[0]).is_some() {
+-                        return Err(invalid());
+-                    }
++                "PPid" if values.len() != 1 || ppid.replace(values[0]).is_some() => {
++                    return Err(invalid());
+                 }
+                 _ => {}
+             }
+diff --git a/src/platform/mod.rs b/src/platform/mod.rs
+index 0ea23d5..2470ff5 100644
+--- a/src/platform/mod.rs
++++ b/src/platform/mod.rs
+@@ -4,6 +4,7 @@
+ //! modules don't scatter `#[cfg]` branches through product logic.
+ 
+ pub(crate) mod guarded_prompt;
++pub(crate) mod process_environment;
+ 
+ #[cfg(unix)]
+ pub(crate) mod ssh_agent;
+diff --git a/src/platform/process_environment.rs b/src/platform/process_environment.rs
+new file mode 100644
+index 0000000..b6d6187
+--- /dev/null
++++ b/src/platform/process_environment.rs
+@@ -0,0 +1,182 @@
++//! Ordinary agent startup with an explicit environment. The terminal sees only
++//! a private file path, never credential values. No daemon or OS identity layer.
++
++use std::collections::BTreeMap;
++use std::io;
++
++fn invalid() -> io::Error {
++    io::Error::new(
++        io::ErrorKind::InvalidInput,
++        "invalid private agent environment",
++    )
++}
++
++#[cfg(unix)]
++fn read_environment(path: &str) -> io::Result<BTreeMap<String, String>> {
++    use std::io::Read;
++    use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
++    if !std::path::Path::new(path).is_absolute() || path.chars().any(char::is_control) {
++        return Err(invalid());
++    }
++    let file = std::fs::OpenOptions::new()
++        .read(true)
++        .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK)
++        .open(path)
++        .map_err(|_| invalid())?;
++    let metadata = file.metadata().map_err(|_| invalid())?;
++    // SAFETY: geteuid has no arguments and does not dereference memory.
++    let uid = unsafe { libc::geteuid() };
++    if !metadata.is_file() || metadata.uid() != uid || metadata.mode() & 0o777 != 0o600 {
++        return Err(invalid());
++    }
++    let mut bytes = Vec::new();
++    file.take(262_145)
++        .read_to_end(&mut bytes)
++        .map_err(|_| invalid())?;
++    if bytes.len() > 262_144 {
++        return Err(invalid());
++    }
++    let environment: BTreeMap<String, String> =
++        serde_json::from_slice(&bytes).map_err(|_| invalid())?;
++    for (name, value) in &environment {
++        let mut chars = name.chars();
++        if !chars
++            .next()
++            .is_some_and(|c| c == '_' || c.is_ascii_alphabetic())
++            || !chars.all(|c| c == '_' || c.is_ascii_alphanumeric())
++            || value.contains('\0')
++        {
++            return Err(invalid());
++        }
++    }
++    Ok(environment)
++}
++
++#[cfg(not(unix))]
++fn read_environment(_path: &str) -> io::Result<BTreeMap<String, String>> {
++    Err(io::Error::new(
++        io::ErrorKind::Unsupported,
++        "private agent environments require Unix",
++    ))
++}
++
++pub(crate) fn launch_argv(path: &str, argv: &[String]) -> io::Result<Vec<String>> {
++    // Validate before accepting the start. The child independently validates
++    // before exec; neither error path includes file contents.
++    read_environment(path)?;
++    let executable = std::env::current_exe()?
++        .into_os_string()
++        .into_string()
++        .map_err(|_| invalid())?;
++    let mut result = vec![executable, "agent".into(), "exec-env".into(), path.into()];
++    result.extend_from_slice(argv);
++    Ok(result)
++}
++
++#[cfg(unix)]
++pub(crate) fn exec(args: &[String]) -> io::Result<i32> {
++    use std::os::unix::process::CommandExt;
++    let [path, executable, rest @ ..] = args else {
++        return Err(invalid());
++    };
++    let mut environment = read_environment(path)?;
++    // These values are supplied by the existing terminal runtime. Session
++    // credentials and arbitrary caller variables are never inherited.
++    for name in [
++        "HERDR_ENV",
++        "HERDR_SOCKET_PATH",
++        "HERDR_PANE_ID",
++        "HERDR_WORKSPACE_ID",
++        "HERDR_TAB_ID",
++    ] {
++        environment.remove(name);
++        if let Ok(value) = std::env::var(name) {
++            environment.insert(name.into(), value);
++        }
++    }
++    for (alias, native) in [
++        ("HERDR_PANE", "HERDR_PANE_ID"),
++        ("HERDR_SESSION", "HERDR_WORKSPACE_ID"),
++    ] {
++        environment.remove(alias);
++        if let Some(value) = environment.get(native).cloned() {
++            environment.insert(alias.into(), value);
++        }
++    }
++    let error = std::process::Command::new(executable)
++        .args(rest)
++        .env_clear()
++        .envs(environment)
++        .exec();
++    Err(io::Error::new(
++        error.kind(),
++        "agent environment command could not start",
++    ))
++}
++
++#[cfg(not(unix))]
++pub(crate) fn exec(_args: &[String]) -> io::Result<i32> {
++    Err(io::Error::new(
++        io::ErrorKind::Unsupported,
++        "private agent environments require Unix",
++    ))
++}
++
++#[cfg(all(test, unix))]
++mod tests {
++    use super::*;
++    use std::os::unix::fs::PermissionsExt;
++
++    fn fixture(bytes: &str) -> std::path::PathBuf {
++        let nonce = std::time::SystemTime::now()
++            .duration_since(std::time::UNIX_EPOCH)
++            .unwrap()
++            .as_nanos();
++        let dir =
++            std::env::temp_dir().join(format!("herdr-process-env-{}-{nonce}", std::process::id()));
++        std::fs::create_dir(&dir).unwrap();
++        let path = dir.join("environment.json");
++        std::fs::write(&path, bytes).unwrap();
++        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600)).unwrap();
++        path
++    }
++
++    #[test]
++    fn process_environment_values_never_enter_launch_argv() {
++        let path = fixture(r#"{"TOKEN":"private-token","PATH":"/usr/bin:/bin"}"#);
++        let argv = launch_argv(
++            path.to_str().unwrap(),
++            &["pi".into(), "--model".into(), "test".into()],
++        )
++        .unwrap();
++        assert!(!argv.join(" ").contains("private-token"));
++        assert_eq!(&argv[4..], ["pi", "--model", "test"]);
++        assert_eq!(
++            read_environment(path.to_str().unwrap()).unwrap()["TOKEN"],
++            "private-token"
++        );
++        std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
++    }
++
++    #[test]
++    fn process_environment_rejects_permissions_symlinks_and_malformed_values() {
++        let path = fixture(r#"{"TOKEN":"private-token"}"#);
++        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644)).unwrap();
++        assert!(read_environment(path.to_str().unwrap()).is_err());
++        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600)).unwrap();
++        let link = path.with_extension("link");
++        std::os::unix::fs::symlink(&path, &link).unwrap();
++        assert!(read_environment(link.to_str().unwrap()).is_err());
++        for bytes in [
++            r#"{"TOKEN":12}"#,
++            r#"{"bad=name":"value"}"#,
++            r#"{"TOKEN":"\u0000"}"#,
++            "[]",
++        ] {
++            std::fs::write(&path, bytes).unwrap();
++            let error = read_environment(path.to_str().unwrap()).unwrap_err();
++            assert_eq!(error.to_string(), "invalid private agent environment");
++        }
++        std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
++    }
++}
+diff --git a/tests/cli/agents.rs b/tests/cli/agents.rs
+index cc5af06..7a0df1a 100644
+--- a/tests/cli/agents.rs
++++ b/tests/cli/agents.rs
+@@ -1,5 +1,84 @@
+ use super::harness::*;
+ 
++#[test]
++fn agent_start_with_environment_keeps_credentials_out_of_terminal_and_child_ambient() {
++    use std::os::unix::fs::PermissionsExt;
++    let base = unique_test_dir();
++    let config_home = base.join("config");
++    let runtime_dir = base.join("runtime");
++    let socket_path = runtime_dir.join("herdr.sock");
++    let (bin, shell, _) = write_delayed_shell_and_fake_pi(&base, "0");
++    let evidence = base.join("child-environment");
++    fs::write(bin.join("pi"), format!(
++        "#!/bin/sh\nprintf '%s|%s|%s|%s' \"$TOKEN\" \"${{AMBIENT_SECRET-unset}}\" \"$ACE_TOOLCHAIN\" \"$HERDR_PANE_ID\" > '{}'\nexport HERDR_AGENT=pi\n'{}' pane report-agent \"$HERDR_PANE_ID\" --source custom:env-test --agent pi --state idle >/dev/null\nwhile IFS= read -r _prompt; do :; done\n",
++        evidence.display(), env!("CARGO_BIN_EXE_herdr"))).unwrap();
++    let config = format!(
++        "onboarding = false\n[terminal]\ndefault_shell = {:?}\nshell_mode = \"non_login\"\n",
++        shell.to_str().unwrap()
++    );
++    let herdr = spawn_herdr_with_config(
++        &config_home,
++        &runtime_dir,
++        &socket_path,
++        Some(&bin),
++        &config,
++    );
++    wait_for_socket(&socket_path, Duration::from_secs(5));
++    let created = run_cli_json(
++        &socket_path,
++        &["workspace", "create", "--cwd", base.to_str().unwrap()],
++    );
++    let pane = created["result"]["root_pane"]["pane_id"].as_str().unwrap();
++    assert!(run_cli(
++        &socket_path,
++        &[
++            "pane",
++            "run",
++            pane,
++            "export AMBIENT_SECRET=ambient-sentinel"
++        ]
++    )
++    .status
++    .success());
++    let environment = base.join("private.json");
++    fs::write(&environment, serde_json::to_vec(&serde_json::json!({
++        "PATH":format!("{}:/usr/bin:/bin", bin.display()), "TOKEN":"secret-sentinel", "ACE_TOOLCHAIN":"installed"
++    })).unwrap()).unwrap();
++    fs::set_permissions(&environment, fs::Permissions::from_mode(0o644)).unwrap();
++    let args = [
++        "agent",
++        "start",
++        "env-worker",
++        "--kind",
++        "pi",
++        "--pane",
++        pane,
++        "--timeout",
++        "6000",
++        "--env-file",
++        environment.to_str().unwrap(),
++    ];
++    let rejected = run_cli(&socket_path, &args);
++    assert!(!rejected.status.success());
++    assert!(!evidence.exists());
++    fs::set_permissions(&environment, fs::Permissions::from_mode(0o600)).unwrap();
++    let started = run_cli_json(&socket_path, &args);
++    assert_eq!(started["result"]["agent"]["name"], "env-worker");
++    let recorded = fs::read_to_string(&evidence).unwrap();
++    assert!(
++        recorded.starts_with("secret-sentinel|unset|installed|"),
++        "{recorded}"
++    );
++    assert!(!recorded.ends_with('|'));
++    fs::remove_file(&environment).unwrap();
++    let transcript = run_cli(&socket_path, &["pane", "read", pane, "--source", "recent"]);
++    assert!(!String::from_utf8_lossy(&transcript.stdout).contains("secret-sentinel"));
++    assert!(!serde_json::to_string(&started)
++        .unwrap()
++        .contains("secret-sentinel"));
++    cleanup_spawned_herdr(herdr, base);
++}
++
+ #[test]
+ fn agent_explain_missing_file_reports_json_error() {
+     let base = unique_test_dir();
+diff --git a/tests/process_environment.rs b/tests/process_environment.rs
+new file mode 100644
+index 0000000..afe8c3a
+--- /dev/null
++++ b/tests/process_environment.rs
+@@ -0,0 +1,74 @@
++#![cfg(unix)]
++
++use std::os::unix::fs::PermissionsExt;
++use std::process::Command;
++
++fn environment_file(bytes: &str) -> std::path::PathBuf {
++    let nonce = std::time::SystemTime::now()
++        .duration_since(std::time::UNIX_EPOCH)
++        .unwrap()
++        .as_nanos();
++    let directory =
++        std::env::temp_dir().join(format!("herdr-env-exec-{}-{nonce}", std::process::id()));
++    std::fs::create_dir(&directory).unwrap();
++    let file = directory.join("env.json");
++    std::fs::write(&file, bytes).unwrap();
++    std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o600)).unwrap();
++    file
++}
++
++#[test]
++fn process_environment_exec_clears_ambient_credentials_and_preserves_terminal_identity() {
++    let path = environment_file(
++        r#"{"ACE_TOOLCHAIN":"installed","TOKEN":"scoped","HERDR_PANE_ID":"wrong","PATH":"/usr/bin:/bin"}"#,
++    );
++    let output = Command::new(env!("CARGO_BIN_EXE_herdr"))
++        .args(["agent", "exec-env", path.to_str().unwrap(), "/bin/sh", "-c",
++            "test -z \"${UNRELATED_SECRET+x}\" && test \"$TOKEN\" = scoped && test \"$ACE_TOOLCHAIN\" = installed && test \"$HERDR_PANE_ID\" = actual && test \"$HERDR_PANE\" = actual && test \"$HERDR_SESSION\" = w1 && test \"$HERDR_SOCKET_PATH\" = /tmp/native.sock && test \"$HERDR_ENV\" = 1"])
++        .env("UNRELATED_SECRET", "must-not-inherit")
++        .env("HERDR_ENV", "1")
++        .env("HERDR_PANE_ID", "actual")
++        .env("HERDR_WORKSPACE_ID", "w1")
++        .env("HERDR_SESSION", "wrong-coordinator")
++        .env("HERDR_PANE", "wrong-coordinator")
++        .env("HERDR_SOCKET_PATH", "/tmp/native.sock")
++        .output().unwrap();
++    assert!(
++        output.status.success(),
++        "{}",
++        String::from_utf8_lossy(&output.stderr)
++    );
++    assert!(output.stdout.is_empty());
++    std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
++}
++
++#[test]
++fn process_environment_failure_never_reports_secret_contents() {
++    let path = environment_file(r#"{"TOKEN":"secret-sentinel", malformed}"#);
++    let output = Command::new(env!("CARGO_BIN_EXE_herdr"))
++        .args(["agent", "exec-env", path.to_str().unwrap(), "/bin/true"])
++        .output()
++        .unwrap();
++    assert!(!output.status.success());
++    assert!(!String::from_utf8_lossy(&output.stderr).contains("secret-sentinel"));
++    assert!(!String::from_utf8_lossy(&output.stdout).contains("secret-sentinel"));
++    std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
++}
++
++#[test]
++fn process_environment_exec_preserves_real_exit_status() {
++    let path = environment_file("{}");
++    let output = Command::new(env!("CARGO_BIN_EXE_herdr"))
++        .args([
++            "agent",
++            "exec-env",
++            path.to_str().unwrap(),
++            "/bin/sh",
++            "-c",
++            "exit 37",
++        ])
++        .output()
++        .unwrap();
++    assert_eq!(output.status.code(), Some(37));
++    std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
++}
+-- 
+2.54.0 (Apple Git-157)
+
+
+From 4462e31354e9fe88c929f5961023fd75694768c1 Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Tue, 10 Nov 2026 23:06:09 +0000
+Subject: [PATCH 5/6] fix: require fresh environments on cold agent restoration
+
+---
+ src/app/agents.rs                   |  3 ++
+ src/persist/restore.rs              | 51 +++++++++++++++++++++++++++++
+ src/platform/process_environment.rs |  6 ++++
+ 3 files changed, 60 insertions(+)
+
+diff --git a/src/app/agents.rs b/src/app/agents.rs
+index 9bbfb31..b2be1b8 100644
+--- a/src/app/agents.rs
++++ b/src/app/agents.rs
+@@ -228,6 +228,9 @@ impl App {
+             .get_mut(&terminal_id)
+             .ok_or_else(|| AgentStartError::TargetUnavailable(params.pane_id.clone()))?;
+         terminal.begin_managed_agent(name.clone(), kind, now, AGENT_START_SETTLE_DELAY, timeout);
++        if env_file.is_some() {
++            terminal.launch_argv = Some(launch_argv);
++        }
+         if let Err(err) = runtime.try_send_bytes(Bytes::from(bytes)) {
+             terminal.clear_agent_name();
+             return Err(AgentStartError::InputFailed(err.to_string()));
+diff --git a/src/persist/restore.rs b/src/persist/restore.rs
+index e79a0f3..253ba88 100644
+--- a/src/persist/restore.rs
++++ b/src/persist/restore.rs
+@@ -515,6 +515,17 @@ fn restore_tab(
+ 
+         let cwd = saved_cwd;
+         let has_import = old_id.is_some_and(|old_id| imported_panes.contains_key(old_id));
++        if !has_import
++            && saved_pane
++                .and_then(|pane| pane.launch_argv.as_deref())
++                .is_some_and(crate::platform::process_environment::requires_environment)
++        {
++            let terminal = unavailable_restored_terminal(saved_pane, cwd,
++                "This agent requires a fresh explicit environment. Relaunch it through its coordinator.".into());
++            panes.insert(*id, PaneState::new(terminal.id.clone()));
++            terminals.push(terminal);
++            continue;
++        }
+         if !has_import && !cwd.is_dir() {
+             let terminal = unavailable_restored_terminal(
+                 saved_pane,
+@@ -1356,6 +1367,46 @@ mod tests {
+         assert!(restored_terminal_agent_session(Some(&session), true).is_none());
+     }
+ 
++    #[tokio::test]
++    async fn explicit_environment_cold_restore_never_resumes_with_ambient_credentials() {
++        let cwd = std::env::current_dir().unwrap();
++        let snapshot: SessionSnapshot = serde_json::from_value(serde_json::json!({
++            "version":super::super::snapshot::SNAPSHOT_VERSION,
++            "workspaces":[{"id":"explicit", "identity_cwd":cwd, "tabs":[{
++                "layout":{"Pane":0}, "panes":{"0":{"cwd":cwd,
++                    "agent_name":"worker", "managed_agent_kind":"pi",
++                    "launch_argv":["/usr/bin/herdr","agent","exec-env","/gone/env.json","pi"],
++                    "agent_session":{"source":"herdr:pi","agent":"pi","kind":"path","value":"/tmp/pi-session.jsonl"}
++            }}, "zoomed":false}], "active_tab":0}], "active":0, "selected":0
++        })).unwrap();
++        let (events, _rx) = mpsc::channel(32);
++        let (workspaces, terminals, runtimes) = restore(
++            &snapshot,
++            None,
++            24,
++            80,
++            0,
++            test_restore_shell(),
++            crate::config::ShellModeConfig::NonLogin,
++            true,
++            events,
++            Arc::new(Notify::new()),
++            Arc::new(RenderSignal::new()),
++        );
++        assert_eq!(workspaces.len(), 1);
++        assert!(runtimes.is_empty());
++        let terminal = terminals.values().next().unwrap();
++        assert!(terminal
++            .restore_error
++            .as_ref()
++            .unwrap()
++            .contains("fresh explicit environment"));
++        assert!(terminal.pending_agent_resume_plan.is_none());
++        assert!(crate::platform::process_environment::requires_environment(
++            terminal.launch_argv.as_deref().unwrap()
++        ));
++    }
++
+     #[tokio::test]
+     async fn failed_cold_restore_preserves_panes_and_saved_directories() {
+         for missing_shell in [false, true] {
+diff --git a/src/platform/process_environment.rs b/src/platform/process_environment.rs
+index b6d6187..66ae240 100644
+--- a/src/platform/process_environment.rs
++++ b/src/platform/process_environment.rs
+@@ -73,6 +73,12 @@ pub(crate) fn launch_argv(path: &str, argv: &[String]) -> io::Result<Vec<String>
+     Ok(result)
+ }
+ 
++pub(crate) fn requires_environment(argv: &[String]) -> bool {
++    argv.get(1).is_some_and(|value| value == "agent")
++        && argv.get(2).is_some_and(|value| value == "exec-env")
++        && argv.len() >= 5
++}
++
+ #[cfg(unix)]
+ pub(crate) fn exec(args: &[String]) -> io::Result<i32> {
+     use std::os::unix::process::CommandExt;
+-- 
+2.54.0 (Apple Git-157)
+
+
+From b6eef16bbbeb5210f5414b67104d2656576e0e5c Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Tue, 10 Nov 2026 23:16:46 +0000
+Subject: [PATCH 6/6] fix: clean ordinary session credentials when agents exit
+
+---
+ src/persist/restore.rs              |  13 +--
+ src/platform/process_environment.rs | 132 ++++++++++++++++++++++++++--
+ tests/cli/agents.rs                 |   7 +-
+ tests/process_environment.rs        | 121 +++++++++++++++++++++++++
+ 4 files changed, 257 insertions(+), 16 deletions(-)
+
+diff --git a/src/persist/restore.rs b/src/persist/restore.rs
+index 253ba88..3b0ca57 100644
+--- a/src/persist/restore.rs
++++ b/src/persist/restore.rs
+@@ -459,15 +459,9 @@ fn unavailable_restored_terminal(
+         if let Some(resume) = saved_reported_resume(pane) {
+             terminal.restore_reported_resume(reported_resume_from_snapshot(resume));
+         }
+-        match (
+-            pane.agent_name.as_ref(),
+-            pane.managed_agent_kind
+-                .as_deref()
+-                .and_then(crate::detect::parse_canonical_agent_label),
+-        ) {
+-            (Some(name), Some(agent)) => terminal.restore_managed_agent(name.clone(), agent),
+-            (Some(name), None) => terminal.set_agent_name(name.clone()),
+-            _ => {}
++        // Preserve identity for reconciliation, never readiness without a runtime.
++        if let Some(name) = &pane.agent_name {
++            terminal.set_agent_name(name.clone());
+         }
+     }
+     terminal
+@@ -1402,6 +1396,7 @@ mod tests {
+             .unwrap()
+             .contains("fresh explicit environment"));
+         assert!(terminal.pending_agent_resume_plan.is_none());
++        assert!(!terminal.managed_agent_interactive_ready());
+         assert!(crate::platform::process_environment::requires_environment(
+             terminal.launch_argv.as_deref().unwrap()
+         ));
+diff --git a/src/platform/process_environment.rs b/src/platform/process_environment.rs
+index 66ae240..df7469d 100644
+--- a/src/platform/process_environment.rs
++++ b/src/platform/process_environment.rs
+@@ -63,7 +63,11 @@ fn read_environment(_path: &str) -> io::Result<BTreeMap<String, String>> {
+ pub(crate) fn launch_argv(path: &str, argv: &[String]) -> io::Result<Vec<String>> {
+     // Validate before accepting the start. The child independently validates
+     // before exec; neither error path includes file contents.
+-    read_environment(path)?;
++    let environment = read_environment(path)?;
++    #[cfg(unix)]
++    CredentialCleanup::from_environment(&environment)?;
++    #[cfg(not(unix))]
++    let _ = environment;
+     let executable = std::env::current_exe()?
+         .into_os_string()
+         .into_string()
+@@ -109,17 +113,133 @@ pub(crate) fn exec(args: &[String]) -> io::Result<i32> {
+             environment.insert(alias.into(), value);
+         }
+     }
+-    let error = std::process::Command::new(executable)
+-        .args(rest)
+-        .env_clear()
+-        .envs(environment)
+-        .exec();
++    let credentials = CredentialCleanup::from_environment(&environment)?;
++    let mut command = std::process::Command::new(executable);
++    command.args(rest).env_clear().envs(environment);
++    if let Some(credentials) = credentials {
++        let outcome = wait_for_child(&mut command);
++        credentials.clean()?;
++        return outcome;
++    }
++    let error = command.exec();
+     Err(io::Error::new(
+         error.kind(),
+         "agent environment command could not start",
+     ))
+ }
+ 
++// Keep an open directory descriptor so cleanup cannot follow a replaced path.
++#[cfg(unix)]
++struct CredentialCleanup(std::fs::File);
++
++#[cfg(unix)]
++impl CredentialCleanup {
++    fn from_environment(environment: &BTreeMap<String, String>) -> io::Result<Option<Self>> {
++        use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
++        let Some(directory) = environment.get("ACE_SESSION_CREDENTIALS_DIRECTORY") else {
++            return Ok(None);
++        };
++        let path = std::path::Path::new(directory);
++        if environment.get("PI_CODING_AGENT_DIR") != Some(directory)
++            || !path.is_absolute()
++            || !path
++                .file_name()
++                .and_then(|name| name.to_str())
++                .is_some_and(|name| name.starts_with("ace-session-") && name.len() > 12)
++        {
++            return Err(invalid());
++        }
++        let directory = std::fs::OpenOptions::new()
++            .read(true)
++            .custom_flags(libc::O_NOFOLLOW | libc::O_DIRECTORY)
++            .open(path)
++            .map_err(|_| invalid())?;
++        let metadata = directory.metadata().map_err(|_| invalid())?;
++        // SAFETY: geteuid has no arguments or pointers.
++        if !metadata.is_dir()
++            || metadata.uid() != unsafe { libc::geteuid() }
++            || metadata.mode() & 0o777 != 0o700
++        {
++            return Err(invalid());
++        }
++        Ok(Some(Self(directory)))
++    }
++
++    fn clean(self) -> io::Result<()> {
++        use std::os::fd::AsRawFd;
++        // SAFETY: directory remains open and the fixed filename is NUL terminated.
++        if unsafe { libc::unlinkat(self.0.as_raw_fd(), c"auth.json".as_ptr(), 0) } == 0 {
++            return Ok(());
++        }
++        let error = io::Error::last_os_error();
++        if error.kind() == io::ErrorKind::NotFound {
++            return Ok(());
++        }
++        Err(io::Error::new(
++            error.kind(),
++            "agent credential cleanup failed",
++        ))
++    }
++}
++
++#[cfg(unix)]
++static CHILD_PID: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
++#[cfg(unix)]
++static STOP_SIGNAL: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
++
++#[cfg(unix)]
++extern "C" fn forward_stop(signal: libc::c_int) {
++    use std::sync::atomic::Ordering;
++    // Terminal Ctrl-C already reaches the child in the same foreground group.
++    // Keep the waiter alive to clean credentials when the child actually exits.
++    if signal == libc::SIGINT {
++        return;
++    }
++    STOP_SIGNAL.store(signal, Ordering::SeqCst);
++    let pid = CHILD_PID.load(Ordering::SeqCst);
++    if pid > 0 {
++        // SAFETY: kill is async-signal-safe; pid identifies our still-owned child.
++        unsafe {
++            libc::kill(pid, signal);
++        }
++    }
++}
++
++#[cfg(unix)]
++fn wait_for_child(command: &mut std::process::Command) -> io::Result<i32> {
++    use std::os::unix::process::ExitStatusExt;
++    use std::sync::atomic::Ordering;
++    for signal in [libc::SIGTERM, libc::SIGHUP, libc::SIGINT] {
++        // SAFETY: a static handler with the required C ABI; used only by this
++        // standalone helper process, before spawning its one child.
++        if unsafe { libc::signal(signal, forward_stop as *const () as libc::sighandler_t) }
++            == libc::SIG_ERR
++        {
++            return Err(io::Error::other("agent signal forwarding failed"));
++        }
++    }
++    let mut child = command.spawn().map_err(|error| {
++        io::Error::new(error.kind(), "agent environment command could not start")
++    })?;
++    CHILD_PID.store(child.id() as i32, Ordering::SeqCst);
++    let pending = STOP_SIGNAL.load(Ordering::SeqCst);
++    if pending != 0 {
++        // SAFETY: child is owned and not yet reaped.
++        unsafe {
++            libc::kill(child.id() as i32, pending);
++        }
++    }
++    let result = child.wait();
++    CHILD_PID.store(0, Ordering::SeqCst);
++    result
++        .map(|status| {
++            status
++                .code()
++                .unwrap_or_else(|| 128 + status.signal().unwrap_or(1))
++        })
++        .map_err(|error| io::Error::new(error.kind(), "agent command wait failed"))
++}
++
+ #[cfg(not(unix))]
+ pub(crate) fn exec(_args: &[String]) -> io::Result<i32> {
+     Err(io::Error::new(
+diff --git a/tests/cli/agents.rs b/tests/cli/agents.rs
+index 7a0df1a..43bafba 100644
+--- a/tests/cli/agents.rs
++++ b/tests/cli/agents.rs
+@@ -40,9 +40,14 @@ fn agent_start_with_environment_keeps_credentials_out_of_terminal_and_child_ambi
+     )
+     .status
+     .success());
++    let credentials = base.join("ace-session-native-test");
++    fs::create_dir(&credentials).unwrap();
++    fs::set_permissions(&credentials, fs::Permissions::from_mode(0o700)).unwrap();
++    fs::write(credentials.join("auth.json"), "private-model-auth").unwrap();
+     let environment = base.join("private.json");
+     fs::write(&environment, serde_json::to_vec(&serde_json::json!({
+-        "PATH":format!("{}:/usr/bin:/bin", bin.display()), "TOKEN":"secret-sentinel", "ACE_TOOLCHAIN":"installed"
++        "PATH":format!("{}:/usr/bin:/bin", bin.display()), "TOKEN":"secret-sentinel", "ACE_TOOLCHAIN":"installed",
++        "PI_CODING_AGENT_DIR": credentials, "ACE_SESSION_CREDENTIALS_DIRECTORY": credentials
+     })).unwrap()).unwrap();
+     fs::set_permissions(&environment, fs::Permissions::from_mode(0o644)).unwrap();
+     let args = [
+diff --git a/tests/process_environment.rs b/tests/process_environment.rs
+index afe8c3a..9dedb83 100644
+--- a/tests/process_environment.rs
++++ b/tests/process_environment.rs
+@@ -72,3 +72,124 @@ fn process_environment_exec_preserves_real_exit_status() {
+     assert_eq!(output.status.code(), Some(37));
+     std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
+ }
++
++fn credentials_fixture() -> (std::path::PathBuf, std::path::PathBuf) {
++    let environment = environment_file("{}");
++    let directory = environment.parent().unwrap().join("ace-session-owned");
++    std::fs::create_dir(&directory).unwrap();
++    std::fs::set_permissions(&directory, std::fs::Permissions::from_mode(0o700)).unwrap();
++    std::fs::write(directory.join("auth.json"), "private-sentinel").unwrap();
++    std::fs::write(directory.join("session.jsonl"), "evidence").unwrap();
++    std::fs::write(
++        &environment,
++        serde_json::json!({
++            "PATH":"/usr/bin:/bin", "PI_CODING_AGENT_DIR":directory,
++            "ACE_SESSION_CREDENTIALS_DIRECTORY":directory
++        })
++        .to_string(),
++    )
++    .unwrap();
++    (environment, directory)
++}
++
++#[test]
++fn process_environment_cleanup_preserves_evidence_and_child_exit_code() {
++    for executable in ["/bin/sh", "/nonexistent-herdr-test-command"] {
++        let (environment, directory) = credentials_fixture();
++        let output = Command::new(env!("CARGO_BIN_EXE_herdr"))
++            .args([
++                "agent",
++                "exec-env",
++                environment.to_str().unwrap(),
++                executable,
++                "-c",
++                "exit 37",
++            ])
++            .output()
++            .unwrap();
++        assert!(!output.status.success());
++        if executable == "/bin/sh" {
++            assert_eq!(output.status.code(), Some(37));
++        }
++        assert!(!directory.join("auth.json").exists());
++        assert_eq!(
++            std::fs::read_to_string(directory.join("session.jsonl")).unwrap(),
++            "evidence"
++        );
++        assert!(!String::from_utf8_lossy(&output.stderr).contains("private-sentinel"));
++        std::fs::remove_dir_all(environment.parent().unwrap()).unwrap();
++    }
++}
++
++#[test]
++fn process_environment_cleanup_refuses_public_or_mismatched_directory() {
++    for mismatch in [false, true] {
++        let (environment, directory) = credentials_fixture();
++        if mismatch {
++            std::fs::write(
++                &environment,
++                serde_json::json!({
++                    "PI_CODING_AGENT_DIR":"/tmp/some-other-directory",
++                    "ACE_SESSION_CREDENTIALS_DIRECTORY":directory
++                })
++                .to_string(),
++            )
++            .unwrap();
++        } else {
++            std::fs::set_permissions(&directory, std::fs::Permissions::from_mode(0o755)).unwrap();
++        }
++        let output = Command::new(env!("CARGO_BIN_EXE_herdr"))
++            .args([
++                "agent",
++                "exec-env",
++                environment.to_str().unwrap(),
++                "/bin/true",
++            ])
++            .output()
++            .unwrap();
++        assert!(!output.status.success());
++        assert!(directory.join("auth.json").exists());
++        std::fs::remove_dir_all(environment.parent().unwrap()).unwrap();
++    }
++}
++
++#[test]
++fn process_environment_cleanup_forwards_termination_and_keeps_evidence() {
++    let (environment, directory) = credentials_fixture();
++    let ready = directory.join("ready");
++    let mut child = Command::new(env!("CARGO_BIN_EXE_herdr"))
++        .args([
++            "agent",
++            "exec-env",
++            environment.to_str().unwrap(),
++            "/bin/sh",
++            "-c",
++            "touch \"$PI_CODING_AGENT_DIR/ready\"; exec sleep 30",
++        ])
++        .spawn()
++        .unwrap();
++    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
++    while !ready.exists() {
++        assert!(
++            std::time::Instant::now() < deadline,
++            "child readiness timed out"
++        );
++        std::thread::sleep(std::time::Duration::from_millis(10));
++    }
++    // SAFETY: the test owns the running child PID.
++    assert_eq!(unsafe { libc::kill(child.id() as i32, libc::SIGTERM) }, 0);
++    let status = loop {
++        if let Some(status) = child.try_wait().unwrap() {
++            break status;
++        }
++        if std::time::Instant::now() >= deadline {
++            child.kill().unwrap();
++            panic!("helper did not forward termination");
++        }
++        std::thread::sleep(std::time::Duration::from_millis(10));
++    };
++    assert_eq!(status.code(), Some(128 + libc::SIGTERM));
++    assert!(!directory.join("auth.json").exists());
++    assert!(directory.join("session.jsonl").exists());
++    std::fs::remove_dir_all(environment.parent().unwrap()).unwrap();
++}
+-- 
+2.54.0 (Apple Git-157)
+

@@ -15,6 +15,30 @@ class WorktreeManagerTest < Minitest::Test
   # Smoke tests - verify API exists and basic validation works
   # These don't mock internals since organisms initialize their own dependencies
 
+  def test_branch_reattachment_defers_hooks_only_when_requested
+    config = Object.new
+    config.define_singleton_method(:after_create_hooks) do
+      [{"command" => "touch hook-ran", "working_dir" => "."}]
+    end
+    creator = Object.new
+    path = @temp_dir
+    creator.define_singleton_method(:create_traditional) { |*_args, **_kwargs| {success: true, worktree_path: path} }
+    lister = Object.new
+    lister.define_singleton_method(:find_by_branch) { |_branch| nil }
+    @manager.instance_variable_set(:@config, config)
+    @manager.instance_variable_set(:@worktree_creator, creator)
+    @manager.instance_variable_set(:@worktree_lister, lister)
+
+    deferred = @manager.create("surviving-branch", path: path, defer_setup: true)
+    assert deferred[:success]
+    assert_equal "checkout_ready", deferred[:readiness]
+    assert_equal "delegated", deferred[:project_setup]
+    refute File.exist?(File.join(path, "hook-ran"))
+    ordinary = @manager.create("ordinary-branch", path: path)
+    assert ordinary[:success]
+    assert File.exist?(File.join(path, "hook-ran")), ordinary.inspect
+  end
+
   def test_create_task_api_exists
     # Just verify the API exists and handles validation
     result = @manager.create_task(nil)

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-10
+
+### Added
+
+- Configure ordinary role processes with project-scoped environment files; installation and verification require no session issuer service. Converge protected extension permissions and runtime dependency closure. Execute temporary grants in ordinary process groups with deadlines, cleanup, principal checks and durable interrupted-execution reconciliation; use repository-scoped Forgejo token APIs.
+
 ## [0.14.1] - 2026-10-31
 
 ### Fixed

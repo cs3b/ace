@@ -1,0 +1,10 @@
+#!/bin/sh
+# Executable code belongs to the protected installed package, never the
+# ephemeral credential directory (which may be mounted noexec).
+if [ "$1" = "Username for '$ACE_LAB_FORGEJO_ORIGIN': " ]; then
+  printf '%s\n' "$ACE_LAB_FORGEJO_ACCOUNT"
+elif [ "$1" = "Password for '$ACE_LAB_FORGEJO_SCHEME://$ACE_LAB_FORGEJO_ACCOUNT@$ACE_LAB_FORGEJO_AUTHORITY': " ]; then
+  cat "$ACE_LAB_CREDENTIAL_FILE"
+else
+  exit 1
+fi

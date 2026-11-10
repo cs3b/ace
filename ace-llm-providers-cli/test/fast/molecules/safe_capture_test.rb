@@ -208,6 +208,16 @@ module Ace
               assert capture.success?
             end
 
+            def test_large_input_and_startup_output_are_transferred_concurrently
+              payload = "evidence\n" * 140_000
+              script = 'STDERR.write("x" * 262_144); STDOUT.write(STDIN.read)'
+              capture = SafeCapture.call([RbConfig.ruby, "-e", script], timeout: 5, stdin_data: payload)
+
+              assert capture.success?
+              assert_equal payload, capture.stdout
+              assert_equal 262_144, capture.stderr.bytesize
+            end
+
             def test_chdir_option
               capture = SafeCapture.call(
                 ["pwd"],

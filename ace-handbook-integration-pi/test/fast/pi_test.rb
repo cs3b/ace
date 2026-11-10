@@ -32,7 +32,7 @@ class Ace::Handbook::Integration::PiTest < Minitest::Test
     body = match[2]
     # The resume prompt reads real state: _overseer tasks, assignments, and
     # current project truth (8xg.t.sbz.6.2 acceptance).
-    assert_includes body, "ace-task --in _overseer list"
+    assert_includes body, "ace-task list --in _overseer"
     assert_includes body, ".ace-local/assign/"
     assert_includes body, "ace-git-worktree list"
     assert_includes body, "git status --short"

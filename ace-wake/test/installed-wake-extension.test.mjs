@@ -54,10 +54,11 @@ describe("ace-wake commands", () => {
   it("/watch add requires a readable path and stores the canonical path", async () => {
     const host = createFakeHost();
     await startSession(host);
+    const baseline = host.sessionEntries.length;
 
     await host.runCommand("watch", "add dep --path missing.txt --message changed");
     assert.match(host.notifications.at(-1).message, /path is not readable/);
-    assert.equal(host.sessionEntries.length, 0, "failed adds must not persist");
+    assert.equal(host.sessionEntries.length, baseline, "failed adds must not persist");
 
     host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
     await host.runCommand("watch", "add dep --path dep.txt --message changed");

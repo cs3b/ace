@@ -6,6 +6,16 @@ require "ace/test/end_to_end_runner"
 class ScenarioContractTest < AceMonorepoE2eTestCase
   SCENARIO_DIR = File.expand_path("../e2e/TS-MONO-001-rubygems-install", __dir__)
 
+  def test_autonomy_scenarios_load_without_executing_vm_or_model
+    loader = Ace::Test::EndToEndRunner::Molecules::ScenarioLoader.new
+    {"TS-MONO-003-lab-vm-bootstrap" => %w[TC-001 TC-002 TC-003],
+     "TS-MONO-004-lab-vm-recovery" => %w[TC-001 TC-002 TC-003 TC-004]}.each do |name, cases|
+      scenario = loader.load(File.expand_path("../e2e/#{name}", __dir__))
+      assert_equal cases, scenario.test_cases.map(&:tc_id)
+      scenario.test_cases.each { |test_case| refute_empty test_case.declared_artifacts }
+    end
+  end
+
   # The artifact-contract validator runs only when the E2E runner loads the
   # scenario, so contract drift (a verify.md path not declared in the runner
   # or scenario.yml) otherwise surfaces only at verification time.

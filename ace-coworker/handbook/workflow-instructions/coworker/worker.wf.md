@@ -50,6 +50,15 @@ false "work done".
      goal, the task dependencies, or the overseer tree.
 
 3. **Implement.**
+   - Checkout preparation delegates project setup to you. Inspect the project's
+     worktree configuration for after-create hooks, toolchain trust and bootstrap;
+     perform the setup needed by this assignment under your worker identity.
+     Preserve installed ACE as the operational runtime while preparing project
+     development dependencies separately. Check the commissioned test command
+     and its prerequisites before installing development dependencies. A checkout
+     Gemfile or binstub alone does not require `bundle install` in installed mode.
+     Record executed or inapplicable phases;
+     the standalone bootstrap command does not replay after-create hooks.
    - Work only inside this worktree. Mark checkboxes and step states only when
      the underlying work is verified.
    - Commit path-scoped (`ace-git-commit <paths>`), verifying `git status`
@@ -58,8 +67,15 @@ false "work done".
    - Follow repository conventions (AGENTS.md, ATOM architecture, style).
 
 4. **Verify - required tests (completion gate).**
-   - For every changed package run `bin/ace-test <changed-package> all`.
-   - When the task requires monorepo validation, run `bin/ace-test-suite`.
+   - Run the task's required checks from the assignment worktree. If the
+     task and project leave the test scope unspecified, run
+     `ace-test <changed-package> all` for every changed package. Use
+     installed `ace-test` when `ACE_TOOLCHAIN=installed`. When the task
+     requires monorepo validation, run installed `ace-test-suite`.
+     Record the required commands and their results for the reviewer.
+     If a required installed test tool is missing, report the readiness failure.
+   - In ACE development mode use the checkout's `bin/ace-test` and
+     `bin/ace-test-suite` for the same checks.
    - **Failed required tests block success.** On a failing required test:
      - fix and rerun within this assignment; record the failure and the fix;
      - while the failure stands, the step is failed (`ace-assign fail` with
@@ -68,6 +84,23 @@ false "work done".
        error outcome naming the cause.
 
 5. **Finish and report.**
+   - Keep the final `publish-pr` step open while implementing and testing.
+     If a forge-linked assignment lacks that step, add it through
+     `ace-assign add` before completing the test step.
+   - For a task linked to a forge issue, publish the tested candidate on a
+     source branch and create or reconcile its pull request against the
+     commissioned target branch. Use the worker's scoped access and the
+     configured forge. Use `ace-git pr create --head BRANCH --base TARGET
+     --expected-head SHA --title TITLE --body-file BODY --no-draft` with the retained
+     server selection. Link the originating issue in the PR body. The full
+     pushed HEAD must match the tested HEAD. Record the PR reference, target
+     branch and exact HEAD in the worker report. If publication is unavailable
+     or uncertain, report the impediment and reconcile before retrying.
+     If the existing PR is a draft, use `ace-git pr ready PR --expected-head
+     SHA` and re-read it. Finish `publish-pr` only after verifying the
+     open, non-draft PR at
+     the exact tested HEAD. Record the evidence in that step's report.
+     For local-only work record the tested commit and that no PR applies.
    - Run `ace-coworker report`. The outcome is derived from the ace-assign
      verdict: reporting a forced success on an incomplete assignment is
      refused by the tool. Never send a false "work done"; when in doubt, the
@@ -80,7 +113,8 @@ false "work done".
 ## Completion Rule
 
 The assignment is complete when the change is implemented, every required
-test for every changed package passes (or the task's monorepo gate passes),
+test declared by the task passes. When the task does not specify checks,
+run each changed package's required suite (or its monorepo gate),
 and the truthful outcome has been recorded and reported. A failing required
 test means the work is NOT done, whatever the local state of the steps.
 

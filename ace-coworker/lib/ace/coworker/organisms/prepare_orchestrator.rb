@@ -61,6 +61,8 @@ module Ace
         # @return [Models::Preparation]
         # @raise [Error] for an unresolvable task or an operational failure
         def call(task_ref:, roles:, to: nil, config_path: nil, dry_run: false)
+          @delivery_mode = @config.dig("reporting", "delivery") || "adapter"
+          raise Error, "reporting.delivery must be adapter or observe" unless Atoms::ConfigSchema::DELIVERIES.include?(@delivery_mode)
           task = @task_probe.resolve(task_ref)
           raise Error, "task '#{task_ref}' not found in this worktree" if task.nil?
 
@@ -230,6 +232,11 @@ module Ace
             return {"kind" => "readiness", "error" => event.message}
           end
 
+          if @delivery_mode == "observe"
+            published = @hitl_reporter.event_published?(event, to: to, task: task, type: "report", result: "success")
+            return {"kind" => "readiness", "event" => event, "published" => published,
+              "error" => ("publication for configured observer could not be verified" unless published)}.compact
+          end
           {"kind" => "readiness", "event" => event,
            "delivered" => @hitl_reporter.send_report(event) == true}
         rescue Error => e
@@ -237,7 +244,8 @@ module Ace
         end
 
         def readiness_lines(worktree_path:, branch:, disposition:, assignments:, start_configs:)
-          lines = ["worktree: #{worktree_path} (branch #{branch}, #{disposition})"]
+          lines = ["worktree: #{worktree_path} (branch #{branch}, #{disposition})",
+            "project setup: delegated to executor; checkout/assignments ready, hooks, toolchain trust and bootstrap not verified"]
           assignments.each do |entry|
             lines << "sequence #{entry['position']}/#{entry['of']} #{entry['role']}: " \
               "#{entry['assignment']} (#{entry['disposition']}, #{entry['steps']} steps)"
@@ -292,6 +300,7 @@ module Ace
           to:, config_path:, dry_run:, assignments: [], active_executor: nil)
           hitl_event = nil
           delivered = nil
+          published = nil
           recipient, recipient_note = escalation_recipient(to: to, config_path: config_path)
           detail = detail.dup
 
@@ -309,7 +318,12 @@ module Ace
                   detail << "\ncannot report conflict: #{result.message}"
                 else
                   hitl_event = result
-                  delivered = @hitl_reporter.send_report(hitl_event) == true
+                  if @delivery_mode == "observe"
+                    published = @hitl_reporter.event_published?(hitl_event, to: recipient, task: task, type: "question")
+                    detail << "\npublication for configured observer could not be verified" unless published
+                  else
+                    delivered = @hitl_reporter.send_report(hitl_event) == true
+                  end
                 end
               rescue Error => e
                 # e.g. the ace-hitl binary is missing: keep the structured
@@ -323,7 +337,7 @@ module Ace
             worktree: nil, worktree_assignments: assignments,
             active_executor: active_executor,
             conflict: {"kind" => kind, "detail" => detail,
-                       "hitl_event" => hitl_event, "delivered" => delivered},
+                       "hitl_event" => hitl_event, "delivered" => delivered, "published" => published},
             dry_run: dry_run)
         end
 
@@ -364,7 +378,7 @@ module Ace
           branch:, assignments: [], start_configs: [], worktree_assignments: [],
           report: nil, dry_run:)
           Models::Preparation.new(task: task, task_path: task_path, roles: roles,
-            worktree: {"path" => worktree_path, "branch" => branch, "disposition" => disposition},
+            worktree: {"path" => worktree_path, "branch" => branch, "disposition" => disposition, "project_setup" => "delegated"},
             worktree_assignments: worktree_assignments, assignments: assignments,
             start_configs: start_configs, report: report, dry_run: dry_run)
         end

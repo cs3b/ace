@@ -158,6 +158,16 @@ module Molecules
       assert_equal message, error.message
     end
 
+    def test_child_unconfirmed_start_keeps_its_report_when_cli_exits_nonzero
+      root = project("unconfirmed child", "4.0.0")
+      payload = {"status" => "started", "scope" => "project", "prompt_failed" => true,
+                 "message" => "agent blocked"}
+      write_child_report(root, payload, exit_code: 1)
+      report = Ace::Overseer::Molecules::ProjectBundle.new.call(root: root, workspace: "w-child")
+      assert_equal true, report.fetch("prompt_failed")
+      assert_equal "agent blocked", report.fetch("message")
+    end
+
     def test_unscoped_or_wrong_scope_success_and_malformed_failure_are_refused
       root = project("invalid child", "4.0.0")
       [

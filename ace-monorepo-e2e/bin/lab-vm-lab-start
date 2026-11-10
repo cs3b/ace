@@ -1,0 +1,135 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Start one lab coordinator and deliver one user-level goal. This harness
+# does not create tasks, dispatch workers or respond on the coordinator's behalf.
+require "json"
+require "tempfile"
+load File.expand_path("lab-vm", __dir__)
+
+def guest_mo(uuid, *argv, timeout_s: 90)
+  LabVm.guest_exec(uuid, "/usr/sbin/runuser", "-u", "mo", "--", "/bin/sh", "-c",
+    'set -e; . /etc/profile.d/ace-e2e.sh; cd /lab; exec "$@"', "ace-e2e", *argv, timeout_s: timeout_s)
+end
+
+def guest_json(uuid, *argv)
+  code, output = guest_mo(uuid, *argv)
+  raise "guest command failed: #{argv.first} #{argv[1]}" unless code.zero?
+  value = JSON.parse(output)
+  raise "guest command reported an error: #{argv.first} #{argv[1]}" if value.is_a?(Hash) && value["error"]
+  value
+end
+
+def save_start_receipt(path, value)
+  Tempfile.create(["lab-start-", ".json"], File.dirname(path)) do |file|
+    file.chmod(0o600)
+    file.write(JSON.pretty_generate(value) + "\n")
+    file.flush
+    file.fsync
+    File.rename(file.path, path)
+  end
+end
+
+begin
+  raise "usage: lab-vm-lab-start RUN_ID" unless ARGV.length == 1 && ARGV[0].match?(/\A[a-f0-9]{16}\z/)
+  run_id = ARGV[0]
+  LabVm.with_lifecycle_lock do
+    mutated = false
+    begin
+      dir = File.join(LabVm.local_dir, "runs", run_id)
+      raise "fixture run is missing or unsafe" if File.symlink?(dir) || !File.directory?(dir)
+      fixture_path = File.join(dir, "fixture.json")
+      raise "fixture receipt is unsafe" if File.symlink?(fixture_path) || !File.file?(fixture_path)
+      fixture = JSON.parse(File.read(fixture_path))
+      raise "fixture is not ready" unless fixture["status"] == "ready" && fixture["run_id"] == run_id
+      output_path = File.join(dir, "lab-start.json")
+      raise "a lab start was already attempted; inspect existing state instead of retrying" if File.exist?(output_path) || File.symlink?(output_path)
+      work = LabVm.status.fetch("work")
+      raise "working VM is not running" unless work && work["status"] == "started"
+      uuid = work.fetch("uuid")
+      raise "fixture belongs to a different working VM" unless fixture.fetch("vm_uuid").casecmp?(uuid)
+      code, head = guest_mo(uuid, "git", "-C", "/lab/ace", "rev-parse", "HEAD")
+      raise "guest checkout does not match fixture" unless code.zero? && head.to_s.strip == fixture.fetch("initial_sha")
+      code, remote = guest_mo(uuid, "git", "-C", "/lab/ace", "remote", "get-url", "origin")
+      raise "guest checkout has a different origin" unless code.zero? && remote.to_s.strip == "http://127.0.0.1:3000/#{fixture.fetch('repository')}.git"
+      digest = LabVm.runtime_configuration_fingerprint
+      ready = "test -f /var/lib/ace-e2e/runtime-ready.sha256; test ! -L /var/lib/ace-e2e/runtime-ready.sha256; test \"$(stat -c '%U:%G' /var/lib/ace-e2e/runtime-ready.sha256)\" = root:root; test \"$(cat /var/lib/ace-e2e/runtime-ready.sha256)\" = '#{digest}'"
+      code, = LabVm.guest_exec(uuid, "/bin/sh", "-ec", ready)
+      raise "installed runtime receipt does not match" unless code.zero?
+      status = guest_json(uuid, "herdr", "status", "server", "--json")
+      raise "a Herdr server is already running; inspect it before starting" unless status["running"] == false
+
+      receipt = {"schema" => "ace-e2e-lab-start/v1", "run_id" => run_id, "vm_uuid" => uuid,
+        "repository" => fixture.fetch("repository"), "status" => "starting"}
+      File.open(output_path, File::WRONLY | File::CREAT | File::EXCL | File::NOFOLLOW, 0o600) do |file|
+        file.write(JSON.pretty_generate(receipt) + "\n")
+        file.flush
+        file.fsync
+      end
+      mutated = true
+      launch = 'set -e; . /etc/profile.d/ace-e2e.sh; cd /lab; umask 077; mkdir -p .ace-local/e2e; nohup herdr server > .ace-local/e2e/herdr-server.log 2>&1 < /dev/null &'
+      code, = LabVm.guest_exec(uuid, "/usr/sbin/runuser", "-u", "mo", "--", "/bin/sh", "-c", launch)
+      raise "Herdr server launch failed" unless code.zero?
+      deadline = LabVm.uptime + 60
+      loop do
+        status = guest_json(uuid, "herdr", "status", "server", "--json")
+        break if status["running"] == true && status["compatible"] == true
+        raise "Herdr server did not become ready (running: #{status["running"].inspect}, compatible: #{status["compatible"].inspect})" if LabVm.uptime >= deadline
+        sleep 1
+      end
+      # Public start owns workspace selection, ordinary process startup and
+      # its initial prompt. The harness supplies only the user's single goal.
+      start = guest_json(uuid, "ace-overseer", "start", "--scope", "lab", "--format", "json")
+      pane = start["pane"]
+      unless start["status"] == "started" && start["scope"] == "lab" &&
+          start["root"] == "/lab" && pane.to_s.match?(/\A[A-Za-z0-9_.:-]+\z/)
+        raise "public start did not confirm a new lab coordinator"
+      end
+      native = guest_json(uuid, "herdr", "agent", "get", pane).dig("result", "agent")
+      terminal = native && native["terminal_id"]
+      session = native && native["agent_session"]
+      unless native && terminal.to_s.match?(/\Aterm_[0-9a-f]+\z/) && native["cwd"] == "/lab" &&
+          session.is_a?(Hash) && session["agent"] == "pi" && session["kind"] == "path" &&
+          session["value"].is_a?(String) && session["value"].start_with?("/") && session["value"].end_with?(".jsonl")
+        raise "native lab session identity is unavailable"
+      end
+      goal = "Przygotuj projekt ACE wskazany w konfiguracji laba i doprowadź jego nadzorcę do gotowości. " \
+        "Stanowisko używa lokalnego HITL i lokalnego Forgejo. Transport Hermes i Telegram są poza zakresem."
+      receipt.merge!("terminal" => terminal, "workspace" => start.fetch("workspace"),
+        "agent_session" => session, "status" => "prompt_pending", "ready" => false, "goal" => goal)
+      save_start_receipt(output_path, receipt)
+      reply = guest_json(uuid, "herdr", "agent", "prompt", terminal, goal)
+      unless reply.dig("result", "type") == "agent_prompted" &&
+          reply.dig("result", "agent", "terminal_id") == terminal
+        raise "goal acknowledgement differs; preserve the session without resending"
+      end
+      receipt["status"] = "prompt_delivered"
+      save_start_receipt(output_path, receipt)
+      puts JSON.pretty_generate(receipt.merge("receipt" => output_path))
+    rescue StandardError, Interrupt
+      if mutated
+        begin
+          current = LabVm.status["work"]
+          if current && current["uuid"].casecmp?(uuid) && current["status"] == "started"
+            LabVm.utm_call("stop", uuid, "--request")
+            LabVm.wait_stopped("work")
+            warn "Working VM stopped and preserved for diagnosis."
+          end
+        rescue StandardError => error
+          warn "Could not confirm working VM shutdown: #{error.message}"
+        end
+      end
+      raise
+    end
+  end
+rescue Interrupt
+  warn "lab-vm-lab-start: interrupted; inspect the VM and run receipt before retrying."
+  exit 130
+rescue JSON::ParserError
+  warn "lab-vm-lab-start: a provider response was not valid JSON"
+  exit 1
+rescue StandardError => e
+  warn "lab-vm-lab-start: #{e.message}"
+  warn "Inspect the preserved VM and run receipt before retrying."
+  exit 1
+end

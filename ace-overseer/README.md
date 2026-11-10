@@ -16,7 +16,7 @@
 
 > **State owner:** the private, gitignored overseer task list in
 > `.ace-tasks/_overseer/`, a normal task folder reached through
-> `ace-task --in _overseer …` (see [docs/lab-flow.md](../docs/lab-flow.md)).
+> `ace-task list --in _overseer` (see [docs/lab-flow.md](../docs/lab-flow.md)).
 > Task worktrees live in `.ace-wt/`; assignment plans and steps stay in
 > `.ace-local/assign/` (ace-assign) and are never copied into the overseer
 > list.
@@ -80,7 +80,7 @@ or create your own.
 > assignment sequence -- not available yet.
 >
 > **L6 (partial):** the private overseer queue is coordinated through the
-> gitignored `.ace-tasks/_overseer/` list (`ace-task --in _overseer`):
+> gitignored `.ace-tasks/_overseer/` list (`ace-task list --in _overseer`):
 > managing tasks with lifecycle subtasks (prepare, implement, review,
 > integrate), integration-gated dependencies, and one active executor per
 > worktree. See the

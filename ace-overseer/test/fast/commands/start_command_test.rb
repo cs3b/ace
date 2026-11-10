@@ -2,6 +2,7 @@
 
 require_relative "../../test_helper"
 require "ace/overseer/cli/commands/start"
+require "shellwords"
 
 module Commands
   # Task 8xs.t.pu0.1: `ace-overseer start` CLI semantics — exit-0 only
@@ -17,6 +18,10 @@ module Commands
       end
 
       def call(dry_run: false)
+        @report
+      end
+
+      def reconcile(dry_run: false)
         @report
       end
     end
@@ -43,24 +48,35 @@ module Commands
       assert_empty out
     end
 
-    def test_default_launcher_replaces_the_cli_process
-      script = <<~RUBY
-        require "ace/overseer"
-        $stdout.sync = true
-        puts Process.pid
-        report = {"status" => "foreground", "command" => [RbConfig.ruby, "-e", "puts Process.pid"]}
-        orchestrator = Object.new
-        orchestrator.define_singleton_method(:bootstrap) { |**| report }
-        Ace::Overseer::CLI::Commands::Start.new(orchestrator: orchestrator).call
-        abort "exec returned"
-      RUBY
-      out, err, status = Open3.capture3(RbConfig.ruby, "-e", script)
-      assert status.success?, err
-      assert_equal 2, out.lines.size
-      assert_equal out.lines[0], out.lines[1], "harness must keep the calling CLI pid"
+    def test_default_launcher_waits_for_real_child_then_cleans_credentials_and_returns
+      credentials = Dir.mktmpdir("ace-session-")
+      File.write(File.join(credentials, "auth.json"), "{}")
+      environment_file = File.join(credentials, "environment.json")
+      File.write(environment_file, JSON.generate("EXPECTED_VALUE" => "fixture"))
+      environment = Object.new
+      environment.define_singleton_method(:with_environment) do |**_, &block|
+        block.call(environment_file, credentials, [])
+      end
+      child = 'abort "environment missing" unless ENV["EXPECTED_VALUE"] == "fixture"; puts "CHILD=#{Process.pid}"'
+      report = {"status" => "foreground", "scope" => "lab", "root" => Dir.pwd,
+        "command" => [RbConfig.ruby, "-e", child]}
+      out, err = capture_subprocess_io do
+        Ace::Overseer::Molecules::SessionEnvironment.stub(:new, environment) do
+          Ace::Overseer::CLI::Commands::Start.new(orchestrator: FakeOrchestrator.new(report)).call
+        end
+        assert File.directory?(credentials), "keep transcript evidence directory"
+        refute File.exist?(File.join(credentials, "auth.json"))
+        puts "RETURNED=#{Process.pid}"
+      end
+      child_pid = out[/CHILD=(\d+)/, 1]
+      assert child_pid, err
+      refute_equal Process.pid.to_s, child_pid
+      assert_equal Process.pid.to_s, out[/RETURNED=(\d+)/, 1]
+    ensure
+      FileUtils.remove_entry(credentials) if credentials && File.exist?(credentials)
     end
 
-    def test_real_bare_cli_execs_in_current_cwd_without_any_herdr_call_or_environment
+    def test_real_bare_cli_waits_in_current_cwd_without_any_herdr_call_or_environment
       Dir.mktmpdir("bare-start") do |root|
         bin = File.join(root, "bin")
         FileUtils.mkdir_p(bin)
@@ -79,7 +95,7 @@ module Commands
           $stdout.sync = true
           puts "BEFORE=#{Process.pid}"
           Ace::Overseer::CLI::Commands::Start.new(config: {}).call
-          abort "foreground exec returned"
+          puts "RETURNED=#{Process.pid}"
         RUBY
         env = ENV.keys.grep(/\AHERDR/).to_h { |key| [key, nil] }
         env["PATH"] = [bin, ENV.fetch("PATH")].join(File::PATH_SEPARATOR)
@@ -87,7 +103,8 @@ module Commands
         assert status.success?, err
         before = out[/BEFORE=(\d+)/, 1]
         assert before
-        assert_equal before, out[/AFTER=(\d+)/, 1]
+        refute_equal before, out[/AFTER=(\d+)/, 1]
+        assert_equal before, out[/RETURNED=(\d+)/, 1]
         assert_includes out, "CWD=#{File.realpath(root)}"
         assert_includes out, "ARGS=--model|zai/glm-5.3-flash|--thinking|high|--append-system-prompt|"
         assert_includes out, "lab-start.wf.md"
@@ -118,9 +135,60 @@ module Commands
       assert_equal "no start section", error.message
     end
 
+    def test_unconfirmed_project_start_returns_an_error_and_keeps_the_report
+      %w[started reused].each do |status|
+        out, = capture_io do
+          error = assert_raises(Ace::Support::Cli::Error) do
+            Ace::Overseer::CLI::Commands::Start.new(orchestrator: FakeOrchestrator.new(
+              {"status" => status, "prompt_failed" => true, "message" => "agent blocked"}
+            )).call(scope: "project", format: "json")
+          end
+          assert_equal "agent blocked", error.message
+        end
+        assert_equal true, JSON.parse(out).fetch("prompt_failed")
+      end
+    end
+
+    def test_reconcile_table_includes_each_project_failure_and_its_pane
+      report = {"status" => "partial", "message" => "0/1 project overseers ready",
+                "projects" => [{"id" => "ace", "path" => "/lab/ace", "status" => "started",
+                                "pane" => "w2:p2", "prompt_failed" => true,
+                                "message" => "first turn unconfirmed; inspect the existing session"}]}
+      out, = capture_io do
+        error = assert_raises(Ace::Support::Cli::Error) do
+          Ace::Overseer::CLI::Commands::Start.new(orchestrator: FakeOrchestrator.new(report)).call(reconcile: true)
+        end
+        assert_equal "0/1 project overseers ready", error.message
+      end
+      assert_includes out, "ace"
+      assert_includes out, "/lab/ace"
+      assert_includes out, "w2:p2"
+      assert_includes out, "first turn unconfirmed; inspect the existing session"
+    end
+
     def test_dry_run_report_exits_clean
       out = run_command({"status" => "dry_run", "message" => "plan only"})
       assert_equal "dry_run", JSON.parse(out)["status"]
+    end
+
+    def test_dry_run_table_shows_foreground_command_as_reproducible_argv
+      report = {"status" => "dry_run", "command" => ["pi", "--model", "model with spaces", "first turn"]}
+      out, = capture_io do
+        Ace::Overseer::CLI::Commands::Start.new(orchestrator: FakeOrchestrator.new(report)).call(dry_run: true)
+      end
+      line = out.lines.find { |item| item.include?("command:") }
+      assert line
+      assert_equal report["command"], Shellwords.split(line.split("command:", 2).last.strip)
+    end
+
+    def test_interrupt_warns_about_uncertain_start_and_exits_130
+      orchestrator = Object.new
+      orchestrator.define_singleton_method(:bootstrap) { |**| raise Interrupt }
+      error = assert_raises(Ace::Support::Cli::Error) do
+        Ace::Overseer::CLI::Commands::Start.new(orchestrator: orchestrator).call
+      end
+      assert_equal 130, error.exit_code
+      assert_match(/inspect.*session/i, error.message)
     end
   end
 end

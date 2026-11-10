@@ -32,6 +32,81 @@ class ForgejoIssueApiTest < AceGitForgejoTestCase
     assert calls.all? { |args| args[2].start_with?("https://forge.example.com/api/v1/repos/owner/repo/issues/42/comments?") }
   end
 
+  def test_provider_lists_only_open_issues_in_the_selected_repository
+    calls = []
+    runner = lambda do |args:, **_options|
+      calls << args[2]
+      page = if args[2].include?("page=1")
+        [
+          {"id" => 1, "number" => 1, "title" => "First", "state" => "open", "user" => {"login" => "alice"},
+           "html_url" => "https://forge.example.com/owner/repo/issues/1", "body" => "Depends on #3", "labels" => [{"name" => "blocked"}]},
+          {"id" => 2, "number" => 2, "title" => "Pull", "pull_request" => {"url" => "api"}},
+          {"id" => 3, "number" => 3, "title" => "Newest", "state" => "open", "user" => {"login" => "bob"},
+           "html_url" => "https://forge.example.com/owner/repo/issues/3"}
+        ]
+      else
+        []
+      end
+      {success: true, status: 200, stdout: JSON.generate(page)}
+    end
+    provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+    issues = provider.recent_issues(limit: 2)
+    assert_equal [3, 1], issues.map(&:number)
+    assert_equal %w[Newest First], issues.map(&:title)
+    assert_equal "Depends on #3", issues.last.body
+    assert_equal ["blocked"], issues.last.labels
+    assert calls.all? { |url| url.start_with?("https://forge.example.com/api/v1/repos/owner/repo/issues?state=open&page=") }
+  end
+
+  def test_issue_listing_refuses_foreign_or_malformed_data_and_auth_errors
+    bad = {"id" => 3, "number" => 3, "title" => "Foreign", "state" => "open",
+      "html_url" => "https://other.example.com/owner/repo/issues/3"}
+    runner = ->(args:, **_rest) { {success: true, status: 200, stdout: (args[2].include?("page=1") ? [bad] : []).to_json} }
+    provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+    assert_raises(Ace::Git::ProviderIdentityMismatchError) { provider.recent_issues(limit: 2) }
+    runner = ->(**_args) { {success: false, status: 403, stdout: ""} }
+    provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+    assert_raises(Ace::Git::ProviderAuthenticationError) { provider.recent_issues(limit: 2) }
+    assert_empty provider.recent_issues(limit: 0)
+  end
+
+  def test_issue_listing_rejects_a_server_that_repeats_its_first_page
+    issue = {"id" => 1, "number" => 1, "title" => "First", "state" => "open",
+      "html_url" => "https://forge.example.com/owner/repo/issues/1"}
+    runner = ->(**_args) { {success: true, status: 200, stdout: [issue].to_json} }
+    provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+    error = assert_raises(Ace::Git::ProviderMalformedOutputError) { provider.recent_issues(limit: 10) }
+    assert_match(/repeated a page/, error.message)
+  end
+
+  def test_issue_listing_refuses_blank_titles_or_non_open_issues
+    base = {"id" => 1, "number" => 1, "title" => "First", "state" => "open",
+      "html_url" => "https://forge.example.com/owner/repo/issues/1"}
+    [{"title" => " "}, {"state" => "closed"}].each do |change|
+      runner = lambda do |args:, **_rest|
+        entries = args[2].include?("page=1") ? [base.merge(change)] : []
+        {success: true, status: 200, stdout: entries.to_json}
+      end
+      provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+      assert_raises(Ace::Git::ProviderMalformedOutputError) { provider.recent_issues(limit: 10) }
+    end
+  end
+
+  def test_issue_listing_collects_multiple_distinct_pages
+    runner = lambda do |args:, **_rest|
+      page = args[2][/page=(\d+)/, 1].to_i
+      entries = if page <= 2
+        [{"id" => page, "number" => page, "title" => "Issue #{page}", "state" => "open",
+          "html_url" => "https://forge.example.com/owner/repo/issues/#{page}"}]
+      else
+        []
+      end
+      {success: true, status: 200, stdout: entries.to_json}
+    end
+    provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+    assert_equal [2, 1], provider.recent_issues(limit: 10).map(&:number)
+  end
+
   def test_post_timeout_keeps_unknown_outcome
     runner = ->(**_args) { raise Net::ReadTimeout }
     api = Ace::Git::Forgejo::IssueApi.new(server: SERVER, timeout: 5, runner: runner)

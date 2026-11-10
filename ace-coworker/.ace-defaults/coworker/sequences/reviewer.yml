@@ -18,3 +18,8 @@ steps:
       - "Work as the reviewer on task {{task}}: review the delivered change independently of the worker; fix confirmed defects yourself inside this assignment and check each fix diff with a delta round."
       - "Record every full round with `ace-coworker rounds record --type full` and every fix-diff check with `--type delta`; the RoundRule verdict decides the outcome, aborted or incomplete rounds are never clean."
       - "Acceptance (3/2/10): at least 3 completed full rounds, the last 2 consecutive rounds clean (no confirmed High/Critical), and no unresolved earlier High/Critical; a rule-satisfying round 10 ends in success, no acceptance after 10 full rounds escalates to the overseer via ace-hitl."
+  - name: publish-approval
+    instructions:
+      - "For a forge issue, publish formal approval on the original PR after the full review accepts its current HEAD and the required tests pass at that HEAD."
+      - "Finish this step with the verified provider receipt and test evidence. For a local-only task record the local review and tests and that no provider publication applies."
+      - "Report success only after this step is done. Missing publication evidence keeps a forge-linked assignment incomplete."

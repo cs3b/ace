@@ -41,7 +41,7 @@ module Ace
         # @return [Models::DispatchOutcome]
         # @raise [TargetResolutionError] workspace/pane cannot be resolved
         # @raise [ExecutorError] herdr command failures
-        def dispatch(label:, prompt:, kind: nil, workspace_id: nil, pane: nil, cwd: nil)
+        def dispatch(label:, prompt:, kind: nil, workspace_id: nil, pane: nil, cwd: nil, role: nil, env_file: nil, args: [])
           kind ||= @default_agent_kind
           tab_created = false
 
@@ -53,14 +53,14 @@ module Ace
           end
           validate_token!(pane, "pane")
 
-          @executor.pane_run(
-            pane,
-            Ace::Support::Cli::Toolchain.shell_setup + "export HERDR_SESSION=#{Shellwords.escape(workspace_id)} " \
-            "HERDR_PANE=#{Shellwords.escape(pane)}"
-          )
-          @executor.agent_start(
-            name: label, kind: kind, pane: pane, timeout_ms: @agent_start_timeout_ms
-          )
+          unless env_file
+            @executor.pane_run(pane, Ace::Support::Cli::Toolchain.shell_setup +
+              "export HERDR_SESSION=#{Shellwords.escape(workspace_id)} HERDR_PANE=#{Shellwords.escape(pane)}")
+          end
+          options = {name: label, kind: kind, pane: pane, timeout_ms: @agent_start_timeout_ms}
+          options[:env_file] = env_file if env_file
+          options[:args] = args unless args.empty?
+          @executor.agent_start(**options)
 
           prompted = false
           unless prompt.empty?

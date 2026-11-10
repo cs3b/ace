@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { Eyes } from "../handbook/extensions/ace-wake/wake/eyes.js";
+import { Eyes, validateConfig } from "../handbook/extensions/ace-wake/wake/eyes.js";
 
 const event = (n = "a", revision = "b") => ({ key: n.repeat(64), revision: revision.repeat(64), id: `event${n}` });
 function fixture(snapshot) {
-  const f = { time: 0, rows: [], sends: [], saved: snapshot, fail: false };
+  const f = { time: 0, rows: [], sends: [], saved: snapshot, fail: false, observations: 0 };
   f.build = () => new Eyes({ snapshot: f.saved, save: (s) => { f.saved = s; }, now: () => f.time,
-    observe: async () => { if (f.fail) throw new Error("private failure"); return { schema: "ace.hitl.observation/v1", events: f.rows }; },
+    observe: async () => { f.observations++; if (f.fail) throw new Error("private failure"); return { schema: "ace.hitl.observation/v1", events: f.rows }; },
     deliver: async (batch) => { f.sends.push(batch); return true; } });
   f.eyes = f.build(); f.eyes.start({}); return f;
 }
@@ -18,8 +18,10 @@ describe("event-driven eyes", () => {
   });
   it("coalesces revisions while active without accepting on settlement", async () => {
     const f = fixture(); f.rows = [event()]; await f.eyes.tick();
+    f.eyes.canDeliver = () => false;
     f.rows = [event(), event("c")]; await f.eyes.tick();
     assert.equal(f.sends.length, 1); assert.equal(Object.keys(f.saved.pending).length, 2);
+    f.eyes.canDeliver = () => true;
     f.eyes.ack(event().key, event().revision); await f.eyes.tick();
     assert.equal(f.sends.length, 2); assert.equal(f.sends[1][0][0], event("c").key);
     f.eyes.ack(event("c").key, event("c").revision); await f.eyes.tick();
@@ -34,8 +36,10 @@ describe("event-driven eyes", () => {
   });
   it("new revision racing old acknowledgement is retained", async () => {
     const f = fixture(); f.rows = [event()]; await f.eyes.tick();
+    f.eyes.canDeliver = () => false;
     f.rows = [event("a", "c")]; await f.eyes.tick();
     f.eyes.ack(event().key,event().revision);
+    f.eyes.canDeliver = () => true;
     await f.eyes.tick();
     assert.equal(f.sends.length,2);
     assert.equal(f.saved.pending[event().key].revision, "c".repeat(64));
@@ -46,12 +50,31 @@ describe("event-driven eyes", () => {
     assert.equal(f.sends.length, 0); assert.equal(f.saved.breaker.reason, "quota-or-budget");
     await f.eyes.resume(); assert.equal(f.sends.length, 1);
   });
-  it("errors and idle budgets fail closed without losing pending", async () => {
-    const f = fixture(); f.fail = true;
+  it("observation failures retain pending and recover without a new model turn", async () => {
+    const f = fixture();
+    f.eyes.start({maxObservationsPerHour: 11});
+    f.rows = [event()];
+    f.eyes.canDeliver = () => false;
+    await f.eyes.tick();
+    f.fail = true;
+    f.eyes = f.build();
     for (let i = 0; i < 10; i++) await f.eyes.tick();
-    assert.equal(f.saved.breaker.reason, "observation-or-delivery-failure"); assert.equal(f.sends.length,0);
-    const g = fixture(); g.eyes.start({ maxObservationsPerHour: 1 }); await g.eyes.tick(); await g.eyes.tick();
-    assert.equal(g.saved.breaker.reason, "observation-budget");
+    assert.equal(f.saved.breaker, null);
+    assert.equal(f.saved.observationUnavailable, true);
+    assert.equal(f.saved.pending[event().key].revision, event().revision);
+    assert.equal(f.sends.length, 0);
+    f.eyes = f.build();
+    f.fail = false;
+    await f.eyes.tick({scheduled: true});
+    assert.equal(f.sends.length, 0, "a tick without acquisition cannot deliver stale pending work");
+    assert.equal(f.observations, 11, "failed acquisitions consume the same persisted allowance");
+    f.time = 3600000;
+    await f.eyes.tick({scheduled: true});
+    assert.equal(f.saved.observationUnavailable, false);
+    assert.equal(f.sends.length, 1);
+    f.eyes.ack(event().key, event().revision);
+    await f.eyes.tick();
+    assert.equal(f.sends.length, 1);
   });
   it("explicit deadline fires once and cancel/change invalidates old pending", async () => {
     const f = fixture(); f.eyes.deadline("review", 100, "head-a"); await f.eyes.tick(); assert.equal(f.sends.length,0);
@@ -79,11 +102,33 @@ it("retirement during in-flight observation prevents a late wake", async () => {
   await tick;assert.equal(f.sends.length,0);
 });
 
-it("semantic event storms hit a durable wake budget without resetting on restart", async () => {
-  const f=fixture();f.eyes.start({maxWakesPerHour:1});f.rows=[event()];await f.eyes.tick();
-  f.eyes.ack(event().key,event().revision);f.eyes=f.build();f.rows=[event("a","c")];await f.eyes.tick();
-  assert.equal(f.sends.length,1);assert.equal(f.saved.breaker.reason,"wake-budget");
-  assert.equal(f.saved.pending[event().key].revision,"c".repeat(64));
+it("hourly wake allowance survives restart, keeps observing, and delivers in the next window", async () => {
+  const f = fixture();
+  f.eyes.start({maxWakesPerHour: 1});
+  f.rows = [event()];
+  await f.eyes.tick();
+  f.eyes.ack(event().key, event().revision);
+  f.eyes = f.build();
+  f.rows = [event("a", "c")];
+  await f.eyes.tick();
+  assert.equal(f.sends.length, 1);
+  assert.equal(f.saved.breaker, null);
+  assert.equal(f.eyes.summary().wakeLimitedUntil, 3600000);
+
+  f.time = 30000;
+  f.rows = [event("a", "d")];
+  await f.eyes.tick();
+  assert.equal(f.observations, 3);
+  assert.equal(f.sends.length, 1);
+  assert.equal(f.saved.pending[event().key].revision, event("a", "d").revision);
+
+  f.time = 3600000;
+  await f.eyes.tick();
+  assert.equal(f.sends.length, 2);
+  assert.equal(f.sends[1][0][1].revision, event("a", "d").revision);
+  f.eyes.ack(event().key, event("a", "d").revision);
+  await f.eyes.tick();
+  assert.equal(f.sends.length, 2);
 });
 
 it("canonical terminal settlement suppresses pending after crash without model notification", async()=>{
@@ -98,6 +143,23 @@ it("partial batch acknowledgement never requeues the other already delivered mem
   f.eyes.ack(event().key,event().revision);await f.eyes.tick();assert.equal(f.sends.length,1);
   f.eyes.ack(event("c").key,event("c").revision);await f.eyes.tick();assert.equal(f.sends.length,1);
 });
+it("a recovered source wakes an idle owner even with accepted work awaiting acknowledgement", async () => {
+  const f = fixture();
+  const held = event("a"), degraded = event("c"), recovered = event("c", "d");
+  f.rows = [held, degraded];
+  await f.eyes.tick();
+  f.eyes.ack(degraded.key, degraded.revision);
+  f.rows = [held, recovered];
+  await f.eyes.tick();
+  assert.deepEqual(f.sends[1], [[recovered.key, {id: recovered.id, revision: recovered.revision}]]);
+  assert.equal(f.saved.pending[held.key].revision, held.revision);
+  await f.eyes.tick();
+  assert.equal(f.sends.length, 2, "unchanged delivered revisions do not wake again");
+  f.eyes.ack(held.key, held.revision);
+  f.eyes.ack(recovered.key, recovered.revision);
+  assert.deepEqual(f.saved.pending, {});
+});
+
 it("cancelling an in-flight deadline releases coalesced actual events", async()=>{
   const f=fixture();f.eyes.deadline("review",0,"head-a");await f.eyes.tick();
   f.rows=[event()];await f.eyes.tick();f.eyes.cancelDeadline("review");await f.eyes.tick();
@@ -110,4 +172,91 @@ it("unconfirmed host delivery persists a breaker across restart without automati
   f.eyes=f.build();for(let i=0;i<10;i++)await f.eyes.tick();
   assert.equal(f.sends.length,1);assert.equal(Object.keys(f.saved.pending).length,1);
   await f.eyes.resume();assert.equal(f.sends.length,2,"only explicit owner resume can retry after reconciliation");
+});
+
+it("explicit reconciliation retries uncertain delivery in the same process",async()=>{
+  const f=fixture();f.rows=[event()];f.eyes.deliveryStatus=()=>"uncertain";
+  await f.eyes.tick();await f.eyes.tick();
+  assert.equal(f.saved.breaker.reason,"notification-unconfirmed");
+  for(let i=0;i<10;i++)await f.eyes.tick();
+  assert.equal(f.sends.length,1,"never retry without explicit reconciliation");
+  f.eyes.deliveryStatus=()=>"accepted";
+  await f.eyes.resume();await f.eyes.tick();
+  assert.equal(f.sends.length,2);
+  assert.equal(Object.keys(f.saved.pending).length,1);
+  await f.eyes.resume();await f.eyes.tick();
+  assert.equal(f.sends.length,2,"confirmed delivery remains suppressed without an ack");
+});
+
+it("reconciliation retries only the uncertain batch, retaining earlier confirmed suppression",async()=>{
+  const f=fixture();f.rows=[event()];await f.eyes.tick();
+  f.rows=[event(),event("c")];await f.eyes.tick();
+  assert.equal(f.sends.length,2);
+  f.eyes.deliveryStatus=()=>"uncertain";await f.eyes.tick();
+  assert.equal(f.saved.breaker.reason,"notification-unconfirmed");
+  f.eyes.deliveryStatus=()=>"accepted";
+  await f.eyes.resume();await f.eyes.tick();
+  assert.equal(f.sends.length,3);
+  assert.deepEqual(f.sends[2].map(([key])=>key),[event("c").key]);
+  assert.equal(Object.keys(f.saved.pending).length,2,"delivery does not acknowledge either revision");
+});
+
+// The real installed ARM64 lab needed 17 seconds to read two worktrees.
+it("uses a bounded observation timeout by default and validates overrides", async () => {
+  const f = fixture();
+  let timeout;
+  f.eyes.observe = async config => { timeout = config.timeoutMs; return { schema: "ace.hitl.observation/v1", events: [] }; };
+  await f.eyes.tick();
+  assert.equal(timeout, 60000);
+  assert.equal(validateConfig({ timeoutMs: 120000 }).timeoutMs, 120000);
+  assert.throws(() => validateConfig({ timeoutMs: 120001 }), /timeoutMs/);
+});
+
+it("delivers a deadline that expires during a slow observation", async () => {
+  const f = fixture();
+  f.eyes.deadline("review", 100, "head-a");
+  f.eyes.observe = async () => { f.time = 101; return { schema: "ace.hitl.observation/v1", events: [] }; };
+  await f.eyes.tick();
+  assert.equal(f.sends.length, 1);
+  assert.equal(f.sends[0][0][0], "deadline:review");
+});
+
+it("observation allowance renews autonomously after exhaustion and restart", async () => {
+  const f = fixture(); f.eyes.start({ maxObservationsPerHour: 1 });
+  await f.eyes.tick();
+  f.rows = [event()]; f.time = 10000;
+  await f.eyes.tick();
+  assert.equal(f.observations, 1);
+  assert.equal(f.saved.breaker, null);
+  f.eyes.dispose(); f.eyes = f.build();
+  f.time = 3599999; await f.eyes.tick();
+  assert.equal(f.observations, 1);
+  assert.equal(f.sends.length, 0);
+  f.time = 3600000; await f.eyes.tick();
+  assert.equal(f.observations, 2);
+  assert.equal(f.sends.length, 1);
+  assert.equal(f.saved.pending[event().key].revision, event().revision);
+  f.eyes.ack(event().key, event().revision);
+  f.time = 7200000; await f.eyes.tick();
+  assert.equal(f.sends.length, 1);
+});
+
+it("local deadlines remain live when the source allowance is exhausted", async () => {
+  const f = fixture(); f.eyes.start({maxObservationsPerHour:1});
+  await f.eyes.tick(); f.eyes.deadline("startup",60000,"session-1");
+  f.time=60000; await f.eyes.tick({scheduled:true});
+  assert.equal(f.observations,1);
+  assert.equal(f.sends.length,1);
+  assert.equal(f.sends[0][0][0],"deadline:startup");
+  f.eyes.cancelDeadline("startup"); f.time=90000;
+  await f.eyes.tick({scheduled:true});
+  assert.equal(f.sends.length,1);
+  assert.equal(f.saved.breaker,null);
+});
+
+it("scheduled acquisition rounds allowance cadence to timer boundaries", async()=>{
+  const f=fixture();f.eyes.start({intervalSeconds:20,maxObservationsPerHour:120});
+  await f.eyes.tick({scheduled:true});
+  f.time=20000;await f.eyes.tick({scheduled:true});assert.equal(f.observations,1);
+  f.time=40000;await f.eyes.tick({scheduled:true});assert.equal(f.observations,2);
 });

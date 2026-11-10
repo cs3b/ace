@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.4] - 2026-11-10
+
+### Fixed
+
+- Resolve explicit project-scoped configuration without retaining another project’s resolver cache.
 
 ## [0.18.3] - 2026-10-20
 

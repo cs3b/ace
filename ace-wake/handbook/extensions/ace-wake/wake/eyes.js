@@ -3,14 +3,14 @@ import { createHash } from "node:crypto";
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 export const EYES_ENTRY = "ace-wake-eyes";
 export const defaults = { intervalSeconds: 30, maxEvents: 500, maxObservationsPerHour: 120, maxWakesPerHour: 20,
-  timeoutMs: 10000, maxErrors: 3, maxPending: 2000, scope: "current", recipient: "self", syncRoutes: [] };
+  timeoutMs: 60000, maxErrors: 3, maxPending: 2000, scope: "current", recipient: "self", syncRoutes: [] };
 
 export function validateConfig(input) {
   if (!input || typeof input !== "object" || Array.isArray(input) ||
       Object.keys(input).some(key => !(key in defaults))) throw new Error("Invalid eyes configuration");
   const config = { ...defaults, ...input };
   for (const [key, min, max] of [["intervalSeconds", 1, 3600], ["maxEvents", 1, 2000],
-    ["maxObservationsPerHour", 1, 3600], ["maxWakesPerHour", 1, 1000], ["timeoutMs", 100, 30000], ["maxErrors", 1, 10], ["maxPending", 1, 10000]]) {
+    ["maxObservationsPerHour", 1, 3600], ["maxWakesPerHour", 1, 1000], ["timeoutMs", 100, 120000], ["maxErrors", 1, 10], ["maxPending", 1, 10000]]) {
     if (!Number.isInteger(config[key]) || config[key] < min || config[key] > max) throw new Error(`Invalid ${key}`);
   }
   if (typeof config.recipient !== "string" || !/^[a-zA-Z0-9_-]{1,64}$/.test(config.recipient)) throw new Error("Invalid observer recipient");
@@ -24,7 +24,7 @@ export function validateConfig(input) {
 /** Observation/delivery bookkeeping in the existing Pi session, not a work
  * queue. It never starts tasks or accepts reports on behalf of their owner. */
 export class Eyes {
-  constructor({ snapshot, save, observe, deliver, now = Date.now, status = () => {}, deliveryStatus = () => "accepted", canDeliver = () => true }) {
+  constructor({ snapshot, save, observe, deliver, now = Date.now, status = () => {}, deliveryStatus = () => "accepted", canDeliver = () => true, onObserved = () => {}, onObservationUnavailable = () => {} }) {
     this.s = structuredClone(snapshot || { enabled: false, retired: false, config: defaults,
       pending: {}, acknowledged: {}, deadlines: {}, breaker: null, errors: 0, window: null });
     this.s.config = validateConfig(this.s.config);
@@ -33,31 +33,60 @@ export class Eyes {
     if (typeof this.s.enabled !== "boolean" || typeof this.s.retired !== "boolean" ||
         !Number.isInteger(this.s.errors) || this.s.errors < 0) throw new Error("Invalid persisted eyes state");
     this.save = save; this.observe = observe; this.deliver = deliver; this.now = now; this.status = status;
-    this.deliveryStatus = deliveryStatus; this.canDeliver = canDeliver;
-    this.busy = false; this.disposed = false;
+    this.deliveryStatus = deliveryStatus; this.canDeliver = canDeliver; this.onObserved = onObserved;
+    this.onObservationUnavailable = onObservationUnavailable;
+    this.busy = null; this.delivering = false; this.disposed = false;
     // A process restart does not imply receipt acknowledgement. Reconcile the
     // same pending revisions; business-effect idempotence remains with .5.4.
     this.inflight = false;
     this.sent = new Map();
+    this.lastDelivery = new Map();
     this.generation = 0;
   }
   persist() { this.save(structuredClone(this.s)); this.status(this.summary()); }
   summary() { return { enabled: this.s.enabled, retired: this.s.retired, pending: Object.keys(this.s.pending).length,
-    breaker: this.s.breaker, errors: this.s.errors, observations: this.s.window?.count || 0, wakes: this.s.window?.wakes || 0 }; }
+    breaker: this.s.breaker, errors: this.s.errors + Number(this.s.observationUnavailable === true),
+    observationUnavailable: this.s.observationUnavailable === true,
+    observations: this.s.window?.count || 0, wakes: this.s.window?.wakes || 0,
+    wakeLimitedUntil: this.wakeLimitedUntil() }; }
+  wakeLimitedUntil() {
+    const window = this.s.window;
+    if (!window || (window.wakes || 0) < this.s.config.maxWakesPerHour) return null;
+
+    const until = window.start + 3600000;
+    return this.now() < until ? until : null;
+  }
   start(config) {
+    if (this.disposed) throw new Error("Disposed observer cannot start");
+    if (this.delivering) throw new Error("Observer cannot reconfigure during delivery");
     if (this.s.retired) throw new Error("Retired actor cannot restart its eyes; hand off pending to its owner");
     if (this.s.breaker) throw new Error("Resolve breaker with explicit resume first");
-    this.s.config = validateConfig(config); this.s.enabled = true; this.persist();
+    const next = validateConfig(config);
+    this.generation++; this.s.config = next; this.s.enabled = true; this.persist();
   }
   block(reason) {
     if (!this.s.breaker) { this.s.breaker = { reason, at: this.now() }; this.persist(); }
   }
   async resume() {
+    if (this.disposed) throw new Error("Disposed observer cannot resume");
+    if (this.delivering) throw new Error("Observer cannot resume during delivery");
     if (this.s.retired) throw new Error("Retired actor cannot resume");
     // Explicit operator action; check source/transport readiness without a model
     // request. Quota availability must have been verified by the owner.
+    const generation = ++this.generation;
     const result = await this.observe(this.s.config);
+    if (this.disposed || generation !== this.generation) throw new Error("Observer changed during resume");
     this.validate(result);
+    this.onObserved(result);
+    this.s.observationUnavailable = false;
+    // Explicit reconciliation permits retrying an unconfirmed notification.
+    // Keep confirmed deliveries suppressed until their exact revision is acked.
+    if (this.s.breaker?.reason === "notification-unconfirmed") {
+      for (const [key, revision] of this.lastDelivery) {
+        if (this.sent.get(key) === revision) this.sent.delete(key);
+      }
+      this.lastDelivery.clear();
+    }
     this.s.breaker = null; this.s.errors = 0; this.s.window = null; this.inflight = false;
     this.s.enabled = true; this.persist();
     await this.tick();
@@ -99,54 +128,101 @@ export class Eyes {
       keys.add(event.key);
     }
   }
-  async tick() {
-    if (this.busy || this.disposed || !this.s.enabled || this.s.retired || this.s.breaker) return;
+  async tick({ scheduled = false } = {}) {
+    if (this.busy === this.generation || this.disposed || !this.s.enabled || this.s.retired || this.s.breaker) return;
     const now = this.now();
     if (!this.s.window || now - this.s.window.start >= 3600000) this.s.window = { start: now, count: 0, wakes: 0 };
-    if (this.s.window.count >= this.s.config.maxObservationsPerHour) { this.block("observation-budget"); return; }
-    this.s.window.count++; this.persist(); // Budget survives restart too.
-    this.busy = true;
+    const timerInterval = this.s.config.intervalSeconds * 1000;
+    const cadence = Math.ceil(3600000 / (this.s.config.maxObservationsPerHour * timerInterval)) * timerInterval;
+    const due = !scheduled || this.s.window.lastAttemptAt === undefined ||
+      now - this.s.window.lastAttemptAt >= cadence;
+    const acquire = due && this.s.window.count < this.s.config.maxObservationsPerHour;
     const generation = this.generation;
+    this.busy = generation;
+    let observed = false;
     try {
-      const result = await this.observe(this.s.config);
-      if (generation !== this.generation || this.disposed) return;
-      this.validate(result);
-      for (const e of result.settled || []) {
-        this.s.acknowledged[e.key] = e.revision;
-        if (this.s.pending[e.key]?.revision === e.revision) delete this.s.pending[e.key];
-        this.sent.delete(e.key);
+      if (acquire) {
+        this.s.window.count++;
+        this.s.window.lastAttemptAt = now;
+        this.persist(); // Attempts and allowance survive restart.
+        let result;
+        try {
+          result = await this.observe(this.s.config);
+        } catch {
+          if (generation === this.generation && !this.disposed) {
+            // Reading again is safe. Retain pending work, but do not deliver
+            // it against stale evidence. The next scheduled acquisition uses
+            // the same cadence and hourly allowance.
+            this.s.observationUnavailable = true;
+            this.onObservationUnavailable();
+            this.persist();
+          }
+          return;
+        }
+        if (generation !== this.generation || this.disposed) return;
+        try {
+          this.validate(result);
+        } catch (error) {
+          this.s.observationUnavailable = true;
+          this.onObservationUnavailable();
+          throw error;
+        }
+        this.s.observationUnavailable = false;
+        this.onObserved(result);
+        for (const e of result.settled || []) {
+          this.s.acknowledged[e.key] = e.revision;
+          if (this.s.pending[e.key]?.revision === e.revision) delete this.s.pending[e.key];
+          this.sent.delete(e.key);
+        }
+        if (this.inflight && this.sent.size === 0) this.inflight = false;
+        for (const e of result.events) {
+          if (this.s.acknowledged[e.key] !== e.revision) this.s.pending[e.key] = { id: e.id, revision: e.revision };
+        }
+        observed = true;
       }
-      if (this.inflight && this.sent.size === 0) this.inflight = false;
-      for (const e of result.events) {
-        if (this.s.acknowledged[e.key] !== e.revision) this.s.pending[e.key] = { id: e.id, revision: e.revision };
-      }
+      if (this.s.observationUnavailable) return;
       for (const [name, deadline] of Object.entries(this.s.deadlines)) {
         const { at, operationRevision } = deadline;
         const key = `deadline:${name}`, revision = hash([name, at, operationRevision]);
-        if (now >= at && this.s.acknowledged[key] !== revision) this.s.pending[key] = { id: name, revision };
+        if (this.now() >= at && this.s.acknowledged[key] !== revision) this.s.pending[key] = { id: name, revision };
       }
       if (Object.keys(this.s.pending).length + Object.keys(this.s.acknowledged).length > this.s.config.maxPending) {
         this.block("retention-budget"); return;
       }
       this.persist();
-      if (this.inflight && this.deliveryStatus() === "uncertain") {
+      const delivery = this.inflight ? this.deliveryStatus() : "accepted";
+      if (delivery === "uncertain") {
         this.block("notification-unconfirmed"); return;
       }
-      if (!this.inflight && !this.s.breaker && Object.keys(this.s.pending).length && this.canDeliver()) {
+      // An accepted turn may deliberately leave work unacknowledged while a
+      // source is degraded. A fresh revision must still reach the idle owner.
+      const batch = Object.entries(this.s.pending)
+        .filter(([key, value]) => this.sent.get(key) !== value.revision).slice(0, 20);
+      if (delivery === "accepted" && !this.s.breaker && batch.length && this.canDeliver() &&
+          this.wakeLimitedUntil() === null) {
         // Retain identities before attempting delivery. A rejected send leaves
         // pending intact; acceptance by Pi is not application acknowledgement.
-        if ((this.s.window.wakes || 0) >= this.s.config.maxWakesPerHour) { this.block("wake-budget"); return; }
         this.s.window.wakes = (this.s.window.wakes || 0) + 1;
         this.persist(); // Includes uncertain notification attempts, never token billing.
-        const batch = Object.entries(this.s.pending).slice(0, 20);
-        this.inflight = Boolean(await this.deliver(batch));
-        if (this.inflight) this.sent = new Map(batch.map(([key, value]) => [key, value.revision]));
-        if (!this.inflight) throw new Error("wake delivery refused");
+        this.delivering = true;
+        let delivered;
+        try { delivered = await this.deliver(batch); } finally { this.delivering = false; }
+        if (generation !== this.generation || this.disposed) return;
+        if (!delivered) throw new Error("wake delivery refused");
+        this.lastDelivery = new Map();
+        for (const [key, value] of batch) {
+          if (this.s.pending[key]?.revision === value.revision) {
+            this.sent.set(key, value.revision);
+            this.lastDelivery.set(key, value.revision);
+          }
+        }
+        this.inflight = this.sent.size > 0;
       }
-      if (this.s.errors && (!this.inflight || this.deliveryStatus() === "accepted")) { this.s.errors = 0; this.persist(); }
+      if (observed && this.s.errors && (!this.inflight || this.deliveryStatus() === "accepted")) { this.s.errors = 0; this.persist(); }
     } catch {
+      if (generation !== this.generation || this.disposed) return;
       this.s.errors++; this.persist();
       if (this.s.errors >= this.s.config.maxErrors) this.block("observation-or-delivery-failure");
-    } finally { this.busy = false; }
+    } finally { if (this.busy === generation) this.busy = null; }
   }
 }

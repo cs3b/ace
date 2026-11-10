@@ -75,7 +75,9 @@ module Ace
                 return success_workflow_result("Worktree already exists", workflow_result.merge(
                   worktree_path: existing_worktree.path,
                   branch: existing_worktree.branch,
-                  existing: true
+                  existing: true,
+                  readiness: options[:defer_setup] ? "checkout_ready" : nil,
+                  project_setup: options[:defer_setup] ? "delegated" : nil
                 ))
               end
 
@@ -254,6 +256,14 @@ module Ace
                 workflow_result[:warnings] << "Skipped PR creation: branch not pushed to remote"
               end
 
+              # A coordinator prepares checkout/assignment data only. The
+              # commissioned executor owns project setup commands and trust.
+              if options[:defer_setup]
+                workflow_result[:readiness] = "checkout_ready"
+                workflow_result[:project_setup] = "delegated"
+                return success_workflow_result("Checkout ready; project setup delegated", workflow_result)
+              end
+
               # Step 12: Run after-create hooks if configured
               hooks = @config.after_create_hooks
               if hooks && hooks.any?
@@ -391,8 +401,13 @@ module Ace
                 create_pr: should_create_pr,
                 pr_title: should_create_pr ? @config.format_pr_title(task_data) : nil,
                 pr_base: should_create_pr ? target_branch : nil,
-                hooks_count: @config.after_create_hooks.length
+                hooks_count: options[:defer_setup] ? 0 : @config.after_create_hooks.length
               }
+
+              if options[:defer_setup]
+                workflow_result[:would_create][:readiness] = "checkout_ready"
+                workflow_result[:would_create][:project_setup] = "delegated"
+              end
 
               workflow_result[:steps_planned] = [
                 "fetch_task_data",

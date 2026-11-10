@@ -421,6 +421,23 @@ class FeedbackSynthesizerTest < AceReviewTest
     assert_equal 2, result[:items].length
   end
 
+  def test_synthesize_preserves_code_fences_inside_findings
+    report_path = create_report_file("report.md", sample_report_content)
+    finding = "The example inventory hides a finding:\n```json\n{\"findings\": []}\n```"
+    inventory = {findings: [{title: "Preserve the evidence", finding: finding}]}.to_json
+
+    [inventory, "```json\n#{inventory}\n```"].each do |response|
+      @mock_executor.set_response(response)
+      before = @mock_executor.call_count
+
+      result = @synthesizer.synthesize(report_paths: [report_path], session_dir: @session_dir)
+
+      assert result[:success], result[:error]
+      assert_equal before + 1, @mock_executor.call_count
+      assert_equal [finding], result[:items].map(&:finding)
+    end
+  end
+
   def test_synthesize_handles_text_before_json_fence
     # This is the Claude Opus pattern: conversational text before the JSON code fence
     report_path = create_report_file("report.md", sample_report_content)

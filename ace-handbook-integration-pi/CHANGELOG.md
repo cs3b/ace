@@ -2,6 +2,14 @@
 
 All notable changes to ace-handbook-integration-pi will be documented in this file.
 
+## [Unreleased]
+
+## [0.8.1] - 2026-11-10
+
+### Fixed
+
+- Use valid private-task commands in the resume prompt and require the matching updated observation/runtime packages.
+
 ## [0.8.0] - 2026-10-30
 
 ### Changed

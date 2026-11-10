@@ -787,6 +787,40 @@ module Organisms
       end
     end
 
+    def test_gem_verification_reuses_shared_probes_only_within_a_pass
+      Dir.mktmpdir do |gem_home|
+        calls = Hash.new(0)
+        missing_shared = false
+        runner = lambda do |argv|
+          index = argv.index("gem")
+          command, name = argv[index + 1, 2]
+          calls[[command, name]] += 1
+          out = case command
+          when "list"
+            name == "shared" && missing_shared ? "" : "#{name} (1.0.0)\n"
+          when "dependency"
+            name == "shared" ? "Gem shared-1.0.0\n" : "Gem #{name}-1.0.0\n  shared (>= 0, runtime)\n"
+          else
+            raise "unexpected command #{argv.inspect}"
+          end
+          {"status" => "ok", "out" => out, "err" => ""}
+        end
+        verifier = Ace::Lab::Organisms::Verify.new(runner: runner)
+        manifest = {"gemset" => {"gem_home" => gem_home, "gems" => [
+          {"name" => "first", "version" => "1.0.0"}, {"name" => "second", "version" => "1.0.0"}
+        ]}}
+        first = verifier.send(:check_gems, manifest)
+        assert_equal ["pass", "pass"], first.map { |row| row["status"] }
+        assert_equal 1, calls[["list", "shared"]]
+        assert_equal 1, calls[["list", "first"]], "presence and version checks must reuse the same probe"
+        assert_equal 1, calls[["dependency", "shared"]]
+        missing_shared = true
+        second = verifier.send(:check_gems, manifest)
+        assert_equal ["fail", "fail"], second.map { |row| row["status"] }
+        assert_equal 2, calls[["list", "shared"]], "the next verification must probe again"
+      end
+    end
+
     def test_missing_gem_runtime_fails_every_declared_gem
       Dir.mktmpdir do |gemdir|
         gem_home = File.join(gemdir, "absent-runtime")
@@ -902,6 +936,46 @@ module Organisms
       YAML
     end
 
+    def test_missing_extension_source_is_a_classified_failure
+      Dir.mktmpdir do |dir|
+        reason = Ace::Lab::Organisms::Verify.new.send(:extension_reason,
+          {"gem" => "missing", "path" => File.join(dir, "extensions"), "account" => "worker"},
+          {"version" => "0.1.0"}, dir, nil)
+        assert_match(/not installed/, reason)
+      end
+    end
+
+    def test_malformed_extension_receipt_is_a_classified_failure
+      Dir.mktmpdir do |dir|
+        source = File.join(dir, "gems", "wake-0.1.0", "handbook", "extensions", "wake")
+        FileUtils.mkdir_p(source)
+        File.write(File.join(source, "index.js"), "entry")
+        target = File.join(dir, "extensions")
+        FileUtils.mkdir_p(target)
+        File.write(File.join(target, ".ace-lab-extension-projection.json"), JSON.generate({"gem" => "wake", "version" => "0.1.0", "files" => "invalid"}))
+        reason = Ace::Lab::Organisms::Verify.new.send(:extension_reason,
+          {"gem" => "wake", "path" => target, "account" => "worker"}, {"version" => "0.1.0"}, dir, nil)
+        assert_match(/invalid files/, reason)
+      end
+    end
+
+    def test_projection_directory_must_be_traversable_for_the_declared_account
+      Dir.mktmpdir do |dir|
+        source = File.join(dir, "gems", "wake-0.1.0", "handbook", "extensions", "wake")
+        FileUtils.mkdir_p(source)
+        File.write(File.join(source, "index.js"), "entry")
+        target = File.join(dir, "extensions")
+        entry = {"gem" => "wake", "path" => target, "account" => "worker"}
+        gem = {"name" => "wake", "version" => "0.1.0"}
+        Ace::Lab::Molecules::ExtensionProvisioner.new(gem_home: dir).call(extensions: [entry], gems: [gem])
+        File.chmod(0o700, target)
+        reason = Ace::Lab::Organisms::Verify.new.send(:extension_reason, entry, gem, dir, nil)
+        assert_match(/not traversable/, reason)
+        Ace::Lab::Molecules::ExtensionProvisioner.new(gem_home: dir).call(extensions: [entry], gems: [gem])
+        assert_equal 0o755, File.stat(target).mode & 0o777
+      end
+    end
+
     def test_extension_projection_check_fails_without_a_receipt_and_passes_after_projection
       Dir.mktmpdir do |gemdir|
         gem_home = File.join(gemdir, "runtime")
@@ -955,6 +1029,27 @@ module Organisms
             ext_check["reason"])
         end
       end
+    end
+
+    def test_installed_extension_verification_refuses_unprotected_path_before_reading_receipt
+      previous = ENV["ACE_TOOLCHAIN"]
+      Dir.mktmpdir do |dir|
+        gem_home = File.join(dir, "runtime")
+        source = File.join(gem_home, "gems", "ace-wake-probe-0.1.0", "handbook", "extensions", "ace-wake-probe")
+        FileUtils.mkdir_p(source)
+        File.write(File.join(source, "index.js"), "// entry\n")
+        target = File.join(dir, "extensions")
+        FileUtils.mkdir_p(target)
+        File.write(File.join(target, ".ace-lab-extension-projection.json"), "not-json")
+        ENV["ACE_TOOLCHAIN"] = "installed"
+        reason = Ace::Lab::Organisms::Verify.new.send(:extension_reason,
+          {"gem" => "ace-wake-probe", "path" => target, "account" => "ace-worker"},
+          {"name" => "ace-wake-probe", "version" => "0.1.0"}, gem_home, nil)
+        assert_match(/not root-controlled/, reason)
+        refute_match(/not valid JSON/, reason)
+      end
+    ensure
+      previous.nil? ? ENV.delete("ACE_TOOLCHAIN") : ENV["ACE_TOOLCHAIN"] = previous
     end
 
     def test_manifest_without_gemset_reports_no_gem_checks
@@ -1124,6 +1219,78 @@ class VerifyProbeTest < Minitest::Test
     end
     assert_equal :pass, organism.send(:availability_probe, "git", []).first
     assert_equal :fail, organism.send(:availability_probe, "definitely-not-a-lab-tool-xyz", []).first
+  end
+
+  def test_installed_mode_resolves_nav_from_the_installed_toolchain
+    require "ace/support/cli/toolchain"
+    verify = Ace::Lab::Organisms::Verify.new
+    Dir.mktmpdir do |dir|
+      FileUtils.mkdir_p(File.join(dir, "bin"))
+      binstub = File.join(dir, "bin", "ace-nav")
+      FileUtils.touch(binstub)
+      File.chmod(0o755, binstub)
+      toolchain = Ace::Support::Cli::Toolchain
+      toolchain.stub(:installed?, true) do
+        toolchain.stub(:executable, ->(name) { "/installed/bin/#{name}" }) do
+          [501, 0].each do |uid|
+            Process.stub(:uid, uid) do
+              assert_equal "/installed/bin/ace-nav", verify.send(:nav_binary, dir)
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def test_missing_installed_nav_is_a_readiness_failure
+    require "ace/support/cli/toolchain"
+    toolchain = Ace::Support::Cli::Toolchain
+    missing = ->(_name) { raise toolchain::Error, "installed ace-nav unavailable" }
+    toolchain.stub(:installed?, true) do
+      toolchain.stub(:executable, missing) do
+        status, reason = Ace::Lab::Organisms::Verify.new.send(:protocol_resolution,
+          "wfi://assign/work", {"projects" => [{"path" => "/project"}]})
+        assert_equal "fail", status
+        assert_match(/ACE toolchain error/, reason)
+      end
+    end
+  end
+
+  def test_installed_nav_subprocess_does_not_inherit_checkout_ruby_injection
+    require "rbconfig"
+    previous = ENV.to_h.slice("ACE_TOOLCHAIN", "BUNDLE_GEMFILE", "RUBYOPT", "RUBYLIB")
+    ENV["ACE_TOOLCHAIN"] = "installed"
+    ENV["BUNDLE_GEMFILE"] = "/project/Gemfile"
+    ENV["RUBYOPT"] = "-r/project/injected.rb"
+    ENV["RUBYLIB"] = "/project/lib"
+    script = 'require "json"; puts JSON.generate(ENV.to_h.slice("ACE_TOOLCHAIN", "BUNDLE_GEMFILE", "RUBYOPT", "RUBYLIB"))'
+    result = Ace::Lab::Organisms::Verify.new.send(:run_nav, [RbConfig.ruby, "-e", script], Dir.pwd)
+    assert_equal "ok", result["status"]
+    assert_equal({"ACE_TOOLCHAIN" => "installed"}, JSON.parse(result["out"]))
+  ensure
+    %w[ACE_TOOLCHAIN BUNDLE_GEMFILE RUBYOPT RUBYLIB].each { |key| ENV.delete(key) }
+    previous&.each { |key, value| ENV[key] = value }
+  end
+
+  def test_auto_mode_nav_subprocess_inherits_project_environment
+    require "rbconfig"
+    previous = ENV.to_h.slice("ACE_TOOLCHAIN", "BUNDLE_GEMFILE", "RUBYOPT", "RUBYLIB")
+    ENV["ACE_TOOLCHAIN"] = "auto"
+    project_gemfile = File.expand_path("../../../Gemfile", __dir__)
+    ENV["BUNDLE_GEMFILE"] = project_gemfile
+    ENV["RUBYOPT"] = "-W0"
+    ENV["RUBYLIB"] = "/project/lib"
+    script = 'puts %w[ACE_TOOLCHAIN BUNDLE_GEMFILE RUBYOPT RUBYLIB].map { |key| "#{key}=#{ENV[key]}" }'
+    result = Ace::Lab::Organisms::Verify.new.send(:run_nav, [RbConfig.ruby, "-e", script], Dir.pwd)
+    assert_equal "ok", result["status"], result["err"]
+    observed = result["out"].lines.map { |line| line.strip.split("=", 2) }.to_h
+    assert_equal "auto", observed["ACE_TOOLCHAIN"]
+    assert_equal project_gemfile, observed["BUNDLE_GEMFILE"]
+    assert_includes observed.fetch("RUBYOPT").split, "-W0"
+    assert_includes observed.fetch("RUBYLIB").split(File::PATH_SEPARATOR), "/project/lib"
+  ensure
+    %w[ACE_TOOLCHAIN BUNDLE_GEMFILE RUBYOPT RUBYLIB].each { |key| ENV.delete(key) }
+    previous&.each { |key, value| ENV[key] = value }
   end
 
   def test_root_installer_never_executes_the_project_binstub

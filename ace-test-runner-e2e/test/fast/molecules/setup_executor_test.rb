@@ -145,6 +145,24 @@ class SetupExecutorTest < Minitest::Test
     end
   end
 
+  def test_run_failure_preserves_both_output_streams_and_stops_setup
+    Dir.mktmpdir do |sandbox|
+      File.write(File.join(sandbox, "detail.out"), "download checksum mismatch\n")
+      File.write(File.join(sandbox, "detail.err"), "guest stopped for diagnosis\n")
+      result = @executor.execute(
+        setup_steps: [{"run" => "cat detail.out; cat detail.err >&2; exit 7"},
+          {"run" => "touch should-not-run"}],
+        sandbox_dir: sandbox
+      )
+
+      refute result[:success]
+      assert_includes result[:error], "exit 7"
+      assert_includes result[:error], "download checksum mismatch"
+      assert_includes result[:error], "guest stopped for diagnosis"
+      refute File.exist?(File.join(sandbox, "should-not-run"))
+    end
+  end
+
   def test_run_uses_env_vars
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(

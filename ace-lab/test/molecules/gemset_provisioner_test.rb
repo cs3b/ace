@@ -232,6 +232,13 @@ module Molecules
       end
     end
 
+    def test_installed_prerelease_satisfying_a_dependency_is_usable
+      provisioner = Ace::Lab::Molecules::GemsetProvisioner.new
+      dependency = {"name" => "ace-herdr", "requirement" => "~> 0.9"}
+      versions = %w[0.8.9 0.9.0.pre.utm1 0.9.1.pre.utm1 1.0.0.pre.utm1 1.1.0.pre.utm1 1.0.0]
+      assert_equal ["0.9.1.pre.utm1"], provisioner.send(:satisfying_versions, dependency, versions)
+    end
+
     def test_declared_version_present_only_as_the_default_gem_satisfies_existence
       runner = FakeRunner.new([
         raw_listing("abbrev", ["default: 0.1.2"]),   # presence probe
@@ -459,6 +466,20 @@ module Molecules
           end
           assert_match(/identity mismatch/, error.message)
           assert_equal 0o640, File.stat(payload).mode & 0o777
+        end
+      end
+    end
+
+    def test_strict_dry_run_rejects_an_incomplete_dependency_closure
+      Dir.mktmpdir do |dir|
+        gem_home = build_and_install_gem(dir, "ace-lab-closure-probe", "1.0.0",
+          dependencies: {"ace-lab-missing-probe" => ">= 1.0"}, ignore_dependencies: true)
+        ordinary = Ace::Lab::Molecules::GemPayloadPermissions.new(gem_home: gem_home, dry_run: true, privileged: false)
+        assert_kind_of Array, ordinary.call(name: "ace-lab-closure-probe", version: "1.0.0")
+        strict = Ace::Lab::Molecules::GemPayloadPermissions.new(gem_home: gem_home, dry_run: true,
+          privileged: false, require_complete: true)
+        assert_raises(Ace::Lab::Molecules::GemPayloadPermissions::Error) do
+          strict.call(name: "ace-lab-closure-probe", version: "1.0.0")
         end
       end
     end

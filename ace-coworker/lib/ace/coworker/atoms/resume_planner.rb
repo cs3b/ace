@@ -17,9 +17,9 @@ module Ace
         # @param step_report_path [String, nil] report file of the in-flight step
         # @return [Models::ResumePlan]
         def self.plan(snapshot:, report_state: nil, git_state: {},
-          step_cause: nil, step_report_path: nil)
+          step_cause: nil, step_report_path: nil, reporting_delivery: "adapter", publication_verified: false)
           if snapshot.completion_verdict == :complete
-            return complete_plan(report_state, git_state)
+            return complete_plan(snapshot, report_state, git_state, reporting_delivery, publication_verified)
           end
 
           continue_plan(snapshot, report_state, git_state,
@@ -29,15 +29,17 @@ module Ace
         # Only a DELIVERED SUCCESS report matches a completed assignment:
         # a delivered error report describes an outcome the assignment has
         # since left behind, so resume must still report the success.
-        def self.complete_plan(report_state, git_state)
-          delivered = report_state.is_a?(Hash) &&
-            report_state["result"] == "success" &&
-            report_state["delivery"].to_s.start_with?("delivered")
+        def self.complete_plan(snapshot, report_state, git_state, reporting_delivery, publication_verified)
+          current = OutcomePlanner.plan(snapshot).matches_report?(report_state)
+          delivered = current &&
+            (reporting_delivery == "observe" ?
+              publication_verified && report_state["delivery"].to_s.start_with?("published for observation") :
+              report_state["delivery"].to_s.start_with?("delivered"))
           if delivered
             Models::ResumePlan.new(disposition: :complete, git: git_state)
           else
             Models::ResumePlan.new(disposition: :report, git: git_state,
-              redeliver_event_id: report_state.is_a?(Hash) ? report_state["event_id"] : nil)
+              redeliver_event_id: current ? report_state["event_id"] : nil)
           end
         end
 

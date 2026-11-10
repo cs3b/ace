@@ -119,6 +119,39 @@ module Ace
             .first(limit)
         end
 
+        # Open issue intake uses the selected Forgejo repository, and never
+        # substitutes pull requests or an unavailable listing for an empty one.
+        # @return [Array<ProviderIssue>] open issues, newest first
+        # @raise [Ace::Git::ProviderMalformedOutputError] for invalid evidence
+        # @raise [Ace::Git::ProviderIdentityMismatchError] for foreign evidence
+        def recent_issues(limit:)
+          limit = Integer(limit)
+          return [] if limit <= 0
+
+          issue_api.open_issues.filter_map do |entry|
+            next if entry["pull_request"]
+
+            number = entry["number"]
+            unless number.is_a?(Integer) && number.positive? && entry["title"].is_a?(String) &&
+                !entry["title"].strip.empty? && entry["state"] == "open"
+              raise Ace::Git::ProviderMalformedOutputError, "Forgejo issue listing contains an invalid issue"
+            end
+            unless entry["html_url"] == issue_url(number)
+              raise Ace::Git::ProviderIdentityMismatchError, "Forgejo issue listing contains foreign issue ##{number}"
+            end
+            unless entry["user"].nil? || entry["user"].is_a?(Hash)
+              raise Ace::Git::ProviderMalformedOutputError, "Forgejo issue listing contains an invalid author"
+            end
+            unless (entry["body"].nil? || entry["body"].is_a?(String)) &&
+                (entry["labels"].nil? || entry["labels"].is_a?(Array) && entry["labels"].all? { |label| label.is_a?(Hash) && label["name"].is_a?(String) })
+              raise Ace::Git::ProviderMalformedOutputError, "Forgejo issue listing contains invalid body or labels"
+            end
+            Ace::Git::ProviderIssue.new(server_name: server.name, number: number, title: entry["title"],
+              state: :open, author: entry.dig("user", "login"), url: entry["html_url"],
+              body: entry["body"], labels: Array(entry["labels"]).map { |label| label.fetch("name") })
+          end.sort_by { |issue| -issue.number }.first(limit)
+        end
+
         # @return [ProviderIssue] normalized issue evidence
         def issue(number:)
           view = fj(:issue_view, request_number!(number))
@@ -931,7 +964,19 @@ module Ace
             review_http.request(method, path, body: payload)
           end
           Ace::Git::Providers::FormalApproval.new(provider: self, request: request,
-            list: method(:formal_review_rows), official: true, pending_reuse: true)
+            list: method(:formal_review_rows), official: true, pending_reuse: true,
+            expected_reviewer: leased_reviewer_account)
+        end
+
+        # Repository-scoped leases cannot call /api/v1/user. The issuer's
+        # account is an expectation; the forge review supplies the identity.
+        def leased_reviewer_account
+          return unless ENV["ACE_LAB_FORGEJO_ORIGIN"] == RepositoryBinding::Target.resolve(server.url).host_url
+
+          account = ENV["ACE_LAB_FORGEJO_ACCOUNT"]
+          return account if account&.match?(/\A[a-zA-Z0-9_.-]+\z/)
+
+          raise Ace::Git::ProviderAuthenticationError, "Forgejo lease has no valid reviewer account"
         end
 
         # Forgejo lists review requests alongside actual reviews. User and

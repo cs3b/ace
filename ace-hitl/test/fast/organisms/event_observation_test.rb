@@ -3,6 +3,46 @@ require_relative "../../test_helper"
 require "ace/hitl/molecules/event_observation"
 
 class EventObservationTest < AceHitlTestCase
+  def test_observation_distinguishes_uncreated_and_unavailable_roots
+    with_hitl_dir do |parent|
+      root = File.join(parent, "events")
+      manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: root, config: {"hitl" => {"root_dir" => root}})
+      observer = Ace::Hitl::Molecules::EventObservation.new(manager: manager)
+
+      assert_empty observer.call.fetch("events")
+      File.write(root, "not a directory")
+      assert_raises(Errno::ENOTDIR) { observer.call }
+      File.unlink(root)
+
+      File.symlink(File.join(parent, "unavailable"), root)
+      assert_raises(Errno::ENOENT) { observer.call }
+      File.unlink(root)
+
+      target = File.join(parent, "target")
+      Dir.mkdir(target)
+      File.symlink(target, root)
+      assert_empty observer.call.fetch("events")
+
+      Dir.rmdir(target)
+      File.write(target, "not a directory")
+      assert_raises(Errno::ENOTDIR) { observer.call }
+    end
+  end
+
+  def test_observation_refuses_an_unreadable_store
+    skip "root bypasses store permissions" if Process.euid.zero?
+
+    with_hitl_dir do |root|
+      manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: root, config: {"hitl" => {"root_dir" => root}})
+      observer = Ace::Hitl::Molecules::EventObservation.new(manager: manager)
+      original_mode = File.stat(root).mode & 0o777
+      File.chmod(0, root)
+      assert_raises(Errno::EACCES) { observer.call }
+    ensure
+      File.chmod(original_mode, root) if original_mode
+    end
+  end
+
   def test_semantic_changes_ignore_poll_delivery_metadata_and_mtime_but_keep_answer
     with_hitl_dir do |root|
       manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: root, config: {"hitl" => {"root_dir" => root}})
@@ -68,6 +108,30 @@ class EventObservationTest < AceHitlTestCase
       instruction = manager.create("Instruction", type: "report", result: "success", tags: ["hermes-instruction"])
       assert_equal [question.id, incoming.id, instruction.id].sort, observer.call(owner: "self")["events"].map { |e| e["id"] }.sort
       assert_raises(Ace::Hitl::Molecules::HitlAddressResolver::UnknownRecipientError) { observer.call(owner: "missing") }
+    end
+  end
+
+  def test_archived_publication_can_be_verified_without_reentering_live_observation
+    with_hitl_dir do |root|
+      config = {"hitl" => {"root_dir" => root, "machine" => "lab", "recipients" => {
+        "owner" => {"machine" => "lab", "folder" => "/lab/.ace-local/hitl"},
+        "other" => {"machine" => "lab", "folder" => "/lab/other/.ace-local/hitl"}}}}
+      manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: root, config: config)
+      event = manager.create("Completed worker", to: "owner", type: "report", result: "success",
+        task: "8xh.t.aaa", assignment: "abc123", move_to: "archive")
+      observer = Ace::Hitl::Molecules::EventObservation.new(manager: manager)
+      assert_empty observer.call(owner: "owner")["events"]
+      rows = observer.call(owner: "owner", in_folder: "all")["events"]
+      assert_equal [event.id], rows.map { |row| row["id"] }
+      assert_equal "8xh.t.aaa", rows.first["task"]
+      assert_equal "abc123", rows.first["assignment"]
+      assert_empty observer.call(owner: "other", in_folder: "all")["events"]
+      with_cli_root(root, config: config) do
+        response = run_cli(["observe", "--owner", "owner", "--in", "all"])
+        assert_equal 0, response[:exit_code], response[:stderr]
+        assert_equal [event.id], JSON.parse(response[:stdout])["events"].map { |row| row["id"] }
+      end
+      assert_raises(ArgumentError) { observer.call(in_folder: "invalid") }
     end
   end
 

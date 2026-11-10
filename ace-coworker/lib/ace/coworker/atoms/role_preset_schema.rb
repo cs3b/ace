@@ -39,6 +39,7 @@ module Ace
             "instructions" => str(raw["instructions"]),
             "start_prompt" => raw["start_prompt"].to_s.strip,
             "reporting" => nested_str(raw, "reporting", "channel"),
+            "reporting_delivery" => nested_str(raw, "reporting", "delivery"),
             "errors" => nested_str(raw, "errors", "on_failure")
           }
         end
@@ -53,10 +54,11 @@ module Ace
 
           def reporting_errors(raw)
             channel = nested_str(raw, "reporting", "channel")
-            return [] if channel.empty?
-
-            ConfigSchema::CHANNELS.include?(channel) ? [] :
+            errors = channel.empty? || ConfigSchema::CHANNELS.include?(channel) ? [] :
               ["reporting.channel '#{channel}' is not one of: #{ConfigSchema::CHANNELS.join(', ')}"]
+            delivery = nested_str(raw, "reporting", "delivery")
+            errors << "reporting.delivery must be adapter or observe" unless delivery.empty? || ConfigSchema::DELIVERIES.include?(delivery)
+            errors
           end
 
           def error_rules_errors(raw)

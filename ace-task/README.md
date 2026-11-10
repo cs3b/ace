@@ -21,7 +21,7 @@
 > `--git-commit` is refused for Git-ignored tasks, and completed ignored tasks
 > are neither auto-archived nor moved by `doctor --auto-fix`. A lab may prepare
 > `.ace-tasks/_overseer/` (gitignored) and manage it with
-> `ace-task --in _overseer`; the delegation tools are role- and folder-name
+> `ace-task list --in _overseer`; the delegation tools are role- and folder-name
 > agnostic and do not reject management tasks. The canonical flow is
 > [docs/lab-flow.md](../docs/lab-flow.md).
 

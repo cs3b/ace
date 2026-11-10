@@ -9,6 +9,11 @@ module Ace
       # (step scanning) to produce AssignmentInfo objects with full
       # state, progress, and current step information.
       class AssignmentDiscoverer
+        # Public read-only inventory for a specified project/worktree.
+        def self.for_project(project_root:, env: ENV)
+          new(cache_base: Ace::Assign.cache_dir_for(project_root: project_root, env: env))
+        end
+
         # @param cache_base [String, nil] Base cache directory
         def initialize(cache_base: nil)
           @cache_base = cache_base || Ace::Assign.cache_dir

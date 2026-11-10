@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.62.3] - 2026-11-10
+
+### Fixed
+
+- Parse review JSON containing literal Markdown fences without truncating valid findings.
+
 ## [0.62.2] - 2026-10-23
 
 ### Added

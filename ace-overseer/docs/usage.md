@@ -10,7 +10,7 @@ ace-docs:
 # Usage
 
 > **State owner:** `.ace-tasks/_overseer/` (private, gitignored task folder
-> reached via `ace-task --in _overseer`) and `.ace-wt/` (one worktree per
+> reached via `ace-task list --in _overseer`) and `.ace-wt/` (one worktree per
 > project task). Assignment plans live in `.ace-local/assign/` and are not
 > copied here. See [docs/lab-flow.md](../../docs/lab-flow.md).
 
@@ -84,14 +84,16 @@ Behavior:
   `herdr agent start` success only means the interactive agent is ready for
   input, the start submits a first-turn prompt right after the agent starts —
   the session actually begins its first turn (state read, `/eyes` arming).
-  Delivery is confirmed through herdr's activity gate (`agent prompt
-  --wait`): success means observed working activity, so the turn began. A
-  delivery failure after a started agent never reports the start as failed:
-  the report stays `started` with `prompt_failed: true` and a repairable
-  warning. On a later start, a live reused agent ready for input gets the
-  first-turn prompt re-delivered through the same gate (repairing a missing
-  initialization without restarting anything); a working/blocked agent is
-  never interrupted, and an unclassifiable state stays visibly unconfirmed.
+  Herdr's activity gate (`agent prompt --wait`) only confirms working
+  activity. Readiness also requires the completed first turn and fresh,
+  healthy eyes evidence tied to the current live Pi process and session. A
+  delivery failure after a started agent does not remove that agent:
+  the report stays `started` with `prompt_failed: true` and an uncertain
+  delivery warning. A later start never re-sends the prompt solely because a
+  reused agent is idle or done: either state can follow a delivered prompt.
+  A healthy reused session can become ready once its current observation is
+  verified; a blocked agent is never interrupted. Process identity evidence
+  currently supports Linux only; other systems remain unconfirmed.
 - The report carries `status` (`started|reused|blocked|dry_run`), `scope`,
   `root`, `label`, `workspace`, `pane`, `agent`, `profile`, `instructions`
   (`source` + resolved `path`) and a `message`. Exit 0 only for a ready
@@ -153,17 +155,14 @@ explicitly through `start --scope lab`:
   nesting): the lab context owns the per-project spaces by creating and
   reusing them from this one start flow.
 - Statuses: `ready` (all projects started/reused AND every first turn
-  confirmed delivered — the lab overseer's included; an empty configured
+  completed with live, healthy eyes — the lab overseer's included; an empty configured
   list is a valid idle lab once its own session is initialized), `partial`
   (an unhealthy project — or a session whose first turn failed or stays
   unconfirmed — is reported with its concrete reason while healthy projects
   run — never false success), `blocked` (unreadable topology / conflicting
-  roles). A repeated start repairs only what is missing: healthy sessions
-  are reused, manual panes are never closed, nothing healthy is restarted,
-  and a reused session that is ready for input gets its first-turn prompt
-  re-delivered through herdr's activity gate (`agent prompt --wait`) to
-  confirm or repair initialization; a working/blocked agent is never
-  interrupted, and an unclassifiable one stays visibly unconfirmed.
+  roles). Repeated start reuses live sessions and never closes manual panes.
+  A reused session remains unconfirmed without trustworthy first-turn and
+  current-process observation evidence. No first prompt is re-sent automatically.
 - `--dry-run` lists the plan (space + per-project would_start) and creates
   nothing. The report carries per-project results (`projects`), the count,
   and the lab-level readiness; exit 0 for ready, non-zero for partial and
@@ -174,7 +173,7 @@ explicitly through `start --scope lab`:
 ## `ace-overseer observe`
 
 Read-only standing observation the started overseer's eyes poll (task
-8xs.t.pu0.3). The projection merges the six local source classes, each read
+8xs.t.pu0.3). The projection merges local source classes, each read
 from its state owner — never a second task/assignment state:
 
 - HITL events (semantic revisions; reports/questions toward this owner),
@@ -182,7 +181,10 @@ from its state owner — never a second task/assignment state:
 - worktrees (`ace-git-worktree`),
 - coworker availability and assignment progress (`ace-coworker` probe over the
   `ace-assign` inventory; live/stale judged by existing run identifiers —
-  commissioned assignment ids — never pane names).
+  commissioned assignment ids — never pane names),
+- configured project Overseer session states from `ace-lab` project locations
+  and Herdr. Session activity is a wake signal, not proof that project eyes
+  are armed; inspect the session for that evidence.
 
 Every row carries a stable `key` and a `revision` that changes only when the
 owner's data changes: identical state projects identical revisions (healthy
@@ -190,11 +192,13 @@ silence consumes zero model turns), and a real change wakes the observer once.
 A failing source degrades ONLY itself — it contributes a `source-health` row
 whose revision is keyed by the failure class (an identical repeated failure
 never re-wakes; a new failure mode wakes once) while the healthy sources keep
-projecting. `sources` maps each source to `ok`/`degraded`. After a restart,
+projecting. Recovery revises the same row to `ok` and wakes the observer
+even if the work is unchanged. `sources` maps each source to
+`ok`/`degraded`. After a restart,
 pending revisions reconcile before new work is chosen, so a report that
 arrived during the overseer's absence is recognized exactly once.
 
-### Remote PR observation
+### Remote issue and PR observation
 
 Configure the observed pull requests in the same cascade (task 8xs.t.pu0.4)
 — the project's own declarations, never a scan of every accessible account:
@@ -203,10 +207,24 @@ Configure the observed pull requests in the same cascade (task 8xs.t.pu0.4)
 # .ace/overseer/config.yml
 observe:
   remote:
+    issues:
+      - server: forgejo-lab  # the configured project repository
     pull_requests:
       - server: github-cs3b   # configured git server (ace-git ServerRegistry)
         number: 398
 ```
+
+Each configured issue source observes the selected repository's open issues
+as one collection. New, changed and closed issues change its semantic
+revision, while reordered identical results do not. Read the current issue
+before acting. The revision covers issue identity, title, state, author, URL
+and available labels; issue comments are not observed by this source. A
+listing with more than 500 open issues, an unsupported
+provider, or an authentication failure degrades the source visibly rather
+than treating a partial or unavailable list as complete. Session credentials
+must be available to the observation command for the duration of observation.
+Currently the Forgejo provider implements issue listing; GitHub does not.
+The Forgejo listing does not currently expose labels to this observation.
 
 Rows project through the EXISTING forge provider adapters (Forgejo and
 GitHub — `Ace::Git::Providers.for`; no separate HTTP client, no webhook
@@ -221,8 +239,8 @@ state projects identical revisions — zero model turns.
 A failing forge (401/403, rate limit, timeout, malformed payload) degrades
 only its source (`source-health` marker keyed by failure class: one wake per
 failure mode, never an empty healthy list); retry/backoff stays inside the
-provider adapters. After access returns, the changed state is recognized
-through its normal revision. Remote data stays data: re-read the current
+provider adapters. After access returns, the source health revision wakes
+the observer. Remote data stays data: re-read the current
 state and evidence before any merge decision. CI check changes are
 information, never a merge gate.
 
@@ -348,9 +366,13 @@ Matching and outcome rules (enforced mechanically):
   it `done`, then continues with the next unblocked step (same
   `DependencyReadiness` gate as `work-on`): `ace-overseer handoff` for the
   next role when the family records a worktree, otherwise the `work-on`
-  gate. A refused continuation is reported as blocked with reasons. The
-  handoff outcome carries the actionable start command (the same one the
-  Handoff CLI prints); the window is ensured, the agent runs the command.
+  gate in local terminal mode. A refused continuation is reported as blocked
+  with reasons. Local handoff ensures the window and returns the start command.
+  With the Herdr backend, work-on and handoff start the actual executor with
+  an explicit environment and record its identity on the coworker commission.
+  Accepted reports retire that executor before continuation. A completed role
+  sequence does not close pending coordination steps. No authorization daemon
+  or isolated operating-system session is required.
 - A repeated delivery of an already-processed report is `duplicate`: the
   recorded result and existing allocation answer it; nothing re-runs
   (delivery repetition is never work repetition). A duplicate whose

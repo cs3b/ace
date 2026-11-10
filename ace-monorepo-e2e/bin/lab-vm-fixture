@@ -1,0 +1,200 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Set up only the test inputs; starting and steering the overseer is separate.
+require "json"
+require "open3"
+require "tempfile"
+load File.expand_path("lab-vm", __dir__)
+
+def checked(*argv, chdir: nil)
+  out, err, result = Open3.capture3(*argv, **(chdir ? {chdir: chdir} : {}))
+  raise "#{argv.first} failed: #{err.lines.first.to_s.strip}" unless result.success?
+  out.strip
+end
+
+begin
+  raise "usage: lab-vm-fixture prepare RUN_ID" unless ARGV.length == 2 && ARGV[0] == "prepare" && ARGV[1].match?(/\A[a-f0-9]{16}\z/)
+  run_id = ARGV[1]
+  LabVm.with_lifecycle_lock do
+    run_dir = File.join(LabVm.local_dir, "runs", run_id)
+    raise "run directory is not a real directory" if File.symlink?(run_dir) || !File.directory?(run_dir)
+    receipt_path = File.join(run_dir, "fixture.json")
+    raise "invalid fixture receipt" if File.symlink?(receipt_path) || !File.file?(receipt_path)
+    receipt = JSON.parse(File.read(receipt_path))
+    repo = receipt.fetch("repository")
+    unless receipt["schema"] == "ace-e2e-forgejo-fixture/v1" && receipt["status"] == "ready" &&
+        receipt["run_id"] == run_id && repo == "e2e-integrator/ace"
+      raise "fixture identity or readiness mismatch"
+    end
+    fixture_repo = File.join(run_dir, "repository")
+    raise "fixture checkout is a symlink" if File.symlink?(fixture_repo)
+    actual = checked("git", "rev-parse", "HEAD", chdir: fixture_repo)
+    raise "fixture source has changed" unless actual == receipt.fetch("initial_sha")
+    auth_path = File.expand_path("~/.pi/agent/auth.json")
+    raise "Pi auth file is not a regular file" if File.symlink?(auth_path) || !File.file?(auth_path)
+    auth = JSON.parse(File.read(auth_path))
+    raise "configured zai provider is missing" unless auth.is_a?(Hash) && auth["zai"].is_a?(Hash) && !auth["zai"].empty?
+
+    work = LabVm.status.fetch("work")
+    raise "working VM must be running" unless work && work["status"] == "started"
+    uuid = work.fetch("uuid")
+    raise "fixture belongs to a different working VM" unless receipt.fetch("vm_uuid").casecmp?(uuid)
+    addresses = LabVm.utm_call("ip-address", uuid).lines.map(&:strip)
+    address = addresses.find { |entry| entry.match?(/\A(?:\d{1,3}\.){3}\d{1,3}\z/) }
+    raise "working VM has no IPv4 address" unless address
+    known_hosts = File.join(LabVm.local_dir, "known-hosts-#{uuid}")
+    raise "verified VM host key missing; provision the runtime first" unless File.file?(known_hosts) && !File.symlink?(known_hosts)
+    key = File.join(LabVm.local_dir, "bootstrap/operator_ed25519")
+    options = ["-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "UserKnownHostsFile=#{known_hosts}", "-i", key]
+    digest = LabVm.runtime_configuration_fingerprint
+    check = <<~SH
+      set -eu
+      test -x /opt/ace/runtime/bin/herdr
+      test -x /opt/ace/runtime/gems/bin/ace-overseer
+      test -f /var/lib/ace-e2e/runtime-ready.sha256
+      test ! -L /var/lib/ace-e2e/runtime-ready.sha256
+      test "$(stat -c '%U:%G' /var/lib/ace-e2e/runtime-ready.sha256)" = root:root
+      test "$(cat /var/lib/ace-e2e/runtime-ready.sha256)" = '#{digest}'
+      test -d /lab
+      test ! -L /lab
+      test -d /etc/lab/ace-lab
+      test ! -L /etc/lab/ace-lab
+      test -f /etc/lab/ace-lab/install.yml
+      test ! -L /etc/lab/ace-lab/install.yml
+      test "$(stat -c '%U:%G %a' /etc/lab/ace-lab/install.yml)" = 'root:root 644'
+      test ! -e /etc/lab/ace-lab/authorization.yml
+      test ! -L /etc/lab/ace-lab/authorization.yml
+      for path in /home/mo /home/mo/.pi /home/mo/.pi/agent; do test ! -L "$path"; done
+      for path in /lab/.git /lab/.ace /lab/.gitignore /lab/ace /etc/lab/ace-lab/pi-auth.json /tmp/ace-e2e-fixture.bundle /home/lab-operator/lab /home/lab-operator/fixture.bundle /home/lab-operator/ace-e2e-auth.json; do
+        test ! -e "$path"
+        test ! -L "$path"
+      done
+    SH
+    code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", check)
+    raise "working VM runtime is incomplete or fixture already exists: #{output}" unless code.zero?
+
+    bundle = File.join(run_dir, "fixture.bundle")
+    raise "fixture bundle already exists; preserve the partial run" if File.exist?(bundle) || File.symlink?(bundle)
+    checked("git", "bundle", "create", bundle, "main", chdir: fixture_repo)
+    lab = File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/fixtures/lab")
+    remote = "lab-operator@#{address}:/home/lab-operator/"
+    auth_staged = false
+    mutated = false
+    complete = false
+    begin
+      Tempfile.create(["pi-auth-", ".json"], LabVm.local_dir) do |file|
+        file.chmod(0o600)
+        file.write(JSON.generate({"zai" => auth.fetch("zai")}))
+        file.flush
+        mutated = true
+        raise "fixture transfer failed" unless system("scp", "-q", "-r", *options, bundle, lab, File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/session-fixture.rb"), remote)
+        auth_staged = true
+        raise "provider auth transfer failed" unless system("scp", "-q", *options, file.path, "#{remote}ace-e2e-auth.json")
+      end
+      guest_setup = <<~SH
+        set -eu
+        test -d /lab
+        test ! -L /lab
+        for path in /home/mo /home/mo/.pi /home/mo/.pi/agent; do test ! -L "$path"; done
+        for path in /lab/.git /lab/.ace /lab/.gitignore /lab/ace /etc/lab/ace-lab/pi-auth.json /tmp/ace-e2e-fixture.bundle; do
+          test ! -e "$path"
+          test ! -L "$path"
+        done
+        test "$(stat -c '%U:%G' /lab)" = mo:mo
+        cp -R /home/lab-operator/lab/. /lab/
+        chown -R mo:mo /lab/.ace /lab/.gitignore
+        test "$(stat -c '%U:%G' /lab)" = mo:mo
+        install -o mo -g mo -m 0600 /home/lab-operator/ace-e2e-auth.json /etc/lab/ace-lab/pi-auth.json
+        rm -f /home/lab-operator/ace-e2e-auth.json
+        install -o root -g root -m 0644 /home/lab-operator/fixture.bundle /tmp/ace-e2e-fixture.bundle
+        runuser -u mo -- git -C /lab init -q -b main
+        runuser -u mo -- git -C /lab config user.name 'ACE E2E Lab'
+        runuser -u mo -- git -C /lab config user.email 'ace-e2e@example.invalid'
+        runuser -u mo -- git -C /lab add .gitignore .ace
+        runuser -u mo -- git -C /lab -c core.hooksPath=/dev/null commit -q -m 'Configure disposable lab fixture'
+        runuser -u mo -- mkdir -p /lab/.ace-tasks/_overseer /lab/.ace-local/hitl
+        runuser -u mo -- git clone -q -b main /tmp/ace-e2e-fixture.bundle /lab/ace
+        runuser -u mo -- git -C /lab/ace remote set-url origin http://127.0.0.1:3000/#{repo}.git
+        runuser -u mo -- git -C /lab/ace config user.name 'ACE E2E Worker'
+        runuser -u mo -- git -C /lab/ace config user.email 'ace-e2e@example.invalid'
+        runuser -u mo -- mkdir -p /lab/ace/.ace-tasks/_overseer /lab/ace/.ace-local/hitl /lab/ace/.ace/hitl
+        # The trusted deployment manifest declares project visibility; only
+        # ace-lab install converges the root-owned authorization document.
+        test ! -e /etc/lab/ace-lab/authorization.yml
+        test ! -L /etc/lab/ace-lab/authorization.yml
+        test -f /etc/lab/ace-lab/install.yml
+        test ! -L /etc/lab/ace-lab/install.yml
+        test "$(stat -c '%U:%G %a' /etc/lab/ace-lab/install.yml)" = 'root:root 644'
+        . /etc/profile.d/ace-e2e.sh
+        test ! -e /var/lib/ace-e2e/session-fixture.rb
+        install -o root -g root -m 0644 /home/lab-operator/session-fixture.rb /var/lib/ace-e2e/session-fixture.rb
+        test "$(sha256sum /var/lib/ace-e2e/session-fixture.rb | cut -d' ' -f1)" = '#{Digest::SHA256.file(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/session-fixture.rb")).hexdigest}'
+        ruby /var/lib/ace-e2e/session-fixture.rb '#{run_id}' '#{uuid}'
+        install -d -o root -g root -m 0755 /run/lab
+        install -d -o mo -g mo -m 0700 /run/lab/herdr
+        printf '%s\n' 'export HERDR_SOCKET_PATH=/run/lab/herdr/herdr.sock' >> /etc/profile.d/ace-e2e.sh
+        . /etc/profile.d/ace-e2e.sh
+        GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=/lab/ace ace-lab install
+        test "$(stat -c '%U:%G %a' /etc/lab/ace-lab/authorization.yml)" = 'root:root 644'
+        # Use Herdr's own pinned native integration to report Pi lifecycle
+        # and native session identity. Install it before any agent starts.
+        test -d /opt/ace/runtime/pi-agent/extensions
+        test ! -L /opt/ace/runtime/pi-agent/extensions
+        test "$(stat -c '%U:%G' /opt/ace/runtime/pi-agent/extensions)" = root:root
+        # Reinstall the pinned embedded asset on repeat; the runtime survives reset.
+        if test -e /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts; then
+          test -f /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts
+          test "$(stat -c '%U:%G' /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts)" = root:root
+        fi
+        test ! -L /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts
+        HOME=/home/mo PI_CODING_AGENT_DIR=/opt/ace/runtime/pi-agent herdr integration install pi
+        test -f /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts
+        test ! -L /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts
+        chown root:root /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts
+        chmod 0644 /opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts
+        integration_status=$(runuser -u mo -- env "PATH=$PATH" HOME=/home/mo PI_CODING_AGENT_DIR=/opt/ace/runtime/pi-agent herdr integration status)
+        printf '%s\n' "$integration_status"
+        # Status text is the pinned Herdr build's contract; recheck on bump.
+        printf '%s\n' "$integration_status" | grep -q '^pi: current ('
+        cd /lab
+        runuser -u mo -- env "PATH=$PATH" GEM_HOME=/opt/ace/runtime/gems GEM_PATH=/opt/ace/runtime/gems ACE_TOOLCHAIN=installed ace-lab resolve --id ace --format json
+        test ! -e /lab/ace/.ace/overseer/config.yml
+        test "$(stat -c '%U:%G' /lab/ace)" = mo:mo
+        rm -f /tmp/ace-e2e-fixture.bundle /home/lab-operator/fixture.bundle
+        printf 'Fixture prepared; overseer has not been started.\n'
+      SH
+      # A real ARM64 install took over ten minutes due to dependency closure
+      # probes. On timeout the VM is stopped and preserved; retry requires a
+      # reset and a new fixture run, since guest execution may have continued.
+      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", guest_setup, timeout_s: 3600)
+      puts output
+      raise "fixture setup failed; working VM preserved" unless code.zero?
+      complete = true
+    ensure
+      if auth_staged
+        begin
+          code, = LabVm.guest_exec(uuid, "/bin/rm", "-f", "/home/lab-operator/ace-e2e-auth.json")
+          warn "Could not remove guest authentication staging file" unless code.zero?
+        rescue StandardError
+          warn "Could not remove guest authentication staging file"
+        end
+      end
+      if mutated && !complete
+        begin
+          LabVm.utm_call("stop", uuid, "--request")
+          LabVm.wait_stopped("work")
+          warn "Working VM stopped and preserved for diagnosis."
+        rescue StandardError => error
+          warn "Could not confirm working VM shutdown: #{error.message}"
+        end
+      end
+    end
+  end
+rescue JSON::ParserError
+  warn "lab-vm-fixture: invalid JSON in input; no secret contents printed"
+  exit 1
+rescue StandardError => e
+  warn "lab-vm-fixture: #{e.message}"
+  exit 1
+end

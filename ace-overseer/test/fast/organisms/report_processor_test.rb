@@ -46,16 +46,18 @@ class ReportProcessorTest < AceOverseerTestCase
   end
 
   class FakeHandoff
-    attr_reader :calls
+    attr_reader :calls, :options
 
     def initialize(error: nil, status: "ready", next_role: "reviewer")
       @error = error
       @status = status
       @next_role = next_role
       @calls = []
+      @options = []
     end
 
-    def call(task_ref:, **)
+    def call(task_ref:, **options)
+      @options << options
       @calls << task_ref
       raise @error if @error
 
@@ -112,6 +114,9 @@ class ReportProcessorTest < AceOverseerTestCase
       work_on: work_on
     )
   end
+
+
+
 
   def test_success_report_updates_step_and_starts_next_unblocked_step_via_work_on
     managers = [manager(steps: [
@@ -469,6 +474,73 @@ class ReportProcessorTest < AceOverseerTestCase
     assert_equal "pending", tasks.show("8xg.t.mgr.1").status
     assert_empty handoff.calls
     assert_empty work_on.calls
+  end
+
+  def test_persists_acceptance_before_retirement_and_retries_cleanup_without_another_executor
+    steps = [step("8xg.t.mgr.0", metadata: {"assignment" => "w1", "worktree" => "/wt/prj"}),
+      step("8xg.t.mgr.1", status: "pending", dependencies: ["8xg.t.mgr.0"])]
+    tasks = FakeTaskManager.new([manager(steps: steps)])
+    attempts = 0
+    retirement = lambda do |worktree_path:, assignment:|
+      assert_equal "/wt/prj", worktree_path
+      assert_equal "w1", assignment
+      assert_equal "ab12cd", tasks.show("8xg.t.mgr.0").metadata["processed_report"]
+      attempts += 1
+      raise Ace::Overseer::Error, "terminal unavailable" if attempts == 1
+    end
+    handoff = FakeHandoff.new
+    subject = Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
+      inbox: FakeInbox.new([report]), task_manager: tasks, retire: retirement, handoff: handoff)
+    first = subject.call[:outcomes].first
+    assert_equal "blocked", first[:continuation][:action]
+    assert_empty handoff.calls
+    second = subject.call[:outcomes].first
+    assert_equal :duplicate, second[:status]
+    assert_equal ["8xg.t.prj"], handoff.calls
+    assert_equal 1, tasks.updates.size
+  end
+
+  def test_duplicate_error_retries_retirement_without_advancing_or_rewriting_report
+    tasks = FakeTaskManager.new([manager(steps: [
+      step("8xg.t.mgr.0", metadata: {"assignment" => "w1", "worktree" => "/wt/prj"}),
+      step("8xg.t.mgr.1", status: "pending", dependencies: ["8xg.t.mgr.0"])
+    ])])
+    attempts = 0
+    retirement = lambda do |**|
+      attempts += 1
+      raise Ace::Overseer::Error, "temporary retirement failure" if attempts == 1
+    end
+    handoff, work_on = FakeHandoff.new, FakeWorkOn.new
+    subject = Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
+      inbox: FakeInbox.new([report(result: "error")]), task_manager: tasks,
+      retire: retirement, handoff: handoff, work_on: work_on)
+    assert_equal "blocked", subject.call[:outcomes].first[:continuation][:action]
+    assert_equal :duplicate, subject.call(dry_run: true)[:outcomes].first[:status]
+    assert_equal 1, attempts
+    assert_equal :duplicate, subject.call[:outcomes].first[:status]
+    assert_equal 2, attempts
+    assert_equal 1, tasks.updates.size
+    assert_equal "progress", tasks.show("8xg.t.mgr.0").status
+    assert_empty handoff.calls
+    assert_empty work_on.calls
+  end
+
+  def test_records_actual_next_executor_binding_on_the_private_step
+    steps = [step("8xg.t.mgr.0", metadata: {"assignment" => "w1"}),
+      step("8xg.t.mgr.1", status: "pending", dependencies: ["8xg.t.mgr.0"])]
+    tasks = FakeTaskManager.new([manager(steps: steps, metadata: {"project_task" => "8xg.t.prj", "worktree" => "/wt/prj"})])
+    handoff = Object.new
+    handoff.define_singleton_method(:call) do |**|
+      {status: "ready", worktree_path: "/wt/prj", next: {"assignment" => "r1", "role" => "reviewer"},
+       execution: {"assignment" => "r1", "role" => "reviewer", "terminal_id" => "term_123", "agent" => "coworker-r1"}}
+    end
+    result = Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
+      inbox: FakeInbox.new([report]), task_manager: tasks, handoff: handoff, retire: ->(**) {}).call
+    assert_equal "r1", steps.last.metadata["assignment"]
+    assert_equal "term_123", steps.last.metadata["terminal"]
+    assert_equal "reviewer", steps.last.metadata["role"]
+    assert_equal "pending", steps.last.status
+    assert_includes result[:outcomes].first[:message], "executor coworker-r1 started"
   end
 
 end

@@ -24,6 +24,8 @@ ace-test-e2e-suite --tags quickstart        # cross-package quickstart sweep
   to `TS-MONO-001` (`SAFE`, `LAG_DETECTED`, `METADATA_BROKEN`).
 - The guide is the public contract reference for the release/install proof flow; use it
   alongside `ace-test-e2e ace-monorepo-e2e TS-MONO-001` when validating a release.
+- [Disposable UTM lab fixture](lab-vm/README.md) describes the ARM64 test
+  machine and its current implementation status.
 
 ## Scenarios
 

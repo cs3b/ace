@@ -26,6 +26,8 @@ module Ace
           ]
 
           option :label, type: :string, desc: "Agent and pane label (typically the task id)"
+          option :role, type: :string, desc: "Executor role label"
+          option :env_file, type: :string, desc: "Private JSON file containing the executor environment"
           option :kind, type: :string, desc: "Agent kind (default: config default_agent_kind)"
           option :workspace, type: :string, desc: "Target workspace (default: caller's workspace)"
           option :pane, type: :string, desc: "Existing pane (default: create a new tab)"
@@ -50,7 +52,7 @@ module Ace
               outcome = dispatcher.dispatch(
                 label: options.fetch(:label), prompt: prompt,
                 kind: options[:kind], workspace_id: options[:workspace],
-                pane: options[:pane], cwd: options[:cwd]
+                pane: options[:pane], cwd: options[:cwd], role: options[:role], env_file: options[:env_file]
               )
               puts JSON.generate(outcome.to_h)
             end

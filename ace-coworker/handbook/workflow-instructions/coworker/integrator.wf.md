@@ -69,9 +69,11 @@ the exact candidate head. Otherwise WITHHOLD the merge and report/escalate.
      `.ace-local/coworker/review-rounds/<assignment>.json`
      (`ace-coworker rounds` verdict `accept`). The reviewed head is the head
      that verdict covers.
-   - **Test evidence**: executed `bin/ace-test <package> all` results named
-     in the worker/reviewer reports (counts, failures) - only real executed
-     runs count; CI status is ADVISORY and never a merge blocker.
+   - **Test evidence**: commands and results from the worker and reviewer
+     reports for all checks required by the issue and project. Compare the
+     test scope with those requirements before accepting the reports.
+     Installed mode uses installed `ace-test`, and ACE development mode
+     uses `bin/ace-test`. Only executed checks count. CI status is advisory.
    - **Dependency states**: for each leaf the candidate depends on, whether
      its result was RECEIVED AND INTEGRATED (merged predecessor), not merely
      finished or reviewed.
@@ -98,6 +100,19 @@ the exact candidate head. Otherwise WITHHOLD the merge and report/escalate.
      verdict says accept.
 
 4. **Consume formal approval, then merge only a ready candidate.**
+   - For every forge issue run the gate with `--require-approval`. Set
+     `--approval-head` and `--approval-by` from the verified approval below,
+     and `--author` from `ace-git pr show PR --format json` on the same
+     server. Without that evidence, the gate stays blocked.
+     Stop before any merge attempt and report the missing handoff through
+     the existing assignment and report. The integrator does not publish
+     a replacement PR or substitute its own approval.
+   - A forge issue is delivered through its commissioned PR. Require the
+     worker's PR reference and the reviewer's approval for that same PR and
+     exact tested HEAD. Verify that the review covers the current forge
+     target/merge-base and the full PR delta. Missing or changed scope goes
+     back to the overseer for a renewed review. The local integration route
+     below is reserved for local-only commissions.
    - For PR integration, read the reviewer's receipt from the existing report
      and verify current provider evidence without minting another approval:
      `ace-git pr approval PR --expected-head SHA --review-id REVIEW_ID
@@ -112,12 +127,15 @@ the exact candidate head. Otherwise WITHHOLD the merge and report/escalate.
      copy their token or bypass branch protection. This read does not replace
      the dependency/test/current-head gate or authorize a merge by itself.
 
-   - Verdict `ready`: perform the project-defined integration with the
+   - With verdict `ready` and the verified provider approval, merge the PR via
+     `ace-git pr merge PR --expected-head SHA --method METHOD` with the retained
+     server selection and commissioned merge method.
+   - For local-only commissions with verdict `ready`, perform integration with the
      existing tools (`git` / `ace-git`, scoped to the commissioned paths;
      never force-push; fetch first and resolve conflicts explicitly).
    - If the merge itself changed the candidate or conflicts were resolved,
-     the result is a NEW candidate: re-run the affected checks
-     (`bin/ace-test <package> all`) and RENEW the review for the changed
+     the result is a NEW candidate: re-run the affected checks with the
+     selected toolchain and RENEW the review for the changed
      result (reviewer role) before treating it as integrated - never mix
      acceptance of the old candidate with new code (step 4 of the lab's execution-order contract). Then re-evaluate the gate.
    - After merging, verify the actual outcome (branch state, merged head)
@@ -176,5 +194,5 @@ less is an error outcome with the cause named.
   Integration decisions persist in the assignment's existing report state
   (ReportStateStore / `<task>/coworker/<assignment>.md` record); no new
   artifact kind is introduced.
-- Inside the ACE repository itself, invoke every tool as `bin/ace-*` (the
-  binstubs pin the checkout's bundle).
+- In ACE development mode, use `bin/ace-*`. With `ACE_TOOLCHAIN=installed`,
+  use installed commands and packaged instructions even inside an ACE checkout.

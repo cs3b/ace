@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require_relative "../molecules/coworker_launcher"
 
 module Ace
   module Overseer
@@ -20,13 +21,14 @@ module Ace
       # worktrees and hand off independently.
       class HandoffOrchestrator
         def initialize(task_loader: nil, worktree_finder: nil, probe: nil,
-          window_opener: nil, config: nil, lifecycle_exclusion: nil)
+          window_opener: nil, config: nil, lifecycle_exclusion: nil, coworker_launcher: nil)
           @task_manager = task_loader || Ace::Task::Organisms::TaskManager.new
           @worktree_finder = worktree_finder
           @probe = probe
           @window_opener = window_opener || Molecules::WindowOpener.new
           @config = config || Ace::Overseer.config
           @lifecycle_exclusion = lifecycle_exclusion
+          @coworker_launcher = coworker_launcher
         end
 
         # @param task_ref [String] task reference (the task whose
@@ -56,19 +58,21 @@ module Ace
 
           outcome = nil
           lifecycle_exclusion.with_shared(lifecycle_exclusion.task_key(task.id.to_s)) do
-            progress.call("Reading role-sequence state in #{worktree_path}...")
-            state = probe.probe(worktree_path, task_id: task.id.to_s)
+            lifecycle_exclusion.with_exclusive("delegate:#{task.id}") do
+              progress.call("Reading role-sequence state in #{worktree_path}...")
+              state = probe.probe(worktree_path, task_id: task.id.to_s)
 
-            active = Ace::Coworker::Atoms::ActiveExecutorRule.evaluate(
-              config: state[:executor][:config], assignments: state[:executor][:assignments])
-            verdict = Atoms::HandoffReadiness.evaluate(legs: state[:legs], active_executor: active)
+              active = Ace::Coworker::Atoms::ActiveExecutorRule.evaluate(
+                config: state[:executor][:config], assignments: state[:executor][:assignments])
+              verdict = Atoms::HandoffReadiness.evaluate(legs: state[:legs], active_executor: active)
 
-            if verdict[:status] == :refused
-              raise Error, "Handoff refused: #{verdict[:reasons].join("; ")}"
+              if verdict[:status] == :refused
+                raise Error, "Handoff refused: #{verdict[:reasons].join("; ")}"
+              end
+
+              outcome = ready_outcome(task: task, worktree_path: worktree_path, branch: found[:branch],
+                verdict: verdict, dry_run: dry_run, runtime: runtime, progress: progress)
             end
-
-            outcome = ready_outcome(task: task, worktree_path: worktree_path, branch: found[:branch],
-              verdict: verdict, dry_run: dry_run, runtime: runtime, progress: progress)
           end
 
           outcome
@@ -78,13 +82,20 @@ module Ace
 
         def ready_outcome(task:, worktree_path:, branch:, verdict:, dry_run:, runtime:, progress:)
           next_leg = verdict[:next]
+          execution = nil
 
           if next_leg
             progress.call("Next leg: role #{next_leg['role']} (assignment #{next_leg['assignment']})")
             unless dry_run
-              window_options = {worktree_path: worktree_path, preset: @config.dig("window_presets", "handoff")}
-              window_options[:runtime] = runtime if runtime
-              @window_opener.open(**window_options)
+              selected = Atoms::RuntimeSetting.normalize(runtime || @config["runtime"]) || ENV["ACE_RUNTIME"]
+              if selected == "herdr" || selected.to_s.empty? && Ace::Runtime::Atoms::Detector.detect == :herdr
+                launcher = @coworker_launcher || Molecules::CoworkerLauncher.new
+                execution = launcher.call(worktree_path: worktree_path, config_path: next_leg.fetch("start_config"))
+              else
+                window_options = {worktree_path: worktree_path, preset: @config.dig("window_presets", "handoff")}
+                window_options[:runtime] = runtime if runtime
+                @window_opener.open(**window_options)
+              end
             end
           else
             progress.call("Every role in the sequence finished; nothing to hand off")
@@ -102,7 +113,7 @@ module Ace
               "start_config" => next_leg["start_config"]
             },
             dry_run: dry_run
-          }
+          }.merge(execution ? {execution: execution} : {})
         end
 
         def worktree_finder

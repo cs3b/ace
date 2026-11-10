@@ -26,6 +26,24 @@ lives at `handbook/extensions/ace-wake/` (single copy) and ships in the
   into each manifest-declared extension directory (`gemset.extensions`),
   reporting the loaded version and any restart need.
 
+## Standing observation
+
+`/eyes` keeps observing source revisions while an agent is working. It does
+not enqueue a follow-up during that turn: the agent can acknowledge a revision
+it handles itself. Once the agent is idle and its other pending messages have
+cleared, the next observation delivers any still-unhandled revisions. This can
+delay notification by one observation interval, but avoids turns for changes
+already handled during the active turn.
+
+The effective observation interval is the larger of `intervalSeconds` and
+`3600 / maxObservationsPerHour` seconds, rounded up to a whole timer interval.
+Local deadlines are checked on timer ticks even when source reads are throttled.
+Extra observations can consume the remaining hourly allowance; the timer stays
+armed and observation resumes automatically in the next window, including
+after restart. The hourly wake allowance limits delivery while observation
+continues to coalesce pending revisions. Delivery resumes with the next
+window. Provider quota and failure breakers still require explicit recovery.
+
 ## Mount-aware poll fallback
 
 `/lab/state/hitl-address/ace` (the HITL transport folder) is a FUSE/virtiofs

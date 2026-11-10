@@ -12,6 +12,27 @@ class DirectoryScannerTest < AceSupportItemsTestCase
     FileUtils.rm_rf(@tmpdir)
   end
 
+  def test_accessible_scan_skips_denied_descendant_but_strict_scan_fails
+    public_dir = File.join(@tmpdir, "8ppq7w-public")
+    denied = File.join(@tmpdir, "_private")
+    FileUtils.mkdir_p([public_dir, denied])
+    File.write(File.join(public_dir, "public.idea.s.md"), "public")
+    scanner = Ace::Support::Items::Molecules::DirectoryScanner.new(@tmpdir, file_pattern: "*.idea.s.md")
+    original = Dir.method(:entries)
+    entries = ->(path) { raise Errno::EACCES, path if path == denied; original.call(path) }
+    Dir.stub(:entries, entries) do
+      assert_raises(Errno::EACCES) { scanner.scan }
+      assert_equal ["8ppq7w"], scanner.scan(accessible_only: true).map(&:id)
+    end
+  end
+
+  def test_accessible_scan_does_not_hide_denied_root
+    scanner = Ace::Support::Items::Molecules::DirectoryScanner.new(@tmpdir, file_pattern: "*.idea.s.md")
+    Dir.stub(:entries, ->(_path) { raise Errno::EACCES, @tmpdir }) do
+      assert_raises(Errno::EACCES) { scanner.scan(accessible_only: true) }
+    end
+  end
+
   def test_returns_empty_for_nonexistent_dir
     scanner = Ace::Support::Items::Molecules::DirectoryScanner.new(
       "/nonexistent/path",

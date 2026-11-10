@@ -3,6 +3,7 @@
 require "ace/support/cli/toolchain"
 
 require "open3"
+require "json"
 
 module Ace
   module Coworker
@@ -94,6 +95,42 @@ module Ace
         def event_exists?(event_id)
           _out, _err, status = run([hitl_binary, "show", event_id, "--path"])
           status.success?
+        end
+
+        # Verify durable publication through HITL's own recipient resolution and
+        # inventory. Archived reports still satisfy publication; this does not
+        # claim that the coordinator consumed or accepted the result.
+        def publication_matches?(event_id, cfg, result:)
+          event_published?(event_id, to: cfg.overseer, task: cfg.task,
+            assignment: cfg.assignment, type: "report", result: result)
+        end
+
+        def event_published?(event_id, to:, task:, assignment: nil, type:, result: nil)
+          raise Error, "publication verification requires a configured recipient" if to.to_s.strip.empty?
+
+          out, _err, status = run([hitl_binary, "observe", "--scope", "current",
+            "--owner", to, "--in", "all", "--limit", "2000"])
+          raise Error, "HITL publication verification is unavailable; existing report preserved" unless status.success?
+
+          document = JSON.parse(out)
+          unless document.is_a?(Hash) && document["schema"] == "ace.hitl.observation/v1" && document["events"].is_a?(Array)
+            raise Error, "invalid HITL publication projection; existing report preserved"
+          end
+          events = document["events"]
+          valid = events.all? do |event|
+            event.is_a?(Hash) && %w[id type task assignment result].all? { |key| event.key?(key) } &&
+              event["id"].is_a?(String) && !event["id"].empty? && %w[report question].include?(event["type"]) &&
+              %w[task assignment].all? { |key| event[key].nil? || event[key].is_a?(String) } &&
+              [nil, "success", "error"].include?(event["result"])
+          end
+          raise Error, "invalid HITL publication events; existing report preserved" unless valid
+
+          matches = events.select { |event| event["id"] == event_id }
+          raise Error, "ambiguous HITL publication; existing report preserved" if matches.length > 1
+          matches.length == 1 && matches.first.values_at("type", "task", "assignment", "result") ==
+            [type, task, assignment, result]
+        rescue JSON::ParserError
+          raise Error, "invalid HITL publication JSON; existing report preserved"
         end
 
         private

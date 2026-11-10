@@ -5,6 +5,7 @@ require "open3"
 require "json"
 require "timeout"
 require_relative "bounded_process"
+require_relative "installed_pi_extensions"
 
 module Ace
   module Herdr
@@ -21,6 +22,10 @@ module Ace
         def initialize(binary: DEFAULT_BINARY, process: BoundedProcess)
           @binary = binary
           @process = process
+        end
+
+        def agent_list
+          run!([@binary, "agent", "list"])
         end
 
         # Probe the agent living in a pane (raises AgentNotFoundError when none)
@@ -55,9 +60,13 @@ module Ace
         # `args` are harness passthrough arguments forwarded verbatim
         # after `--` (e.g. pi's --model/--thinking/--append-system-prompt;
         # the overseer start contract, 8xs.t.pu0.1).
-        def agent_start(name:, kind:, pane:, timeout_ms:, args: [])
+        def agent_start(name:, kind:, pane:, timeout_ms:, args: [], env_file: nil)
+          managed = kind == "pi" ? InstalledPiExtensions.arguments : []
+          InstalledPiExtensions.reject_override!(args) unless managed.empty?
+          args = managed + args
           cmd = [@binary, "agent", "start", name, "--kind", kind,
             "--pane", pane, "--timeout", timeout_ms.to_s]
+          cmd += ["--env-file", env_file] if env_file
           cmd += ["--", *args] unless args.empty?
           run!(cmd)
         end
@@ -66,12 +75,14 @@ module Ace
         # rejects blocked agents pre-send with agent_blocked. With
         # wait: herdr's activity gate applies — a prompt sent from a
         # non-working state must produce observed working/blocked
-        # activity, so success confirms the turn actually began
-        # (agent_prompt_stalled / timeout otherwise; timeout_ms bounds
-        # the wait).
-        def agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
+        # activity before waiting for the requested state. With no explicit
+        # states the native default waits for idle, done or blocked.
+        def agent_prompt(pane:, text:, wait: false, timeout_ms: nil, until_states: nil)
+          raise ArgumentError, "until_states requires wait" if until_states && !wait
+
           cmd = [@binary, "agent", "prompt", pane, text]
           cmd += ["--wait"] if wait
+          Array(until_states).each { |state| cmd += ["--until", state] }
           cmd += ["--timeout", timeout_ms.to_s] if timeout_ms
           run!(cmd)
         end

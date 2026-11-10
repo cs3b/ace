@@ -8,20 +8,21 @@ module Ace
       # the outcome through the existing ace-task update surface, and
       # continue the queue by reusing the existing start gates —
       # WorkOnOrchestrator for a step without a worktree,
-      # HandoffOrchestrator for the next role in the SAME worktree. No new
-      # state: the processed report ID lives on the step's frontmatter, so
+      # HandoffOrchestrator for the next role in the SAME worktree.
+      # No new state: the processed report ID lives on the step's frontmatter, so
       # a repeated delivery is detected from the recorded result instead
       # of re-running anything, and a question or failed report never
       # advances a step.
       class ReportProcessor
         OUTCOME_STATUSES = %i[success error needs_answer duplicate unmatched].freeze
 
-        def initialize(inbox: nil, task_manager: nil, handoff: nil, work_on: nil, completion_check: nil)
+        def initialize(inbox: nil, task_manager: nil, handoff: nil, work_on: nil, completion_check: nil, owner: "overseer", scope: nil, retire: nil)
           @completion_check = completion_check || Molecules::ReportCompletionCheck.new
-          @inbox = inbox || Molecules::HitlInbox.new
+          @inbox = inbox || Molecules::HitlInbox.new(owner: owner, scope: scope)
           @task_manager = task_manager || Ace::Task::Organisms::TaskManager.new
           @handoff = handoff || Organisms::HandoffOrchestrator.new(task_loader: @task_manager)
           @work_on = work_on || Organisms::WorkOnOrchestrator.new(task_loader: @task_manager)
+          @retire = retire || Molecules::CoworkerLauncher.new.method(:retire)
         end
 
         # @param dry_run [Boolean] interpret only — no task writes, no
@@ -79,8 +80,13 @@ module Ace
         # through the same gates; duplicate starts stay impossible because
         # the gates read real allocation state (work-on reuses an active
         # assignment, handoff refuses a busy worktree). A duplicate
-        # without a recorded success (or a dry run) changes nothing.
+        # without a recorded success never continues work, but retries any
+        # incomplete executor cleanup. A dry run changes nothing.
         def resume_duplicate_continuation(verdict, event, dry_run:, progress:)
+          unless dry_run
+            retirement = retire_executor(verdict, event)
+            return outcome(verdict, event, retirement, retirement[:reason]) if retirement
+          end
           unless verdict[:recorded_result] == Atoms::ReportInterpretation::SUCCESS_RESULT && !dry_run
             return outcome(verdict, event, nil,
               "report #{event['id']} already recorded on #{verdict[:step_ref]} (result: #{verdict[:recorded_result]}); " \
@@ -109,6 +115,8 @@ module Ace
             return outcome(verdict, event, {action: "blocked", reason: reason}, message)
           end
           progress.call("Event #{event['id']}: recorded #{verdict[:status]} on #{verdict[:step_ref]}")
+          retirement = retire_executor(verdict, event)
+          return outcome(verdict, event, retirement, retirement[:reason]) if retirement
 
           if verdict[:status] == :error
             message = "step #{verdict[:step_ref]} kept open; report #{event['id']} (result #{verdict.dig(:set, Atoms::ReportInterpretation::REPORT_RESULT_KEY)}) " \
@@ -150,11 +158,13 @@ module Ace
           begin
             if family_worktree(manager)
               result = @handoff.call(task_ref: manager.metadata["project_task"].to_s)
+              record_allocation(next_step, result) if result[:execution]
               {action: "handoff", step_ref: next_step.id.to_s,
                next: result[:next], status: result[:status], worktree_path: result[:worktree_path],
-               start_command: start_command_of(result[:next])}
+               execution: result[:execution], start_command: start_command_of(result[:next])}
             else
               result = @work_on.call(task_ref: next_step.id.to_s)
+              record_allocation(next_step, result) if result[:execution]
               {action: "work-on", step_ref: next_step.id.to_s,
                assignment_id: result[:assignment_id], worktree_path: result[:worktree_path],
                assignment_created: result.fetch(:assignment_created, true)}
@@ -162,6 +172,28 @@ module Ace
           rescue Ace::Overseer::Error => e
             progress.call("Continuation blocked: #{e.message}")
             {action: "blocked", step_ref: next_step.id.to_s, reason: e.message}
+          end
+        end
+
+        def retire_executor(verdict, event)
+          assignment = event["assignment"].to_s
+          return if assignment.empty?
+          step = @task_manager.show(verdict[:step_ref])
+          manager = @task_manager.show(verdict[:manager_ref])
+          root = step&.metadata&.fetch("worktree", nil) || (manager && family_worktree(manager))
+          return if root.to_s.empty?
+          @retire.call(worktree_path: File.expand_path(root), assignment: assignment)
+          nil
+        rescue Ace::Overseer::Error, Ace::Herdr::ExecutorError, Ace::Coworker::Error => e
+          {action: "blocked", reason: "report recorded; executor retirement failed: #{e.message}"}
+        end
+
+        def record_allocation(step, result)
+          execution = result.fetch(:execution)
+          unless @task_manager.update(step.id, set: {"assignment" => execution.fetch("assignment"),
+              "worktree" => result.fetch(:worktree_path), "terminal" => execution.fetch("terminal_id"),
+              "role" => execution.fetch("role")})
+            raise Ace::Overseer::Error, "executor started but allocation could not be recorded; reconcile before another start"
           end
         end
 
@@ -221,15 +253,15 @@ module Ace
           }
         end
 
-        # Per queue.wf.md section 4 the handoff gate only ENSURES the next
-        # role's window in the worktree; the overseer AGENT runs the
-        # printed start command. The description therefore carries the
-        # command instead of asserting the role already started.
+        # Report an actual launch only when the handoff returned its binding.
+        # A prepared leg alone is not execution evidence.
         def continuation_description(continuation)
           case continuation[:action]
           when "handoff"
             if continuation[:status] == "sequence_complete"
               "sequence complete - the worktree has no next role; pending coordination steps still require acceptance before closing the managing task"
+            elsif continuation[:execution]
+              "executor #{continuation[:execution]['agent']} started; end the turn and await its report"
             elsif continuation[:start_command]
               "window ensured in #{continuation[:worktree_path]} for the next role " \
                 "(#{continuation.dig(:next, 'role')}); run there: #{continuation[:start_command]}"

@@ -121,6 +121,7 @@ module Ace
                 number: pr.number,
                 url: pr.url,
                 title: pr.title,
+                author: pr.author,
                 state: pr.state,
                 draft: pr.draft,
                 head: pr.head_sha,

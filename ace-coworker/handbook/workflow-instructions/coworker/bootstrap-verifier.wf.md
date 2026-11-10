@@ -15,6 +15,8 @@ Use its pinned assignment ID for every ace-assign operation. Read the executable
 lab task and its explicit canonical target path, allowed configuration paths,
 operations, runtime selection and acceptance criteria. Missing or ambiguous
 scope is an error report, never a guessed directory or permission.
+The prepared commission and assignment define this leg. Execute them directly;
+do not start a separate `ace-task plan` turn for the commissioned work.
 
 The assignment and evidence belong to the prepared lab task worktree. This
 operational role may act on the explicitly commissioned canonical target
@@ -33,9 +35,18 @@ coordinator, not permission to borrow an account or change ownership.
 ## Assignment and report
 
 Drive the pinned ace-assign step through start/finish/fail. Store evidence in
-the executable task's docs. Failed or unavailable required checks block success.
+the executable task's docs. Run each `ace-*` check directly, without a pipe or
+redirection, and record its actual exit status and output in task docs; when
+it prints a file path, read that file. Never use the exit status of `head`, another pipeline command or `echo` as the check's result.
+Failed, unavailable or inconclusive required checks block success.
 Use `ace-coworker report --config <returned path>` for the truthful assignment
 outcome. A process exit, prepared config or printed CLI brief is not completion.
+For `reporting.delivery: observe`, publish from the assignment worktree.
+The Lab Overseer's inbox is outside your mount by design. Validate the
+configured recipient address, never try to read, create or write its folder.
+Publication returns an event ID and leaves acceptance to the Lab Overseer.
+If the commission asks for a destination-folder write probe, report the
+conflicting check to the coordinator instead of attempting the write.
 After interruption, read current state before repeating any external effect;
 resume the same assignment, never silently create a replacement.
 
@@ -46,7 +57,20 @@ the actual target files and installed runtime independently. Verify requested
 configuration, allowed-change boundaries, executable resolution and dependency
 readiness with the task's explicit checks; compare actual results with the
 worker's claims. Do not repair the target or accept your own preparation.
-Report discrepancies as failure for the coordinator to return to the worker.
+`ace-lab prepare`, `ace-lab install` and `ace-lab verify` are host deployment
+commands in every directory. Do not run them, even in dry-run mode. If the
+assignment requires one, fail the step and report the exact conflicting check
+to the commissioning Overseer for correction. End the turn after reporting.
+Independently check the commissioned eyes configuration and its configured
+HITL recipient using checks available to the verifier role. Check the file
+with the installed ace-wake validator. The project Overseer start scope is
+`project`; the eyes JSON observes its current project with `"scope": "current"`.
+Do not require full
+observation of private overseer tasks, host systemd or host-wide verification:
+the authorized coordinator confirms those sources at final project acceptance.
+Record any incidental restricted-source results without treating expected access
+denial as a configuration defect. A failed check required by the commissioned
+preparation scope remains a failure for the coordinator to return to the worker.
 
 Do not start the project overseer: the coordinator owns the final reconcile,
 first-turn and eyes acceptance. Your success accepts preparation only.

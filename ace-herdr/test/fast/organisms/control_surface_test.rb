@@ -29,6 +29,9 @@ module Ace
           pairs.map { |type, value| {type: type, value: value} }
         end
 
+
+
+
         # --- send: plain pane --------------------------------------------------
 
         def test_plain_cmd_submits_via_pane_run

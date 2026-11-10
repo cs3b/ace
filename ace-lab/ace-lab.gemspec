@@ -30,6 +30,7 @@ Gem::Specification.new do |spec|
 
   spec.files = Dir.glob(%w[
     lib/**/*
+    libexec/*
     docs/**/*
     exe/*
     .ace-defaults/**/*
@@ -41,16 +42,13 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  # Runtime dependencies. The installed authority/journal/command kernel and
-  # its ace-assign/ace-runtime/ace-herdr/ace-hitl integrations were removed in
-  # L1; the package ships read-only topology queries, the lab status snapshot,
-  # the prepare phase (L8.1), and the retained Forgejo provider adapter.
+  # Runtime dependencies.
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-support-config", "~> 0.18"
   # The retained Forgejo merge adapter delegates provider transport and
   # authentication to the forgejo provider.
-  spec.add_dependency "ace-git-forgejo", "~> 0.7"
+  spec.add_dependency "ace-git-forgejo", "~> 0.7", ">= 0.9.0"
 
   # Development dependencies
   spec.add_development_dependency "ace-support-test-helpers", "~> 0.14"

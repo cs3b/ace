@@ -108,9 +108,8 @@ conflated:
   carries the path-bearing message.
 
 Runtime *configuration* is echoed (project/user `runtime/config.yml`, then the
-`ACE_RUNTIME` environment variable) with its value and origin. No runtime
-detection and no `ace-runtime` dependency: runtime availability is
-`ace-herdr status`'s dimension.
+`ACE_RUNTIME` environment variable) with its value and origin. This status
+does not detect runtime availability; that is `ace-herdr status`'s dimension.
 
 Local state covers `.ace-tasks/`, `.ace-tasks/_overseer/` (presence only —
 private, never enumerated), `.ace-local/assign/`, `.ace-local/hitl/`,
@@ -167,6 +166,9 @@ projects:                    # optional (consumed by ace-lab install)
     path: /Users/ace/lab/atlas         # absolute, unique
     remote: git@forge:atlas/atlas.git  # optional clone source
     label: Atlas platform    # optional display label
+    environment_files:       # optional role-specific JSON environment sources
+      worker: /home/mo/.config/ace/atlas-worker.json
+      integrator: /home/mo/.config/ace/atlas-integrator.json
 grants:                      # optional: trusted-tier principal grants
   ace-overseer:              # principal → declared project ids
     - atlas
@@ -175,11 +177,38 @@ gemset:                      # optional (gad.2): target runtime + required gem s
   gems:                      # exact versions, unique names
     - name: ace-lab
       version: 0.13.0        # must be an exact gem version (no ranges)
+    - name: ace-wake
+      version: 0.2.0
   extensions:                # optional (8xs.t.pu0.0): harness extension projections
     - gem: ace-wake          # must be declared in gems above
-      path: /Users/overseer/.pi/agent/extensions  # absolute target directory
+      path: /opt/lab/pi-agent/extensions  # root-controlled operational directory
       account: lab-overseer  # must be a declared account (the loading executor)
+session_runtime:            # explicit installed Pi launch configuration
+  node: /opt/ace/node/bin/node
+  pi: /opt/ace/pi/node_modules/@mariozechner/pi-coding-agent/dist/cli.js
+  path: [/usr/bin]     # additional root-controlled executable directories
+  provider: zai
+  model: glm-5.3
+  credentials: /etc/lab/ace-lab/pi-auth.json # private Pi auth JSON; no inline secrets
 ```
+
+`session_runtime` selects the installed Pi command; it does not install Node,
+Pi or model credentials. The launcher starts an ordinary child in the selected
+project worktree with its explicit environment and `ACE_TOOLCHAIN=installed`.
+Standing instructions come from the selected role and resolve through installed
+ACE. Missing runtime is a readiness failure, never a checkout fallback.
+
+`projects[].environment_files` maps a role to a private JSON environment file;
+`coordinator.environment_files` does the same for the lab Overseer. Files must be
+mode 0600 and owned by the launch user or root. Only the selected project's role
+file is loaded. Values can point at a private provider login or contain an
+already repo-scoped token. The forge enforces the token's repository access;
+selecting environment variables does not narrow an administrator token.
+
+This is a worktree/process/environment boundary between trusted agents. It does
+not create a systemd service, change OS users, or protect against a malicious
+process running as the same account. The lab Overseer delegates bootstrap;
+project Overseers delegate implementation, review and integration.
 
 Statuses: accounts `created|exists|would_create|failed`; directories
 `created|exists|mode_fixed|would_create|would_fix_mode|failed`; keys
@@ -350,8 +379,18 @@ Behavior and guarantees:
 - **Extension projections (8xs.t.pu0.0).** Each `gemset.extensions`
   entry projects the installed gem's `handbook/extensions` tree — at
   its EXACT declared version, never the checkout and never a newer
-  sibling — into the declared target directory. The projection is
-  receipt-based: only files recorded in the target's
+  sibling — into the declared target directory. In `ACE_TOOLCHAIN=installed`
+  mode, the projection is root-owned; its source, destination,
+  receipt and existing ancestors must be root-controlled and not writable
+  by group or others. Configure the harness to load this protected location;
+  projecting files alone does not change the harness's extension discovery.
+  Installed Linux lab Pi starts use one shared `ace-wake` projection and
+  refuse an ambiguous manifest with multiple `ace-wake` entries. They also
+  require the Herdr Pi integration alongside it. Outside a configured lab,
+  installed Pi retains normal extension discovery. Configured lab launches
+  preserve the installed toolchain and load the declared operational extension
+  paths. No issuer socket or systemd invocation is needed for readiness.
+  The projection is receipt-based: only files recorded in the target's
   `.ace-lab-extension-projection.json` receipt are ever removed, so
   user-authored extensions in the same directory stay untouched. The
   report carries `loaded_version` (the version the running harness
@@ -662,10 +701,11 @@ auth:
       scopes: ["write:repository"]
       ttl_minutes: 30            # default 30; max 60 unless the host sets otherwise
       expiry_mode: host-revoke   # provider | host-revoke | process
-      issuer:                    # an ADMIN PAT: the token-authenticated admin API
+      issuer:                    # host-only administrator Basic credential
         url: https://forge.example.com
         account: lab-role-dev
-        token_file: /etc/lab/ace-lab/secrets/forgejo.admin.token
+        admin_username: forge-admin
+        password_file: /etc/lab/ace-lab/secrets/forgejo.admin.password
 ```
 
 ```bash
@@ -707,11 +747,17 @@ Contract highlights:
   returns the child's code after printing the report); on process success a
   cleanup failure is itself an error and the report carries both outcomes;
   one exec at a time per lease; normal end/cancel revokes immediately, a
-  SIGKILL'd executor is cleaned up no later than the recorded deadline (host
-  scheduler) and `reconcile` resolves interrupted cycles. The child runs with
-  an ALLOWLISTED environment (PATH/HOME &c. plus the leased credential
+  ordinary execution enforces its deadline and terminates its process group.
+  There is no background revoke scheduler. After a hard process death, run
+  `reconcile` before retrying; unconfirmed execution or revocation stays visibly
+  unresolved. Forgejo grants have no claimed native expiry; GitHub expiry is
+  accepted only when the provider returns a valid deadline. The child runs with
+  an ALLOWLISTED environment (PATH/HOME, ACE_TOOLCHAIN, GEM_HOME, GEM_PATH,
+  and the leased credential
   reference) — ambient credential overrides (GH_TOKEN, GIT_* auth, ...) are
   never inherited past the profile's scope.
+  When the selected toolchain is `installed`, its runtime paths also take
+  precedence over caller and provider environment values.
 - Refusals are non-zero with a reason and the escalation addressee; there is
   no fallback identity. A network-shaped revoke stays visibly
   `revoke-pending` — a revocation is never claimed before the provider
@@ -720,12 +766,15 @@ Contract highlights:
   LEASE --force` → forced-terminal with the unconfirmed outcome recorded),
   never silently marked revoked.
 - Plugins (explicit registry, like the ace-git providers): `forgejo` (one
-  scoped token per lease through the TOKEN-AUTHENTICATED ADMIN API
-  (`/api/v1/admin/users/{account}/tokens`; the user endpoint requires
-  BasicAuth, not a PAT) with owner/name RepoTargetOption repository targets —
+  scoped token per lease through `/api/v1/users/{account}/tokens`, using
+  administrator Basic authentication and a `Sudo` header. The setup process
+  reads the configured source credential and passes only the resulting
+  project-scoped token to the child. Remote
+  issuers require HTTPS; plain HTTP is accepted only on loopback. Tokens use
+  owner/name RepoTargetOption repository targets —
   a repo without an owner is refused, never an all-repositories token — and
-  the response's granted scopes validated against the request; revoke deletes
-  that exact token name, 404 = already invalid), `github` (App JWT →
+  the response must confirm exactly the requested scopes and repositories.
+  Revoke deletes that exact token name; 404 = already invalid), `github` (App JWT →
   installation token for chosen repos/permissions with the real `expires_at`;
   DELETE to revoke; 401 = already invalid), `env` (named values of configured
   safe sources, process-scoped only — a standalone env profile cannot declare
@@ -736,3 +785,16 @@ Contract highlights:
   Forgejo-shaped subjects like `write:repository`. Provider Authorization
   headers travel in 0600 ephemeral files (`curl -H @file`), never in argv
   visible to `ps`.
+
+  During a Forgejo `auth exec` on Linux, the child receives a private temporary `fj`
+  login and Git askpass bound to the issuer origin and role account. Ambient
+  credential helpers are disabled for that child. The projection is removed
+  on exit or by lease cleanup after an interrupted executor. Other platforms
+  refuse this projection rather than falling back to ambient credentials.
+
+A pre-existing project-scoped token supplied through a role environment file is
+static configuration: ending the session removes its local projection, not the
+remote token shared by other sessions. Temporary grants created by `auth request`
+use `auth exec` and its normal revoke/reconcile lifecycle. Secret values belong
+only to private files or the child environment, never prompts, argv, task records
+or reports.

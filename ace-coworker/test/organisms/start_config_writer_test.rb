@@ -74,6 +74,24 @@ module Ace
           FileUtils.remove_entry(worktree) if worktree
         end
 
+        def test_preparing_again_preserves_the_live_executor_binding
+          worktree = Dir.mktmpdir("scw")
+          writer, writes = writer(worktree)
+          writer.call(task: "8xg.t.aaa", sequence: sequence.take(1), overseer: "overseer@lab")
+          path = writes.first
+          document = YAML.safe_load_file(path)
+          document["execution"] = {"state" => "running", "agent" => "worker-1", "terminal_id" => "term_1"}
+          File.write(path, YAML.safe_dump(document))
+          before = File.read(path)
+          writes.clear
+          entries = writer.call(task: "8xg.t.aaa", sequence: sequence.take(1), overseer: "overseer@lab")
+          assert_equal ["reused"], entries.map { |entry| entry["disposition"] }
+          assert_equal before, File.read(path)
+          assert_empty writes
+        ensure
+          FileUtils.remove_entry(worktree) if worktree
+        end
+
         def test_changed_content_is_updated
           worktree = Dir.mktmpdir("scw")
           writer, writes = writer(worktree)

@@ -8,12 +8,13 @@ module Ace
         class Observe < Ace::Support::Cli::Command
           desc "Read bounded semantic event revisions without private message text"
           option :scope, type: :string, default: "current", desc: "current or all linked worktrees"
+          option :in, type: :string, default: "next", desc: "next for live events; all to verify archived publications"
           option :owner, type: :string, desc: "Configured recipient owning incoming events"
           option :limit, type: :integer, default: 500, desc: "Maximum event count (1..2000)"
           def call(**options)
             scope = options[:scope] || "current"
             raise Ace::Support::Cli::Error, "invalid scope" unless %w[current all].include?(scope)
-            puts JSON.generate(Molecules::EventObservation.new.call(scope: scope, limit: options[:limit] || 500, owner: options[:owner]))
+            puts JSON.generate(Molecules::EventObservation.new.call(scope: scope, limit: options[:limit] || 500, owner: options[:owner], in_folder: options[:in] || "next"))
           rescue ArgumentError => e
             raise Ace::Support::Cli::Error, e.message
           end

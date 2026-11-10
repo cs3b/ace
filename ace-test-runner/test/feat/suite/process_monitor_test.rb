@@ -21,7 +21,60 @@ module Ace
           })
 
           assert_includes command, "--run-in-single-batch"
-          assert_equal [RbConfig.ruby, "-rbundler/setup", monitor.send(:ace_test_executable), "--run-in-single-batch", "--format", "progress", "--no-save-reports", "--fail-fast", "--no-color", "--report-dir", "/tmp/reports/sample"], command
+          assert_equal [RbConfig.ruby, Gem.bin_path("bundler", "bundle"), "exec", RbConfig.ruby, monitor.send(:ace_test_executable), "--run-in-single-batch", "--format", "progress", "--no-save-reports", "--fail-fast", "--no-color", "--report-dir", "/tmp/reports/sample"], command
+        end
+
+        def test_installed_suite_worker_uses_selected_runtime_without_loading_project_gemfile
+          Dir.mktmpdir do |root|
+            package = package_config(root, "ace-probe")
+            File.write(File.join(package["path"], "Gemfile"), "raise 'project Gemfile must not bootstrap operational ACE'\n")
+            observed = File.join(root, "environment.json")
+            launcher = File.join(root, "ace-test")
+            runner_lib = File.expand_path("../../../lib/ace/test_runner", __dir__)
+            File.write(launcher, <<~RUBY)
+              require "json"
+              module Ace; module TestRunner; class Error < StandardError; end; end; end
+              require #{File.join(runner_lib, "models/environment_policy").inspect}
+              require #{File.join(runner_lib, "atoms/environment_sanitizer").inspect}
+              require #{File.join(runner_lib, "molecules/fixture_environment").inspect}
+              fixture = Ace::TestRunner::Molecules::FixtureEnvironment.new(
+                policy: Ace::TestRunner::Models::EnvironmentPolicy.new, parent_env: ENV.to_h).build
+              File.write(#{observed.inspect}, JSON.generate("worker" => ENV.to_h, "test" => fixture.env))
+              fixture.cleanup
+            RUBY
+            toolchain = Ace::Support::Cli::Toolchain
+            runtime = {"ACE_TOOLCHAIN" => "installed", "GEM_HOME" => "/selected/gems",
+              "GEM_PATH" => "/selected/gems", "RUBYOPT" => nil, "RUBYLIB" => nil,
+              "PATH" => "#{File.dirname(RbConfig.ruby)}:/usr/bin:/bin"}
+            original = ENV["SECRET_TEST_TOKEN"]
+            ENV["SECRET_TEST_TOKEN"] = "must-not-leak"
+            monitor = ProcessMonitor.new
+            toolchain.stub(:installed?, true) do
+              toolchain.stub(:executable, launcher) do
+                toolchain.stub(:child_environment, runtime) do
+                  monitor.start_package(package, {})
+                  wait_until(timeout: 10) { monitor.check_processes; !monitor.running? }
+                end
+              end
+            end
+            assert File.file?(observed), "installed worker must start without evaluating checkout Gemfile"
+            result = JSON.parse(File.read(observed))
+            env = result.fetch("worker")
+            %w[ACE_TOOLCHAIN GEM_HOME GEM_PATH SECRET_TEST_TOKEN RUBYOPT BUNDLE_GEMFILE].each do |key|
+              refute result.fetch("test").key?(key), "test process must not inherit #{key}"
+            end
+            refute_equal env["HOME"], result.fetch("test")["HOME"]
+            assert_equal "installed", env["ACE_TOOLCHAIN"]
+            assert_equal "/selected/gems", env["GEM_HOME"]
+            assert_equal "/selected/gems", env["GEM_PATH"]
+            refute env.key?("SECRET_TEST_TOKEN")
+            refute env.key?("RUBYOPT")
+            refute env.key?("BUNDLE_GEMFILE")
+            refute_equal ENV["HOME"], env["HOME"]
+          ensure
+            monitor&.stop_all
+            original ? ENV["SECRET_TEST_TOKEN"] = original : ENV.delete("SECRET_TEST_TOKEN")
+          end
         end
 
         class FakeProcessMonitor < ProcessMonitor
@@ -110,7 +163,7 @@ module Ace
 
           command = monitor.send(:build_command, package, options)
 
-          assert_equal [RbConfig.ruby, "-rbundler/setup", monitor.send(:ace_test_executable)], command.first(3)
+          assert_equal [RbConfig.ruby, Gem.bin_path("bundler", "bundle"), "exec", RbConfig.ruby, monitor.send(:ace_test_executable)], command.first(5)
           assert_equal "feat", command.last
         end
 

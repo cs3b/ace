@@ -1,0 +1,202 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Create one fresh Forgejo fixture in the disposable working VM.
+require "json"
+require "yaml"
+require "open3"
+require "fileutils"
+require "securerandom"
+require "tempfile"
+require "digest"
+load File.expand_path("lab-vm", __dir__)
+require_relative "../lab-vm/forgejo/fixture"
+
+def checked(*argv, chdir: nil)
+  out, err, result = Open3.capture3(*argv, **(chdir ? {chdir: chdir} : {}))
+  raise "#{argv.first} failed: #{err.lines.first.to_s.strip}" unless result.success?
+  out.strip
+end
+
+def save(path, value)
+  Tempfile.create(["forgejo-", ".json"], File.dirname(path)) do |file|
+    file.chmod(0o600)
+    file.write(JSON.pretty_generate(value) + "\n")
+    file.flush
+    file.fsync
+    File.rename(file.path, path)
+  end
+end
+
+begin
+  raise "usage: lab-vm-forgejo create" unless ARGV == ["create"]
+  LabVm.with_lifecycle_lock do
+    work = LabVm.status.fetch("work")
+    raise "working VM must be running" unless work && work["status"] == "started"
+    uuid = work.fetch("uuid")
+    digest = LabVm.runtime_configuration_fingerprint
+    code, = LabVm.guest_exec(uuid, "/bin/sh", "-ec", "test -f /var/lib/ace-e2e/runtime-ready.sha256; test ! -L /var/lib/ace-e2e/runtime-ready.sha256; test \"$(cat /var/lib/ace-e2e/runtime-ready.sha256)\" = '#{digest}'; test ! -e /var/lib/ace-e2e/forgejo-input; test ! -e /etc/forgejo/app.ini")
+    raise "fresh, verified runtime required" unless code.zero?
+    root = File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/forgejo")
+    profile = YAML.safe_load_file(File.join(root, "profile.yml"), permitted_classes: [], aliases: false)
+    issues = YAML.safe_load_file(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/fixtures/forgejo-issues.yml"), permitted_classes: [], aliases: false).fetch("issues")
+    LabVmForgejoFixture.validate_issues!(issues)
+    fixture_paths = %w[ace-monorepo-e2e/bin/lab-vm-forgejo ace-monorepo-e2e/bin/lab-vm-fixture
+      ace-monorepo-e2e/bin/lab-vm-lab-start ace-monorepo-e2e/lab-vm/session-fixture.rb ace-monorepo-e2e/lab-vm/forgejo
+      ace-monorepo-e2e/lab-vm/fixtures ace-monorepo-e2e/bin/lab-vm-fixture-reset
+      ace-monorepo-e2e/lab-vm/reset-fixture.py ace-monorepo-e2e/bin/lab-vm-scenario-setup]
+    changed = checked("git", "status", "--porcelain", "--untracked-files=all", "--", *fixture_paths, chdir: LabVm::ROOT)
+    raise "fixture inputs must match the committed source" unless changed.empty?
+    cache = File.join(LabVm.local_dir, "downloads")
+    FileUtils.mkdir_p(cache, mode: 0o700)
+    artifacts = [["forgejo-#{profile.fetch('version')}-linux-arm64", profile], ["forgejo-cli-#{profile.fetch('client').fetch('version')}-aarch64-linux.tar.gz", profile.fetch("client")]]
+    artifacts.each do |name, entry|
+      raise "invalid artifact name" unless name.match?(/\A[A-Za-z0-9._-]+\z/)
+      raise "invalid artifact URL" unless entry.fetch("url").start_with?("https://")
+      raise "invalid artifact digest" unless entry.fetch("sha256").match?(/\A[0-9a-f]{64}\z/)
+      path = File.join(cache, name)
+      raise "artifact is a symlink" if File.symlink?(path)
+      unless File.file?(path)
+        Tempfile.create(["download-", ".tmp"], cache) do |tmp|
+          checked("curl", "--fail", "--silent", "--show-error", "--location", "--proto", "=https", "--proto-redir", "=https", "--output", tmp.path, entry.fetch("url"))
+          raise "artifact checksum mismatch" unless Digest::SHA256.file(tmp.path).hexdigest == entry.fetch("sha256")
+          File.rename(tmp.path, path)
+        end
+      end
+      raise "artifact checksum mismatch: #{name}" unless Digest::SHA256.file(path).hexdigest == entry.fetch("sha256")
+    end
+    # GnuPG uses a Unix socket under GNUPGHOME; a worktree path can
+    # exceed the platform socket limit even though key import succeeds.
+    Dir.mktmpdir("ace-fj-gpg-", "/tmp") do |keydir|
+      key = File.join(root, profile.fetch("key_file"))
+      signature = File.join(root, profile.fetch("signature_file"))
+      checked("gpg", "--homedir", keydir, "--batch", "--import", key)
+      listing = checked("gpg", "--homedir", keydir, "--batch", "--with-colons", "--fingerprint")
+      fingerprints = listing.lines.select { |line| line.start_with?("fpr:") }.map { |line| line.split(":")[9] }
+      raise "unexpected signing key" unless fingerprints.first == profile.fetch("key_fingerprint")
+      checked("gpg", "--homedir", keydir, "--batch", "--verify", signature, File.join(cache, artifacts[0][0]))
+    end
+    run_id = SecureRandom.hex(8)
+    parent = File.join(LabVm.local_dir, "runs")
+    FileUtils.mkdir_p(parent, mode: 0o700)
+    raise "unsafe run directory" if File.symlink?(parent) || (File.stat(parent).mode & 0o077) != 0
+    dir = File.join(parent, run_id)
+    Dir.mkdir(dir, 0o700)
+    path = File.join(dir, "fixture.json")
+    sha = checked("git", "rev-parse", "HEAD", chdir: LabVm::ROOT)
+    receipt = {"schema" => "ace-e2e-forgejo-fixture/v1", "run_id" => run_id, "vm_uuid" => uuid,
+      "repository" => "e2e-integrator/ace", "source_sha" => sha, "status" => "preparing",
+      "forgejo_sha256" => profile.fetch("sha256"), "fj_sha256" => profile.fetch("client").fetch("sha256")}
+    save(path, receipt)
+    repository = File.join(dir, "repository")
+    Dir.mkdir(repository, 0o700)
+    archive = File.join(dir, "source.tar")
+    checked("git", "archive", "--format=tar", "--output=#{archive}", sha, chdir: LabVm::ROOT)
+    checked("tar", "-xf", archive, "-C", repository)
+    File.unlink(archive)
+    # The source backlog contains thousands of unrelated tasks. This private
+    # fixture starts from the seeded Forgejo issues, with an empty task store.
+    task_store = File.join(repository, ".ace-tasks")
+    raise "unsafe fixture task store" if File.symlink?(task_store)
+    receipt["excluded_paths"] = []
+    if File.directory?(task_store)
+      FileUtils.remove_entry_secure(task_store)
+      receipt["excluded_paths"] << ".ace-tasks"
+    elsif File.exist?(task_store)
+      raise "unexpected fixture task store type"
+    end
+    raise "fixture task store was not excluded" if File.exist?(task_store) || File.symlink?(task_store)
+    # The source checkout targets the real forge. Replace that fixture input
+    # before committing, so an agent cannot route its work to production.
+    File.write(File.join(repository, ".ace/git/config.yml"), <<~YAML)
+      git:
+        servers:
+          - name: utm-forgejo
+            provider: forgejo
+            url: http://127.0.0.1:3000/e2e-integrator/ace
+            default: true
+    YAML
+    # Local report transport is a fixture prerequisite, not the repair goal.
+    # Keep it in the seeded commit so bootstrap starts from a clean project.
+    FileUtils.mkdir_p(File.join(repository, ".ace/hitl"))
+    FileUtils.cp(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/fixtures/ace/.ace/hitl/config.yml"),
+      File.join(repository, ".ace/hitl/config.yml"))
+    legacy_route = ".ace/hitl/native-route.json"
+    route_path = File.join(repository, legacy_route)
+    if File.exist?(route_path) || File.symlink?(route_path)
+      File.unlink(route_path)
+      receipt["excluded_paths"] << legacy_route
+    end
+    FileUtils.mkdir_p(File.join(repository, ".ace/coworker"))
+    File.write(File.join(repository, ".ace/coworker/config.yml"), <<~YAML)
+      reporting:
+        channel: hitl
+        delivery: observe
+    YAML
+    FileUtils.mkdir_p(File.join(repository, ".ace/lab"))
+    File.write(File.join(repository, ".ace/lab/config.yml"), <<~YAML)
+      schema_version: 1
+      topology:
+        projects:
+          - id: ace
+            label: ACE E2E fixture
+            path: /lab/ace
+    YAML
+    checked("git", "init", "-q", "-b", "main", repository)
+    checked("git", "config", "user.name", "ACE E2E Fixture", chdir: repository)
+    checked("git", "config", "user.email", "ace-e2e@example.invalid", chdir: repository)
+    checked("git", "-c", "core.hooksPath=/dev/null", "add", "-A", chdir: repository)
+    checked("git", "-c", "core.hooksPath=/dev/null", "commit", "-q", "-m", "Seed ACE E2E fixture from #{sha}", chdir: repository)
+    receipt["initial_sha"] = checked("git", "rev-parse", "HEAD", chdir: repository)
+    input = File.join(dir, "input")
+    Dir.mkdir(input, 0o700)
+    checked("git", "bundle", "create", File.join(input, "fixture.bundle"), "main", chdir: repository)
+    File.write(File.join(input, "initial-sha"), receipt.fetch("initial_sha") + "\n")
+    FileUtils.cp(File.join(cache, artifacts[0][0]), File.join(input, "forgejo"))
+    FileUtils.cp(File.join(cache, artifacts[1][0]), File.join(input, "fj.tar.gz"))
+    %w[install.sh seed.py].each { |name| FileUtils.cp(File.join(root, name), input) }
+    File.write(File.join(input, "issues.json"), JSON.generate(issues))
+    address = LabVm.utm_call("ip-address", uuid).lines.map(&:strip).find { |entry| entry.match?(/\A(?:\d{1,3}\.){3}\d{1,3}\z/) }
+    raise "VM has no IPv4 address" unless address
+    hosts = File.join(LabVm.local_dir, "known-hosts-#{uuid}")
+    raise "verified host key missing" unless File.file?(hosts) && !File.symlink?(hosts)
+    key = File.join(LabVm.local_dir, "bootstrap/operator_ed25519")
+    options = ["-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "UserKnownHostsFile=#{hosts}", "-i", key]
+    begin
+      raise "fixture transfer failed" unless system("scp", "-q", "-r", *options, input, "lab-operator@#{address}:/home/lab-operator/forgejo-input")
+      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", LabVm.staging_command("/home/lab-operator/forgejo-input", "/var/lib/ace-e2e/forgejo-input"))
+      raise "fixture staging failed: #{output}" unless code.zero?
+      Dir.children(input).each do |name|
+        expected = Digest::SHA256.file(File.join(input, name)).hexdigest
+        code, output = LabVm.guest_exec(uuid, "/usr/bin/sha256sum", "/var/lib/ace-e2e/forgejo-input/#{name}")
+        raise "staged input changed: #{name}" unless code.zero? && output.split.first == expected
+      end
+      code, output = LabVm.guest_exec(uuid, "/bin/sh", "/var/lib/ace-e2e/forgejo-input/install.sh", timeout_s: 240)
+      raise "Forgejo install failed: #{output}" unless code.zero?
+      receipt["status"] = "seeding"
+      save(path, receipt)
+      seed = 'OPERATOR_UID=$(id -u lab-operator) OPERATOR_GID=$(id -g lab-operator) python3 /var/lib/ace-e2e/forgejo-input/seed.py'
+      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", seed, timeout_s: 240)
+      raise "Forgejo seed failed: #{output}" unless code.zero?
+      result = JSON.parse(output.lines.find { |line| line.start_with?("{") }.to_s)
+      raise "source commit changed while preparing fixture" unless checked("git", "rev-parse", "HEAD", chdir: LabVm::ROOT) == sha
+      changed = checked("git", "status", "--porcelain", "--untracked-files=all", "--", *fixture_paths, chdir: LabVm::ROOT)
+      raise "fixture inputs changed while preparing fixture" unless changed.empty?
+      raise "unexpected repository" unless result.fetch("repository") == receipt.fetch("repository")
+      receipt["issues"] = result.fetch("issues")
+      receipt["status"] = "ready"
+      save(path, receipt)
+      puts JSON.pretty_generate(receipt.merge("receipt" => path))
+    rescue StandardError
+      receipt["status"] = "failed"
+      save(path, receipt)
+      LabVm.utm_call("stop", uuid, "--request")
+      LabVm.wait_stopped("work")
+      warn "Working VM stopped and preserved for diagnosis; fixture receipt: #{path}"
+      raise
+    end
+  end
+rescue StandardError => error
+  warn "lab-vm-forgejo: #{error.message}"
+  exit 1
+end

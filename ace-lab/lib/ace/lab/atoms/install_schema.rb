@@ -15,13 +15,13 @@ module Ace
         SCHEMA_VERSION = 1
         TOP_LEVEL_KEYS =
           %w[schema_version machine accounts directories keys roles projects grants
-             adapters tools gemset].freeze
+             adapters tools gemset session_runtime coordinator].freeze
         ENTRY_KEYS = {
           "accounts" => %w[username role create home],
           "directories" => %w[path owner mode],
           "keys" => %w[account type path],
           "roles" => %w[id account instructions],
-          "projects" => %w[id path remote label],
+          "projects" => %w[id path remote label environment_files],
           "adapters" => %w[id kind command config]
         }.freeze
         USERNAME_PATTERN = /\A[a-z_][a-z0-9_-]{0,31}\z/
@@ -66,6 +66,7 @@ module Ace
             accounts = normalize_accounts(document["accounts"], os)
             usernames = accounts.map { |account| account["username"] }
             projects = normalize_projects(document["projects"])
+            coordinator = normalize_coordinator(document["coordinator"], projects)
 
             {
               "schema_version" => SCHEMA_VERSION,
@@ -75,14 +76,77 @@ module Ace
               "keys" => normalize_keys(document["keys"], accounts),
               "roles" => normalize_roles(document["roles"], usernames),
               "projects" => projects,
-              "grants" => normalize_grants(document["grants"], projects.map { |p| p["id"] }),
+              "coordinator" => coordinator,
+              "grants" => normalize_grants(document["grants"], projects.map { |p| p["id"] } + [coordinator&.fetch("id")].compact),
               "adapters" => normalize_adapters(document["adapters"]),
               "tools" => normalize_tools(document["tools"]),
-              "gemset" => normalize_gemset(document["gemset"], accounts.map { |a| a["username"] })
+              "gemset" => normalize_gemset(document["gemset"], accounts.map { |a| a["username"] }),
+              "session_runtime" => normalize_session_runtime(document["session_runtime"])
             }
           end
 
           private
+
+          def normalize_coordinator(raw, projects)
+            return nil if raw.nil?
+            unless raw.is_a?(Hash) && (raw.keys - %w[id path environment_files]).empty? && (%w[id path] - raw.keys).empty? &&
+                raw["id"].is_a?(String) && ROLE_ID_PATTERN.match?(raw["id"]) &&
+                raw["path"].is_a?(String) && raw["path"].match?(%r{\A/lab(?:/[a-zA-Z0-9][a-zA-Z0-9_.-]*)?\z}) &&
+                File.expand_path(raw["path"]) == raw["path"] && !raw["path"].match?(/[[:cntrl:]]/)
+              raise_invalid "coordinator requires an id and canonical absolute path"
+            end
+            if projects.any? { |project| project["id"] == raw["id"] || project["path"] == raw["path"] }
+              raise_invalid "coordinator must be distinct from projects"
+            end
+            raw.key?("environment_files") ? raw.merge("environment_files" => normalize_environment_files(raw["environment_files"])) : raw.dup
+          end
+
+          def normalize_environment_files(raw)
+            return {} if raw.nil?
+            roles = %w[lab-overseer project-overseer worker verifier integrator]
+            unless raw.is_a?(Hash) && raw.all? { |role, path|
+              roles.include?(role) && path.is_a?(String) && path.start_with?("/") &&
+                File.expand_path(path) == path && !path.match?(/[[:cntrl:]]/)
+            }
+              raise_invalid "environment_files must map execution roles to canonical absolute paths"
+            end
+            raw.dup
+          end
+
+          def normalize_session_runtime(raw)
+            return nil if raw.nil?
+            keys = %w[node pi path provider model credentials]
+            unless raw.is_a?(Hash) && (raw.keys - keys - ["herdr"]).empty? && (keys - raw.keys).empty?
+              raise_invalid "session_runtime requires exactly node, pi, path, provider, model and credentials"
+            end
+            %w[node pi credentials].each do |key|
+              path = raw[key]
+              unless path.is_a?(String) && path.start_with?("/") && File.expand_path(path) == path && !path.match?(/[[:cntrl:]]/)
+                raise_invalid "session_runtime #{key} must be a canonical absolute path"
+              end
+            end
+            paths = raw["path"]
+            unless paths.is_a?(Array) && !paths.empty? && paths.uniq == paths && paths.all? { |path|
+              path.is_a?(String) && path.start_with?("/") && File.expand_path(path) == path && !path.match?(/[[:cntrl:]:]/)
+            }
+              raise_invalid "session_runtime path must contain unique canonical absolute directories"
+            end
+            %w[provider model].each do |key|
+              unless raw[key].is_a?(String) && raw[key].match?(%r{\A[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}\z})
+                raise_invalid "session_runtime #{key} is invalid"
+              end
+            end
+            if raw.key?("herdr")
+              endpoint = raw["herdr"]
+              unless endpoint.is_a?(Hash) && endpoint.keys.sort == %w[account socket] &&
+                  endpoint["account"].is_a?(String) && endpoint["account"].match?(/\A[a-z_][a-z0-9_-]*\z/) &&
+                  endpoint["socket"].is_a?(String) && endpoint["socket"].start_with?("/") &&
+                  File.expand_path(endpoint["socket"]) == endpoint["socket"] && !endpoint["socket"].match?(/[[:cntrl:]]/)
+                raise_invalid "session_runtime herdr requires an account and canonical socket path"
+              end
+            end
+            raw.transform_values { |value| value.is_a?(Array) ? value.map(&:dup) : value.dup }
+          end
 
           def raise_invalid(reason)
             raise Ace::Lab::InvalidConfigurationError,
@@ -229,7 +293,9 @@ module Ace
               remote = optional_string(entry, "projects", "remote")
               label = optional_string(entry, "projects", "label")
 
-              {"id" => id, "path" => path, "remote" => remote, "label" => label}
+              normalized = {"id" => id, "path" => path, "remote" => remote, "label" => label}
+              normalized["environment_files"] = normalize_environment_files(entry["environment_files"]) if entry.key?("environment_files")
+              normalized
             end.tap do |projects|
               duplicates_of(projects.map { |project| project["id"] }) do |_id|
                 raise_invalid_entry("projects", "id is declared more than once")

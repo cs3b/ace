@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.3] - 2026-11-10
+
+### Fixed
+
+- Send Pi prompts through stdin instead of process arguments; drain streams while writing input and retain timeout/no-response evidence.
+
 ## [0.36.2] - 2026-10-16
 
 ### Fixed

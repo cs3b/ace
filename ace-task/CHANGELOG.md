@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.1] - 2026-11-10
+
+### Fixed
+
+- Serialize subtask allocation/reparenting across processes and path aliases. Resolve accessible task references without weakening full inventory errors; preserve private ignored-task ownership.
+
 ## [0.41.0] - 2026-10-17
 
 ### Added

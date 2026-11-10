@@ -2,6 +2,8 @@
 
 require_relative "../../test_helper"
 require "ace/lab/auth"
+require "open3"
+require "timeout"
 
 module Ace
   module Lab
@@ -72,9 +74,27 @@ module Ace
           credentials = File.join(@dir, "credentials")
           @document = format(AUTH_YAML, leases, credentials)
           Providers.register("fake", @fake = FakeProvider.new)
+          @peer_handle = File.open(File::NULL)
+          @main_handle = File.open(File::NULL)
+          @mount_namespace = File.open(File::NULL)
+        end
+
+        def test_rejects_noncallable_principal_at_construction
+          error = assert_raises(ArgumentError) { Service.new(principal: "worker") }
+          assert_match(/principal must be callable/, error.message)
+        end
+
+        def test_invalid_environment_names_are_rejected_at_profile_load
+          ["BAD=NAME", "BAD\0NAME"].each do |name|
+            doc = {"auth" => {"profiles" => {"test" => {"provider" => "env", "env_names" => [name]}}}}
+            assert_raises(Ace::Lab::InvalidConfigurationError) { ProfileSchema.normalize(doc) }
+          end
         end
 
         def teardown
+          @peer_handle.close unless @peer_handle.closed?
+          @main_handle.close unless @main_handle.closed?
+          @mount_namespace.close unless @mount_namespace.closed?
           FileUtils.remove_entry(@dir) if @dir
           Providers.reset!
         end
@@ -102,6 +122,85 @@ module Ace
           assert_equal 0o400, File.stat(credential).mode & 0o777
         end
 
+        def test_provider_refusal_records_that_no_token_was_issued
+          @fake.instance_variable_set(:@failure, Providers::RefusedError.new("refused before issue"))
+          requester = service
+          assert_raises(Refusal) do
+            requester.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          end
+          record = requester.store.all.fetch(0)
+          assert_equal "revoked", record.fetch("state")
+          assert_equal "not-issued", record.dig("cleanup", "result")
+        end
+
+        def test_another_principal_cannot_execute_a_live_lease
+          owner = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" })
+          end
+          lease = owner.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          ran = false
+          other = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "other-worker" }, runner: ->(_argv, _env) { ran = true; 0 })
+          end
+
+          error = assert_raises(Refusal) { other.exec(lease_id: lease["id"], argv: ["true"]) }
+          assert_match(/principal/, error.message)
+          refute ran
+          assert_equal "issued", owner.status(lease_id: lease["id"])["state"]
+        end
+
+        def test_another_principal_cannot_revoke_a_live_lease
+          owner = service
+          lease = owner.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          other = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "other-worker" }, runner: ->(_argv, _env) { 0 })
+          end
+
+          error = assert_raises(Refusal) { other.revoke(lease_id: lease["id"]) }
+          assert_match(/principal/, error.message)
+          assert_empty @fake.revoked
+          assert_equal "issued", owner.status(lease_id: lease["id"])["state"]
+        end
+
+        def test_runner_failure_still_revokes_and_clears_its_lease
+          failing = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" }, runner: ->(_argv, _env) { raise Errno::ENOENT })
+          end
+          lease = failing.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+
+          assert_raises(Error) { failing.exec(lease_id: lease["id"], argv: ["missing-command"]) }
+          assert_equal "revoked", failing.status(lease_id: lease["id"])["state"]
+          assert_empty Dir.children(File.join(@dir, "credentials"))
+        end
+
+        def test_root_exec_without_a_non_root_session_is_refused
+          owner = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" })
+          end
+          lease = owner.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          error = Process.stub(:euid, 0) do
+            assert_raises(Refusal) { owner.exec(lease_id: lease["id"], argv: ["true"]) }
+          end
+          assert_match(/configured executor account/, error.message)
+        end
+
+        def test_root_request_without_a_non_root_session_does_not_issue
+          owner = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" })
+          end
+          error = Process.stub(:euid, 0) do
+            assert_raises(Refusal) do
+              owner.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+            end
+          end
+          assert_match(/configured executor account/, error.message)
+          assert_empty @fake.issued
+        end
+
         def test_request_is_idempotent_for_the_same_live_correlation
           svc = service
           first = svc.request(profile_name: "developer", role: "developer",
@@ -111,6 +210,17 @@ module Ace
 
           assert_equal first["id"], second["id"]
           assert_equal 1, @fake.issued.size, "concurrent requests mint one token"
+        end
+
+        def test_idempotent_retry_with_unsorted_profile_repository_scope
+          document = YAML.safe_load(@document)
+          document["auth"]["profiles"]["developer"]["repos"] = %w[other ace]
+          svc = service(document: YAML.dump(document))
+          args = {profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: %w[ace other]}
+          first = svc.request(**args)
+          second = svc.request(**args)
+          assert_equal first["id"], second["id"]
+          assert_equal 1, @fake.issued.size
         end
 
         def test_concurrent_identical_requests_serialize_to_one_token
@@ -226,7 +336,7 @@ module Ace
           YAML
           svc = service(document: document)
 
-          error = assert_raises(Providers::UnsupportedError) do
+          error = assert_raises(Refusal) do
             svc.request(profile_name: "missing", role: "developer",
               task: "t", assignment: "a", repos: %w[ace])
           end
@@ -272,6 +382,68 @@ module Ace
           assert_equal "revoked", report["cleanup"]
         end
 
+        def test_exec_preserves_the_selected_installed_runtime
+          @fake.define_singleton_method(:with_exec_environment) do |profile:, credential:, &block|
+            block.call({"ACE_TOOLCHAIN" => "auto", "GEM_PATH" => "/provider/source", "PATH" => "/provider/source/bin"})
+          end
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          selected = {"ACE_TOOLCHAIN" => "installed", "GEM_HOME" => "/opt/ace/gems", "GEM_PATH" => "/opt/ace/gems",
+            "PATH" => "/opt/ace/runtime/bin:/usr/bin:/bin"}
+          original = selected.to_h { |key, _| [key, ENV[key]] }
+          selected.each { |key, value| ENV[key] = value }
+          begin
+            svc.exec(lease_id: lease["id"], argv: %w[true],
+              env: {"ACE_TOOLCHAIN" => "auto", "GEM_HOME" => "/workspace/source", "GEM_PATH" => "/workspace/source"})
+            _argv, env = @exec_seen
+            selected.each { |key, value| assert_equal value, env[key], "#{key} must survive the auth boundary" }
+          ensure
+            original.each { |key, value| value ? ENV[key] = value : ENV.delete(key) }
+          end
+        end
+
+        def test_exec_uses_the_provider_session_environment
+          @fake.define_singleton_method(:with_exec_environment) do |profile:, credential:, &block|
+            raise "missing handoff" unless File.file?(credential)
+            block.call({"XDG_DATA_HOME" => "/private/session"})
+          end
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          svc.exec(lease_id: lease["id"], argv: %w[true])
+          _argv, env = @exec_seen
+          assert_equal "/private/session", env["XDG_DATA_HOME"]
+          assert_equal "revoked", svc.status(lease_id: lease["id"])["state"]
+        end
+
+        def test_exec_connects_real_forgejo_projection_to_the_lease_handoff
+          projection = Plugins::ForgejoProvider.new
+          @fake.define_singleton_method(:with_exec_environment) do |profile:, credential:, &block|
+            effective = profile.merge("issuer" => {"url" => "http://127.0.0.1:3000", "account" => "reviewer"})
+            projection.stub(:linux_xdg?, true) do
+              projection.with_exec_environment(profile: effective, credential: credential, &block)
+            end
+          end
+          observed = nil
+          svc = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" }, runner: lambda { |_argv, env|
+              data = JSON.parse(File.read(File.join(env.fetch("XDG_DATA_HOME"), "forgejo-cli", "keys.json")))
+              token = data.fetch("hosts").fetch("127.0.0.1:3000").fetch("token")
+              value, status = Open3.capture2(env, env.fetch("GIT_ASKPASS"), "Password for 'http://reviewer@127.0.0.1:3000': ")
+              observed = [token, value, status.success?, env.fetch("XDG_DATA_HOME")]
+              0
+            })
+          end
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          svc.exec(lease_id: lease["id"], argv: %w[true])
+          assert_equal "SECRET-#{lease['id']}", observed[0]
+          assert_equal observed[0], observed[1]
+          assert observed[2]
+          refute File.exist?(observed[3])
+        end
+
         def test_exec_on_a_dead_or_parallel_lease_is_refused
           svc = service
           lease = svc.request(profile_name: "developer", role: "developer",
@@ -280,6 +452,26 @@ module Ace
 
           error = assert_raises(Refusal) { svc.exec(lease_id: lease["id"], argv: %w[true]) }
           assert_match(/not live/, error.message)
+        end
+
+        def test_exec_refuses_when_the_registered_provider_disappears
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          Providers.reset!
+          error = assert_raises(Refusal) { svc.exec(lease_id: lease["id"], argv: %w[true]) }
+          assert_match(/provider execution refused/, error.message)
+        end
+
+        def test_revoke_keeps_unknown_outcome_pending_when_provider_disappears
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          Providers.reset!
+          assert_match(/revoke-pending/, svc.revoke(lease_id: lease["id"]).to_s)
+          record = svc.store.load(lease["id"])
+          assert_equal "revoke-pending", record["state"]
+          refute svc.store.live?(record)
         end
 
         def test_exec_without_the_delivered_credential_degrades_to_a_refusal
@@ -305,6 +497,77 @@ module Ace
 
           error = assert_raises(Error) { svc.revoke(lease_id: "lease-0000000000000000") }
           assert_match(/unknown lease/, error.message)
+        end
+
+        def test_repeated_revoke_preserves_unconfirmed_forced_terminal_result
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          svc.store.update(lease["id"]) do |record|
+            record["state"] = "revoked"
+            record["cleanup"] = {"result" => "forced-terminal"}
+          end
+          assert_equal :forced_terminal, svc.revoke(lease_id: lease["id"])
+          assert_empty @fake.revoked
+        end
+
+        def test_concurrent_revoke_does_not_turn_confirmed_cleanup_into_pending
+          entered = Queue.new
+          release = Queue.new
+          def @fake.revoke(profile:, token_ref:, token: nil)
+            raise Providers::OutcomeUnknownError, "token required" if token.nil?
+            @revoked << token_ref
+            :revoked
+          end
+          svc = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" }, runner: ->(_argv, _env) { entered << true; release.pop; 0 })
+          end
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          execution = Thread.new do
+            {result: svc.exec(lease_id: lease["id"], argv: ["dummy"])}
+          rescue StandardError => e
+            {error: e}
+          end
+          Timeout.timeout(5) { entered.pop }
+          assert_equal :revoked, svc.revoke(lease_id: lease["id"])
+          release << true
+          outcome = execution.value
+          assert_nil outcome[:error], outcome[:error]&.message
+          assert_equal "revoked", svc.status(lease_id: lease["id"])["state"]
+        ensure
+          release << true if execution&.alive?
+          execution&.join
+        end
+
+        def test_late_cleanup_failure_does_not_overwrite_confirmed_revocation
+          entered = Queue.new
+          release = Queue.new
+          mutex = Mutex.new
+          calls = 0
+          @fake.define_singleton_method(:revoke) do |profile:, token_ref:, token: nil|
+            ordinal = mutex.synchronize { calls += 1 }
+            if ordinal == 1
+              entered << true
+              release.pop
+              raise Providers::OutcomeUnknownError, "late failure"
+            end
+            :revoked
+          end
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          execution = Thread.new do
+            {result: svc.exec(lease_id: lease["id"], argv: ["dummy"])}
+          rescue StandardError => e
+            {error: e}
+          end
+          Timeout.timeout(5) { entered.pop }
+          assert_equal :revoked, svc.revoke(lease_id: lease["id"])
+          release << true
+          outcome = execution.value
+          assert_nil outcome[:error], outcome[:error]&.message
+          assert_equal "revoked", svc.status(lease_id: lease["id"])["state"]
+        ensure
+          release << true if execution&.alive?
+          execution&.join
         end
 
         def test_network_shaped_revoke_stays_visible_as_pending_never_claimed
@@ -354,6 +617,385 @@ module Ace
           assert_equal "revoked", svc.status(lease_id: lease["id"])["state"]
         end
 
+        def test_reconcile_does_not_report_forced_terminal_as_confirmed_revocation
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          svc.store.update(lease["id"]) do |record|
+            record["state"] = "revoked"
+            record["cleanup"] = {"result" => "forced-terminal"}
+          end
+          result = svc.reconcile.find { |row| row["lease"] == lease["id"] }
+          assert_equal "forced_terminal", result["reconciled"]
+        end
+
+        def test_exec_accepts_already_invalid_as_confirmed_cleanup
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          def @fake.revoke(**) = :already_invalid
+          assert_equal "already_invalid", svc.exec(lease_id: lease["id"], argv: ["true"])["cleanup"]
+          assert_equal "revoked", svc.status(lease_id: lease["id"])["state"]
+        end
+
+        def test_credential_disappearing_during_cleanup_remains_pending
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          credential = Dir.glob(File.join(@dir, "credentials", "*")).fetch(0)
+          read = File.method(:read)
+          raced = ->(path, *args, **kwargs) { raise Errno::ENOENT if path == credential; read.call(path, *args, **kwargs) }
+          outcome = File.stub(:read, raced) { svc.revoke(lease_id: lease["id"]) }
+          assert_match(/revoke-pending/, outcome.to_s)
+          assert_equal "revoke-pending", svc.store.load(lease["id"])["state"]
+        end
+
+        def test_invalid_stored_deadline_is_a_typed_error
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          svc.store.update(lease["id"]) { |record| record["use_until"] = "not-a-date" }
+          assert_raises(Error) { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"]) }
+        end
+
+        def test_reconcile_reports_one_broken_handoff_and_continues
+          svc = service
+          leases = %w[first second].map do |name|
+            lease = svc.request(profile_name: "developer", role: "developer", task: name, assignment: name, repos: ["ace"])
+            svc.store.update(lease["id"]) { |record| record["use_until"] = "2020-01-01T00:00:00Z" }
+            lease
+          end
+          handoff = svc.method(:handoff_for)
+          poisoned = ->(lease) { raise Error, "unsafe runtime directory" if lease["id"] == leases.first["id"]; handoff.call(lease) }
+          report = svc.stub(:handoff_for, poisoned) { svc.reconcile }
+          assert_match(/reconcile-failed/, report.find { |row| row["lease"] == leases.first["id"] }["reconciled"])
+          assert_equal "revoked", svc.status(lease_id: leases.last["id"])["state"]
+        end
+
+        def test_reconcile_reports_a_record_missing_correlation_fields
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          svc.store.update(lease["id"]) { |record| record.delete("task") }
+          result = svc.reconcile.find { |row| row["lease"] == lease["id"] }
+          assert_match(/reconcile-failed/, result["reconciled"])
+        end
+
+        def test_exec_reports_session_system_call_failure_as_auth_error_and_cleans_up
+          svc = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" }, runner: ->(*) { raise Errno::EINVAL })
+          end
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          assert_raises(Error) { svc.exec(lease_id: lease["id"], argv: ["true"]) }
+          assert_equal "revoked", svc.status(lease_id: lease["id"])["state"]
+        end
+
+        def test_exec_rejects_invalid_runner_result_and_cleans_up
+          svc = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" }, runner: ->(*) { nil })
+          end
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          assert_raises(Error) { svc.exec(lease_id: lease["id"], argv: ["true"]) }
+          assert_equal "revoked", svc.status(lease_id: lease["id"])["state"]
+        end
+
+        def test_unconfirmed_containment_blocks_recovery_and_new_issuance
+          svc = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" }, runner: ->(*) { raise ExecutionCleanupError, "unconfirmed" })
+          end
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          assert_raises(ExecutionCleanupError) { svc.exec(lease_id: lease["id"], argv: ["true"]) }
+          record = svc.status(lease_id: lease["id"])
+          assert_equal "revoked", record["state"]
+          assert_equal "unconfirmed", record["containment"]
+          assert_equal :revoked, svc.revoke(lease_id: lease["id"])
+          assert_match(/execution unresolved/, svc.reconcile.find { |row| row["lease"] == lease["id"] }["reconciled"])
+          assert_raises(Refusal) { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"]) }
+          assert_equal 1, @fake.issued.size
+          assert_equal [lease["token_ref"]], @fake.revoked
+        end
+
+        def test_cleanup_error_preserves_uncontained_failure_and_marker
+          svc = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" }, runner: ->(*) { raise ExecutionCleanupError, "unconfirmed" })
+          end
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          def @fake.revoke(**) = raise(Errno::EIO)
+          error = assert_raises(ExecutionCleanupError) { svc.exec(lease_id: lease["id"], argv: ["true"]) }
+          assert_kind_of Errno::EIO, error.cause
+          assert_equal "unconfirmed", svc.store.load(lease["id"])["execution"]
+        end
+
+        def test_cleanup_system_error_after_success_is_a_typed_failure
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          def @fake.revoke(**) = raise(Errno::EIO)
+          assert_raises(Error) { svc.exec(lease_id: lease["id"], argv: ["true"]) }
+          refute svc.store.load(lease["id"]).key?("execution")
+        end
+
+        def test_reissued_lease_waits_for_a_previously_revoked_execution_to_finish
+          started, finish = Queue.new, Queue.new
+          svc = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" }, runner: ->(*) { started << true; finish.pop; 0 })
+          end
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          execution = Thread.new { svc.exec(lease_id: lease["id"], argv: ["true"]) }
+          Timeout.timeout(3) { started.pop }
+          assert_equal :revoked, svc.revoke(lease_id: lease["id"])
+          assert_raises(Refusal) { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"]) }
+          assert_equal 1, @fake.issued.size
+          finish << true
+          Timeout.timeout(3) { execution.value }
+        ensure
+          finish << true if finish && execution&.alive?
+          execution&.join(3)
+        end
+
+        def test_reconcile_revokes_expired_credential_without_claiming_command_exit
+          started, finish = Queue.new, Queue.new
+          svc = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" }, runner: ->(*) { started << true; finish.pop; 0 })
+          end
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          execution = Thread.new { svc.exec(lease_id: lease["id"], argv: ["true"]) }
+          Timeout.timeout(3) { started.pop }
+          svc.store.update(lease["id"]) { |record| record["use_until"] = "2020-01-01T00:00:00Z" }
+          report = svc.reconcile.find { |row| row["lease"] == lease["id"] }
+          assert_match(/execution unresolved/, report["reconciled"])
+          assert_equal "revoked", svc.store.load(lease["id"])["state"]
+          assert_equal [lease["token_ref"]], @fake.revoked
+          assert_raises(Refusal) { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"]) }
+          finish << true
+          Timeout.timeout(3) { execution.value }
+        ensure
+          finish << true if finish && execution&.alive?
+          execution&.join(3)
+        end
+
+        def test_concurrent_revoke_cannot_hide_unconfirmed_command_containment
+          started, finish = Queue.new, Queue.new
+          svc = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" }, runner: ->(*) { started << true; finish.pop; raise ExecutionCleanupError, "unconfirmed" })
+          end
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          execution = Thread.new do
+            svc.exec(lease_id: lease["id"], argv: ["true"])
+          rescue ExecutionCleanupError
+            :uncontained
+          end
+          Timeout.timeout(3) { started.pop }
+          assert_equal :revoked, svc.revoke(lease_id: lease["id"])
+          assert_raises(Refusal) { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"]) }
+          finish << true
+          assert_equal :uncontained, Timeout.timeout(3) { execution.value }
+          assert_equal "unconfirmed", svc.status(lease_id: lease["id"])["containment"]
+          assert_raises(Refusal) { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"]) }
+          assert_equal 1, @fake.issued.size
+        ensure
+          finish << true if finish && execution&.alive?
+          execution&.join(3)
+        end
+
+        def test_persisted_execution_marker_blocks_recovery_and_reissue_after_crash
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          svc.store.update(lease["id"]) do |record|
+            record["state"] = "revoked"
+            record["cleanup"] = {"result" => "revoked"}
+            record["execution"] = "in-progress"
+          end
+          report = svc.reconcile.find { |row| row["lease"] == lease["id"] }
+          assert_match(/execution unresolved/, report["reconciled"])
+          assert_raises(Refusal) { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"]) }
+          assert_equal 1, @fake.issued.size
+        end
+
+        def test_persisted_execution_marker_blocks_reuse_of_an_issued_lease
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          svc.store.update(lease["id"]) { |record| record["execution"] = "in-progress" }
+          assert_raises(Refusal) { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"]) }
+          assert_raises(Refusal) { svc.exec(lease_id: lease["id"], argv: ["true"]) }
+          assert_empty @fake.revoked
+        end
+
+        def test_exec_refuses_credential_overrides_from_caller_environment
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          assert_raises(Refusal) { svc.exec(lease_id: lease["id"], argv: ["true"], env: {"GH_TOKEN" => "override"}) }
+          assert_equal "issued", svc.status(lease_id: lease["id"])["state"]
+        end
+
+        def test_exec_rejects_invalid_allowlisted_environment_values
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          [1, nil, "bad\0value"].each do |value|
+            assert_raises(Refusal) { svc.exec(lease_id: lease.fetch("id"), argv: ["true"], env: {"PATH" => value}) }
+          end
+          assert_equal "issued", svc.status(lease_id: lease.fetch("id"))["state"]
+        end
+
+        def test_exec_refuses_invalid_argv_before_reading_credentials
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          [nil, [], [""], ["valid", "bad\0argument"], [123]].each do |argv|
+            assert_raises(Refusal) { svc.exec(lease_id: lease["id"], argv: argv) }
+          end
+          assert_equal "issued", svc.status(lease_id: lease["id"])["state"]
+          assert_empty @fake.revoked
+        end
+
+        def test_exec_rejects_malformed_env_handoff_without_exposing_or_consuming_it
+          document = YAML.safe_load(@document)
+          document.fetch("auth").fetch("profiles")["local"] = {
+            "provider" => "env", "roles" => ["developer"], "principals" => ["test-worker"],
+            "repos" => ["ace"], "env_names" => ["TEST_SECRET"]
+          }
+          Providers.register("env", Plugins::EnvProvider.new(issuer_env: {"TEST_SECRET" => "private-value"}))
+          svc = service(document: YAML.dump(document))
+          lease = svc.request(profile_name: "local", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          credential = Dir.glob(File.join(@dir, "credentials", "*")).fetch(0)
+          File.chmod(0o600, credential)
+          File.write(credential, '["unexpected"]')
+          assert_raises(Refusal) { svc.exec(lease_id: lease["id"], argv: ["true"]) }
+          assert_equal "issued", svc.status(lease_id: lease["id"])["state"]
+          refute @exec_seen
+        end
+
+        def test_default_runner_executes_a_program_with_equals_in_its_path
+          skip "the unprivileged direct runner is unavailable to root" if Process.euid.zero?
+          svc = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "test-worker" }) }
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          program = File.join(@dir, "program=literal")
+          File.write(program, "#!/bin/sh\nexit 0\n")
+          File.chmod(0o700, program)
+          assert_equal 0, svc.exec(lease_id: lease["id"], argv: [program])["exit"]
+        end
+
+        def test_wildcard_profile_deduplicates_requested_repositories
+          lease = service.request(profile_name: "wide", role: "developer", task: "t", assignment: "a", repos: %w[ace ace])
+          assert_equal ["ace"], lease["repos"]
+        end
+
+        def test_reconcile_cannot_revoke_an_issue_that_is_still_in_flight
+          started, finish = Queue.new, Queue.new
+          provider = @fake
+          original_issue = provider.method(:issue)
+          provider.define_singleton_method(:issue) do |profile:, lease:|
+            started << lease["id"]
+            finish.pop
+            original_issue.call(profile: profile, lease: lease)
+          end
+          svc = service
+          request = Thread.new { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"]) }
+          id = Timeout.timeout(3) { started.pop }
+          attempted = Queue.new
+          lock = svc.store.method(:with_correlation_lock)
+          svc.store.define_singleton_method(:with_correlation_lock) { |**args, &block| attempted << true; lock.call(**args, &block) }
+          reconcile = Thread.new { svc.reconcile }
+          Timeout.timeout(3) { attempted.pop }
+          assert_empty @fake.revoked
+          finish << true
+          lease = Timeout.timeout(3) { request.value }
+          report = Timeout.timeout(3) { reconcile.value }
+          assert_equal "issued", svc.status(lease_id: id)["state"]
+          assert_equal "live", report.find { |row| row["lease"] == id }["reconciled"]
+          assert_equal id, lease["id"]
+        ensure
+          finish << true if finish && request&.alive?
+          [request, reconcile].compact.each { |thread| thread.join(3) }
+        end
+
+        def test_revoke_waits_for_the_correlated_issue_to_finish
+          started, finish = Queue.new, Queue.new
+          provider = @fake
+          original_issue = provider.method(:issue)
+          provider.define_singleton_method(:issue) do |profile:, lease:|
+            started << lease["id"]
+            finish.pop
+            original_issue.call(profile: profile, lease: lease)
+          end
+          svc = service
+          request = Thread.new { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"]) }
+          id = Timeout.timeout(3) { started.pop }
+          attempted = Queue.new
+          lock = svc.store.method(:with_correlation_lock)
+          svc.store.define_singleton_method(:with_correlation_lock) { |**args, &block| attempted << true; lock.call(**args, &block) }
+          revoke = Thread.new { svc.revoke(lease_id: id) }
+          Timeout.timeout(3) { attempted.pop }
+          assert_empty @fake.revoked
+          finish << true
+          Timeout.timeout(3) { request.value }
+          assert_equal :revoked, Timeout.timeout(3) { revoke.value }
+          assert_equal "revoked", svc.status(lease_id: id)["state"]
+        ensure
+          finish << true if finish && request&.alive?
+          [request, revoke].compact.each { |thread| thread.join(3) }
+        end
+
+        def test_reconcile_does_not_overtake_issuance_across_processes
+          skip "fork unavailable" unless Process.respond_to?(:fork)
+          ready_read, ready_write = IO.pipe
+          release_read, release_write = IO.pipe
+          attempted_read, attempted_write = IO.pipe
+          revoked = File.join(@dir, "revoked-during-issue")
+          provider = @fake
+          original_issue = provider.method(:issue)
+          provider.define_singleton_method(:issue) do |profile:, lease:|
+            ready_write.write("1")
+            release_read.read(1)
+            original_issue.call(profile: profile, lease: lease)
+          end
+          provider.define_singleton_method(:revoke) do |**|
+            File.write(revoked, "revoked")
+            :revoked
+          end
+          svc = service
+          issuer = fork do
+            begin
+              svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+              exit! 0
+            rescue StandardError
+              exit! 1
+            end
+          end
+          Timeout.timeout(5) { ready_read.read(1) }
+          reconciler = fork do
+            lock = svc.store.method(:with_correlation_lock)
+            svc.store.define_singleton_method(:with_correlation_lock) do |**args, &block|
+              attempted_write.write("1")
+              lock.call(**args, &block)
+            end
+            begin
+              svc.reconcile
+              exit! 0
+            rescue StandardError
+              exit! 1
+            end
+          end
+          Timeout.timeout(5) { attempted_read.read(1) }
+          refute File.exist?(revoked), "reconcile revoked an issue that had not finished"
+          release_write.write("1")
+          _, status = Timeout.timeout(5) { Process.wait2(issuer) }
+          issuer = nil
+          assert status.success?, "issuer process failed"
+          _, status = Timeout.timeout(5) { Process.wait2(reconciler) }
+          reconciler = nil
+          assert status.success?, "reconciler process failed"
+          assert_equal "issued", svc.store.all.fetch(0)["state"]
+          refute File.exist?(revoked)
+        ensure
+          [issuer, reconciler].compact.each do |pid|
+            begin
+              unless Process.waitpid(pid, Process::WNOHANG)
+                Process.kill("KILL", pid) # our own unreaped test child
+                Process.waitpid(pid)
+              end
+            rescue Errno::ESRCH, Errno::ECHILD
+              nil
+            end
+          end
+          [ready_read, ready_write, release_read, release_write, attempted_read, attempted_write].compact.each do |io|
+            io.close unless io.closed?
+          end
+        end
+
         def test_status_never_exposes_the_token_reference
           svc = service
           lease = svc.request(profile_name: "developer", role: "developer",
@@ -364,10 +1006,141 @@ module Ace
           refute_includes svc.status.map(&:keys).flatten.uniq, "token_ref"
         end
 
+        def test_status_does_not_expose_internal_path_of_corrupt_record
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          File.write(File.join(@dir, "leases", "#{lease.fetch("id")}.json"), "{")
+
+          corrupt = svc.status.find { |record| record["id"] == lease["id"] }
+          assert corrupt.fetch("corrupt")
+          refute_includes corrupt.keys, "_path"
+        end
+
+        def test_corrupt_lease_blocks_new_issuance_without_reminting
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          File.write(File.join(@dir, "leases", "#{lease.fetch("id")}.json"), "{")
+
+          error = assert_raises(Refusal) do
+            svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: %w[ace])
+          end
+          assert_match(/corrupt/, error.message)
+          assert_equal 1, @fake.issued.length
+        end
+
+        def test_unattributable_lease_blocks_new_issuance
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          svc.store.update(lease.fetch("id")) { |record| record.delete("task") }
+
+          assert_raises(Error) { svc.revoke(lease_id: lease.fetch("id")) }
+          assert_raises(Refusal) do
+            svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: %w[ace])
+          end
+          assert_equal 1, @fake.issued.length
+        end
+
+        def test_request_refuses_incomplete_correlation_before_creating_a_lease
+          svc = service
+          [nil, "", "  ", 1].each do |value|
+            assert_raises(Refusal) do
+              svc.request(profile_name: "developer", role: "developer", task: value, assignment: "a", repos: ["ace"])
+            end
+          end
+          assert_empty svc.store.all
+          assert_empty @fake.issued
+        end
+
+        def test_expired_lease_with_unconfirmed_revocation_blocks_reissue
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          svc.store.update(lease.fetch("id")) { |record| record["use_until"] = "2020-01-01T00:00:00Z" }
+          @fake.instance_variable_set(:@failure, Providers::TransientError.new("offline"))
+
+          assert_raises(Refusal) do
+            svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: %w[ace])
+          end
+          assert_equal 1, @fake.issued.length
+          assert_equal "revoke-pending", svc.store.load(lease.fetch("id"))["state"]
+        end
+
+        def test_missing_live_handoff_requires_revocation_before_replacement
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          credential = Dir.glob(File.join(@dir, "credentials", "#{lease.fetch("id")}-*")).fetch(0)
+          File.unlink(credential)
+
+          error = assert_raises(Refusal) { svc.exec(lease_id: lease.fetch("id"), argv: ["true"]) }
+          assert_match(/revoke/, error.message)
+          assert_raises(Refusal) { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"]) }
+          report = svc.reconcile.find { |entry| entry["lease"] == lease.fetch("id") }
+          assert_match(/handoff missing/, report.fetch("reconciled"))
+          assert_equal 1, @fake.issued.length
+          assert_equal :revoked, svc.revoke(lease_id: lease.fetch("id"))
+          replacement = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          refute_equal lease.fetch("id"), replacement.fetch("id")
+        end
+
+        def test_invalid_provider_expiry_is_pending_and_can_be_reconciled
+          issue = @fake.method(:issue)
+          @fake.define_singleton_method(:issue) do |**kwargs|
+            issue.call(**kwargs).merge("provider_expiry" => "not-a-time")
+          end
+          svc = service
+          error = assert_raises(Error) do
+            svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          end
+          assert_match(/invalid or expired expiry/, error.message)
+          record = svc.store.all.fetch(0)
+          assert_equal "revoke-pending", record.fetch("state")
+          assert_nil record["provider_expiry"]
+          assert_equal "revoked", svc.reconcile.fetch(0).fetch("reconciled")
+        end
+
+        def test_provider_managed_expiry_cannot_be_missing
+          @fake.instance_variable_set(:@capabilities, {"expiry_mode" => "provider"})
+          document = YAML.safe_load(@document)
+          document.fetch("auth").fetch("profiles").fetch("developer")["expiry_mode"] = "provider"
+          svc = service(document: document.to_yaml)
+          assert_raises(Error) do
+            svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          end
+          record = svc.store.all.fetch(0)
+          assert_equal "revoke-pending", record.fetch("state")
+          assert_equal "revoked", svc.reconcile.fetch(0).fetch("reconciled")
+        end
+
+        def test_provider_managed_expiry_requires_a_declared_capability
+          @fake.instance_variable_set(:@capabilities, {})
+          document = YAML.safe_load(@document)
+          document.fetch("auth").fetch("profiles").fetch("developer")["expiry_mode"] = "provider"
+          svc = service(document: document.to_yaml)
+          assert_raises(Refusal) do
+            svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          end
+          assert_empty svc.store.all
+          assert_empty @fake.issued
+        end
+
+        def test_provider_expiry_is_normalized_to_an_absolute_time
+          issue = @fake.method(:issue)
+          @fake.define_singleton_method(:issue) do |**kwargs|
+            issue.call(**kwargs).merge("provider_expiry" => (Time.now.utc + 3600).getlocal("+02:00").strftime("%Y-%m-%d %H:%M:%S %z"))
+          end
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+          assert_match(/\A\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ\z/, lease.fetch("provider_expiry"))
+        end
+
         # R6 (re-review): a REALLY spawned child must not inherit any
         # ambient credential override the lease does not contain — the
         # child environment is an allowlist, not a merge.
         def test_exec_real_child_does_not_inherit_unleased_credential_overrides
+          skip "the unprivileged direct runner is not available to a root issuer" if Process.euid.zero?
           require "rbconfig"
           svc = Molecules::GrantResolver.stub :read_verified, @document do
             Service.new(principal: -> { "test-worker" }) # default runner: real spawn via env -i

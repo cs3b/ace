@@ -16,7 +16,11 @@ module Ace
       :head_repository_url, :base_repository_url, :merge_commit_sha
     )
 
-    ProviderIssue = Data.define(:server_name, :number, :title, :state, :author, :url, :labels)
+    ProviderIssue = Data.define(:server_name, :number, :title, :state, :author, :url, :labels, :body) do
+      def initialize(body: nil, **fields)
+        super(body: body, **fields)
+      end
+    end
 
     # Normalized check/CI evidence for one check run.
     ProviderCheck = Data.define(:server_name, :name, :state, :conclusion, :url)

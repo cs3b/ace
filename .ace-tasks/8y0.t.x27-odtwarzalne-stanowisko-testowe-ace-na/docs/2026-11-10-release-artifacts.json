@@ -1,0 +1,170 @@
+{
+  "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+  "packaging": {
+    "ruby": "3.4.8",
+    "rubygems": "3.6.9",
+    "reproduced_twice": true
+  },
+  "gems": [
+    {
+      "name": "ace-assign",
+      "version": "0.73.2",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "cf87b7fe67704b11a5e5dd590146e234dca62bab8f2492bd7510efc6cb86cc2f",
+      "artifact": "ace-assign/ace-assign-0.73.2.gem"
+    },
+    {
+      "name": "ace-coworker",
+      "version": "0.9.0",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "60d68df009f3c16c9d97c4d0466fcf0b46c1bd49fb407005f05fe3a473e5f68d",
+      "artifact": "ace-coworker/ace-coworker-0.9.0.gem"
+    },
+    {
+      "name": "ace-git",
+      "version": "0.33.0",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "1bec6cb404a8e88ecf9a11eb1e2fa8265e154f54a2569cf48e5ffa0748563d97",
+      "artifact": "ace-git/ace-git-0.33.0.gem"
+    },
+    {
+      "name": "ace-git-forgejo",
+      "version": "0.9.0",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "9f2ed48a8621b7cb652a6646eae41d21135336df9fb48e0d1089c55c72892aaf",
+      "artifact": "ace-git-forgejo/ace-git-forgejo-0.9.0.gem"
+    },
+    {
+      "name": "ace-git-worktree",
+      "version": "0.27.4",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "9c38d43d95433a83478836694d7d1f605d383ffc102fe58c19948d5fa447cbd8",
+      "artifact": "ace-git-worktree/ace-git-worktree-0.27.4.gem"
+    },
+    {
+      "name": "ace-handbook-integration-pi",
+      "version": "0.8.1",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "3867d5141ec534ddf6b0d4f6270e2ab480b00860add8e9df679d7ce568360aab",
+      "artifact": "ace-handbook-integration-pi/ace-handbook-integration-pi-0.8.1.gem"
+    },
+    {
+      "name": "ace-herdr",
+      "version": "0.10.0",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "1503a02cf818747b4be384acdb3b29f9a7411c0cf8191ba37e352b70312f4b22",
+      "artifact": "ace-herdr/ace-herdr-0.10.0.gem"
+    },
+    {
+      "name": "ace-hitl",
+      "version": "0.25.1",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "5baebcb2b670bac26656560dd2b91c01d18fc719c9f9888bd25ac5faf75da60d",
+      "artifact": "ace-hitl/ace-hitl-0.25.1.gem"
+    },
+    {
+      "name": "ace-lab",
+      "version": "0.15.0",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "2b019ee961b7ca4d26e4ec3a18eba85dda085bd99016a8476c4ccb6e6a4a00d5",
+      "artifact": "ace-lab/ace-lab-0.15.0.gem"
+    },
+    {
+      "name": "ace-llm-providers-cli",
+      "version": "0.36.3",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "a117c697f03b2240d8bbc0b983b5f67a74aa836ae4c18e32a158ea8352c6c734",
+      "artifact": "ace-llm-providers-cli/ace-llm-providers-cli-0.36.3.gem"
+    },
+    {
+      "name": "ace-overseer",
+      "version": "0.29.0",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "1464786cb922bfa44519bde3731f09d5e45b9f371ef3a4162ad194b883d2ec7e",
+      "artifact": "ace-overseer/ace-overseer-0.29.0.gem"
+    },
+    {
+      "name": "ace-review",
+      "version": "0.62.3",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "aeead93aa5655cc221994a9f87b9b55fd5555c76ccb04d53374fb34effd0e8f8",
+      "artifact": "ace-review/ace-review-0.62.3.gem"
+    },
+    {
+      "name": "ace-runtime",
+      "version": "0.4.2",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "fac804dca5783479d38d034d55c6a4f8d16dc03f2b00e5dccdf9f67368d298e1",
+      "artifact": "ace-runtime/ace-runtime-0.4.2.gem"
+    },
+    {
+      "name": "ace-support-config",
+      "version": "0.18.4",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "e8f39c8a3d12b2eeee18fdea8f2745d65566001e3da2257e1706d5a10df5c584",
+      "artifact": "ace-support-config/ace-support-config-0.18.4.gem"
+    },
+    {
+      "name": "ace-support-items",
+      "version": "0.15.17",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "abaef592e781d9f9ab4b8dd57616407fd1ede02d916fc845d5b105333c304c06",
+      "artifact": "ace-support-items/ace-support-items-0.15.17.gem"
+    },
+    {
+      "name": "ace-task",
+      "version": "0.41.1",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "8232fc69d483bffba103d4d278fa2eddd63a8b7f585bf8e705c37d0119747469",
+      "artifact": "ace-task/ace-task-0.41.1.gem"
+    },
+    {
+      "name": "ace-test-runner",
+      "version": "0.28.2",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "c598cb6da439cdc4e938de60c911415629b5e83f2e09c3b2ab278ac1eb8f4329",
+      "artifact": "ace-test-runner/ace-test-runner-0.28.2.gem"
+    },
+    {
+      "name": "ace-test-runner-e2e",
+      "version": "0.43.1",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "e72fbcc33fcbbc6602fbd5cd7593941e3b28f8e823915896b94018346463c982",
+      "artifact": "ace-test-runner-e2e/ace-test-runner-e2e-0.43.1.gem"
+    },
+    {
+      "name": "ace-wake",
+      "version": "0.3.0",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec",
+      "source_date_epoch": 1794353114,
+      "sha256": "4b4608a5b0e901fa55ce11810922c09397525712fac53240934129504bbfdbd2",
+      "artifact": "ace-wake/ace-wake-0.3.0.gem"
+    }
+  ],
+  "native_herdr": {
+    "source_commit": "f475b86b1fc0a72103fbdf5cc0aba7dfc54cdcb4",
+    "target": "aarch64-unknown-linux-musl",
+    "sha256": "0ee169b8ec16b4678fd2e1c2b0ee0ff2fb2aca5396419787758884972c82acf6",
+    "provenance_sha256": "9c6ba420622d5db68f26b79a1e94d2cc5b7160c1294f442c7bb2de9556e6453c"
+  },
+  "published": false,
+  "vm_acceptance": false
+}

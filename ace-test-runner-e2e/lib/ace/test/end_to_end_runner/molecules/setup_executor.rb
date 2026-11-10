@@ -301,7 +301,7 @@ module Ace
             end
 
             unless status.success?
-              raise "Setup step 'run' failed (exit #{status.exitstatus}): #{command}\n#{stderr}"
+              raise "Setup step 'run' failed (exit #{status.exitstatus}): #{command}\nstdout:\n#{stdout}\nstderr:\n#{stderr}"
             end
 
             stdout

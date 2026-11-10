@@ -1,0 +1,42 @@
+# Each run creates these issues in its isolated test repository. The
+# dependency token is replaced with the actual issue URL returned by Forgejo.
+issues:
+  - key: base
+    title: Add a small counter primitive
+    body: |
+      Add a small Ruby counter primitive under ace-monorepo-e2e/lab-fixture.
+      It must start at zero, accept integer increments and expose the value.
+      Include executable tests for the initial value and multiple increments.
+      Put those tests in ace-monorepo-e2e/test/fast/lab_fixture_counter_test.rb.
+      Run `ace-test ace-monorepo-e2e test/fast/lab_fixture_counter_test.rb --direct` on the candidate.
+      Use the repository's normal task, test, review and PR workflow.
+  - key: cli
+    title: Add a counter command-line interface
+    depends_on: [base]
+    body: |
+      After {{issue:base}} has been integrated, add a command-line interface
+      to the counter. It must accept a sequence of integer increments and
+      print the resulting value. Include executable tests for valid input and
+      an invalid increment. This task depends on {{issue:base}}.
+      Put the CLI tests in ace-monorepo-e2e/test/fast/lab_fixture_counter_cli_test.rb.
+      Run both required checks on the candidate.
+
+      - `ace-test ace-monorepo-e2e test/fast/lab_fixture_counter_test.rb --direct`
+      - `ace-test ace-monorepo-e2e test/fast/lab_fixture_counter_cli_test.rb --direct`
+  - key: docs
+    title: Document the counter fixture
+    body: |
+      Add concise documentation describing the purpose and expected usage of
+      the counter fixture under ace-monorepo-e2e/lab-fixture. The documentation
+      must explain that this is a disposable E2E fixture, not a product API.
+      Run `git diff --check` over the full proposed PR range. Verify that the
+      examples reflect a counter starting at zero and accumulating integer increments.
+  - key: release
+    title: Release the integrated counter fixture
+    kind: release
+    depends_on: [base, cli, docs]
+    body: |
+      Release prerequisites: {{issue:base}}, {{issue:cli}}, and {{issue:docs}}.
+      Keep this issue open and queued after all prerequisites are integrated.
+      A separate explicit release commission is required to start this work.
+      This scenario authorizes no release publication or closure of this issue.

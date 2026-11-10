@@ -69,6 +69,11 @@ module Ace
             roles = string_list(raw["roles"], name, "roles")
             principals = string_list(raw["principals"], name, "principals")
             repos = string_list(raw["repos"], name, "repos")
+            env_names = string_list(raw["env_names"], name, "env_names")
+            if env_names.any? { |value| value.include?("=") || value.include?("\0") }
+              raise Ace::Lab::InvalidConfigurationError,
+                "auth profile '#{name}' env_names cannot contain '=' or NUL"
+            end
             ttl = positive_minutes(raw["ttl_minutes"], name, DEFAULT_TTL_MINUTES)
             max_ttl = positive_minutes(raw["max_ttl_minutes"], name, DEFAULT_MAX_TTL_MINUTES)
             raise_conflict(name, "ttl_minutes exceeds max_ttl_minutes") if ttl > max_ttl
@@ -92,7 +97,7 @@ module Ace
              "ttl_minutes" => ttl, "max_ttl_minutes" => max_ttl,
              "expiry_mode" => expiry_mode,
              "issuer" => raw["issuer"].is_a?(Hash) ? raw["issuer"] : {},
-             "env_names" => string_list(raw["env_names"], name, "env_names")}
+             "env_names" => env_names}
           end
 
           def default_expiry_mode(provider)

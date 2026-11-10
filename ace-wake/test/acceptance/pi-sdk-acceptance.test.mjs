@@ -153,6 +153,10 @@ async function startWakeSession({ script = [], extraFactories = [], extraTools =
     customTools: extraTools,
   });
 
+  // SDK command contexts have no-op reload unless the host binds it.
+  // Exercise the actual replacement lifecycle used by interactive Pi.
+  await session.bindExtensions({commandContextActions:{reload:()=>session.reload()}});
+
   return {
     session,
     cwd,
@@ -192,11 +196,38 @@ function lastWakeMessage(session) {
 }
 
 describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
+  it("persists current observer evidence after the first completed model turn", async () => {
+    const { registerEyes } = await import(pathToFileURL(path.join(path.dirname(EXT_PATH), "wake/eyes-runtime.js")).href);
+    const identity = {pid: 42, startedAt: "linux:01234567-89ab-cdef-0123-456789abcdef:10"};
+    const {session,cwd,cleanup}=await startWakeSession({loadProjected:false,
+      script:[{kind:"tool",toolName:"ace_eyes",arguments:{action:"start",configPath:"eyes.json"}},
+        {kind:"text",text:"ready"}],
+      extraFactories:[pi=>registerEyes(pi,{
+        processIdentity:()=>identity,
+        observe:async()=>({schema:"ace.hitl.observation/v1",events:[],sources:{tasks:{status:"ok"}}}),
+        schedule:()=>1,cancel:()=>{}
+      })]});
+    try {
+      fs.writeFileSync(path.join(cwd,"eyes.json"),"{}");
+      await session.prompt("first turn");
+      const branch=session.sessionManager.getBranch();
+      const binding=branch.findIndex(e=>e.customType==="ace-wake-eyes-binding" && e.data?.process?.startedAt===identity.startedAt);
+      const prompt=branch.findIndex(e=>e.message?.role==="user" && e.message.content?.some?.(p=>p.text==="first turn"));
+      const complete=branch.findIndex(e=>e.message?.role==="assistant" && e.message.stopReason==="stop");
+      const eye=branch.findLastIndex(e=>e.customType==="ace-wake-eyes" && e.data?.observerEvidence?.sources?.tasks==="ok");
+      assert.ok(binding>=0 && prompt>=0 && complete>prompt && eye>complete && eye>binding,
+        `unexpected session order: binding=${binding}, prompt=${prompt}, complete=${complete}, eyes=${eye}`);
+    } finally {cleanup();}
+  });
+
+  // These tests manually fire scheduled ticks. Advance the injected clock by
+  // the scheduler's actual interval: an immediate callback is not elapsed time
+  // and must not bypass the production observation cadence/budget.
   it("recovers the exact async compaction rejection without stranding or duplicate delivery", async () => {
     const { registerEyes } = await import(pathToFileURL(path.join(path.dirname(EXT_PATH), "wake/eyes-runtime.js")).href);
-    let tick, rows=[];
+    let tick, rows=[], clock=0;
     const {session,cwd,cleanup}=await startWakeSession({loadProjected:false,extraFactories:[pi=>registerEyes(pi,{
-      observe:async()=>({schema:"ace.hitl.observation/v1",events:rows}),schedule:fn=>{tick=fn;return 1;},cancel:()=>{}
+      observe:async()=>({schema:"ace.hitl.observation/v1",events:rows}),now:()=>clock,schedule:(fn,interval)=>{tick=()=>{clock+=interval;fn();};return 1;},cancel:()=>{}
     })]});
     const flush=()=>new Promise(resolve=>setImmediate(resolve));
     try {
@@ -217,9 +248,9 @@ describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
 
   it("preserves uncertain async interception behind a breaker until explicit owner reconciliation", async () => {
     const { registerEyes } = await import(pathToFileURL(path.join(path.dirname(EXT_PATH), "wake/eyes-runtime.js")).href);
-    let tick, rows=[],reject=true;
+    let tick, rows=[],reject=true,clock=0;
     const {session,cwd,cleanup}=await startWakeSession({loadProjected:false,extraFactories:[pi=>{
-      registerEyes(pi,{observe:async()=>({schema:"ace.hitl.observation/v1",events:rows}),schedule:fn=>{tick=fn;return 1;},cancel:()=>{}});
+      registerEyes(pi,{observe:async()=>({schema:"ace.hitl.observation/v1",events:rows}),now:()=>clock,schedule:(fn,interval)=>{tick=()=>{clock+=interval;fn();};return 1;},cancel:()=>{}});
       pi.on("input",async event=>{if(reject&&event.text.includes("[ace-eyes]")){await Promise.resolve();return {action:"handled"};}});
       pi.registerCommand("eyes-test-reload",{handler:async(_args,ctx)=>ctx.reload()});
     }]});
@@ -237,19 +268,19 @@ describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
       assert.equal(Object.keys(state.pending).length,1);
       reject=false;await session.prompt("/eyes resume quota-verified");await flush();
       for(let i=0;i<3;i++){tick();await flush();}
-      assert.equal(userTextsOf(session).filter(text=>text.includes("[ace-eyes]")).length,1);
       state=session.sessionManager.getBranch().filter(e=>e.customType==="ace-wake-eyes").at(-1).data;
+      assert.equal(userTextsOf(session).filter(text=>text.includes("[ace-eyes]")).length,1);
       assert.equal(Object.keys(state.pending).length,1);assert.equal(state.breaker,null);
     }finally{cleanup();}
   });
 
   it("never retries a delayed asynchronous input preflight even while the SDK reports idle", async () => {
     const { registerEyes } = await import(pathToFileURL(path.join(path.dirname(EXT_PATH), "wake/eyes-runtime.js")).href);
-    let tick,rows=[],release;
+    let tick,rows=[],release,clock=0;
     const gate=new Promise(resolve=>{release=resolve;});
     const {session,cwd,cleanup}=await startWakeSession({loadProjected:false,extraFactories:[pi=>{
       pi.on("input",async event=>{if(event.text.includes("[ace-eyes]")) await gate;});
-      registerEyes(pi,{observe:async()=>({schema:"ace.hitl.observation/v1",events:rows}),schedule:fn=>{tick=fn;return 1;},cancel:()=>{}});
+      registerEyes(pi,{observe:async()=>({schema:"ace.hitl.observation/v1",events:rows}),now:()=>clock,schedule:(fn,interval)=>{tick=()=>{clock+=interval;fn();};return 1;},cancel:()=>{}});
     }]});
     const flush=()=>new Promise(resolve=>setImmediate(resolve));
     try {
@@ -263,15 +294,15 @@ describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
     }finally{release();cleanup();}
   });
 
-  it("retains one uncertain busy follow-up until the actual host consumes it", async () => {
+  it("defers an eyes wake while the actual host is busy, then delivers it once", async () => {
     const { registerEyes } = await import(pathToFileURL(path.join(path.dirname(EXT_PATH), "wake/eyes-runtime.js")).href);
-    let tick,rows=[],release,entered=false;
+    let tick,rows=[],release,entered=false,clock=0;
     const gate=new Promise(resolve=>{release=resolve;});
     const block={name:"block",label:"Block",description:"Scripted blocking tool",parameters:Type.Object({}),execute:async()=>{
       entered=true;await gate;return {content:[{type:"text",text:"released"}],details:{}};
     }};
     const {session,cwd,cleanup}=await startWakeSession({loadProjected:false,script:[{kind:"tool",toolName:"block"}],extraTools:[block],extraFactories:[pi=>registerEyes(pi,{
-      observe:async()=>({schema:"ace.hitl.observation/v1",events:rows}),schedule:fn=>{tick=fn;return 1;},cancel:()=>{}
+      observe:async()=>({schema:"ace.hitl.observation/v1",events:rows}),now:()=>clock,schedule:(fn,interval)=>{tick=()=>{clock+=interval;fn();};return 1;},cancel:()=>{}
     })]});
     const flush=()=>new Promise(resolve=>setImmediate(resolve));
     try {
@@ -280,9 +311,11 @@ describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
       rows=[{key:"a".repeat(64),revision:"b".repeat(64),id:"event1"}];
       for(let i=0;i<4;i++){tick();await flush();}
       let state=session.sessionManager.getBranch().filter(e=>e.customType==="ace-wake-eyes").at(-1).data;
-      assert.equal(state.window.wakes,1,"queued follow-up must never be retried while host busy");
+      assert.equal(state.window.wakes,0,"busy turns do not accumulate queued eyes follow-ups");
       release();await running;await waitFor(()=>session.isIdle);
       for(let i=0;i<3;i++){tick();await flush();}
+      state=session.sessionManager.getBranch().filter(e=>e.customType==="ace-wake-eyes").at(-1).data;
+      assert.equal(state.window.wakes,1,"an unhandled revision wakes after the turn finishes");
       assert.equal(userTextsOf(session).filter(text=>text.includes("[ace-eyes]")).length,1);
     }finally{release();cleanup();}
   });

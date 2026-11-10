@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/hitl/molecules/event_observation"
+
 module Ace
   module Overseer
     module Molecules
@@ -10,8 +12,14 @@ module Ace
       # until answered — both are the overseer's inbox.
       class HitlInbox
         # @param manager [Ace::Hitl::Organisms::HitlManager, nil]
-        def initialize(manager: nil)
+        def initialize(manager: nil, owner: "overseer", scope: nil)
           @manager = manager || Ace::Hitl::Organisms::HitlManager.new
+          raise ArgumentError, "configured HITL owner is required" if owner.to_s.strip.empty?
+          unless scope.nil? || %w[current all].include?(scope)
+            raise ArgumentError, "HITL scope must be current or all"
+          end
+          @owner, @scope = owner, scope
+          @observation = Ace::Hitl::Molecules::EventObservation.new(manager: @manager)
         end
 
         # @return [Array<Hash>] {"id","type","result","task","assignment",
@@ -19,10 +27,10 @@ module Ace
         #   atom matches on are carried: assignment, then the managing
         #   task's project_task.
         def incoming_events
-          reports = @manager.list(in_folder: "next", type: "report")
-          questions = @manager.list(in_folder: "next", type: "question", status: "pending")
-
-          (reports + questions).sort_by { |event| event.created_at || Time.now }.map { |event| normalize(event) }
+          events = @observation.incoming_events(owner: @owner, scope: @scope).select do |event|
+            event.type == "report" || (event.type == "question" && event.status == "pending")
+          end
+          events.sort_by { |event| event.created_at || Time.now }.map { |event| normalize(event) }
         end
 
         private

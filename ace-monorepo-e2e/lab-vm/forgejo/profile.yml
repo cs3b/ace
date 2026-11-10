@@ -1,0 +1,13 @@
+# Local test forge only. The signing key and release signature are public.
+version: 15.0.11
+architecture: linux-arm64
+url: https://code.forgejo.org/forgejo/forgejo/releases/download/v15.0.11/forgejo-15.0.11-linux-arm64
+sha256: 897629ce7723b46620004ae2e7b2ff21917efd24e9a2d2f02b77888e867e4af5
+key_fingerprint: EB114F5E6C0DC2BCDD183550A4B61A2DC5923710
+signature_file: forgejo-15.0.11-linux-arm64.asc
+key_file: release-key.asc
+listen: 127.0.0.1:3000
+client:
+  version: 0.6.0
+  url: https://codeberg.org/forgejo-contrib/forgejo-cli/releases/download/v0.6.0/forgejo-cli-aarch64-linux.tar.gz
+  sha256: f427e0f94e2bf6f4b44bff17020706915bccfe7abb7ad9b9cbb74cc1aa2dd7b5

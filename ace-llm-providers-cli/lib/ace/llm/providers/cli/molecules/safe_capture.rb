@@ -145,19 +145,19 @@ module Ace
                   pgid = safe_getpgid(pid)
                   debug_log(provider_name, "spawn pid=#{pid} pgid=#{pgid || "n/a"} invocation=#{invocation_id}")
 
-                  begin
-                    stdin.write(stdin_data) if stdin_data
-                  rescue Errno::EPIPE
-                    # Subprocess exited before consuming stdin — continue to capture stderr for the real error
-                  end
-                  stdin.close
-
                   partial_stdout = +""
                   partial_stderr = +""
                   out_reader = Thread.new { safe_read_stream(stdout, partial_stdout) }
                   err_reader = Thread.new { safe_read_stream(stderr, partial_stderr) }
                   out_reader.report_on_exception = false
                   err_reader.report_on_exception = false
+                  input_writer = Thread.new do
+                    stdin.write(stdin_data) if stdin_data
+                  rescue Errno::EPIPE, IOError
+                    # The child exited or capture closed its input during cleanup.
+                  ensure
+                    stdin.close unless stdin.closed?
+                  end
 
                   unless wait_thr.join(normalized_timeout)
                     # Deadline exceeded: kill subprocess group (and descendants), retain partial streams
@@ -218,7 +218,7 @@ module Ace
                     end
                   end
                   [stdin, stdout, stderr].each { |stream| stream.close unless stream.closed? }
-                  [out_reader, err_reader].compact.each { |reader| reader.join(1) }
+                  [input_writer, out_reader, err_reader].compact.each { |thread| thread.join(1) }
                 end
               end
 

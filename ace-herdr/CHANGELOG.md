@@ -5,6 +5,14 @@ All notable changes to `ace-herdr` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.10.0] - 2026-11-10
+
+### Added
+
+- Launch ordinary agents with an explicit private JSON environment file, without exposing credentials in terminal commands. Preserve real pane/session identity and refuse cold auto-resume without the original environment. Retain protected installed extensions and package reproducible native source builds for Linux ARM64, including cross-building on macOS.
+
 ## [0.9.0] - 2026-10-30
 
 ### Changed

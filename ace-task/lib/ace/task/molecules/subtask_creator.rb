@@ -4,6 +4,7 @@ require "fileutils"
 require_relative "../atoms/task_id_formatter"
 require_relative "../atoms/task_frontmatter_defaults"
 require_relative "task_loader"
+require_relative "subtask_allocation_lock"
 
 module Ace
   module Task
@@ -44,32 +45,34 @@ module Ace
         )
           raise ArgumentError, "Title is required" if title.nil? || title.strip.empty?
 
-          paths = destination_paths_for(parent_task, title)
-          subtask_id = paths[:id]
-          subtask_dir = paths[:dir]
-          FileUtils.mkdir_p(subtask_dir)
+          SubtaskAllocationLock.synchronize(parent_task.path) do
+            paths = destination_paths_for(parent_task, title)
+            subtask_id = paths[:id]
+            subtask_dir = paths[:dir]
+            FileUtils.mkdir_p(subtask_dir)
 
-          # Build frontmatter
-          effective_status = status || @config.dig("task", "default_status") || "pending"
-          frontmatter = Atoms::TaskFrontmatterDefaults.build(
-            id: subtask_id,
-            status: effective_status,
-            priority: priority,
-            tags: tags,
-            created_at: time,
-            parent: parent_task.id,
-            estimate: estimate,
-            remote_issue: remote_issue
-          )
+            # Build frontmatter
+            effective_status = status || @config.dig("task", "default_status") || "pending"
+            frontmatter = Atoms::TaskFrontmatterDefaults.build(
+              id: subtask_id,
+              status: effective_status,
+              priority: priority,
+              tags: tags,
+              created_at: time,
+              parent: parent_task.id,
+              estimate: estimate,
+              remote_issue: remote_issue
+            )
 
-          # Write spec file
-          spec_file = paths[:spec]
-          content = build_spec_content(frontmatter: frontmatter, title: title)
-          File.write(spec_file, content)
+            # Write spec file
+            spec_file = paths[:spec]
+            content = build_spec_content(frontmatter: frontmatter, title: title)
+            File.write(spec_file, content)
 
-          # Load and return
-          loader = TaskLoader.new
-          loader.load(subtask_dir, id: subtask_id, load_subtasks: false)
+            # Load and return
+            loader = TaskLoader.new
+            loader.load(subtask_dir, id: subtask_id, load_subtasks: false)
+          end
         end
 
         # Non-mutating preview of the directory and spec file a subtask create

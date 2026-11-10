@@ -20,6 +20,23 @@ module Ace
             refute_includes out, "blocked:"
           end
 
+          def test_required_approval_blocks_until_both_accounts_and_head_are_known
+            evidence = {
+              candidate_head: "1a2b3c4", review_head: "1a2b3c4", review_verdict: "accept",
+              tests: %w[executed passed], tests_head: "1a2b3c4", require_approval: true, format: "json"
+            }
+            approval = {approval_head: "1a2b3c4", approval_by: "reviewer"}
+
+            [[{}, "blocked"], [approval, "blocked"],
+              [approval.merge(author: "reviewer"), "blocked"],
+              [approval.merge(author: "worker"), "ready"]].each do |facts, verdict|
+              out, = capture_io { Gate.new.call(**evidence, **facts) }
+              payload = JSON.parse(out)
+              assert_equal verdict, payload.fetch("verdict")
+              assert_equal(verdict == "blocked" ? ["approval"] : [], payload.fetch("failed_checks"))
+            end
+          end
+
           def test_stale_review_after_candidate_change_prints_blocked_reason
             out, = capture_io do
               Gate.new.call(candidate_head: "1a2b3c4", review_head: "0d0e0f0",

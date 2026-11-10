@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
+require "shellwords"
 
 module Ace
   module Overseer
@@ -9,8 +10,8 @@ module Ace
         # `ace-overseer start [--dry-run] [--format table|json]`
         # (task 8xs.t.pu0.1): starts or reuses the project overseer
         # session from the directory's explicit start configuration.
-        # Exit 0 only for started/reused (dry-run reports the plan with
-        # exit 0 but creates nothing); a blocked start is a CLI error.
+        # Ready starts and dry runs exit 0; blocked or partial starts
+        # are CLI errors. A dry run creates no session.
         class Start < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
 
@@ -27,7 +28,7 @@ module Ace
             super()
             @orchestrator = orchestrator
             @config = config
-            @launcher = launcher || ->(argv) { Kernel.exec(*argv) }
+            @launcher = launcher
           end
 
           def call(dry_run: false, format: "table", scope: nil, reconcile: false, **options)
@@ -45,7 +46,7 @@ module Ace
             else
               operation.bootstrap(dry_run: dry_run)
             end
-            return @launcher.call(report.fetch("command")) if report["status"] == "foreground"
+            return launch_foreground(report) if report["status"] == "foreground"
 
             if options[:quiet]
               # quiet still fails loudly on a blocked start
@@ -55,11 +56,16 @@ module Ace
               render_table(report)
             end
 
+            if report["prompt_failed"] == true
+              raise Ace::Support::Cli::Error, report["message"] || "first turn or readiness is unconfirmed"
+            end
             case report["status"]
             when "started", "reused", "ready", "dry_run" then nil
             else
               raise Ace::Support::Cli::Error, report["message"] || "start blocked"
             end
+          rescue Interrupt
+            raise Ace::Support::Cli::Error.new("start interrupted; inspect existing sessions before retrying", exit_code: 130)
           rescue Ace::Support::Cli::Error
             raise
           rescue => e
@@ -67,6 +73,25 @@ module Ace
           end
 
           private
+
+          def launch_foreground(report)
+            return @launcher.call(report.fetch("command")) if @launcher
+
+            role = report["scope"] == "lab" ? "lab-overseer" : "project-overseer"
+            directory = nil
+            Molecules::SessionEnvironment.new.with_environment(root: report.fetch("root"), role: role) do |path, credentials, _args|
+              directory = credentials
+              environment = JSON.parse(File.read(path))
+              system(environment, *report.fetch("command"), unsetenv_others: true)
+              status = $?
+              unless status&.success?
+                raise Ace::Support::Cli::Error.new("coordinator process exited unsuccessfully",
+                  exit_code: status&.exitstatus || 1)
+              end
+            end
+          ensure
+            Molecules::SessionEnvironment.cleanup(directory) if directory
+          end
 
           def orchestrator(scope: nil)
             @orchestrator || Organisms::StartOrchestrator.new(config: @config || Ace::Overseer.config, scope: scope)
@@ -83,9 +108,16 @@ module Ace
             end
             puts "  workspace:     #{report["workspace"] || "-"}"
             puts "  pane:          #{report["pane"] || "-"}"
-            puts "  agent:         #{report["agent"]}"
+            puts "  agent:         #{report["agent"] || "-"}"
+            puts "  command:       #{Shellwords.join(report["command"])}" if report["command"]
             puts "  replaced pane: #{report["replaced_pane"] || "-"}" if report["replaced_pane"]
             puts "  #{report["message"]}" if report["message"]
+            Array(report["projects"]).each do |project|
+              status = project["status"] || "unknown"
+              status += " (first turn unconfirmed)" if project["prompt_failed"]
+              puts "  project #{project["id"]}: #{status} (#{project["path"] || "-"}, pane: #{project["pane"] || "-"})"
+              puts "    #{project["message"]}" if project["message"]
+            end
           end
         end
       end

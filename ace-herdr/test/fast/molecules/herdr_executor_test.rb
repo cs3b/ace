@@ -69,6 +69,12 @@ module Ace
           )
         end
 
+        def test_agent_list_uses_native_inventory
+          executor = StubbedExecutor.new
+          executor.agent_list
+          assert_equal [["herdr", "agent", "list"]], executor.commands
+        end
+
         def test_agent_start_builds_expected_argv
           executor = StubbedExecutor.new(binary: "herdr")
 
@@ -79,6 +85,20 @@ module Ace
             executor.commands
           )
         end
+
+        def test_installed_pi_start_injects_protected_extensions_and_refuses_overrides
+          executor = StubbedExecutor.new(binary: "herdr")
+          flags = ["--no-extensions", "--extension", "/opt/ace/wake/index.js"]
+          InstalledPiExtensions.stub(:arguments, flags) do
+            executor.agent_start(name: "worker", kind: "pi", pane: "p5", timeout_ms: 1000, args: ["--model", "test"])
+            assert_equal ["herdr", "agent", "start", "worker", "--kind", "pi", "--pane", "p5", "--timeout", "1000", "--", *flags, "--model", "test"], executor.commands.last
+            assert_raises(ExecutorUnavailableError) do
+              executor.agent_start(name: "worker", kind: "pi", pane: "p5", timeout_ms: 1000, args: ["--extension=/tmp/evil.js"])
+            end
+            assert_equal 1, executor.commands.size
+          end
+        end
+
 
         def test_agent_start_passes_harness_args_after_separator
           executor = StubbedExecutor.new(binary: "herdr")
@@ -113,6 +133,17 @@ module Ace
             ["herdr", "agent", "prompt", "p5", "begin", "--wait", "--timeout", "120000"],
             executor.commands.first
           )
+        end
+
+        def test_prompt_can_wait_only_for_first_activity
+          executor = StubbedExecutor.new
+          executor.agent_prompt(pane: "p5", text: "begin", wait: true,
+            until_states: %w[working blocked], timeout_ms: 120_000)
+          assert_equal ["herdr", "agent", "prompt", "p5", "begin", "--wait",
+            "--until", "working", "--until", "blocked", "--timeout", "120000"], executor.commands.first
+          assert_raises(ArgumentError) { executor.agent_prompt(pane: "p5", text: "begin", until_states: ["working"]) }
+          executor.agent_prompt(pane: "p5", text: "begin", wait: true, until_states: [])
+          assert_equal ["herdr", "agent", "prompt", "p5", "begin", "--wait"], executor.commands.last
         end
 
         def test_bounded_wake_terminates_stalled_subprocess

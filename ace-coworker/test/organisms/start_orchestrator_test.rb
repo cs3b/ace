@@ -2,6 +2,8 @@
 
 require_relative "../test_helper"
 require_relative "../support/coworker_fixture"
+require "fileutils"
+require "shellwords"
 
 module Ace
   module Coworker
@@ -43,7 +45,19 @@ module Ace
           table = Atoms::BriefFormatter.format_table(brief)
           assert_includes table, "role:              worker"
           assert_includes table, "--assignment abc123"
+          assert_equal File.join(@dir, ".ace-local", "coworker", "config.yml"), brief.to_h.fetch("config_path")
+          assert_includes table, "ace-coworker report --config #{Shellwords.escape(brief.config.source_path)} --assignment abc123"
           assert_includes table, "overseer@lab"
+        end
+
+        def test_explicit_start_config_is_used_in_report_command
+          path = File.join(@dir, ".ace-local", "coworker", "prepared $verifier;config.yml")
+          FileUtils.cp(File.join(@dir, ".ace-local", "coworker", "config.yml"), path)
+          brief = orchestrator.call(config_path: path)
+
+          assert_equal path, brief.to_h.fetch("config_path")
+          assert_includes Atoms::BriefFormatter.format_table(brief),
+            "ace-coworker report --config #{Shellwords.escape(path)} --assignment abc123"
         end
 
         def test_start_writes_nothing

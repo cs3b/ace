@@ -49,8 +49,9 @@ module Ace
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
 
           def call(**options)
-            discoverer = Molecules::AssignmentDiscoverer.new
-            manager = Molecules::AssignmentManager.new
+            cache = Ace::Assign.cache_dir
+            discoverer = Molecules::AssignmentDiscoverer.new(cache_base: cache)
+            manager = Molecules::AssignmentManager.new(cache_base: cache)
             current_id = manager.current_id
 
             all_assignments = discoverer.find_all(include_completed: true)

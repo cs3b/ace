@@ -35,8 +35,8 @@ module Ace
 
         # Scan for all primary tasks (excludes subtask folders).
         # @return [Array<ScanResult>] Sorted scan results
-        def scan
-          @scanner.scan.reject { |sr| subtask_folder?(sr.folder_name) }
+        def scan(accessible_only: false)
+          @scanner.scan(accessible_only: accessible_only).reject { |sr| subtask_folder?(sr.folder_name) }
         end
 
         # Scan and filter by special folder or virtual filter.

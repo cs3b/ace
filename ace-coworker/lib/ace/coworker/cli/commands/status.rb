@@ -57,8 +57,6 @@ module Ace
               }
               if result.snapshot
                 payload["assignment_status"] = result.snapshot.to_h
-              elsif result.probe_error
-                payload["assignment_error"] = result.probe_error
               end
               payload
             end
@@ -83,8 +81,6 @@ module Ace
                 reasons = snapshot.incomplete_reasons
                 lines.concat(reasons.map { |r| "    remaining: #{r}" })
               end
-            elsif result.probe_error
-              lines << "  assignment error: #{result.probe_error}"
             end
             lines.join("\n")
           end

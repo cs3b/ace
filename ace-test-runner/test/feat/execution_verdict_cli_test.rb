@@ -18,6 +18,7 @@ class ExecutionVerdictCliTest < Minitest::Test
         File.write(path, content)
       end
       File.write(File.join(root, "Gemfile"), "eval_gemfile #{File.join(ROOT, 'Gemfile').inspect}\n")
+      configure_fixture_bundle(root)
       FileUtils.mkdir_p(File.join(root, ".ace", "test"))
       config = {"version" => 1, "patterns" => {"first" => "test/first/*_test.rb", "failure" => "test/failure/*_test.rb", "last" => "test/last/*_test.rb"},
         "targets" => {"all" => ["first", "failure", "last"]},

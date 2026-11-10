@@ -55,7 +55,7 @@ Pi's `sendUserMessage` returns before delivery resolves, and some refusals (no m
 
 The `/continue-work` prompt template (`.pi/prompts/continue-work.md`) is the resume prompt for a pi overseer session. It runs on two triggers: a report notification woke the session, or the session restarted. In both cases it:
 
-1. reads real state — `_overseer` tasks (`ace-task --in _overseer list`), `ace-assign` assignments under `.ace-local/assign/`, and project truth (`ace-task list`, `ace-overseer status`, `ace-git-worktree list`, `git status --short`);
+1. reads real state — `_overseer` tasks (`ace-task list --in _overseer`), `ace-assign` assignments under `.ace-local/assign/`, and project truth (`ace-task list`, `ace-overseer status`, `ace-git-worktree list`, `git status --short`);
 2. processes reports through `ace-overseer process-reports` (dedup by event state — delivery repetition is never work repetition);
 3. continues the SAME commissioned process via `ace-overseer work-on` / `ace-overseer handoff`.
 

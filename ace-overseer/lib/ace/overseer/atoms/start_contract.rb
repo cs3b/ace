@@ -7,6 +7,26 @@ module Ace
       # first-run profile when no start section exists. A malformed explicit
       # configuration never falls back to another model or harness.
       class StartContract
+        FIRST_TURN_PROMPT = <<~PROMPT.chomp
+          Begin your first turn now. Execute the "First turn after start"
+          protocol in your standing instructions in its listed order.
+          Arm observation with the ace_eyes tool, action start, using configPath
+          set to your configured eyes path.
+          Report reconciliation and new dispatch both require a successful
+          observation with every required source healthy. If observation is
+          unavailable or degraded, record its exact error through the existing
+          task/HITL owner and END THIS TURN without processing pending reports.
+          If that owner is unavailable, report its failure and end the turn.
+          When observation is healthy, follow the role's first-turn protocol
+          through its stopping point. When that protocol calls for work,
+          reconcile existing commissions before choosing new work and
+          acknowledge revisions only after their owner accepted them.
+          Do not diagnose implementation, inspect host
+          credential stores, probe transports or repeat status/help commands.
+          Installation, configuration and diagnosis belong to workers.
+          End the turn after delegation; remain idle when there is no work.
+        PROMPT
+
         SCOPES = %w[project lab].freeze
         SECTION_KEYS = %w[scope profile instructions].freeze
         PROFILE_KEYS = %w[harness model thinking].freeze

@@ -9,6 +9,7 @@ require_relative "../molecules/extension_provisioner"
 require_relative "../molecules/hitl_routes"
 require_relative "../molecules/caller_authorizer"
 require_relative "../atoms/topology_schema"
+require "ace/support/cli/toolchain"
 require "open3"
 require "yaml"
 require "json"
@@ -199,9 +200,8 @@ module Ace
         # verified readiness. Protocol instructions are resolved with
         # ace-nav from every declared project root (the execution
         # contexts the executor works in); a role that fails resolution
-        # is a failed check, an environment without the resolver
-        # reports unknown (offline verifier posture, like network
-        # remotes) and does not block.
+        # is a failed check. In auto mode a missing resolver reports unknown;
+        # installed mode requires the installed executable and fails closed.
         def check_roles(manifest)
           verifier = Molecules::RoleVerifier.new(
             account_lookup: @account_lookup, group_source: @group_source
@@ -252,6 +252,8 @@ module Ace
             "'#{instructions}'; not probed by the read-only verifier"] if unresolved_resolver
 
           [PASS, nil]
+        rescue Ace::Support::Cli::Toolchain::Error => e
+          [FAIL, "ACE toolchain error: #{e.message}"]
         end
 
         def resolution_error(result)
@@ -259,20 +261,18 @@ module Ace
           detail ? detail : "ace-nav exited with status #{result['status']}"
         end
 
-        # Same binary choice the executor's resolver makes
-        # (Ace::Coworker::Molecules::InstructionResolver): the
-        # project's binstub when present, otherwise the PATH lookup.
-        # A privileged installer never executes repository-controlled
-        # binstubs (same trust posture as the LAB-1 symlink refusals):
-        # under root only the PATH-installed resolver is used.
+        # Match the executor's resolver: installed mode always resolves the
+        # installed launcher, and root never executes repository binstubs.
         def nav_binary(project_root)
+          return Ace::Support::Cli::Toolchain.executable("ace-nav") if Ace::Support::Cli::Toolchain.installed?
+
           binstub = File.join(project_root, "bin", "ace-nav")
           use_binstub = !Process.uid.zero? && File.executable?(binstub)
           use_binstub ? binstub : "ace-nav"
         end
 
         def run_nav(argv, cwd)
-          out, err, status = Open3.capture3(*argv, chdir: cwd)
+          out, err, status = Open3.capture3(Ace::Support::Cli::Toolchain.child_environment, *argv, chdir: cwd)
           {"status" => status.success? ? "ok" : (status.exitstatus || "signal #{status.termsig}"),
            "out" => out, "err" => err}
         rescue Errno::ENOENT
@@ -577,7 +577,12 @@ module Ace
 
           gem_home = gemset["gem_home"]
           runtime_reason = gem_runtime_reason(gem_home)
-          provisioner = Molecules::GemsetProvisioner.new(runner: @runner)
+          # All probes below are read-only and overlap heavily across root
+          # dependency graphs. Reuse identical command results only within
+          # this verification pass; a later call always reads the runtime again.
+          probes = {}
+          read_once = ->(argv) { probes.fetch(argv) { probes[argv] = @runner.call(argv) } }
+          provisioner = Molecules::GemsetProvisioner.new(runner: read_once)
           gems.map do |gem|
             if runtime_reason
               next {"gem" => gem["name"], "version" => gem["version"], "gem_home" => gem_home,
@@ -657,8 +662,17 @@ module Ace
             gem_home, entry["gem"], declared["version"]
           )
           return "gem '#{entry["gem"]}' #{declared["version"]} is not installed with a " \
-            "handbook/extensions tree in '#{gem_home}'; rerun ace-lab install" unless File.directory?(source_root)
+            "handbook/extensions tree in '#{gem_home}'; rerun ace-lab install" if source_root.nil?
 
+          if ENV["ACE_TOOLCHAIN"] == "installed"
+            begin
+              Molecules::ExtensionProjection.validate_protected_root!(source_root)
+              Molecules::ExtensionProjection.validate_protected_files!(entry["path"],
+                [Molecules::ExtensionProjection::RECEIPT_NAME])
+            rescue Ace::Lab::Error => e
+              return "#{e.message}; rerun ace-lab install"
+            end
+          end
           receipt_path = File.join(entry["path"], Molecules::ExtensionProvisioner::RECEIPT_NAME)
           unless File.file?(receipt_path)
             return "extension projection receipt '#{receipt_path}' is missing; rerun ace-lab install"
@@ -671,6 +685,9 @@ module Ace
           rescue Errno::EACCES, Errno::ENOENT
             return "extension projection receipt '#{receipt_path}' is not readable; " \
               "rerun ace-lab install"
+          end
+          unless Molecules::ExtensionProjection.valid_receipt?(receipt)
+            return "extension projection receipt '#{receipt_path}' has invalid files; rerun ace-lab install"
           end
           if receipt["gem"] != entry["gem"] || receipt["version"] != declared["version"]
             return "extension projection at '#{entry["path"]}' was projected from " \
@@ -691,6 +708,11 @@ module Ace
           begin
             expected.each_key do |relative|
               Molecules::ExtensionProjection.validate_destination!(entry["path"], relative)
+            end
+            if ENV["ACE_TOOLCHAIN"] == "installed"
+              Molecules::ExtensionProjection.validate_protected_files!(source_root, expected.keys)
+              Molecules::ExtensionProjection.validate_protected_files!(entry["path"],
+                expected.keys + [Molecules::ExtensionProjection::RECEIPT_NAME])
             end
           rescue Ace::Lab::Error => e
             return "#{e.message}; rerun ace-lab install"
@@ -713,7 +735,28 @@ module Ace
           return "extension projection file '#{unreadable}' is not readable by the declared " \
             "account '#{entry["account"]}'; rerun ace-lab install" if unreadable
 
+          directories = [entry["path"]] + expected.keys.flat_map do |relative|
+            segments = relative.split("/")[0...-1]
+            segments.each_index.map { |i| File.join(entry["path"], *segments[0..i]) }
+          end
+          if ENV["ACE_TOOLCHAIN"] == "installed"
+            parent = File.dirname(entry["path"])
+            loop do
+              directories << parent
+              break if parent == "/"
+              parent = File.dirname(parent)
+            end
+          end
+          inaccessible = directories.uniq.find do |dir|
+            stat = lstat(dir)
+            !stat || !stat.directory? || stat.symlink? ||
+              ((stat.mode & 0o001).zero? && !((stat.mode & 0o100) != 0 && account_entry && stat.uid == account_entry.uid))
+          end
+          return "extension projection directory '#{inaccessible}' is not traversable by the declared account '#{entry["account"]}'" if inaccessible
+
           nil
+        rescue SystemCallError => e
+          "extension projection at '#{entry["path"]}' cannot be inspected (#{e.class.name}); rerun ace-lab install"
         end
 
         def unreadable_reason(path, account_entry)

@@ -47,6 +47,11 @@ module Ace
             reporter: Molecules::HitlReporter.new(project_root: @dir, runner: runner))
         end
 
+        def completed_outcome
+          snapshot = Models::AssignmentSnapshot.from_status_json(JSON.parse(completed_json))
+          Atoms::OutcomePlanner.plan(snapshot).to_h
+        end
+
         def completed_json
           CoworkerFixture.status_json(state: "completed",
             steps: [{number: "010", name: "impl", status: "done"}, {number: "020", name: "verify", status: "done"}])
@@ -85,6 +90,70 @@ module Ace
           assert_includes create_argv, "success"
           send_argv = @runner_calls.find { |argv| argv[1] == "send" }
           assert_equal "8xhq01", send_argv[2]
+        end
+
+        def test_observed_report_publishes_without_transport_and_reuses_matching_event
+          config = YAML.safe_load_file(@config_path)
+          config["reporting"] = {"delivery" => "observe"}
+          File.write(@config_path, YAML.dump(config))
+          projection = JSON.generate("schema" => "ace.hitl.observation/v1", "events" => [
+            {"id" => "8xhq01", "type" => "report", "task" => "8xh.t.aaa", "assignment" => "abc123", "result" => "success"}])
+          orch = orchestrator(json: completed_json, script: [
+            {success: true, out: "HITL event created: 8xhq01 x\n"},
+            {success: true, out: projection}, {success: true, out: projection}, {success: true, out: projection}])
+          first = orch.call(config_path: nil)
+          assert_equal 0, first.exit_code, first.message
+          assert_includes first.delivery, "published for observation"
+          refute_includes first.delivery, "delivered"
+          second = orch.call(config_path: nil)
+          assert_equal first.event_id, second.event_id
+          assert_equal 0, second.exit_code, second.message
+          assert_equal 1, @runner_calls.count { |argv| argv[1] == "create" }
+          refute @runner_calls.any? { |argv| argv[1] == "send" }
+        end
+
+        def test_completed_followup_step_publishes_a_new_success_event
+          first = orchestrator(json: completed_json,
+            script: [{success: true, out: "HITL event created: 8xhq01 x\n"}, {success: true}]).call
+
+          payload = JSON.parse(completed_json)
+          payload.fetch("steps") << {"number" => "030", "name" => "publish-approval", "status" => "done"}
+          payload["progress"] = "3/3 done"
+          followup = orchestrator(json: JSON.generate(payload),
+            script: [{success: true, out: "HITL event created: 8xhq02 x\n"}, {success: true}]).call
+
+          assert_equal "8xhq01", first.event_id
+          assert_equal "8xhq02", followup.event_id
+          assert_equal %w[create send], @runner_calls.map { |argv| argv[1] }
+          assert_includes @runner_calls.first, "publish-approval"
+        end
+
+        def test_unavailable_observation_preserves_existing_event_without_creating_another
+          config = YAML.safe_load_file(@config_path)
+          config["reporting"] = {"delivery" => "observe"}
+          File.write(@config_path, YAML.dump(config))
+          FileUtils.mkdir_p(File.dirname(state_path))
+          original = JSON.generate("result" => "success", "event_id" => "8xhq01", "outcome" => completed_outcome)
+          File.write(state_path, original)
+          [{success: false, err: "unreadable observation"},
+           {success: true, out: JSON.generate("schema" => "ace.hitl.observation/v1", "events" => [{}])}].each do |response|
+            orch = orchestrator(json: completed_json, script: [response])
+            assert_raises(Error) { orch.call(config_path: nil) }
+            assert_equal original, File.read(state_path)
+            refute @runner_calls.any? { |argv| %w[create send].include?(argv[1]) }
+          end
+        end
+
+        def test_unverified_observation_publication_is_an_explicit_failure
+          config = YAML.safe_load_file(@config_path)
+          config["reporting"] = {"delivery" => "observe"}
+          File.write(@config_path, YAML.dump(config))
+          result = orchestrator(json: completed_json, script: [
+            {success: true, out: "HITL event created: 8xhq01 x\n"},
+            {success: true, out: JSON.generate("schema" => "ace.hitl.observation/v1", "events" => [])}]).call(config_path: nil)
+          assert_equal 1, result.exit_code
+          assert_includes result.message, "could not be verified"
+          refute @runner_calls.any? { |argv| argv[1] == "send" }
         end
 
         def test_send_failure_preserves_success_outcome_and_rerun_resends_only
@@ -290,7 +359,7 @@ module Ace
           # ace-hitl interface (which honors a custom root_dir), never a
           # glob of the constant .ace-local/hitl path.
           FileUtils.mkdir_p(File.dirname(state_path))
-          File.write(state_path, JSON.generate({"result" => "success", "event_id" => "8xhq30"}))
+          File.write(state_path, JSON.generate("result" => "success", "event_id" => "8xhq30", "outcome" => completed_outcome))
 
           result = orchestrator(json: completed_json,
             script: [{success: true, out: "/custom-root/8xhq30-evt.hitl.s.md\n"},

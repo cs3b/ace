@@ -3,6 +3,30 @@
 require_relative "../../test_helper"
 
 class ListCommandTest < AceAssignTestCase
+  def test_list_uses_same_relative_override_as_create_from_nested_cwd
+    previous = ENV["CACHE_BASE"]
+    Dir.mktmpdir do |root|
+      nested = File.join(root, "nested")
+      FileUtils.mkdir_p(nested)
+      File.write(File.join(root, ".git"), "")
+      ENV["CACHE_BASE"] = "records"
+      Dir.chdir(nested) do
+        cache = Ace::Assign.cache_dir
+        FileUtils.mkdir_p(cache)
+        executor = Ace::Assign::Organisms::AssignmentExecutor.new
+        result = executor.start(create_test_config(cache, name: "nested-store"))
+        Ace::Assign::Molecules::AssignmentManager.new.set_current(result[:assignment].id)
+        output, = capture_io { Ace::Assign::CLI::Commands::List.new.call(format: "json", all: true) }
+        rows = JSON.parse(output)
+        assert_equal ["nested-store"], rows.map { |row| row["name"] }
+        assert rows.first["is_current"]
+        refute File.exist?(File.join(root, "records"))
+      end
+    end
+  ensure
+    ENV["CACHE_BASE"] = previous
+  end
+
   def test_list_shows_assignments
     with_temp_cache do |cache_dir|
       Ace::Assign.config["cache_dir"] = cache_dir

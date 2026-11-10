@@ -19,7 +19,8 @@ module Ace
             "directories" => ->(item) { item["path"] },
             "keys" => ->(item) { "#{item['account']}:#{item['path']}" },
             "roles" => ->(item) { item["id"] },
-            "gems" => ->(item) { "#{item['name']} #{item['version']}" }
+            "gems" => ->(item) { "#{item['name']} #{item['version']}" },
+            "extensions" => ->(item) { item["gem"] }
           }.freeze
 
           # "SHA256:" plus the first 20 base64 characters is enough to

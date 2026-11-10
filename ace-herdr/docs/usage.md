@@ -70,6 +70,24 @@ by the number of deliveries.
 
 ## Dispatch, send, capture, wait, close
 
+`dispatch` starts an ordinary process in `--cwd`. For an explicitly selected
+environment, pass `--env-file` with an absolute path to a private (`0600`) JSON
+object of string variables. The native launcher clears ambient variables and
+reads this file without placing its values in terminal commands or prompts.
+`--role` labels the commission; it does not grant operating-system privileges.
+
+```sh
+ace-herdr dispatch --label review-task --role verifier --cwd /lab/ace/.ace-wt/task-1 --env-file /private/role-environment.json --prompt-file commission.md
+```
+
+Installed Linux deployments use the protected extensions configured by
+`ace-lab`. Missing required runtime or extension files block startup. Sessions
+of the same user are trusted peers, not a hostile-code sandbox. For task work,
+use `ace-overseer work-on` or `handoff`: these own commission identity, duplicate
+protection and report-driven retirement. A low-level dispatch alone is not an
+assignment lifecycle.
+
+
 ```bash
 ace-herdr dispatch --label t.123 --kind pi --prompt-file prompt.md
 ace-herdr dispatch --label review --pane p7 --cwd /Users/me/project
@@ -86,6 +104,11 @@ ace-herdr close --pane p5 --rename done
 prompt semantics: text becomes one self-submitting agent prompt, and a single
 trailing Enter is dropped and reported. A command must be declared before any
 key.
+
+For the native `herdr agent prompt` command, `--wait` without `--until`
+waits for a settled state. Use `--wait --until working --until blocked` to
+wait for observed activity instead. A stalled or timed-out prompt has an
+uncertain delivery outcome; inspect the existing agent before retrying.
 
 ## Workspaces, tabs, and presets
 

@@ -1,0 +1,69 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Rebuild an operational candidate artifact from an immutable source commit.
+# Manifest hashes were recorded with Ruby 3.4.8 and RubyGems 3.6.9; a
+# different packaging toolchain must reproduce those bytes or be refused.
+require "fileutils"
+require "tmpdir"
+require "open3"
+require "digest"
+require "json"
+load File.expand_path("lab-vm", __dir__)
+
+def checked(*args, chdir: nil, env: {})
+  out, err, status = Open3.capture3(env, *args, **(chdir ? {chdir: chdir} : {}))
+  raise "#{args.first} failed: #{err.lines.first.to_s.strip}" unless status.success?
+  out.strip
+end
+
+begin
+  raise "usage: lab-vm-build-gem PACKAGE FULL_COMMIT VERSION" unless ARGV.length == 3
+  package, commit, version = ARGV
+  namespace = {"ace-support-config" => "support/config", "ace-assign" => "assign", "ace-support-items" => "support/items", "ace-git" => "git", "ace-git-worktree" => "git/worktree", "ace-hitl" => "hitl", "ace-task" => "task", "ace-runtime" => "runtime", "ace-test-runner" => "test_runner", "ace-coworker" => "coworker", "ace-wake" => "wake", "ace-lab" => "lab", "ace-herdr" => "herdr", "ace-git-forgejo" => "git/forgejo",
+    "ace-llm-providers-cli" => "llm/providers/cli", "ace-test-runner-e2e" => "test/end_to_end_runner",
+    "ace-overseer" => "overseer", "ace-handbook-integration-pi" => "handbook/integration/pi", "ace-review" => "review"}
+    .fetch(package) { raise "unsupported local gem" }
+  raise "full commit SHA required" unless commit.match?(/\A[0-9a-f]{40}\z/)
+  raise "invalid artifact version" unless version.match?(/\A[0-9]+(?:\.[a-zA-Z0-9]+)+\z/)
+  actual = checked("git", "rev-parse", "#{commit}^{commit}", chdir: LabVm::ROOT)
+  raise "source commit mismatch" unless actual == commit
+  epoch = checked("git", "show", "-s", "--format=%ct", commit, chdir: LabVm::ROOT)
+  raise "invalid commit timestamp" unless epoch.match?(/\A[0-9]+\z/)
+  cache = File.join(LabVm.local_dir, "artifacts")
+  raise "artifact cache is a symlink" if File.symlink?(cache)
+  Dir.mkdir(cache, 0o700) unless File.exist?(cache)
+  info = File.stat(cache)
+  raise "artifact cache is not private and owned" unless info.directory? && info.uid == Process.uid && (info.mode & 0o077).zero?
+  destination = File.join(cache, "#{package}-#{version}.gem")
+  raise "output path is a symlink" if File.symlink?(destination)
+  Dir.mktmpdir("lab-gem-build-", LabVm.local_dir) do |dir|
+    archive = File.join(dir, "source.tar")
+    checked("git", "archive", "--format=tar", "--output=#{archive}", commit, package, chdir: LabVm::ROOT)
+    checked("tar", "-xf", archive, "-C", dir)
+    source = File.join(dir, package)
+    version_file = File.join(source, "lib/ace/#{namespace}/version.rb")
+    original = File.read(version_file)
+    updated = original.sub(/VERSION = "[^"]+"/, "VERSION = \"#{version}\"")
+    raise "expected one version declaration" unless original.scan(/^\s*VERSION = "[^"]+"$/).size == 1
+    File.write(version_file, updated)
+    gemspec = File.join(source, "#{package}.gemspec")
+    original = File.read(gemspec)
+    updated = original.sub('spec.date = Time.now.utc.strftime("%Y-%m-%d")', "spec.date = Time.at(#{epoch}).utc.strftime(\"%Y-%m-%d\")")
+    raise "gemspec release date declaration not found" if updated == original
+    File.write(gemspec, updated)
+    candidate = File.join(dir, "candidate.gem")
+    checked("gem", "build", "#{package}.gemspec", "-o", candidate, chdir: source, env: {"SOURCE_DATE_EPOCH" => epoch})
+    digest = Digest::SHA256.file(candidate).hexdigest
+    if File.exist?(destination)
+      raise "existing artifact has a different SHA-256; refusing overwrite" unless File.file?(destination) && Digest::SHA256.file(destination).hexdigest == digest
+    else
+      File.rename(candidate, destination)
+    end
+    puts JSON.pretty_generate({"name" => package, "version" => version, "source_commit" => commit,
+      "source_date_epoch" => epoch.to_i, "sha256" => digest, "artifact" => destination})
+  end
+rescue StandardError => error
+  warn "lab-vm-build-gem: #{error.message}"
+  exit 1
+end

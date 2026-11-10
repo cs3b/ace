@@ -14,7 +14,7 @@ Resume the **already commissioned** overseer process in this pi session. This pr
 ## Resume cycle
 
 1. **Read truth, not memory.** Reconstruct the current state from the files that own it — never from what the previous turn believed:
-   - Private overseer tasks: `ace-task --in _overseer list`, then `ace-task --in _overseer show <ref>` for every `in-progress` task. These define the commissioned process.
+   - Private overseer tasks: `ace-task list --in _overseer`, then `ace-task show <ref>` for every `in-progress` task. These define the commissioned process.
    - Assignments: the `ace-assign` plans under `.ace-local/assign/` for those tasks. Steps are read from the assignment; they are not copied anywhere else.
    - Project truth: `ace-task list`, `ace-overseer status`, `ace-git-worktree list`, and `git status --short` in each involved worktree.
 2. **Process reports.** Run `ace-overseer process-reports` so incoming ace-hitl reports are interpreted against the managing task and the queue continues. Delivery repetition is not work repetition: an already-processed report (same event id) must not trigger the work again — `process-reports` dedups by event state; trust its output, not the count of wake messages.

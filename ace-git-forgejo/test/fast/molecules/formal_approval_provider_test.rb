@@ -29,7 +29,9 @@ class FormalApprovalProviderTest < AceGitForgejoTestCase
     path = path.delete_prefix("/api/v1/repos/owner/repo/")
     result = case path
     when "/api/v1/version" then {"version" => @version}
-    when "/api/v1/user" then @actor
+    when "/api/v1/user"
+      flunk("Repository-scoped approval called the user API") if @leased
+      @actor
     when /reviews\?page=\d+&limit=50\z/
       path.include?("page=2") ? [] : @rows
     when "pulls/1/reviews"
@@ -77,6 +79,61 @@ class FormalApprovalProviderTest < AceGitForgejoTestCase
     assert_equal :existing, approve.idempotency
     assert read.effective
     assert_equal 1, @writes.length
+  end
+
+  def with_repository_lease(account = "reviewer")
+    previous = ENV.to_h.slice("ACE_LAB_FORGEJO_ORIGIN", "ACE_LAB_FORGEJO_ACCOUNT")
+    ENV.update("ACE_LAB_FORGEJO_ORIGIN" => "https://forge.example", "ACE_LAB_FORGEJO_ACCOUNT" => account)
+    @leased = true
+    yield
+  ensure
+    ENV.delete("ACE_LAB_FORGEJO_ORIGIN")
+    ENV.delete("ACE_LAB_FORGEJO_ACCOUNT")
+    ENV.update(previous)
+  end
+
+  def test_repository_lease_uses_authoritative_review_identity_without_user_scope
+    with_repository_lease do
+      receipt = approve
+      assert_equal "reviewer", receipt.reviewer
+      assert_equal 7, receipt.reviewer_id
+      assert_equal :existing, approve.idempotency
+      assert read.effective
+      assert_equal 1, @writes.length
+    end
+  end
+
+  def test_repository_lease_cannot_claim_approval_by_a_different_account
+    with_repository_lease("different") do
+      assert_raises(Ace::Git::ProviderUnknownOutcomeError) { approve }
+      assert_raises(Ace::Git::ProviderConflictingMatchesError) { approve }
+      assert_equal 1, @writes.length
+    end
+  end
+
+  def test_repository_lease_preserves_unrelated_visible_pending_review
+    @rows << {"id" => 88, "state" => "PENDING", "user" => {"id" => 8, "login" => "other"},
+      "body" => "draft", "commit_id" => HEAD, "comments_count" => 0}
+
+    with_repository_lease do
+      assert_raises(Ace::Git::ProviderConflictingMatchesError) { approve }
+      assert_empty @writes
+      assert_equal "draft", @rows.first.fetch("body")
+    end
+  end
+
+  def test_repository_lease_resumes_only_the_matching_pending_review
+    with_repository_lease do
+      approve
+      @rows.first["state"] = "PENDING"
+
+      receipt = approve
+
+      assert_equal :existing, receipt.idempotency
+      assert_equal 99, receipt.review_id
+      assert_equal HEAD, receipt.head_sha
+      assert_equal 2, @writes.length
+    end
   end
 
   def test_older_unverified_formal_api_is_refused_before_writes

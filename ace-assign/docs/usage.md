@@ -218,3 +218,21 @@ plans. Each plan keeps its own history.
 The old protected/attempt-evidence and installation paths are removed from the
 local flow. No journal, admission service, or second queue is required to
 create, read, or drive an assignment.
+
+
+### Reading assignments from another project in Ruby
+
+Use the installed owner's explicit-root inventory when observing a worktree:
+
+```ruby
+Ace::Assign::Molecules::AssignmentDiscoverer
+  .for_project(project_root: worktree_path)
+  .find_all(include_completed: true)
+```
+
+The call resolves that directory's configuration cascade without changing cwd or
+`Ace::Assign.config`. Relative `cache_dir` and `CACHE_BASE` values resolve against
+the supplied root; absolute values remain absolute. An explicit root takes
+precedence over `PROJECT_ROOT_PATH`. CLI commands retain their existing cwd-based
+cache resolution, including relative `CACHE_BASE`. The API reads current owner
+records on every invocation; it creates no observation cache.

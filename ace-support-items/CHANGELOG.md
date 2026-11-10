@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.17] - 2026-11-10
+
+### Fixed
+
+- Allow accessible-only discovery to skip unreadable descendants while preserving strict complete inventory and root checks.
+
 ## [0.15.16] - 2026-10-29
 
 ### Fixed

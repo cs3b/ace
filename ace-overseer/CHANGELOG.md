@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-11-10
+
+### Added
+
+- Start real workers from work-on/handoff, persist native executor identities on existing commissions, and require active observation before delegation. Accept reports before retirement and continuation through worker, reviewer and integrator roles; refuse duplicate or uncertain starts. Build explicit installed environments, select per-project observation credentials, and observe issue bodies/labels plus project sessions. Verify first-turn/eyes evidence on Linux and macOS; delegate configuration and diagnosis in packaged instructions.
+
 ## [0.28.1] - 2026-10-31
 
 ### Fixed

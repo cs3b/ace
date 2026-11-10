@@ -140,6 +140,27 @@ class PipelineSandboxBuilderTest < Minitest::Test
     end
   end
 
+  def test_existing_setup_artifact_is_preserved_and_missing_artifacts_are_not_directories
+    Dir.mktmpdir do |tmpdir|
+      sandbox = File.join(tmpdir, "sandbox")
+      FileUtils.mkdir_p(File.join(sandbox, "results/setup"))
+      receipt = File.join(sandbox, "results/setup/fixture.json")
+      File.write(receipt, '{"status":"ready"}')
+      scenario = build_scenario(tmpdir)
+      scenario.sandbox_layout.replace({
+        "results/setup/fixture.json" => "setup receipt",
+        "results/tc/01/state.json" => "state",
+        "results/tc/02/" => "second case"
+      })
+      builder = SandboxBuilder.new(config_root: tmpdir, runtime_builder: FakeRuntimeBuilder.new([], {}))
+      builder.prepare_existing_sandbox(scenario: scenario, sandbox_path: sandbox, test_cases: ["TC-001"])
+      assert_equal '{"status":"ready"}', File.read(receipt)
+      assert Dir.exist?(File.join(sandbox, "results/tc/01"))
+      refute File.exist?(File.join(sandbox, "results/tc/01/state.json"))
+      refute File.exist?(File.join(sandbox, "results/tc/02"))
+    end
+  end
+
   def test_sync_protocol_sources_into_copies_manifest_backed_files_without_runtime_mutation
     Dir.mktmpdir do |tmpdir|
       project_root = File.join(tmpdir, "repo")

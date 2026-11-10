@@ -53,17 +53,15 @@ module Ace
           assert_equal :complete, orchestrator(json: json).call.snapshot.completion_verdict
         end
 
-        def test_probe_error_is_carried_without_raising
-          result = orchestrator(json: nil)
+        def test_probe_error_is_not_ready_without_raising
           runner = ->(_argv, _cwd) { ["", "boom", CoworkerFixture::SuccessStatus.new(false)] }
           failing = StatusOrchestrator.new(
             project_root: @dir,
             assignment_probe: Molecules::AssignmentProbe.new(project_root: @dir, runner: runner)
           )
           result = failing.call
-          assert result.is_a?(StatusOrchestrator::Ready)
-          assert_nil result.snapshot
-          assert_includes result.probe_error, "cannot read assignment 'abc123'"
+          assert result.is_a?(StatusOrchestrator::NotReady)
+          assert_includes result.message, "not ready: cannot read assignment 'abc123'"
         end
 
         def test_relative_config_path_resolves_against_project_root_not_cwd

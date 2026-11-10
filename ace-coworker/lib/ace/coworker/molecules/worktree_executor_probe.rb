@@ -1,9 +1,6 @@
 # frozen_string_literal: true
 
-require "ace/support/cli/toolchain"
-
-require "open3"
-require "json"
+require "ace/assign"
 require "yaml"
 
 module Ace
@@ -15,10 +12,13 @@ module Ace
       # running inside that worktree performs, so a commissioned
       # `config_path` such as `.ace-local/coworker/worker.yml` is
       # honored; read leniently) and the assignment inventory via
-      # `ace-assign list --all --format json` (subprocess argv contract
-      # with explicit cwd, ADR-031).
+      # installed ace-assign owner API with an explicit project root.
+      # No checkout code is loaded and no process-global cwd is changed.
       class WorktreeExecutorProbe
-        DEFAULT_RUNNER = ->(argv, cwd) { Open3.capture3(Ace::Support::Cli::Toolchain.child_environment, *argv, chdir: cwd) }
+        DEFAULT_INVENTORY = ->(root) {
+          Ace::Assign::Molecules::AssignmentDiscoverer.for_project(project_root: root)
+            .find_all(include_completed: true)
+        }
         # Coworker config cascade files that may carry a `config_path`
         # override for the probed worktree (project `.ace` and user tiers;
         # the gem-defaults tier equals the loader's built-in default).
@@ -26,15 +26,14 @@ module Ace
 
         attr_reader :project_root
 
-        def initialize(project_root:, runner: DEFAULT_RUNNER)
+        def initialize(project_root:, inventory: DEFAULT_INVENTORY)
           @project_root = project_root
-          @runner = runner
+          @inventory = inventory
         end
 
         # Probes one worktree. Never returns errors: an unreadable config is
         # reported as Atoms::ActiveExecutorRule::UNPARSEABLE; operational
-        # failures (missing ace-assign CLI, failed listing, unparseable
-        # output) raise Error instead.
+        # failures reading the installed assignment owner's inventory raise Error.
         #
         # @return [Hash] {config: Hash | nil | Atoms::ActiveExecutorRule::UNPARSEABLE,
         #   assignments: Array<Hash{"id","name","state","progress"}>}
@@ -102,40 +101,12 @@ module Ace
         end
 
         def list_assignments(worktree_path)
-          argv = [assign_binary, "list", "--all", "--format", "json"]
-          begin
-            out, err, status = @runner.call(argv, worktree_path)
-          rescue Errno::ENOENT
-            raise Error, "required CLI '#{assign_binary}' not found; install the ace-assign gem"
+          @inventory.call(worktree_path).map do |entry|
+            {"id" => entry.id.to_s, "name" => entry.name.to_s,
+             "state" => entry.state.to_s, "progress" => entry.progress.to_s}
           end
-          unless status.success?
-            message = err.to_s.strip.empty? ? out.to_s.strip : err.to_s.strip
-            raise Error, "cannot list assignments in '#{worktree_path}': #{message}"
-          end
-
-          begin
-            payload = JSON.parse(out)
-          rescue JSON::ParserError => e
-            raise Error, "cannot parse ace-assign list for '#{worktree_path}': #{e.message}"
-          end
-          return [] unless payload.is_a?(Array)
-
-          payload.filter_map do |entry|
-            next unless entry.is_a?(Hash)
-
-            {"id" => entry["id"].to_s, "name" => entry["name"].to_s,
-             "state" => entry["state"].to_s, "progress" => entry["progress"].to_s}
-          end
-        end
-
-        # Prefer the repo binstub when present (agent shells do not activate
-        # mise, so bare ace-* may resolve to stale installed gems); the
-        # subprocess still runs with cwd = the probed worktree.
-        def assign_binary
-          return Ace::Support::Cli::Toolchain.executable("ace-assign") if Ace::Support::Cli::Toolchain.installed?
-
-          binstub = File.join(@project_root, "bin", "ace-assign")
-          File.executable?(binstub) ? binstub : "ace-assign"
+        rescue StandardError => error
+          raise Error, "cannot list assignments in '#{worktree_path}': #{error.message}"
         end
       end
     end

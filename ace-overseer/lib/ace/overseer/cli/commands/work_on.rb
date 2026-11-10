@@ -37,7 +37,7 @@ module Ace
             end
 
             progress = options[:quiet] ? nil : ->(msg) { puts msg }
-            @orchestrator.call(
+            result = @orchestrator.call(
               task_ref: task_refs.first,
               task_refs: task_refs,
               cli_preset: preset,
@@ -46,7 +46,11 @@ module Ace
 
             return if options[:quiet]
 
-            puts "Done. Switch to tmux window and run /ace-assign-drive"
+            if result[:execution]
+              puts "Executor #{result[:execution]['agent']} started for #{result[:assignment_id]}. End the turn; eyes observes its report."
+            else
+              puts "Done. Switch to the task window and run /ace-assign-drive"
+            end
           rescue Ace::Support::Cli::Error
             raise
           rescue => e

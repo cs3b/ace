@@ -5,6 +5,7 @@ require "json"
 require "fileutils"
 require "digest"
 require "time"
+require_relative "error"
 
 module Ace
   module Lab
@@ -46,6 +47,9 @@ module Ace
         # @return [Hash] the created (PREPARING) lease record
         def create(profile:, role:, principal:, task:, assignment:, repos:,
           use_until:, provider_expiry:, token_ref: nil, id: nil)
+          unless [profile, role, principal, task, assignment].all? { |value| value.is_a?(String) && value.valid_encoding? && !value.strip.empty? }
+            raise Error, "lease correlation is incomplete"
+          end
           lease = {"id" => id || "lease-#{SecureRandom.hex(8)}",
                    "profile" => profile, "role" => role, "principal" => principal,
                    "task" => task, "assignment" => assignment, "repos" => repos.sort,
@@ -64,8 +68,8 @@ module Ace
         # scope-changed correlation does not match, and
         # DEADLINE-AWARENESS is part of the match: an issued record
         # past its use_until/provider expiry is not returned, so a
-        # retry mints a fresh grant while reconcile retires the expired
-        # one — an expired grant is never handed back as "live".
+        # retry must settle the expired grant before minting a replacement;
+        # an expired grant is never handed back as "live".
         def find_live(task:, assignment:, profile:, role:)
           all.filter_map do |lease|
             next unless lease["task"] == task && lease["assignment"] == assignment &&
@@ -77,9 +81,11 @@ module Ace
 
         def load(id)
           path = lease_path(id)
-          raise Error, "unknown lease '#{id}'" unless File.file?(path)
-
-          JSON.parse(File.read(path))
+          parse_record(path)
+        rescue Errno::ENOENT
+          raise Error, "unknown lease '#{id}'"
+        rescue SystemCallError => e
+          raise Error, "lease record '#{id}' is unavailable (#{e.class})"
         rescue JSON::ParserError
           raise Error, "lease record '#{id}' is unreadable"
         end
@@ -89,13 +95,17 @@ module Ace
         # problem (the remote token may still be live) — never a
         # silently skipped entry that disappears from reconcile.
         def all
-          return [] unless Dir.exist?(@dir)
-
-          Dir.glob(File.join(@dir, "*.json")).sort.filter_map do |path|
-            JSON.parse(File.read(path))
-          rescue Errno::EACCES
-            nil
-          rescue JSON::ParserError
+          names = begin
+            Dir.children(@dir)
+          rescue Errno::ENOENT
+            return []
+          rescue SystemCallError => e
+            raise Error, "lease inventory is unavailable (#{e.class})"
+          end
+          names.reject { |name| name.start_with?(".") }.select { |name| name.end_with?(".json") }.sort.filter_map do |name|
+            path = File.join(@dir, name)
+            parse_record(path)
+          rescue SystemCallError, JSON::ParserError
             {"id" => File.basename(path, ".json"), "state" => nil,
              "corrupt" => true, "_path" => path}
           end
@@ -110,8 +120,8 @@ module Ace
           path = lease_path(id)
           with_write_lock(id) do
             lease = begin
-              JSON.parse(File.read(path))
-            rescue JSON::ParserError, Errno::ENOENT => e
+              parse_record(path)
+            rescue JSON::ParserError, SystemCallError => e
               # A corrupt/missing record is a named store failure, never a
               # raw parser error escaping through the update seam.
               raise Error, "lease '#{id}' cannot be read at #{path}: #{e.class} #{e.message}"
@@ -128,10 +138,12 @@ module Ace
         end
 
         def with_write_lock(id)
-          FileUtils.mkdir_p(@dir)
-          File.open(File.join(@dir, "#{id}.write.lock"), File::CREAT | File::RDWR) do |lock|
-            lock.flock(File::LOCK_EX)
+          lock = open_lock(File.join(@dir, "#{id}.write.lock"))
+          begin
+            lock_flock(lock, File::LOCK_EX)
             yield
+          ensure
+            lock.close
           end
         end
 
@@ -141,24 +153,28 @@ module Ace
         # against a concurrent identical request — the second caller
         # waits and then returns the first caller's live lease.
         def with_correlation_lock(task:, assignment:, profile:, role:)
-          FileUtils.mkdir_p(@dir)
-          key = Digest::SHA256.hexdigest([task, assignment, profile, role].join("\e"))
-          File.open(File.join(@dir, "correlation-#{key}.lock"), File::CREAT | File::RDWR) do |lock|
-            lock.flock(File::LOCK_EX)
+          key = Digest::SHA256.hexdigest(JSON.generate([task, assignment, profile, role]))
+          lock = open_lock(File.join(@dir, "correlation-#{key}.lock"))
+          begin
+            lock_flock(lock, File::LOCK_EX)
             yield
+          ensure
+            lock.close
           end
         end
 
         # One exec at a time per lease: an exclusive lock on the lease's
         # exec lockfile, non-blocking — a parallel exec is a refusal.
         def with_exec_lock(id)
-          FileUtils.mkdir_p(@dir)
-          File.open(File.join(@dir, "#{id}.exec.lock"), File::CREAT | File::RDWR) do |lock|
-            unless lock.flock(File::LOCK_EX | File::LOCK_NB)
+          lock = open_lock(File.join(@dir, "#{id}.exec.lock"))
+          begin
+            unless lock_flock(lock, File::LOCK_EX | File::LOCK_NB)
               raise Error, "lease '#{id}' already has a running exec"
             end
 
             yield
+          ensure
+            lock.close
           end
         end
 
@@ -168,32 +184,78 @@ module Ace
         # or is mid-revocation — neither is ever usable or "live".
         def live?(lease, at: Time.now)
           return false unless lease["state"] == "issued"
+          return false if lease.key?("execution") || lease["containment"] == "unconfirmed"
           return false if lease["use_until"] && Time.parse(lease["use_until"]) <= at
           if lease["provider_expiry"] && Time.parse(lease["provider_expiry"]) <= at
             return false
           end
 
           true
+        rescue ArgumentError, TypeError => e
+          raise Error, "lease deadline is invalid (#{e.class})"
         end
 
         private
 
+        def open_lock(path)
+          FileUtils.mkdir_p(@dir)
+          lock = File.open(path, File::CREAT | File::RDWR | File::NOFOLLOW, 0o600)
+          held, named = lock.stat, File.lstat(path)
+          unless held.file? && !named.symlink? && held.uid == Process::Sys.geteuid && held.nlink == 1 &&
+              (held.mode & 0o022).zero? && [held.dev, held.ino] == [named.dev, named.ino]
+            raise Error, "lease lock is not safely owned"
+          end
+          lock
+        rescue SystemCallError => e
+          lock&.close unless lock&.closed?
+          raise Error, "lease lock is unavailable (#{e.class})"
+        rescue Exception
+          lock&.close unless lock&.closed?
+          raise
+        end
+
+        def lock_flock(lock, flags)
+          lock.flock(flags)
+        rescue SystemCallError => e
+          raise Error, "lease lock could not be acquired (#{e.class})"
+        end
+
+        def parse_record(path)
+          record = JSON.parse(File.read(path))
+          unless record.is_a?(Hash) && record["id"] == File.basename(path, ".json")
+            raise JSON::ParserError, "lease record identity differs"
+          end
+          record
+        end
+
         def atomic_write(path, lease)
           FileUtils.mkdir_p(@dir)
-          temporary = "#{path}.#{Process.pid}.tmp"
-          File.open(temporary, "w") do |file|
+          temporary = "#{path}.#{SecureRandom.hex(16)}.tmp"
+          created = false
+          File.open(temporary, File::WRONLY | File::CREAT | File::EXCL, 0o600) do |file|
+            created = true
+            file.chmod(0o600)
             file.write(JSON.pretty_generate(lease))
             file.flush
             file.fsync
           end
-          # 0600 BEFORE the rename: the record never exists at the target
-          # path with umask-default permissions, even for an instant.
-          FileUtils.chmod(0o600, temporary)
           begin
             File.rename(temporary, path)
           rescue Errno::ENOENT
             FileUtils.mkdir_p(File.dirname(path))
             File.rename(temporary, path)
+          end
+          # Persist the directory entry as well as the file data.
+          File.open(File.dirname(path), File::RDONLY) { |directory| directory.fsync }
+        rescue SystemCallError, IOError => e
+          raise Error, "lease record write is unavailable (#{e.class})"
+        ensure
+          if created
+            begin
+              File.unlink(temporary)
+            rescue SystemCallError
+              nil
+            end
           end
         end
 

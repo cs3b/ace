@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-10
+
+### Added
+
+- Publish observation evidence for Linux and macOS. Pace observation budgets, defer notifications until idle, and deliver deadlines after an in-flight observation without stale duplicate wakes.
+
+### Fixed
+
+- Explicit reconciliation retries an unconfirmed notification in the same session while keeping confirmed deliveries suppressed until acknowledgment.
+
 ## [0.2.0] - 2026-10-31
 
 ### Added

@@ -96,6 +96,7 @@ module Ace
           task: "t", assignment: "a", repos: %w[ace])
       end
       assert_match(/unknown outcome/, error.message)
+      assert_match(/may remain unresolved/, error.message)
 
       # The retry settles the unresolved predecessor FIRST (the fake
       # provider's revoke succeeds, so settlement is confirmed) and
@@ -109,6 +110,62 @@ module Ace
       interrupted = svc.store.all.reject { |record| record["id"] == lease["id"] }
       assert(interrupted.all? { |record| record["state"] == "revoked" },
         "the interrupted record is deterministically settled before the re-mint")
+    end
+
+    def test_unconfirmed_forgejo_scope_is_settled_before_a_retry_is_minted
+      issuer_password = File.join(@dir, "issuer-password")
+      File.write(issuer_password, "issuer-secret")
+      document = <<~YAML
+        auth:
+          leases_dir: #{@dir}/leases
+          credentials_dir: #{@dir}/credentials
+          profiles:
+            developer:
+              provider: forgejo-test
+              roles: [developer]
+              principals: [test-worker]
+              repos: [cs3b/ace]
+              scopes: [write:repository]
+              issuer:
+                url: https://forge.example.com
+                account: test-worker
+                admin_username: admin
+                password_file: #{issuer_password}
+      YAML
+      minted = []
+      runner = lambda do |argv|
+        payload = JSON.parse(argv.fetch(argv.index("-d") + 1))
+        minted << payload.fetch("name")
+        response = {"sha1" => "SECRET", "scopes" => ["write:repository"]}
+        response["repositories"] = [{"full_name" => "cs3b/ace"}] if minted.size > 1
+        JSON.generate(response)
+      end
+      provider = Plugins::ForgejoProvider.new(runner: runner)
+      Providers.register("forgejo-test", provider)
+      svc = Ace::Lab::Molecules::GrantResolver.stub :read_verified, document do
+        Ace::Lab::Auth::Service.new(principal: -> { "test-worker" })
+      end
+      request = -> { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["cs3b/ace"]) }
+
+      assert_raises(Ace::Lab::Error) { request.call }
+      pending = svc.store.all.fetch(0)
+      assert_equal "revoke-pending", pending["state"]
+      refute svc.store.live?(pending)
+      assert_empty Dir.glob(File.join(@dir, "credentials", "*")), "no credential is delivered for an unconfirmed scope"
+
+      revoked = []
+      unavailable = ->(**_args) { raise Providers::TransientError, "network down" }
+      provider.stub(:revoke, unavailable) do
+        assert_raises(Ace::Lab::Auth::Refusal) { request.call }
+      end
+      assert_equal 1, minted.size, "unsettled scope must not trigger another remote grant"
+      settle = ->(profile:, token_ref:, token: nil) { revoked << token_ref; :revoked }
+      lease = provider.stub(:revoke, settle) { request.call }
+      assert_equal [pending["token_ref"]], revoked
+      assert_equal "revoked", svc.store.load(pending["id"])["state"]
+      assert_equal "issued", lease["state_detail"]
+      assert_equal 2, minted.size
+      assert_equal 1, svc.store.all.count { |record| svc.store.live?(record) }
     end
 
     def test_sigkilled_executors_grant_dies_at_use_until_and_never_resurrects
@@ -148,6 +205,19 @@ module Ace
       assert_equal "revoked", entry["reconciled"]
       assert_equal "revoked", svc.status(lease_id: lease["id"])["state"]
       assert_equal 1, @flaky.revoked.size, "the exact token, revoked once"
+    end
+
+    def test_refused_revocation_leaves_grant_pending_and_not_live
+      svc = service
+      lease = svc.request(profile_name: "developer", role: "developer",
+        task: "t", assignment: "a", repos: %w[ace])
+      refusal = ->(**_args) { raise Providers::RefusedError, "issuer credential unavailable" }
+      @flaky.stub(:revoke, refusal) do
+        assert_match(/revoke-pending/, svc.revoke(lease_id: lease["id"]).to_s)
+      end
+      record = svc.store.load(lease["id"])
+      assert_equal "revoke-pending", record["state"]
+      refute svc.store.live?(record)
     end
 
     def test_cleanup_is_independent_of_any_model_turn
@@ -210,8 +280,8 @@ module Ace
     end
 
     # 8xti21n3: an ISSUED record past its use_until must not be handed
-    # back by find_live as "live" — a retry mints a fresh grant while
-    # reconcile retires the expired one (never two live grants).
+    # back by find_live as "live" — a retry first retires the expired
+    # grant, then mints a fresh one.
     def test_expired_lease_is_not_reused_by_a_retry_and_reconcile_retires_it
       svc = service
       expired = svc.request(profile_name: "developer", role: "developer",
@@ -232,7 +302,7 @@ module Ace
         "exactly one live grant after expiry + retry"
 
       entry = svc.reconcile.find { |item| item["lease"] == expired["id"] }
-      assert_equal "revoked", entry["reconciled"], "reconcile retires the expired lease"
+      assert_equal "already_revoked", entry["reconciled"], "retry retired the expired lease before reissuing"
     end
 
     # 8xtiatf1: a revoke-pending lease whose credential file is gone
@@ -252,7 +322,11 @@ module Ace
       assert_match(/revoke-pending/, svc.revoke(lease_id: lease["id"]).to_s)
       assert_equal "revoke-pending", svc.status(lease_id: lease["id"])["state"]
 
-      forced = svc.revoke(lease_id: lease["id"], force: true)
+      assert_raises(Refusal) { svc.revoke(lease_id: lease["id"], force: true) }
+      operator = Ace::Lab::Molecules::GrantResolver.stub(:read_verified, @document) do
+        Ace::Lab::Auth::Service.new(principal: -> { "root" })
+      end
+      forced = Process.stub(:uid, 0) { operator.revoke(lease_id: lease["id"], force: true) }
       assert_equal :forced_terminal, forced
       record = svc.store.load(lease["id"])
       assert_equal "revoked", record["state"]
@@ -336,6 +410,21 @@ module Ace
       assert_empty stuck.revoked
     end
 
+    def test_not_found_after_unknown_issue_does_not_prove_the_inflight_request_finished
+      @flaky.issue_fails = 1
+      svc = service
+      request = -> { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: %w[ace]) }
+      assert_raises(Ace::Lab::Error) { request.call }
+      interrupted = svc.store.all.fetch(0)
+      checked = []
+      @flaky.stub(:revoke, ->(token_ref:, **) { checked << token_ref; :already_invalid }) do
+        assert_raises(Ace::Lab::Auth::Refusal) { request.call }
+        assert_equal "revoke-pending", svc.store.load(interrupted.fetch("id"))["state"]
+        assert_empty @flaky.issued
+        assert_equal [interrupted.fetch("token_ref")], checked
+      end
+    end
+
     # R5 (re-review): with a DETERMINISTIC remote identity (the
     # Forgejo shape), the retry settles the unknown-issue predecessor
     # through its recorded reference BEFORE minting — at most one
@@ -407,7 +496,7 @@ module Ace
       assert(svc.store.all.any? { |record| record["corrupt"] && record["id"] == lease["id"] },
         "the corrupt record stays visible in the inventory")
       entry = svc.reconcile.find { |item| item["lease"] == lease["id"] }
-      assert_match(/corrupt \(unparseable lease record/, entry["reconciled"])
+      assert_match(/corrupt \(unreadable lease record/, entry["reconciled"])
       assert_match(/remote token may still be live/, entry["reconciled"])
     end
   end

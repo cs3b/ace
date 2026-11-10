@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "tempfile"
 require "ace/git/organisms/pull_request_lifecycle"
 
 module Organisms
@@ -226,6 +227,55 @@ module Organisms
             end
             assert_same error, raised
           end
+        end
+      end
+    end
+
+    def test_create_reads_utf8_body_file_under_ascii_locale
+      previous_encoding = Encoding.default_external
+      Encoding.default_external = Encoding::US_ASCII
+      text = "Review — zażółć"
+
+      Tempfile.create("pr-body") do |file|
+        File.binwrite(file.path, text)
+        with_test_providers do
+          lifecycle = Ace::Git::Organisms::PullRequestLifecycle.new(server_name: "forgejo-lab")
+          provider = RecordingProvider.new(server: SERVER)
+          received = nil
+          lifecycle.stub(:provider_for, provider) do
+            provider.stub(:create_pull_request, ->(body:, **) { received = JSON.generate(body) }) do
+              lifecycle.create(head_ref: "feature", base_ref: "main", expected_head: "a" * 40,
+                title: "Add feature", body_file: file.path)
+            end
+          end
+          assert_equal text, JSON.parse(received)
+        end
+      end
+    ensure
+      Encoding.default_external = previous_encoding
+    end
+
+    def test_approval_reads_bounded_body_as_utf8_and_rejects_invalid_or_oversized_files
+      Tempfile.create("approval-body") do |file|
+        with_test_providers do
+          lifecycle = Ace::Git::Organisms::PullRequestLifecycle.new(server_name: "forgejo-lab")
+          provider = RecordingProvider.new(server: SERVER)
+          approve = -> { lifecycle.approve("25", expected_head: "a" * 40, body_file: file.path, correlation: "review-1") }
+
+          File.binwrite(file.path, "Review — zażółć")
+          lifecycle.stub(:provider_for, provider) do
+            provider.stub(:approve_pull_request, ->(body:, **) { body }) do
+              assert_equal "Review — zażółć", approve.call
+              File.truncate(file.path, 0)
+              assert_equal "", approve.call
+            end
+          end
+
+          File.binwrite(file.path, "\xFF")
+          assert_match(/valid UTF-8/, assert_raises(ArgumentError, &approve).message)
+
+          File.binwrite(file.path, "a" * (64 * 1024) + "—")
+          assert_match(/exceeds 65536 bytes/, assert_raises(ArgumentError, &approve).message)
         end
       end
     end

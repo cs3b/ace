@@ -363,7 +363,14 @@ module Ace
           raise ArgumentError, "--body-file is required" unless path
           raise ArgumentError, "Body file not found: #{path}" unless File.file?(path)
 
-          File.read(path, limit)
+          body = File.binread(path, limit) || +""
+          if limit && body.bytesize >= limit
+            raise ArgumentError, "Body file exceeds #{limit - 1} bytes: #{path}"
+          end
+          body.force_encoding(Encoding::UTF_8)
+          raise ArgumentError, "Body file must contain valid UTF-8: #{path}" unless body.valid_encoding?
+
+          body
         rescue SystemCallError => e
           raise ArgumentError, "Cannot read body file #{path}: #{e.message}"
         end

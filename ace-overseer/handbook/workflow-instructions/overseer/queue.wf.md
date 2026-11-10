@@ -1,6 +1,6 @@
 ---
 name: overseer-queue
-description: Run the private overseer queue in .ace-tasks/_overseer with ace-task --in _overseer - record work as managing tasks with lifecycle subtasks, gate starts on integrated results, keep one active executor per worktree, and process ace-hitl reports
+description: Run the private overseer queue in .ace-tasks/_overseer with ace-task list --in _overseer - record work as managing tasks with lifecycle subtasks, gate starts on integrated results, keep one active executor per worktree, and process ace-hitl reports
 allowed-tools: Bash, Read
 doc-type: workflow
 title: Overseer Queue Workflow
@@ -15,7 +15,7 @@ ace-docs:
 ## Goal
 
 Coordinate delegated work exclusively through the overseer's private task tree
-in `.ace-tasks/_overseer/` (gitignored, managed via `ace-task --in _overseer`),
+in `.ace-tasks/_overseer/` (gitignored, managed via `ace-task list --in _overseer`),
 existing subtasks/dependencies, and `ace-hitl` reports tied to a concrete step.
 The tree decides order, dependencies, and assignments. There is no second queue
 engine: no daemon, no journal, no state cache, no lease registry, and no
@@ -147,11 +147,10 @@ Worker finishes → reviewer starts → integrator starts, in the same worktree:
   when every earlier leg reached assignment state `completed` and no
   executor holds the worktree. A busy, in-flight, failed, or unreadable
   predecessor refuses with reasons; unknown state is never a free resource.
-  On success it opens the next executor's window in the same worktree and
-  prints `ace-coworker start --config .ace-local/coworker/prepare/<role>.yml`
-  -- the next role starts from the existing start config, nothing is
-  re-prepared. `--dry-run` checks without effects. Use it before every
-  dispatch into a worktree that already served a previous role.
+  With `--runtime herdr`, success starts the actual next executor from the
+  existing start config and records its native identity. The accepted report
+  retires the preceding process before this handoff. `--dry-run` checks without
+  effects; a printed brief or dry-run result is not proof of a running agent.
 
 - Two different tasks may run in parallel in two different worktrees; one
   worktree never has two active executors.
@@ -178,7 +177,13 @@ When a report arrives (ace-hitl event or message):
 4. After an interruption between recording a result and the next allocation,
    resume by re-reading the task tree and the real worktree/assignment state.
 
-`ace-overseer process-reports` executes rules 1-3 mechanically: it matches
+`ace-overseer process-reports --owner <configured-recipient>` uses the same
+recipient as your eyes observer (default `overseer`). Set `--scope current|all`
+to match an explicit observation scope; without it, HITL uses all linked
+worktrees in the canonical checkout and current scope inside a task worktree.
+Never process another
+coordinator's reports; use the address configured for this commission. It
+executes rules 1-3 mechanically: it matches
 each incoming event (assignment recorded on a step, or the managing task's
 project_task with exactly one explicitly allocated `role=planner` non-terminal
 step having no assignment). Task and any supplied role must agree; an event

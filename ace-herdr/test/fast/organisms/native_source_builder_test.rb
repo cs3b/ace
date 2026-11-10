@@ -6,7 +6,7 @@ require "open3"
 class NativeSourceBuilderTest < Minitest::Test
   Source = Ace::Herdr::Molecules::NativeSource
   Builder = Ace::Herdr::Organisms::NativeSourceBuilder
-  Result = Struct.new(:stdout, :status, :oversized, keyword_init: true)
+  Result = Struct.new(:stdout, :stderr, :status, :oversized, keyword_init: true)
   Status = Struct.new(:ok) { def success? = ok }
 
   # Source-only fixture: no run/spawn/PTY owner or product entry point is invoked.
@@ -15,6 +15,7 @@ class NativeSourceBuilderTest < Minitest::Test
     def validate_native_host!(_target); end
     def build_environment = super.merge("PATH" => @fixture_tools)
     def executable(name) = name == "git" ? @fixture_git : super
+    def linker_path = File.join(@fixture_tools, "zig-linker")
   end
 
   def setup
@@ -55,7 +56,7 @@ class NativeSourceBuilderTest < Minitest::Test
     @source = Source.new(assets: @assets)
     @tools = File.join(@tmp, "tools")
     Dir.mkdir(@tools)
-    %w[rustup cargo rustc zig musl-gcc].each do |name|
+    %w[rustup cargo rustc zig zig-linker].each do |name|
       File.write(File.join(@tools, name), "CONTROLLED_NONEXECUTED_TOOL_#{name}")
       File.chmod(0o700, File.join(@tools, name))
     end
@@ -73,12 +74,17 @@ class NativeSourceBuilderTest < Minitest::Test
         result("0.16.0\n")
       else
         assert_equal File.join(@tools, "cargo"), argv.first
+        assert_equal 7200, timeout_s, "cold native builds require a realistic bounded deadline"
         assert_equal %w[build --release --locked --target x86_64-unknown-linux-musl], argv.drop(1)
         assert_equal "after\n", File.read(File.join(chdir, "marker"))
         assert_equal File.join(@tools, "zig"), environment.fetch("ZIG")
         assert_equal File.join(@tools, "rustc"), environment.fetch("RUSTC")
-        assert_equal File.join(@tools, "musl-gcc"), environment.fetch("CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER")
+        assert_equal File.join(@tools, "zig-linker"), environment.fetch("CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER")
+        assert_equal "x86_64-linux-musl", environment.fetch("ACE_NATIVE_ZIG_TARGET")
+        assert_equal File.join(@tools, "zig-linker"), environment.fetch("CC_x86_64_unknown_linux_musl")
         refute environment.key?("RUSTFLAGS")
+        staging = File.dirname(environment.fetch("CARGO_TARGET_DIR"))
+        assert_equal "--remap-path-prefix=#{staging}=/ace-native-build\x1f-Clink-self-contained=no", environment.fetch("CARGO_ENCODED_RUSTFLAGS")
         return_result = result("", !@compile_failure)
         unless @compile_failure
           artifact = File.join(environment.fetch("CARGO_TARGET_DIR"), "x86_64-unknown-linux-musl", "release", "herdr")
@@ -121,7 +127,7 @@ class NativeSourceBuilderTest < Minitest::Test
   def test_real_git_reproduction_and_controlled_compiler_produce_verified_immutable_artifact
     verified = build
     assert_equal @source.selection.fetch("source_commit"), verified.fetch("source").fetch("source_commit")
-    assert_equal Digest::SHA256.file(File.join(@tools, "musl-gcc")).hexdigest, verified.fetch("build").fetch("tools_sha256").fetch("linker")
+    assert_equal Digest::SHA256.file(File.join(@tools, "zig-linker")).hexdigest, verified.fetch("build").fetch("tools_sha256").fetch("linker")
     assert_equal %w[herdr provenance.json], Dir.children(output).sort
     before = File.binread(File.join(output, "herdr"))
     assert_raises(Source::Error) { build }
@@ -155,9 +161,34 @@ class NativeSourceBuilderTest < Minitest::Test
   end
 
   def test_missing_selected_linker_refuses_before_output_claim
-    File.unlink(File.join(@tools, "musl-gcc"))
+    File.unlink(File.join(@tools, "zig-linker"))
     assert_raises(Source::Error) { build }
     refute Dir.exist?(output)
+  end
+
+  def test_failed_command_keeps_bounded_compiler_reason_without_claiming_artifact
+    original = @runner
+    @runner = lambda do |argv, **options|
+      if argv[1] == "build"
+        Result.new(stdout: "", stderr: "x" * 20_000 + "\nlinker: missing target library", status: Status.new(false), oversized: false)
+      else
+        original.call(argv, **options)
+      end
+    end
+    error = assert_raises(Source::Error) { build }
+    assert_includes error.message, "linker: missing target library"
+    assert_operator error.message.bytesize, :<, 8500
+    refute File.exist?(File.join(output, "provenance.json"))
+  end
+
+  def test_failed_command_bounds_invalid_utf8_and_multibyte_boundaries
+    ["\xff".b * 10_000, "€" * 10_000].each do |bytes|
+      @runner = ->(*) { Result.new(stdout: "", stderr: bytes + "END", status: Status.new(false), oversized: false) }
+      error = assert_raises(Source::Error) { builder.send(:run, ["cargo"], environment: {}) }
+      assert error.message.valid_encoding?
+      assert_operator error.message.bytesize, :<, 8500
+      assert error.message.end_with?("END")
+    end
   end
 
   def test_compiler_tool_changed_after_invocation_refuses_success
@@ -172,10 +203,10 @@ class NativeSourceBuilderTest < Minitest::Test
     refute File.exist?(File.join(output, "provenance.json"))
   end
 
-  def test_real_builder_rejects_macos_cross_host_without_running_any_tool
-    skip "matching native host is separately controlled" if RbConfig::CONFIG.fetch("host_os").include?("linux")
-    instance = Builder.new(selection: @source, runner: ->(*) { flunk "host refusal must precede tool execution" })
-    assert_raises(Source::Error) { instance.build(source: @repo, output: output, target: "x86_64-unknown-linux-musl") }
-    refute Dir.exist?(output)
+  def test_real_builder_accepts_linux_and_macos_for_explicit_zig_targets
+    skip "Unix build hosts only" unless RbConfig::CONFIG.fetch("host_os").match?(/linux|darwin/)
+    instance = Builder.new(selection: @source, runner: ->(*) { flunk "host validation executes no tools" })
+    assert_nil instance.send(:validate_native_host!, "x86_64-unknown-linux-musl")
+    assert_nil instance.send(:validate_native_host!, "aarch64-unknown-linux-musl")
   end
 end

@@ -24,6 +24,7 @@ module Ace
             config_dir: ".ace",
             defaults_dir: ".ace-defaults",
             gem_path: nil,
+            start_path: nil,
             file_patterns: nil,
             merge_strategy: :replace,
             cache_namespaces: false,
@@ -33,6 +34,7 @@ module Ace
             @config_dir = config_dir
             @defaults_dir = defaults_dir
             @gem_path = gem_path
+            @start_path = start_path
             @file_patterns = file_patterns || Molecules::ConfigFinder::DEFAULT_FILE_PATTERNS
             @merge_strategy = merge_strategy
             @cache_namespaces = cache_namespaces
@@ -170,6 +172,7 @@ module Ace
               config_dir: config_dir,
               defaults_dir: defaults_dir,
               gem_path: gem_path,
+              start_path: @start_path,
               file_patterns: Array(patterns)
             )
 
@@ -306,6 +309,7 @@ module Ace
               config_dir: config_dir,
               defaults_dir: defaults_dir,
               gem_path: gem_path,
+              start_path: @start_path,
               file_patterns: file_patterns
             )
           end

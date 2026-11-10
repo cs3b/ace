@@ -41,6 +41,26 @@ module Ace
             FileUtils.remove_entry(@dir)
           end
 
+          def test_prepare_delegates_project_setup_instead_of_running_it
+            config_path = File.join(@dir, ".ace", "git", "worktree.yml")
+            config = YAML.safe_load_file(config_path)
+            settings = config.fetch("git").fetch("worktree")
+            settings["hooks"] = {"after_create" => [{"command" => "touch coordinator-ran-hook", "working_dir" => "."}]}
+            settings["bootstrap"] = {"command" => "touch coordinator-ran-bootstrap; exit 1", "policy" => "required"}
+            File.write(config_path, YAML.dump(config))
+            commit_all("project setup belongs to executor")
+            out, err, status = run_cli(COWORKER_BIN, "prepare", "--task", @task_ref,
+              "--roles", "worker", "--to", "overseer", "--format", "json")
+            assert status.success?, "dispatch preparation ran project setup: #{out}#{err}"
+            payload = JSON.parse(out)
+            assert_equal "delegated", payload.dig("worktree", "project_setup")
+            worktree = payload.dig("worktree", "path")
+            [@dir, worktree].each do |root|
+              refute File.exist?(File.join(root, "coordinator-ran-hook"))
+              refute File.exist?(File.join(root, "coordinator-ran-bootstrap"))
+            end
+          end
+
           def test_prepare_sends_readiness_report_to_the_overseer
             out, err, status = run_cli(COWORKER_BIN, "prepare",
               "--task", @task_ref, "--roles", "worker,reviewer", "--to", "overseer", "--format", "json")
@@ -127,10 +147,12 @@ module Ace
               ids[1], "steps", "*.md")).map { |p| File.read(p) }.join
             integrator_steps = Dir.glob(File.join(worktree, ".ace-local", "assign",
               ids[2], "steps", "*.md")).map { |p| File.read(p) }.join
-            assert_includes worker_steps, "bin/ace-test"
+            assert_includes worker_steps, "required checks from the worker workflow"
+            assert_includes worker_steps, "publish-pr"
             assert_includes worker_steps, @task_ref
             assert_includes reviewer_steps, "3/2/10"
             assert_includes reviewer_steps, "ace-coworker rounds record"
+            assert_includes reviewer_steps, "publish-approval"
             assert_includes reviewer_steps, ids[0], "reviewer entry condition names the worker assignment"
             assert_includes integrator_steps, "ace-coworker gate"
             assert_includes integrator_steps, ids[1]

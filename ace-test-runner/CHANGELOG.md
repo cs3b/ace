@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.2] - 2026-11-10
+
+### Fixed
+
+- Preserve installed toolchains in suite workers; use the selected Bundler entry point in development and configured dependencies in hermetic test fixtures.
+
 ## [0.28.1] - 2026-10-08
 
 ### Fixed

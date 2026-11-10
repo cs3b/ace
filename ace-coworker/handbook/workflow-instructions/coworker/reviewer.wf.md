@@ -5,7 +5,7 @@ description: Reviewer role for the file-based lab. Independent of the worker; re
 doc-type: workflow
 purpose: reviewer role workflow instruction
 ace-docs:
-  last-updated: '2026-10-19'
+  last-updated: '2026-11-06'
 ---
 
 # Reviewer - Independent Review with Fixes Inside the Assignment
@@ -42,6 +42,12 @@ product decision is escalated to the overseer instead.
 - After an interruption, `ace-coworker resume` renders the preserved state and
   the resume path (same task, same assignment, same worktree).
 
+For a forge issue, ensure the pinned assignment has a final
+`publish-approval` step before starting review. Add it through `ace-assign add`
+if the commission has not prepared it. Keep that step open while reviewing
+and testing. The round verdict `accept` completes review rounds only. An
+assignment with an open publication step cannot produce a success report.
+
 ## Project Context Loading
 
 - Read and follow: `ace-bundle wfi://bundle`
@@ -63,6 +69,12 @@ product decision is escalated to the overseer instead.
      dependencies, or the overseer tree.
 
 2. **Run a review round (forge-neutral).**
+   - A task linked to a forge issue requires the worker's published PR and
+     exact tested HEAD before review starts. Read both from the accepted
+     worker assignment's step reports and reconcile them with the configured
+     forge. The issue link makes this a PR review even when the commission
+     omits the PR or calls the work local. If the PR or tested HEAD is
+     missing, report a blocked handoff to the overseer for worker publication.
    - Subject: local candidate
      `ace-review --preset code-valid --subject diff:<merge-base>..<head>`, or
      a typed PR reference `--pr IDENTIFIER` (number, `owner/repo#number`, or
@@ -70,6 +82,32 @@ product decision is escalated to the overseer instead.
      forge selection `--server NAME` or `--default-server` (mutually
      exclusive) - never infer a forge from a hostname or the caller's
      identity.
+   - Use the session's configured project-scoped credentials for forge reads,
+     fetches and approval. When the deployment uses temporary grants, obtain
+     a grant through its configured adapter and use `ace-lab auth exec` for
+     the individual forge operation (one argument per repeated `--cmd`).
+     Keep review, model calls and tests in the ordinary installed session;
+     they do not need a forge grant. A static project token needs no lease
+     service and must not be revoked after each operation.
+   - Run the task's required checks from the assignment worktree on the
+     candidate you will approve. Confirm the scope against the issue and
+     project requirements, and record the executed commands and results.
+     Use installed `ace-test` when `ACE_TOOLCHAIN=installed`. Check the
+     test commands and their prerequisites before installing development dependencies.
+     A checkout binstub or Gemfile alone does not require `bundle install`.
+     If a required installed test tool is missing, report the readiness failure.
+     In ACE development mode use the checkout's `bin/ace-test`.
+   - For a commissioned PR, review the **full forge PR delta**. Prefer its
+     typed PR reference. If using a local diff range, first resolve the actual
+     target branch and candidate HEAD from the configured forge, fetch those
+     exact refs through your granted access, and compute their merge-base.
+     Record the full base and head SHAs and compare the selected files with the
+     forge PR diff. Local `main` may contain unpublished coordination/task
+     commits and is not evidence of the forge base. Include those commits when
+     they are part of the PR; a worker-only slice is not a full review round.
+     Missing base/head evidence or omitted PR changes blocks acceptance. After
+     candidate/base changes, re-establish the complete range for subsequent
+     full rounds; a fix-only check does not replace it.
    - `--dry-run` first: check the selected/omitted files and the budgets
      (30k context / 30k instructions / 128k total input). Change scope if too
      large; never silently truncate or claim omitted code was reviewed.
@@ -103,12 +141,12 @@ product decision is escalated to the overseer instead.
          instructions: |
            Fix the confirmed review finding <feedback-id> in the delivered
            change. Apply the minimal correct fix, run the affected checks
-           (bin/ace-test <package>), and record what changed.
+           with the selected toolchain, and record what changed.
      ```
      (`--step <name>` only selects a step definition that already exists
      in the preset catalog - it cannot mint a new fix-step name);
      (b) implement the fix on the task branch in this worktree; (c) run
-     the affected checks (`bin/ace-test <package> ...` - a failed required
+     the affected checks with the selected toolchain (a failed required
      test blocks); (d) commit scoped (`ace-git-commit <paths>` after
      checking `git status`); (e) only after the fix is verified:
      `ace-review-feedback resolve <id> --resolution "Fixed in <sha>"`.
@@ -122,15 +160,19 @@ product decision is escalated to the overseer instead.
      the convergence counters by itself.
 
 6. **Return to full review.**
-   - After fixes, run a FULL round over the whole candidate with the same
-     retained forge selection. With a `--pr` subject, `--delta` may scope
-     later rounds (it carries findings forward); with a local diff subject,
-     re-run the full `diff:<merge-base>..<head>` range (`--delta` requires
-     `--pr`). A delta round counts toward the 3/2/10 rule only when it
-     still reviews every changed part; a fix-diff check never counts. Any
-     candidate change renews the evidence: every accepted review binds the
-     current candidate SHA; a committed task edit changes the candidate and
-     requires renewed evidence.
+   - For a forge PR, publish scoped fix commits to the existing PR source
+     branch before the next full round. Use the reviewer session's own
+     project-scoped credentials. Read the current PR source repository, branch and
+     HEAD from the forge. Proceed only if that HEAD is the last known PR
+     revision and the update is a fast-forward. Push the exact candidate
+     to that branch without force and re-read the PR to verify its HEAD.
+     An unexpected remote change or denied push blocks this handoff.
+   - Run a FULL round over the whole current candidate with the retained
+     forge selection and the verified forge base and HEAD. Re-read the forge
+     through the configured project access and recompute the
+     merge-base if either changes. A fix-only diff or scoped delta is
+     separate from a full round. A committed task edit also changes the
+     candidate and requires renewed review and test evidence.
    - **Convergence rule 3/2/10**: minimum 3 full rounds, the last 2
      consecutive without confirmed High/Critical and with no unresolved
      earlier High/Critical; maximum 10 - if round 10 satisfies the rule,
@@ -171,6 +213,11 @@ product decision is escalated to the overseer instead.
      `--default-server` selection). Keep the report and returned receipt in the
      existing task/review/assignment artifacts. Use one stable REVIEW_ID for
      this repository/PR publication; changed report/head needs a new publication.
+   - Finish the `publish-approval` step with the verified receipt and
+     executed test evidence in its assignment step report. Then run
+     `ace-coworker report`. The approval receipt and its forge-verified
+     reviewer identity are the handoff. The worker's PR description does
+     not have to be editable by the reviewer.
    - A comment, local acceptance or `pr ready` is not formal approval. Confirm
      the receipt's exact repo/PR/head/reviewer/evidence digest and effective
      approval. Missing permission, unsupported capability or unknown outcome
@@ -227,8 +274,9 @@ and reported. Anything less is an error outcome with the cause named.
 - No new state owners, journals, or queues (ADR-034): `.ace-local/coworker/`
   belongs to ace-coworker, `.ace-local/assign/` to ace-assign,
   `.ace-local/review/` to ace-review, `.ace-local/hitl/` to ace-hitl.
-- Inside the ACE repository itself, invoke every tool as `bin/ace-*` (the
-  binstubs pin the checkout's bundle).
+- With `ACE_TOOLCHAIN=installed`, use installed executables and packaged
+  instructions; the checkout is reviewed project data, never your runtime.
+  In development mode inside the ACE repository, use `bin/ace-*`.
 
 
 Deployment must provide a dedicated automation reviewer identity and one writer

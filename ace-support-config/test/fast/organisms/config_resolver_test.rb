@@ -7,6 +7,27 @@ module Ace
     module Config
       module Organisms
         class ConfigResolverTest < TestCase
+          def test_explicit_roots_resolve_independently_without_changing_cwd
+            Dir.mktmpdir do |base|
+              roots = %w[first second].map do |name|
+                root = File.join(base, name)
+                FileUtils.mkdir_p(File.join(root, ".ace", "assign"))
+                File.write(File.join(root, ".git"), "")
+                File.write(File.join(root, ".ace", "assign", "config.yml"), "cache_dir: #{name}-assignments\n")
+                File.write(File.join(root, ".ace", "settings.yml"), "root_name: #{name}\n")
+                root
+              end
+              cwd = Dir.pwd
+              [0, 1, 0].each do |index|
+                resolver = Ace::Support::Config.create(start_path: roots[index], test_mode: false)
+                name = %w[first second][index]
+                assert_equal "#{name}-assignments", resolver.resolve_namespace("assign").get("cache_dir")
+                assert_equal name, resolver.resolve.get("root_name")
+                assert_equal cwd, Dir.pwd
+              end
+            end
+          end
+
           def test_resolve_returns_config
             with_temp_config(
               ".git" => "",

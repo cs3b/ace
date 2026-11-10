@@ -19,14 +19,14 @@ module Ace
           FileUtils.remove_entry(@dir)
         end
 
-        def orchestrator(json:, report_orchestrator: nil)
+        def orchestrator(json:, report_orchestrator: nil, hitl_reporter: nil)
           ResumeOrchestrator.new(
             project_root: @dir,
             config: {"config_path" => @config_path},
             assignment_probe: Molecules::AssignmentProbe.new(project_root: @dir,
               runner: ->(_argv, _cwd) { [json, "", CoworkerFixture::SuccessStatus.ok] }),
             git_probe: git_probe,
-            report_orchestrator: report_orchestrator)
+            report_orchestrator: report_orchestrator, hitl_reporter: hitl_reporter)
         end
 
         def git_probe
@@ -43,6 +43,11 @@ module Ace
                     {number: "020", name: "verify", status: "active"}])
         end
 
+        def completed_outcome
+          snapshot = Models::AssignmentSnapshot.from_status_json(JSON.parse(completed_json))
+          Atoms::OutcomePlanner.plan(snapshot).to_h
+        end
+
         def completed_json
           CoworkerFixture.status_json(state: "completed",
             steps: [{number: "010", name: "impl", status: "done"}])
@@ -50,6 +55,35 @@ module Ace
 
         def tree_snapshot
           Dir.glob(File.join(@dir, "**", "*"), File::FNM_DOTMATCH).sort
+        end
+
+        def test_observation_resume_revalidates_current_recipient_without_dispatch
+          raw = YAML.safe_load_file(@config_path)
+          raw["reporting"] = {"delivery" => "observe"}
+          File.write(@config_path, YAML.dump(raw))
+          Molecules::ReportStateStore.new(project_root: @dir).write("abc123", {
+            "result" => "success", "event_id" => "ab12cd", "outcome" => completed_outcome,
+            "delivery" => "published for observation (event ab12cd); acceptance pending"})
+          checks = []
+          reporter = Object.new
+          reporter.define_singleton_method(:publication_matches?) do |id, cfg, result:|
+            checks << [id, cfg.task, cfg.assignment, cfg.overseer, result]
+            cfg.overseer == "overseer@lab"
+          end
+          first = orchestrator(json: completed_json, hitl_reporter: reporter).call(dry_run: true)
+          assert_equal :complete, first.plan.disposition
+          assert_equal [["ab12cd", "8xh.t.aaa", "abc123", "overseer@lab", "success"]], checks
+          refute_includes first.message, "delivered"
+          raw["overseer"] = "other"
+          File.write(@config_path, YAML.dump(raw))
+          changed = orchestrator(json: completed_json, hitl_reporter: reporter).call(dry_run: true)
+          assert_equal :report, changed.plan.disposition
+          assert_equal "other", checks.last[3]
+          raw["reporting"]["delivery"] = "adapter"
+          File.write(@config_path, YAML.dump(raw))
+          adapter = orchestrator(json: completed_json, hitl_reporter: reporter).call(dry_run: true)
+          assert_equal :report, adapter.plan.disposition
+          assert_equal 2, checks.size, "adapter mode does not accept observation publication"
         end
 
         def test_continue_writes_nothing_and_surfaces_remaining_work
@@ -132,7 +166,7 @@ module Ace
           state_dir = File.join(@dir, ".ace-local", "coworker", "reports")
           FileUtils.mkdir_p(state_dir)
           File.write(File.join(state_dir, "abc123.json"),
-            JSON.generate({"result" => "success", "event_id" => "ab12cd",
+            JSON.generate({"result" => "success", "event_id" => "ab12cd", "outcome" => completed_outcome,
               "delivery" => "delivered (event ab12cd)"}))
 
           result = orchestrator(json: completed_json).call(config_path: nil)

@@ -11,6 +11,9 @@ module Ace
       # Explicit source build, outside the installed protected deployment.
       # No server contact, product execution, global tool selection or publication.
       class NativeSourceBuilder
+        # A cold ARM64 build includes Ghostty's Zig/C++ dependencies and may
+        # exceed 30 minutes even while all compiler processes remain active.
+        BUILD_TIMEOUT_SECONDS = 7200
         def initialize(selection: Molecules::NativeSource.new, runner: nil)
           @selection = selection
           @runner = runner || lambda do |argv, environment:, chdir:, timeout_s:|
@@ -58,9 +61,16 @@ module Ace
           compile_environment = @environment.merge("CARGO_HOME" => cargo_home,
             "CARGO_TARGET_DIR" => File.join(staging, "target"), "RUSTC" => tools.fetch("rustc"),
             "RUSTUP_TOOLCHAIN" => selected.fetch("rust_version"), "ZIG" => tools.fetch("zig"),
+            # Panic locations and generated source references otherwise embed
+            # the caller's output directory even in stripped release binaries.
+            # Zig supplies target libc/startup objects. Rust's bundled CRT
+            # would otherwise introduce duplicate _start symbols.
+            "CARGO_ENCODED_RUSTFLAGS" => "--remap-path-prefix=#{staging}=/ace-native-build\x1f-Clink-self-contained=no",
+            "ACE_NATIVE_ZIG_TARGET" => target.sub("-unknown", ""),
+            "CC_#{target.tr('-', '_')}" => tools.fetch("linker"),
             "CARGO_TARGET_#{target.upcase.tr("-", "_")}_LINKER" => tools.fetch("linker"))
           run([tools.fetch("cargo"), "build", "--release", "--locked", "--target", target],
-            chdir: checkout, environment: compile_environment, timeout_s: 1800)
+            chdir: checkout, environment: compile_environment, timeout_s: BUILD_TIMEOUT_SECONDS)
           verify_source_files(checkout)
           unless tool_digests(tools) == tool_digests
             raise Molecules::NativeSource::Error, "native build tools changed during compilation"
@@ -81,12 +91,9 @@ module Ace
 
         private
 
-        def validate_native_host!(target)
-          architecture = {"x86_64-unknown-linux-musl" => /\A(?:x86_64|amd64)\z/,
-            "aarch64-unknown-linux-musl" => /\A(?:aarch64|arm64)\z/}.fetch(target)
-          unless RbConfig::CONFIG.fetch("host_os").include?("linux") &&
-              architecture.match?(RbConfig::CONFIG.fetch("host_cpu"))
-            raise Molecules::NativeSource::Error, "native source builds require a matching Linux host; cross builds are unsupported"
+        def validate_native_host!(_target)
+          unless RbConfig::CONFIG.fetch("host_os").match?(/linux|darwin/)
+            raise Molecules::NativeSource::Error, "native source builds require a Linux or macOS build host"
           end
         end
 
@@ -137,13 +144,20 @@ module Ace
             [name, File.realpath(path)]
           end
           tools["zig"] = executable("zig")
-          tools["linker"] = executable("musl-gcc")
+          tools["linker"] = linker_path
+          unless File.file?(tools["linker"]) && File.executable?(tools["linker"])
+            raise Molecules::NativeSource::Error, "packaged Zig target linker is unavailable"
+          end
           unless run([tools.fetch("rustc"), "--version"]).start_with?("rustc #{version} ") &&
               run([tools.fetch("cargo"), "--version"]).start_with?("cargo #{version} ") &&
               run([tools.fetch("zig"), "version"]).strip == @selection.selection.fetch("zig_version")
             raise Molecules::NativeSource::Error, "selected native build tool versions mismatch"
           end
           tools
+        end
+
+        def linker_path
+          File.expand_path("../native_source/zig-linker", __dir__)
         end
 
         def git(checkout, *arguments)
@@ -164,7 +178,14 @@ module Ace
         def run(argv, chdir: nil, environment: @environment, timeout_s: 60)
           result = @runner.call(argv, environment: environment, chdir: chdir, timeout_s: timeout_s)
           unless result.status.success? && !result.oversized
-            raise Molecules::NativeSource::Error, "native build command failed or exceeded output bound"
+            # The build runs with a closed toolchain environment and no secrets.
+            # Keep compiler diagnostics bounded, but do not discard the reason
+            # needed to repair a failed build before retrying it.
+            detail = result.stderr.to_s.dup.force_encoding(Encoding::UTF_8).scrub
+              .gsub(/\e\[[0-9;]*[A-Za-z]/, "")
+            detail = detail.byteslice(-8192, 8192).scrub("") if detail.bytesize > 8192
+            raise Molecules::NativeSource::Error,
+              "native build command failed (#{File.basename(argv.first)}, output_limit=#{result.oversized}): #{detail.strip}"
           end
           result.stdout
         end

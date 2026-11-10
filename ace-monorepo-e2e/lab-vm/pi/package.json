@@ -1,0 +1,8 @@
+{
+  "name": "ace-lab-vm-test-harness",
+  "private": true,
+  "version": "0.0.0",
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "0.86.1"
+  }
+}

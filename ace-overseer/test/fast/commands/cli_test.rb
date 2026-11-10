@@ -26,6 +26,7 @@ class CliTest < AceOverseerTestCase
     result = invoke_cli(["--help"])
     output = result[:stdout] + result[:stderr]
 
+    assert_match(/^\s+start\s+#/, output)
     assert_includes output, "work-on"
     assert_includes output, "status"
     assert_includes output, "prune"

@@ -99,7 +99,7 @@ module Ace
           existing = File.file?(target) ? File.read(target) : nil
           disposition = if dry_run
             "planned"
-          elsif existing == content
+          elsif existing == content || same_commission?(existing, content)
             "reused"
           else
             commission = @commission_factory.call(@worktree_path, target)
@@ -111,6 +111,15 @@ module Ace
 
           {"role" => role, "assignment" => entry["assignment"],
            "path" => File.join(PREPARE_DIR, "#{role}.yml"), "disposition" => disposition}
+        end
+
+        def same_commission?(existing, content)
+          return false unless existing && content
+          document = YAML.safe_load(existing, permitted_classes: [Date, Time], aliases: false)
+          document.is_a?(Hash) && document.reject { |key, _| key == "execution" } ==
+            YAML.safe_load(content, permitted_classes: [Date, Time], aliases: false)
+        rescue Psych::Exception
+          false
         end
 
         def default_commission(worktree_path, target)

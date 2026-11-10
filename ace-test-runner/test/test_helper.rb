@@ -15,6 +15,17 @@ end
 
 # Test helpers
 module TestHelper
+  # Temporary development packages evaluate the checkout Gemfile, so they
+  # must also use its resolved dependency directory after HOME/env sanitizing.
+  def configure_fixture_bundle(package)
+    return unless (bundle_path = Bundler.settings[:path])
+
+    require "yaml"
+    FileUtils.mkdir_p(File.join(package, ".bundle"))
+    File.write(File.join(package, ".bundle", "config"), YAML.dump(
+      "BUNDLE_PATH" => File.expand_path(bundle_path, Bundler.root)))
+  end
+
   def fixture_path(name)
     File.join(__dir__, "fixtures", name)
   end

@@ -77,6 +77,10 @@ module Ace
             if result[:success]
               result[:message] = "Worktree created successfully"
 
+              if options[:defer_setup]
+                return result.merge(readiness: "checkout_ready", project_setup: "delegated")
+              end
+
               # Execute after-create hooks if configured
               hooks = @config.after_create_hooks
               if hooks && hooks.any?

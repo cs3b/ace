@@ -27,10 +27,12 @@ module Ace
             "task" => config.task,
             "task_path" => task_path,
             "assignment" => config.assignment,
+            "config_path" => config.source_path,
             "assignment_state" => assignment_snapshot&.state,
             "assignment_progress" => assignment_snapshot&.progress,
             "overseer" => config.overseer,
             "reporting_channel" => config.reporting_channel,
+            "reporting_delivery" => config.reporting_delivery,
             "on_failure" => config.on_failure,
             "project_root" => project_root
           }
