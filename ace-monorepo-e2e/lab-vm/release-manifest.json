@@ -30,10 +30,10 @@
     },
     {
       "name": "ace-coworker",
-      "version": "0.8.1.pre.utm130",
-      "sha256": "91423ec1f01211d77d77069079b881e06999a2cf865b2c83ce6926a3044102ce",
+      "version": "0.8.1.pre.utm131",
+      "sha256": "610eb77cdc004ee34db54854d5a68b8e5d1180d167178c8bb925928ea5d3817e",
       "source": "local",
-      "source_commit": "4dbc6fc37f506fa4a0f9ee54b702917a92cb6ec4"
+      "source_commit": "9415933d22187d6045ad98f8611d2906c3b82092"
     },
     {
       "name": "ace-git",
