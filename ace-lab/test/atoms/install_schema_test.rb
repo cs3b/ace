@@ -72,6 +72,22 @@ module Atoms
       end
     end
 
+    def test_project_and_coordinator_environment_files_are_role_scoped_paths
+      project = {"id" => "ace", "path" => "/lab/ace",
+        "environment_files" => {"worker" => "/home/mo/.config/ace/worker.json"}}
+      coordinator = {"id" => "lab", "path" => "/lab",
+        "environment_files" => {"lab-overseer" => "/home/mo/.config/ace/lab.json"}}
+      result = normalize(manifest("projects" => [project], "coordinator" => coordinator))
+      assert_equal project["environment_files"], result["projects"].first["environment_files"]
+      assert_equal coordinator["environment_files"], result["coordinator"]["environment_files"]
+      [{"worker" => "relative.json"}, {"worker" => "/tmp/../secret.json"},
+        {"root" => "/tmp/env.json"}, {"worker" => "secret-value"}, []].each do |invalid|
+        assert_raises(Ace::Lab::InvalidConfigurationError) do
+          normalize(manifest("projects" => [project.merge("environment_files" => invalid)]))
+        end
+      end
+    end
+
     def test_darwin_platform_defaults_home_under_users
       result = normalize(manifest, platform: "darwin")
 

@@ -42,14 +42,10 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  # Runtime dependencies. Session peer authentication reuses ace-runtime's
-  # existing Linux process and systemd identity primitives; it introduces no
-  # task queue, journal or second state owner.
+  # Runtime dependencies.
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-support-config", "~> 0.18"
-  spec.add_dependency "ace-runtime", "~> 0.4"
-  spec.add_dependency "ace-herdr", "~> 0.10"
   # The retained Forgejo merge adapter delegates provider transport and
   # authentication to the forgejo provider.
   spec.add_dependency "ace-git-forgejo", "~> 0.7"

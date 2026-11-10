@@ -8,8 +8,7 @@ require "securerandom"
 require "time"
 require "yaml"
 require_relative "error"
-require_relative "session_runner"
-require_relative "session_attachment"
+require_relative "local_command"
 
 module Ace
   module Lab
@@ -38,75 +37,15 @@ module Ace
         # @param authorization_path [String] trusted document location
         # @param runner [Proc] argv runner for the exec'd child
         # @param principal [Proc, nil] trusted callable returning the account name
-        # @param session [SessionPeer::Identity, nil] authenticated peer
-        #   supplied by a trusted system entry point, never client fields
-        # @param issuer_invocation [String, nil] trusted systemd issuer invocation
-        def initialize(authorization_path: nil, runner: nil, principal: nil, session: nil, issuer_invocation: nil,
-          supervised: false)
+        def initialize(authorization_path: nil, runner: nil, principal: nil)
           raise ArgumentError, "principal must be callable" unless principal.nil? || principal.respond_to?(:call)
           @authorization_path = authorization_path || Ace::Lab.authorization_path
           @injected_runner = !runner.nil?
-          @supervised = supervised == true
-          if session
-            raise ArgumentError, "session execution requires a root issuer" unless Process.euid.zero?
-            raise ArgumentError, "session execution does not accept caller-supplied identity or runner" if principal || runner
-            unless session.is_a?(SessionPeer::Identity) && session.uid.is_a?(Integer) && session.uid.positive? &&
-                session.gid.is_a?(Integer) && session.gid.positive? && session.invocation_id.is_a?(String) &&
-                session.invocation_id.match?(/\A[0-9a-f]{32}\z/) && session.runtime_dir.is_a?(String) &&
-                session.runtime_dir.start_with?("/") && File.expand_path(session.runtime_dir) == session.runtime_dir &&
-                session.main_pidfd.is_a?(IO) && !session.main_pidfd.closed? &&
-                session.mount_namespace.is_a?(IO) && !session.mount_namespace.closed?
-              raise ArgumentError, "session execution requires a verified systemd invocation identity"
-            end
-            unless issuer_invocation.is_a?(String) && issuer_invocation.match?(/\A[0-9a-f]{32}\z/)
-              raise ArgumentError, "session execution requires an issuer invocation identity"
-            end
-            unit_match = SessionPeer::UNIT.match(session.unit.to_s)
-            unless unit_match && unit_match[1] == session.role && session.runtime_dir == "/run/ace-auth-#{unit_match[2]}"
-              raise ArgumentError, "session role differs from its verified unit"
-            end
-
-            runtime_environment = session.runtime_environment
-            unless runtime_environment.is_a?(Hash) && runtime_environment.keys.sort == SessionPeer::RUNTIME_ENVIRONMENT.sort &&
-                runtime_environment["ACE_TOOLCHAIN"] == "installed" && runtime_environment.values.all? { |value|
-                  value.is_a?(String) && !value.empty? && !value.match?(/[[:cntrl:]]/)
-                }
-              raise ArgumentError, "session execution requires its authenticated installed runtime"
-            end
-            @session_runtime_environment = runtime_environment.transform_values { |value| value.dup.freeze }.freeze
-            attachment = SessionAttachment.new(identity: session)
-            @session_attachment = attachment
-            @session_runner = SessionRunner.new(uid: session.uid, cwd: session.cwd, attach: attachment,
-              namespace: session.mount_namespace)
-            account = Etc.getpwuid(Integer(session.uid))
-            raise ArgumentError, "session account group differs" unless account.gid == session.gid
-            @session_uid = account.uid
-            @session_id = session.invocation_id
-            @session_role = session.role
-            @session_unit = session.unit
-            @issuer_invocation = issuer_invocation
-            @session_runtime_dir = session.runtime_dir
-            @principal = -> { account.name }
-          else
-            raise ArgumentError, "issuer invocation requires a session" if issuer_invocation
-            @principal = principal || -> { Etc.getpwuid(Process.uid).name }
-          end
-          # Explicit argv and unsetenv_others prevent shell interpretation
-          # and inherited credentials. Preserve the real exit status.
-          @runner = @session_runner || runner || lambda { |argv, env|
-            system(env, [argv.first, argv.first], *argv.drop(1), unsetenv_others: true)
-            status = $?
-            if status.nil?
-              127
-            elsif status.success?
-              0
-            else
-              status.exitstatus || 128 + status.termsig.to_i
-            end
-          }
+          @principal = principal || -> { Etc.getpwuid(Process.uid).name }
+          @runner = runner
           @config = load_config
           @store = LeaseStore.new(@config["leases_dir"] || DEFAULT_LEASES_DIR)
-          @credentials_dir = @session_runtime_dir || @config["credentials_dir"] || DEFAULT_CREDENTIALS_DIR
+          @credentials_dir = @config["credentials_dir"] || DEFAULT_CREDENTIALS_DIR
         end
 
         # --- request -------------------------------------------------------
@@ -122,43 +61,21 @@ module Ace
         # project config grants nothing.
         def request(profile_name:, role:, task:, assignment:, repos: [],
           ttl_minutes: nil)
-          arguments = {profile_name: profile_name, role: role, task: task, assignment: assignment,
-                       repos: repos, ttl_minutes: ttl_minutes}
-          return request_locked(**arguments) unless @session_uid
-
-          @store.with_session_lock(unit: @session_unit, invocation: @session_id) do
-            request_locked(**arguments)
-          end
-        end
-
-        def request_locked(profile_name:, role:, task:, assignment:, repos:, ttl_minutes:)
-          issuance_started = false
           unless [profile_name, role, task, assignment].all? { |value| value.is_a?(String) && value.valid_encoding? && !value.strip.empty? }
             raise Refusal.new("profile, role, task and assignment must be non-empty strings")
           end
-          if Process.euid.zero? && !@session_uid && !@injected_runner
-            raise Refusal.new("root issuance requires an authenticated non-root session identity")
+          if Process.euid.zero? && !@injected_runner
+            raise Refusal.new("run credential issuance as the configured executor account")
           end
           profile = profile_for(profile_name)
-          if @session_uid && profile["principals"].empty?
-            raise Refusal.new("session auth profile '#{profile_name}' requires an explicit principal allowlist")
-          end
           unless profile["roles"].include?(role)
             raise Refusal.new("role '#{role}' is not allowed by profile '#{profile_name}'")
           end
           principal = @principal.call
-          subject = @session_uid ? "session:#{@session_role}" : principal
-          unless profile["principals"].empty? || profile["principals"].include?(subject)
-            raise Refusal.new("principal '#{subject}' is not allowed by profile '#{profile_name}'; " \
+          unless profile["principals"].empty? || profile["principals"].include?(principal)
+            raise Refusal.new("principal '#{principal}' is not allowed by profile '#{profile_name}'; " \
               "escalate to the host owner")
           end
-          if @session_uid && !@supervised
-            # Only the trusted singleton request handler opts into issuance:
-            # it owns supervision through session exit, expiry and revocation.
-            # Direct session-bound service callers cannot mint unattended grants.
-            raise Refusal.new("session access requires revocation supervision and session-bound cleanup before issuance")
-          end
-          @session_attachment&.verify_session!
 
           ttl = ttl_minutes || profile["ttl_minutes"]
           unless ttl.is_a?(Integer) && ttl.positive?
@@ -197,12 +114,7 @@ module Ace
               "profile's native expiry")
           end
 
-          # A privileged session must have a safe handoff destination before
-          # a remote token exists. Delivery can still fail later (e.g. disk
-          # full), in which case the existing revoke-pending recovery applies.
-          handoff = CredentialHandoff.new(@credentials_dir, recipient: principal, owner_uid: @session_uid,
-            create_root: @session_uid.nil?)
-          handoff.prepare! if @session_uid
+          handoff = CredentialHandoff.new(@credentials_dir, recipient: principal)
 
           # One request flow at a time per correlation: find_live +
           # create + issue are atomic against a concurrent identical
@@ -220,8 +132,7 @@ module Ace
               # lease with a different granted scope or principal is a
               # mismatched retry — refusing it never silently reuses a
               # wider grant for a narrower ask.
-              same_issuer = !@session_uid || existing["issuer_invocation"] == @issuer_invocation
-              unless existing["repos"] == repos && existing["principal"] == principal && session_matches?(existing) && same_issuer
+              unless existing["repos"] == repos && existing["principal"] == principal
                 raise Refusal.new("a live lease for task '#{task}' assignment '#{assignment}' " \
                   "profile '#{profile_name}' role '#{role}' already exists with scope " \
                   "[#{existing["repos"].join(", ")}] for principal '#{existing["principal"]}'; " \
@@ -254,10 +165,8 @@ module Ace
               task: task, assignment: assignment, repos: repos,
               use_until: Time.at(Time.now.utc + ttl * 60).strftime("%Y-%m-%dT%H:%M:%SZ"),
               provider_expiry: nil,
-              token_ref: token_ref, session_uid: @session_uid, session_id: @session_id,
-              session_unit: @session_unit, issuer_invocation: @issuer_invocation)
+              token_ref: token_ref)
 
-            issuance_started = true
             begin
               granted = issue.issue(profile: profile, lease: lease)
             rescue Providers::RefusedError => e
@@ -265,7 +174,6 @@ module Ace
                 record["state"] = "revoked"
                 record["cleanup"] = {"result" => "not-issued", "at" => Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")}
               end
-              issuance_started = false
               raise Refusal.new("provider refused: #{e.message}")
             rescue Providers::TransientError, Providers::OutcomeUnknownError => e
               @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
@@ -297,9 +205,9 @@ module Ace
             # reconcile to finish — an interrupted handoff must not be
             # reusable by a retry.
             begin
-              @session_attachment&.verify_session!
+
               handoff.deliver(lease["id"], granted["token"])
-              @session_attachment&.verify_session!
+
             rescue StandardError => e
               @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
               raise Error.new("credential handoff failed: #{e.message}; " \
@@ -324,31 +232,17 @@ module Ace
             # reference-vs-value distinction, never the token itself.
             @store.load(lease["id"]).merge("state_detail" => "issued")
           end
-        rescue StandardError
-          # A failed request may already have a remote grant even though no
-          # lease was returned to the handler. Stop the singleton so its
-          # canonical recovery handles the preparing/revoke-pending record.
-          if @session_uid && @supervised && issuance_started
-            raise UnresolvedIssuanceError, "session issuance requires issuer recovery"
-          end
-          raise
         end
-
-        private :request_locked
 
         # --- status --------------------------------------------------------
 
         def status(lease_id: nil)
           if lease_id
             lease = @store.load(lease_id)
-            if @session_uid && !(session_matches?(lease) && issuer_matches?(lease))
-              raise Refusal.new("lease belongs to a different session or issuer")
-            end
             return public_view(lease)
           end
 
           records = @store.all
-          records = records.select { |lease| session_matches?(lease) && issuer_matches?(lease) } if @session_uid
           records.map { |lease| public_view(lease) }
         end
 
@@ -371,20 +265,17 @@ module Ace
             raise Refusal.new("execution environment contains invalid or disallowed variables")
           end
           lease = @store.load(lease_id)
-          unless lease["principal"] == @principal.call && session_matches?(lease)
+          unless lease["principal"] == @principal.call
             raise Refusal.new("lease '#{lease_id}' belongs to a different principal")
           end
-          unless issuer_matches?(lease)
-            raise Refusal.new("lease '#{lease_id}' belongs to a different issuer invocation")
-          end
-          if Process.euid.zero? && !@session_uid && !@injected_runner
-            raise Refusal.new("root execution requires an authenticated non-root session identity")
+          if Process.euid.zero? && !@injected_runner
+            raise Refusal.new("run credential execution as the configured executor account")
           end
           raise Refusal.new("lease '#{lease_id}' is not live") unless @store.live?(lease)
 
           @store.with_exec_lock(lease_id) do
             lease = @store.load(lease_id)
-            unless lease["principal"] == @principal.call && session_matches?(lease) && issuer_matches?(lease) && @store.live?(lease) && !lease.key?("execution")
+            unless lease["principal"] == @principal.call && @store.live?(lease) && !lease.key?("execution")
               raise Refusal.new("lease '#{lease_id}' is no longer live for this principal")
             end
             profile = profile_for(lease["profile"])
@@ -427,7 +318,7 @@ module Ace
             # execution before starting a child so recovery cannot mistake
             # a dead issuer for proof that its descendants have stopped.
             @store.update(lease["id"]) do |record|
-              unless record["principal"] == @principal.call && session_matches?(record) && issuer_matches?(record) && @store.live?(record) && !record.key?("execution")
+              unless record["principal"] == @principal.call && @store.live?(record) && !record.key?("execution")
                 raise Refusal.new("lease '#{lease_id}' is no longer live for this principal")
               end
               record["execution"] = "in-progress"
@@ -445,7 +336,7 @@ module Ace
               unless exit_code.is_a?(Integer) && exit_code.between?(0, 255)
                 raise Error, "execution returned an invalid exit status"
               end
-            rescue UncontainedSessionError
+            rescue ExecutionCleanupError
               uncontained = true
               raise
             rescue Providers::RefusedError, Providers::UnsupportedError => e
@@ -470,14 +361,13 @@ module Ace
                 else
                   @store.update(lease["id"]) do |record|
                     record.delete("execution")
-                    record.delete("execution_cgroup")
                     record["state"] = "revoke-pending" unless record["state"] == "revoked"
                   end
                   cleanup = cleanup(lease, profile, handoff)
                 end
               rescue Error, SystemCallError, IOError => error
-                if primary_error.is_a?(UncontainedSessionError)
-                  raise UncontainedSessionError.new(primary_error.message), cause: error
+                if primary_error.is_a?(ExecutionCleanupError)
+                  raise ExecutionCleanupError.new(primary_error.message), cause: error
                 end
                 raise primary_error, cause: nil if primary_error
                 raise Error, "credential cleanup failed (#{error.class})"
@@ -516,8 +406,8 @@ module Ace
         def revoke_locked(lease_id:, force:)
           lease = @store.load(lease_id)
           principal = @principal.call
-          operator = @session_uid.nil? && Process.uid.zero? && principal == "root"
-          unless (lease["principal"] == principal && session_matches?(lease) && issuer_matches?(lease)) || operator
+          operator = Process.uid.zero? && principal == "root"
+          unless (lease["principal"] == principal) || operator
             raise Refusal.new("lease '#{lease_id}' belongs to a different principal")
           end
           if force && !operator
@@ -569,99 +459,6 @@ module Ace
 
         # --- reconcile -----------------------------------------------------
 
-        # Invoked before accepting new issuer connections after host startup.
-        # The exclusive lifecycle lock excludes live issuers; no separate
-        # recovery registry is needed because the canonical lease records
-        # already carry their issuer invocation IDs.
-        def recover_issuers
-          unless Process.uid.zero? && Process.euid.zero? && @session_uid.nil? && @principal.call == "root"
-            raise Refusal.new("issuer recovery requires the root operator")
-          end
-          @store.with_issuer_lifecycle_lock(exclusive: true) do
-            records = @store.all
-            problems = records.any? { |record| record["corrupt"] }
-            invocations = records.filter_map { |record| record["issuer_invocation"] unless record["corrupt"] }.uniq
-            results = invocations.flat_map do |invocation|
-              revoke_issuer(invocation: invocation)
-            rescue Error, SystemCallError
-              problems = true
-              []
-            end
-            raise Error, "startup issuer recovery has unresolved leases" if problems
-            results
-          end
-        end
-
-        # Root-owned issuer cleanup can be called for the exact systemd
-        # invocation after its worker has exited or its service stopped.
-        # Corrupt records cannot be attributed safely and therefore block a
-        # clean result instead of disappearing from the recovery inventory.
-        def revoke_issuer(invocation:)
-          unless Process.uid.zero? && Process.euid.zero? && @session_uid.nil? && @principal.call == "root"
-            raise Refusal.new("issuer recovery requires the root operator")
-          end
-          unless invocation.is_a?(String) && invocation.match?(/\A[0-9a-f]{32}\z/)
-            raise Refusal.new("issuer recovery requires an exact invocation identity")
-          end
-          revoke_owned_records(invocation: invocation)
-        end
-
-        # The launch owner calls this after confirming whole-unit containment.
-        # A queued request rechecks its dead session inside this same lock, so
-        # no late grant can appear after the cleanup inventory was inspected.
-        def revoke_session(issuer_invocation:, unit:, invocation:)
-          unless Process.uid.zero? && Process.euid.zero? && @session_uid.nil? && @principal.call == "root"
-            raise Refusal.new("session cleanup requires the root operator")
-          end
-          unless issuer_invocation.is_a?(String) && issuer_invocation.match?(/\A[0-9a-f]{32}\z/) && issuer_invocation != "0" * 32
-            raise Refusal.new("session cleanup requires the issuer invocation")
-          end
-          @store.with_issuer_lifecycle_lock(exclusive: false) do
-            @store.with_session_lock(unit: unit, invocation: invocation) do
-              revoke_owned_records(invocation: issuer_invocation, session_unit: unit, session_id: invocation)
-            end
-          end
-        end
-
-        def revoke_owned_records(invocation:, session_unit: nil, session_id: nil)
-          matches = ->(record) { record["issuer_invocation"] == invocation &&
-            (!session_unit || record["session_unit"] == session_unit && record["session_id"] == session_id) }
-          records = @store.all
-          problems = records.select { |record| record["corrupt"] }.map { |record| record["id"].to_s }
-          results = records.select { |record| !record["corrupt"] && matches.call(record) }.filter_map do |record|
-            begin
-              outcome = @store.with_exec_lock(record.fetch("id")) do
-                current = @store.load(record.fetch("id"))
-                unless current["id"] == record["id"] && matches.call(current)
-                  raise Error, "issuer lease identity changed during recovery"
-                end
-                containment_error = nil
-                begin
-                  recover_recorded_command!(current) if current.key?("execution")
-                rescue Error, Ace::Runtime::Error, SystemCallError, IOError => e
-                  containment_error = e
-                end
-                revoke(lease_id: record.fetch("id"))
-                raise containment_error if containment_error
-                after = @store.load(record.fetch("id"))
-                raise Error, "issuer command execution is unresolved" if after.key?("execution")
-                unless after["state"] == "revoked" && %w[revoked already_invalid cleared not-issued].include?(after.dig("cleanup", "result"))
-                  raise Error, "issuer lease revocation is unconfirmed"
-                end
-                after.dig("cleanup", "result")
-              end
-              {"lease" => record.fetch("id"), "cleanup" => outcome.to_s}
-            rescue StandardError
-              problems << record["id"].to_s
-              nil
-            end
-          end
-          raise Error, "issuer recovery could not inspect or clean leases: #{problems.join(', ')}" unless problems.empty?
-          results
-        end
-
-        private :revoke_owned_records
-
         # Resolves interrupted issue/revoke cycles and expired
         # assignments in the SAME store: preparing (dead mid-issue),
         # revoke-pending and past-deadline leases are
@@ -694,47 +491,12 @@ module Ace
 
         private
 
-        def recover_recorded_command!(lease)
-          path = lease["execution_cgroup"]
-          unit = lease["session_unit"]
-          session_id = lease["session_id"]
-          unless SessionAttachment.command_cgroup_path?(path, unit) && session_id.is_a?(String) && session_id.match?(/\A[0-9a-f]{32}\z/)
-            raise Error, "unresolved command has no verified cgroup identity"
-          end
-          SessionAttachment.recover_command!(path: path, unit: unit, invocation_id: session_id)
-          @store.update(lease.fetch("id")) do |record|
-            unless record["execution_cgroup"] == path && record["session_unit"] == unit && record["session_id"] == session_id &&
-                record["issuer_invocation"] == lease["issuer_invocation"] && record.key?("execution")
-              raise Error, "command recovery identity changed"
-            end
-            record.delete("execution")
-            record.delete("execution_cgroup")
-            record.delete("containment")
-            record["state"] = "revoke-pending" unless record["state"] == "revoked"
-          end
-        end
-
         def run_leased_command(argv, environment, lease_id)
-          return @runner.call(argv, environment) unless @session_runner
+          return @runner.call(argv, environment) if @runner
 
-          before_start = lambda do |path|
-            unless SessionAttachment.command_cgroup_path?(path, @session_unit)
-              raise Error, "command cgroup identity is invalid"
-            end
-            @store.update(lease_id) do |record|
-              unless record["execution"] == "in-progress" && record["session_unit"] == @session_unit &&
-                  record["session_id"] == @session_id
-                raise Error, "command execution identity changed before launch"
-              end
-              record["execution_cgroup"] = path
-            end
-          end
-          deadline = begin
-            Time.iso8601(@store.load(lease_id).fetch("use_until"))
-          rescue ArgumentError, TypeError, KeyError
-            raise Error, "lease execution deadline is invalid"
-          end
-          @session_runner.call(argv, environment, before_start: before_start, deadline: deadline)
+          lease = @store.load(lease_id)
+          deadline = [lease.fetch("use_until"), lease["provider_expiry"]].compact.map { |value| Time.iso8601(value) }.min
+          LocalCommand.new.call(argv, environment, deadline: deadline)
         end
 
         def reconcile_locked(lease)
@@ -840,15 +602,7 @@ module Ace
         # authenticates the request, so the token VALUE is required
         # there; id-revoking providers ignore it.
         def handoff_for(lease)
-          unit = lease["session_unit"]
-          unless unit
-            return CredentialHandoff.new(@credentials_dir, recipient: lease["principal"])
-          end
-          match = SessionPeer::UNIT.match(unit)
-          raise Error, "invalid session unit in lease" unless match
-          handoff = CredentialHandoff.new("/run/ace-auth-#{match[2]}", recipient: lease["principal"])
-          handoff.validate_root_directory!
-          handoff
+          CredentialHandoff.new(@credentials_dir, recipient: lease.fetch("principal"))
         end
 
         def cleanup(lease, profile, handoff, allow_executing: false)
@@ -912,24 +666,12 @@ module Ace
           profile
         end
 
-        def session_matches?(lease)
-          if @session_uid
-            lease["session_uid"] == @session_uid && lease["session_id"] == @session_id
-          else
-            !lease.key?("session_uid")
-          end
-        end
-
-        def issuer_matches?(lease)
-          !@session_uid || lease["issuer_invocation"] == @issuer_invocation
-        end
-
         # No caller or provider projection may silently replace the selected
         # installed runtime. An absent path stays absent.
         def preserve_installed_runtime!(environment)
-          selected = @session_runtime_environment || ENV
+          selected = ENV
           if selected["ACE_TOOLCHAIN"] == "installed"
-            SessionPeer::RUNTIME_ENVIRONMENT.each do |key|
+            %w[ACE_TOOLCHAIN PATH GEM_HOME GEM_PATH].each do |key|
               selected.key?(key) ? environment[key] = selected[key] : environment.delete(key)
             end
           end

@@ -7,22 +7,6 @@ module Ace
   module Lab
     module Auth
       class LeaseStoreTest < Minitest::Test
-        def test_session_lock_is_exclusive_stable_and_invocation_scoped
-          Dir.mktmpdir do |dir|
-            store = LeaseStore.new(dir)
-            unit = "ace-auth-session-worker-0123456789abcdef.service"
-            held_path = nil
-            store.with_session_lock(unit: unit, invocation: "a" * 32) do
-              held_path = Dir.glob(File.join(dir, "session-*.lock")).fetch(0)
-              File.open(held_path, File::RDWR) { |other| refute other.flock(File::LOCK_EX | File::LOCK_NB) }
-              store.with_session_lock(unit: unit, invocation: "b" * 32) { assert_equal 2, Dir.children(dir).size }
-            end
-            inode = File.stat(held_path).ino
-            store.with_session_lock(unit: unit, invocation: "a" * 32) { assert_equal inode, File.stat(held_path).ino }
-            File.open(held_path, File::RDWR) { |other| assert other.flock(File::LOCK_EX | File::LOCK_NB) }
-            assert_raises(ArgumentError) { store.with_session_lock(unit: unit, invocation: "0" * 32) {} }
-          end
-        end
 
         def test_rejects_empty_correlation_before_writing
           Dir.mktmpdir do |dir|
@@ -33,20 +17,6 @@ module Ace
               assert_raises(Error) { store.create(**options.merge(field => "  ")) }
             end
             assert_empty store.all
-          end
-        end
-
-        def test_rejects_partial_session_identity_before_writing
-          Dir.mktmpdir do |dir|
-            store = LeaseStore.new(dir)
-            options = {profile: "p", role: "r", principal: "p", task: "t", assignment: "a",
-                       repos: ["repo"], use_until: (Time.now.utc + 60).iso8601, provider_expiry: nil}
-            assert_raises(Error) { store.create(**options, issuer_invocation: "a" * 32) }
-            assert_raises(Error) { store.create(**options, session_uid: 1234) }
-            assert_empty store.all
-            lease = store.create(**options)
-            assert_raises(Error) { store.update(lease["id"]) { |record| record["session_uid"] = 1234 } }
-            refute store.load(lease["id"]).key?("session_uid")
           end
         end
 

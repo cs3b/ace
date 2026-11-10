@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative "../errors"
-require_relative "../auth/issuer_installer"
 require_relative "../molecules/install_manifest_loader"
 require_relative "../molecules/account_provisioner"
 require_relative "../molecules/directory_provisioner"
@@ -26,14 +25,13 @@ module Ace
         attr_reader :manifest_path, :dry_run, :platform
 
         def initialize(manifest_path: nil, runner: nil, account_lookup: nil, privileged: nil,
-          platform: nil, dry_run: false, issuer: nil)
+          platform: nil, dry_run: false)
           @manifest_path = manifest_path || Ace::Lab.install_manifest_path
           @runner = runner
           @account_lookup = account_lookup
           @privileged = privileged
           @platform = platform
           @dry_run = dry_run
-          @issuer = issuer
         end
 
         # @param dry_run [Boolean, nil] per-call override of the
@@ -56,10 +54,8 @@ module Ace
           gems = prepare_gems(manifest["gemset"], effective_dry_run)
           extensions = prepare_extensions(manifest["gemset"], effective_dry_run, gems)
 
-          issuer = prepare_issuer(manifest, effective_dry_run, gems + extensions)
-
           {
-            "ok" => [accounts, directories, keys, roles, gems, extensions, issuer].flatten
+            "ok" => [accounts, directories, keys, roles, gems, extensions].flatten
               .none? { |item| item["status"] == "failed" },
             "dry_run" => effective_dry_run,
             "machine" => manifest["machine"],
@@ -69,22 +65,11 @@ module Ace
             "keys" => keys,
             "roles" => roles,
             "gems" => gems,
-            "extensions" => extensions,
-            "issuer" => issuer
+            "extensions" => extensions
           }
         end
 
         private
-
-        def prepare_issuer(manifest, dry_run, dependencies)
-          return [] unless manifest["session_runtime"]
-          if dependencies.any? { |entry| entry["status"] == "failed" }
-            return [{"status" => "failed", "message" => "issuer requires a converged installed runtime"}]
-          end
-          [(@issuer || Auth::IssuerInstaller.new).call(**Auth::IssuerInstaller.runtime(manifest), dry_run: dry_run)]
-        rescue Auth::Error => e
-          [{"status" => "failed", "message" => e.message}]
-        end
 
         def prepare_accounts(entries, dry_run)
           provisioner = Molecules::AccountProvisioner.new(

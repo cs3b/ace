@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative "../errors"
-require_relative "../auth/issuer_installer"
 require_relative "../molecules/install_manifest_loader"
 require_relative "../molecules/key_provisioner"
 require_relative "../molecules/role_verifier"
@@ -69,7 +68,7 @@ module Ace
         # @param platform [String, nil] "darwin" / "linux"
         def initialize(manifest_path: nil, runner: nil, account_lookup: nil,
           group_source: nil, trusted_read: nil, authorization_path: nil, nav_runner: nil,
-          platform: nil, issuer: nil)
+          platform: nil)
           @manifest_path = manifest_path || Ace::Lab.install_manifest_path
           @runner = runner || method(:run_argv)
           @account_lookup = account_lookup || method(:lookup_passwd)
@@ -78,7 +77,6 @@ module Ace
           @authorization_path = authorization_path || Ace::Lab.authorization_path
           @nav_runner = nav_runner || method(:run_nav)
           @platform = platform
-          @issuer = issuer
         end
 
         # @return [Hash] {ready:, machine:, manifest:,
@@ -106,8 +104,7 @@ module Ace
             "adapters" => check_adapters(manifest, executors),
             "tools" => check_tools(manifest, executors),
             "gems" => check_gems(manifest),
-            "extensions" => check_extensions(manifest, entries),
-            "issuer" => check_issuer(manifest)
+            "extensions" => check_extensions(manifest, entries)
           }
           flat = checks.values.flatten(1)
           {
@@ -125,14 +122,6 @@ module Ace
         end
 
         private
-
-        def check_issuer(manifest)
-          return [] unless manifest["session_runtime"]
-          (@issuer || Auth::IssuerInstaller.new).verify(**Auth::IssuerInstaller.runtime(manifest))
-          [{"service" => "ace-lab-auth", "status" => PASS, "reason" => "protected singleton issuer and recovery are ready"}]
-        rescue Auth::Error => e
-          [{"service" => "ace-lab-auth", "status" => FAIL, "reason" => e.message}]
-        end
 
         def check_accounts(manifest, entries)
           manifest["accounts"].map do |account|

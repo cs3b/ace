@@ -17,7 +17,7 @@ module Ace
             "roles" => "id", "repositories" => "project", "grants" => "principal",
             "registry" => "project", "overseer" => "project",
             "adapters" => "adapter", "tools" => "tool", "gems" => "gem",
-            "extensions" => "gem", "issuer" => "service"
+            "extensions" => "gem"
           }.freeze
 
           desc "Verify the installed lab's readiness under the target accounts (read-only): " \

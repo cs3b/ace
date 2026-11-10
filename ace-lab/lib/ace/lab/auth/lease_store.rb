@@ -5,8 +5,7 @@ require "json"
 require "fileutils"
 require "digest"
 require "time"
-require_relative "session_peer"
-require_relative "credential_handoff"
+require_relative "error"
 
 module Ace
   module Lab
@@ -47,15 +46,9 @@ module Ace
         #   remote side (the response may never have arrived).
         # @return [Hash] the created (PREPARING) lease record
         def create(profile:, role:, principal:, task:, assignment:, repos:,
-          use_until:, provider_expiry:, token_ref: nil, id: nil, session_uid: nil, session_id: nil, session_unit: nil, issuer_invocation: nil)
+          use_until:, provider_expiry:, token_ref: nil, id: nil)
           unless [profile, role, principal, task, assignment].all? { |value| value.is_a?(String) && value.valid_encoding? && !value.strip.empty? }
             raise Error, "lease correlation is incomplete"
-          end
-          identity = [session_uid, session_id, session_unit, issuer_invocation]
-          if identity.any? { |value| !value.nil? } && !(session_uid.is_a?(Integer) && session_uid.positive? &&
-              [session_id, issuer_invocation].all? { |value| value.is_a?(String) && value.match?(/\A[0-9a-f]{32}\z/) } &&
-              session_unit.is_a?(String) && SessionPeer::UNIT.match?(session_unit))
-            raise Error, "lease session identity is incomplete"
           end
           lease = {"id" => id || "lease-#{SecureRandom.hex(8)}",
                    "profile" => profile, "role" => role, "principal" => principal,
@@ -63,12 +56,6 @@ module Ace
                    "state" => "preparing", "requested_at" => now,
                    "use_until" => use_until, "provider_expiry" => provider_expiry,
                    "token_ref" => token_ref, "cleanup" => nil}
-          if session_uid
-            lease["session_uid"] = session_uid
-            lease["session_id"] = session_id
-            lease["session_unit"] = session_unit
-          end
-          lease["issuer_invocation"] = issuer_invocation if issuer_invocation
           write(lease)
           lease
         end
@@ -140,14 +127,12 @@ module Ace
               raise Error, "lease '#{id}' cannot be read at #{path}: #{e.class} #{e.message}"
             end
             yield(lease)
-            raise Error, "lease session identity is incomplete" unless valid_session_identity?(lease)
             atomic_write(path, lease)
             lease
           end
         end
 
         def write(lease)
-          raise Error, "lease session identity is incomplete" unless valid_session_identity?(lease)
           atomic_write(lease_path(lease["id"]), lease)
           lease
         end
@@ -178,24 +163,6 @@ module Ace
           end
         end
 
-        # Serialize issuance and close for one authenticated session. This is
-        # a stable lock in the existing store, not a separate session registry.
-        # Callers acquire it before correlation/record locks.
-        def with_session_lock(unit:, invocation:)
-          unless unit.is_a?(String) && SessionPeer::UNIT.match?(unit) && invocation.is_a?(String) &&
-              invocation.match?(/\A[0-9a-f]{32}\z/) && invocation != "0" * 32
-            raise ArgumentError, "exact session unit and invocation are required"
-          end
-          key = Digest::SHA256.hexdigest(JSON.generate([unit, invocation]))
-          lock = open_lock(File.join(@dir, "session-#{key}.lock"))
-          begin
-            lock_flock(lock, File::LOCK_EX)
-            yield
-          ensure
-            lock.close
-          end
-        end
-
         # One exec at a time per lease: an exclusive lock on the lease's
         # exec lockfile, non-blocking — a parallel exec is a refusal.
         def with_exec_lock(id)
@@ -209,33 +176,6 @@ module Ace
           ensure
             lock.close
           end
-        end
-
-        # Issuers hold the shared side for their lifetime. Startup recovery
-        # takes the exclusive side before scanning the same canonical store,
-        # so it cannot mistake a live issuer for an interrupted one.
-        def with_issuer_lifecycle_lock(exclusive:)
-          raise ArgumentError, "issuer lock mode must be explicit" unless [true, false].include?(exclusive)
-
-          if Process.euid.zero?
-            CredentialHandoff.new(@dir, recipient: "root").validate_root_directory!(create: true, searchable: false)
-          else
-            FileUtils.mkdir_p(@dir)
-          end
-          flags = File::CREAT | File::RDWR | File::NOFOLLOW
-          path = File.join(@dir, "issuer-lifecycle.lock")
-          File.open(path, flags, 0o600) do |lock|
-            stat = lock.stat
-            named = File.lstat(path)
-            unless stat.file? && stat.uid == Process.euid && stat.nlink == 1 && (stat.mode & 0o077).zero? &&
-                !named.symlink? && [stat.dev, stat.ino] == [named.dev, named.ino]
-              raise Error, "issuer lifecycle lock is not safely owned"
-            end
-            lock.flock(exclusive ? File::LOCK_EX : File::LOCK_SH)
-            yield
-          end
-        rescue Errno::ELOOP
-          raise Error, "issuer lifecycle lock must not be a symlink"
         end
 
         # Usable NOW: only an ISSUED record inside its deadlines. A
@@ -285,16 +225,7 @@ module Ace
           unless record.is_a?(Hash) && record["id"] == File.basename(path, ".json")
             raise JSON::ParserError, "lease record identity differs"
           end
-          raise JSON::ParserError, "lease session identity is incomplete" unless valid_session_identity?(record)
           record
-        end
-
-        def valid_session_identity?(record)
-          fields = %w[session_uid session_id session_unit issuer_invocation]
-          return true unless fields.any? { |field| record.key?(field) }
-          record["session_uid"].is_a?(Integer) && record["session_uid"].positive? &&
-            %w[session_id issuer_invocation].all? { |field| record[field].is_a?(String) && record[field].match?(/\A[0-9a-f]{32}\z/) } &&
-            record["session_unit"].is_a?(String) && SessionPeer::UNIT.match?(record["session_unit"])
         end
 
         def atomic_write(path, lease)

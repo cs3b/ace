@@ -84,14 +84,6 @@ module Ace
           assert_match(/principal must be callable/, error.message)
         end
 
-        def test_rejects_session_without_a_numeric_uid_before_initialization
-          identity = session_identity.dup
-          identity.uid = nil
-          Process.stub(:euid, 0) do
-            assert_raises(ArgumentError) { Service.new(session: identity, issuer_invocation: "a" * 32) }
-          end
-        end
-
         def test_invalid_environment_names_are_rejected_at_profile_load
           ["BAD=NAME", "BAD\0NAME"].each do |name|
             doc = {"auth" => {"profiles" => {"test" => {"provider" => "env", "env_names" => [name]}}}}
@@ -105,15 +97,6 @@ module Ace
           @mount_namespace.close unless @mount_namespace.closed?
           FileUtils.remove_entry(@dir) if @dir
           Providers.reset!
-        end
-
-        def session_identity
-          SessionPeer::Identity.new(uid: Process.uid, gid: Process.gid, role: "worker",
-            invocation_id: "a" * 32, unit: "ace-auth-session-worker-0123456789abcdef.service",
-            cwd: Dir.pwd, runtime_dir: "/run/ace-auth-0123456789abcdef", pidfd: @peer_handle, main_pidfd: @main_handle,
-            main_pid: Process.pid, mount_namespace: @mount_namespace,
-            runtime_environment: {"ACE_TOOLCHAIN" => "installed", "GEM_HOME" => "/opt/ace/runtime",
-              "GEM_PATH" => "/opt/ace/runtime", "PATH" => "/opt/ace/runtime/bin:/usr/bin:/bin"})
         end
 
         def service(document: @document)
@@ -167,231 +150,6 @@ module Ace
           assert_equal "issued", owner.status(lease_id: lease["id"])["state"]
         end
 
-        def test_root_can_revoke_only_leases_of_a_finished_issuer_invocation
-          first, second = "a" * 32, "b" * 32
-          worker = service
-          leases = [first, second].map.with_index do |invocation, index|
-            record = worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
-              task: "task-#{index}", assignment: "assignment-#{index}", repos: ["ace"],
-              use_until: (Time.now.utc + 60).iso8601, provider_expiry: nil,
-              token_ref: "token-#{index}", session_uid: 1234, session_id: "c" * 32,
-              session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: invocation)
-            worker.store.update(record["id"]) { |item| item["state"] = "issued" }
-          end
-          operator = Molecules::GrantResolver.stub(:read_verified, @document) do
-            Service.new(principal: -> { "root" })
-          end
-          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
-            result = operator.revoke_issuer(invocation: first)
-            assert_equal [leases.first["id"]], result.map { |row| row.fetch("lease") }
-          end }
-          assert_equal "revoked", worker.store.load(leases.first["id"])["state"]
-          assert_equal "issued", worker.store.load(leases.last["id"])["state"]
-          assert_equal ["token-0"], @fake.revoked
-          Process.stub(:uid, 1234) { assert_raises(Refusal) { operator.revoke_issuer(invocation: second) } }
-          Process.stub(:uid, 0) { Process.stub(:euid, 0) { assert_raises(Refusal) { operator.revoke_issuer(invocation: "bad") } } }
-        end
-
-        def test_startup_recovery_cleans_each_issuer_under_an_exclusive_lifecycle_lock
-          worker = service
-          leases = %w[a b].map do |letter|
-            record = worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
-              task: letter, assignment: letter, repos: ["ace"], use_until: (Time.now.utc + 60).iso8601,
-              provider_expiry: nil, token_ref: letter, session_uid: 1234, session_id: "c" * 32,
-              session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: letter * 32)
-            worker.store.update(record["id"]) { |item| item["state"] = "issued" }
-            record
-          end
-          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
-          lock = ->(exclusive:, &block) { raise "exclusive lock required" unless exclusive; block.call }
-          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
-            operator.store.stub(:with_issuer_lifecycle_lock, lock) do
-              assert_equal 2, operator.recover_issuers.size
-            end
-          end }
-          assert_equal %w[a b], @fake.revoked.sort
-          leases.each { |lease| assert_equal "revoked", worker.store.load(lease["id"])["state"] }
-        end
-
-        def test_startup_recovery_requires_root
-          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
-          Process.stub(:uid, 1234) { assert_raises(Refusal) { operator.recover_issuers } }
-        end
-
-        def test_session_cannot_be_created_without_its_issuer_invocation
-          skip "requires a non-root account" if Process.uid.zero?
-
-          Process.stub(:euid, 0) do
-            assert_raises(ArgumentError) do
-              Service.new(session: session_identity)
-            end
-          end
-        end
-
-        def test_issuer_recovery_keeps_unconfirmed_revocation_visible
-          worker = service
-          lease = worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
-            task: "task", assignment: "assignment", repos: ["ace"],
-            use_until: (Time.now.utc + 60).iso8601, provider_expiry: nil,
-            token_ref: "token", session_uid: 1234, session_id: "c" * 32,
-            session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: "a" * 32)
-          worker.store.update(lease["id"]) { |item| item["state"] = "issued" }
-          @fake.instance_variable_set(:@failure, Providers::TransientError.new("offline"))
-          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
-          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
-            assert_raises(Error) { operator.revoke_issuer(invocation: "a" * 32) }
-          end }
-          assert_equal "revoke-pending", worker.store.load(lease["id"])["state"]
-        end
-
-        def test_issuer_recovery_continues_after_an_unconfirmed_revocation
-          worker = service
-          leases = %w[first second].map do |name|
-            record = worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
-              task: name, assignment: name, repos: ["ace"], use_until: (Time.now.utc + 60).iso8601,
-              provider_expiry: nil, token_ref: name, session_uid: 1234, session_id: "c" * 32,
-              session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: "a" * 32)
-            worker.store.update(record["id"]) { |item| item["state"] = "issued" }
-            record
-          end
-          failing = Object.new
-          failing.define_singleton_method(:revoke) do |profile:, token_ref:, token:|
-            raise Providers::TransientError, "offline" if token_ref == "first"
-            :revoked
-          end
-          Providers.register("fake", failing)
-          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
-          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
-            assert_raises(Error) { operator.revoke_issuer(invocation: "a" * 32) }
-          end }
-          assert_equal "revoke-pending", worker.store.load(leases.first["id"])["state"]
-          assert_equal "revoked", worker.store.load(leases.last["id"])["state"]
-        end
-
-        def test_issuer_recovery_does_not_claim_a_forced_terminal_is_revoked
-          worker = service
-          record = worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
-            task: "task", assignment: "assignment", repos: ["ace"], use_until: (Time.now.utc + 60).iso8601,
-            provider_expiry: nil, token_ref: "token", session_uid: 1234, session_id: "c" * 32,
-            session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: "a" * 32)
-          worker.store.update(record["id"]) do |item|
-            item["state"] = "revoked"
-            item["cleanup"] = {"result" => "forced-terminal"}
-          end
-          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
-          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
-            assert_raises(Error) { operator.revoke_issuer(invocation: "a" * 32) }
-          end }
-        end
-
-        def test_issuer_recovery_does_not_claim_a_revoked_record_without_evidence
-          worker = service
-          record = worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
-            task: "task", assignment: "assignment", repos: ["ace"], use_until: (Time.now.utc + 60).iso8601,
-            provider_expiry: nil, token_ref: "token", session_uid: 1234, session_id: "c" * 32,
-            session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: "a" * 32)
-          worker.store.update(record["id"]) { |item| item["state"] = "revoked" }
-          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
-          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
-            assert_raises(Error) { operator.revoke_issuer(invocation: "a" * 32) }
-          end }
-        end
-
-        def test_issuer_recovery_reports_not_issued_as_its_actual_outcome
-          worker = service
-          record = worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
-            task: "task", assignment: "assignment", repos: ["ace"], use_until: (Time.now.utc + 60).iso8601,
-            provider_expiry: nil, session_uid: 1234, session_id: "c" * 32,
-            session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: "a" * 32)
-          worker.store.update(record["id"]) do |item|
-            item["state"] = "revoked"
-            item["cleanup"] = {"result" => "not-issued"}
-          end
-          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
-          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
-            assert_equal "not-issued", operator.revoke_issuer(invocation: "a" * 32).first.fetch("cleanup")
-          end }
-        end
-
-        def test_issuer_recovery_refuses_unreadable_lease_inventory
-          worker = service
-          worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
-            task: "task", assignment: "assignment", repos: ["ace"],
-            use_until: (Time.now.utc + 60).iso8601, provider_expiry: nil, session_uid: 1234, session_id: "c" * 32,
-            session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: "a" * 32)
-          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
-          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
-            File.stub(:read, ->(*) { raise Errno::EACCES }) do
-              assert_raises(Error) { operator.revoke_issuer(invocation: "a" * 32) }
-            end
-          end }
-        end
-
-        def test_issuer_recovery_refuses_non_object_lease_inventory
-          worker = service
-          lease = worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
-            task: "task", assignment: "assignment", repos: ["ace"],
-            use_until: (Time.now.utc + 60).iso8601, provider_expiry: nil, session_uid: 1234, session_id: "c" * 32,
-            session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: "a" * 32)
-          File.write(File.join(@dir, "leases", "#{lease['id']}.json"), "null")
-          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
-          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
-            assert_raises(Error) { operator.revoke_issuer(invocation: "a" * 32) }
-          end }
-        end
-
-        def test_issuer_recovery_refuses_session_lease_without_issuer_identity
-          worker = service
-          lease = worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
-            task: "task", assignment: "assignment", repos: ["ace"], session_uid: 1234, session_id: "b" * 32,
-            session_unit: "ace-auth-session-worker-0123456789abcdef.service",
-            use_until: (Time.now.utc + 60).iso8601, provider_expiry: nil, issuer_invocation: "a" * 32)
-          path = File.join(@dir, "leases", "#{lease.fetch('id')}.json")
-          damaged = JSON.parse(File.read(path))
-          damaged.delete("issuer_invocation")
-          File.write(path, JSON.generate(damaged))
-          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
-          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
-            assert_raises(Error) { operator.revoke_issuer(invocation: "a" * 32) }
-          end }
-        end
-
-        def test_issuer_recovery_revokes_known_leases_even_if_another_record_is_corrupt
-          worker = service
-          lease = worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
-            task: "task", assignment: "assignment", repos: ["ace"], token_ref: "token",
-            use_until: (Time.now.utc + 60).iso8601, provider_expiry: nil, session_uid: 1234, session_id: "c" * 32,
-            session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: "a" * 32)
-          worker.store.update(lease["id"]) { |item| item["state"] = "issued" }
-          File.write(File.join(@dir, "leases", "lease-damaged.json"), "null")
-          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
-          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
-            assert_raises(Error) { operator.revoke_issuer(invocation: "a" * 32) }
-          end }
-          assert_equal "revoked", worker.store.load(lease["id"])["state"]
-          assert_equal ["token"], @fake.revoked
-        end
-
-        def test_issuer_recovery_rechecks_identity_after_acquiring_lock
-          worker = service
-          lease = worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
-            task: "task", assignment: "assignment", repos: ["ace"], token_ref: "token",
-            use_until: (Time.now.utc + 60).iso8601, provider_expiry: nil, session_uid: 1234, session_id: "c" * 32,
-            session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: "a" * 32)
-          worker.store.update(lease["id"]) { |item| item["state"] = "issued" }
-          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
-          lock = lambda do |id, &block|
-            worker.store.update(id) { |item| item["issuer_invocation"] = "b" * 32 }
-            block.call
-          end
-          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
-            operator.store.stub(:with_exec_lock, lock) do
-              assert_raises(Error) { operator.revoke_issuer(invocation: "a" * 32) }
-            end
-          end }
-          assert_empty @fake.revoked
-        end
-
         def test_another_principal_cannot_revoke_a_live_lease
           owner = service
           lease = owner.request(profile_name: "developer", role: "developer",
@@ -418,171 +176,6 @@ module Ace
           assert_empty Dir.children(File.join(@dir, "credentials"))
         end
 
-        def test_privileged_session_request_rejects_an_unrestricted_principal_profile
-          skip "requires a non-root account for the fake peer" if Process.uid.zero?
-
-          Process.stub(:euid, 0) do
-            isolated = Molecules::GrantResolver.stub(:read_verified, @document) do
-              Service.new(session: session_identity, issuer_invocation: "b" * 32)
-            end
-            error = assert_raises(Refusal) do
-              isolated.request(profile_name: "wide", role: "developer", task: "t", assignment: "a", repos: ["ace"])
-            end
-            assert_match(/explicit.*principal/i, error.message)
-            assert_empty @fake.issued
-          end
-        end
-
-        def test_session_does_not_issue_host_revoked_token_without_supervision
-          skip "requires a non-root account for the fake peer" if Process.uid.zero?
-
-          account = Etc.getpwuid(Process.uid)
-          document = YAML.safe_load(@document)
-          document["auth"]["profiles"]["developer"]["principals"] = ["session:worker"]
-          document["auth"]["profiles"]["developer"]["expiry_mode"] = "host-revoke"
-          Process.stub(:euid, 0) do
-            isolated = Molecules::GrantResolver.stub(:read_verified, YAML.dump(document)) do
-              Service.new(session: session_identity, issuer_invocation: "b" * 32)
-            end
-            error = assert_raises(Refusal) do
-              isolated.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
-            end
-            assert_match(/revocation supervision/i, error.message)
-            assert_empty @fake.issued
-          end
-        end
-
-        def test_supervised_session_handoff_failure_requires_issuer_recovery_after_remote_issue
-          skip "requires a non-root account for the fake peer" if Process.uid.zero?
-          document = YAML.safe_load(@document)
-          document["auth"]["profiles"]["developer"]["principals"] = ["session:worker"]
-          isolated = Process.stub(:euid, 0) do
-            Molecules::GrantResolver.stub(:read_verified, YAML.dump(document)) do
-              Service.new(session: session_identity, issuer_invocation: "b" * 32, supervised: true)
-            end
-          end
-          handoff = Object.new
-          def handoff.prepare! = true
-          def handoff.deliver(*) = raise(IOError, "disk unavailable")
-          attachment = isolated.instance_variable_get(:@session_attachment)
-          attachment.stub(:verify_session!, true) do
-            CredentialHandoff.stub(:new, handoff) do
-              assert_raises(UnresolvedIssuanceError) do
-                isolated.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
-              end
-            end
-          end
-          assert_equal 1, @fake.issued.size, "failure must occur after remote issuance"
-          record = isolated.store.all.fetch(0)
-          assert_equal "revoke-pending", record.fetch("state")
-          assert_equal "b" * 32, record.fetch("issuer_invocation")
-        end
-
-        def test_dead_session_is_rechecked_while_issuance_lock_is_held
-          skip "requires a non-root account for the fake peer" if Process.uid.zero?
-          document = YAML.safe_load(@document)
-          document["auth"]["profiles"]["developer"]["principals"] = ["session:worker"]
-          isolated = Process.stub(:euid, 0) do
-            Molecules::GrantResolver.stub(:read_verified, YAML.dump(document)) do
-              Service.new(session: session_identity, issuer_invocation: "b" * 32, supervised: true)
-            end
-          end
-          verify = lambda do
-            paths = Dir.glob(File.join(isolated.store.dir, "session-*.lock"))
-            assert_equal 1, paths.size
-            File.open(paths.first, File::RDWR) { |other| refute other.flock(File::LOCK_EX | File::LOCK_NB) }
-            raise Error, "session ended while waiting"
-          end
-          isolated.instance_variable_get(:@session_attachment).stub(:verify_session!, verify) do
-            assert_raises(Error) do
-              isolated.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
-            end
-          end
-          assert_empty @fake.issued
-          assert_empty isolated.store.all
-        end
-
-        def test_session_cleanup_leaves_other_sessions_and_issuers_untouched
-          worker = service
-          unit = "ace-auth-session-worker-0123456789abcdef.service"
-          combinations = [["a", "b", unit], ["a", "c", unit],
-            ["a", "b", "ace-auth-session-worker-fedcba9876543210.service"], ["d", "b", unit]]
-          records = combinations.map.with_index do |(issuer, session, session_unit), index|
-            record = worker.store.create(profile: "developer", role: "developer", principal: "test-worker",
-              task: index.to_s, assignment: index.to_s, repos: ["ace"], use_until: (Time.now.utc + 60).iso8601,
-              provider_expiry: nil, token_ref: "token-#{index}", session_uid: 1234,
-              session_unit: session_unit, session_id: session * 32, issuer_invocation: issuer * 32)
-            worker.store.update(record["id"]) { |value| value["state"] = "issued" }
-          end
-          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
-          lifecycle = ->(exclusive:, &block) { refute exclusive; block.call }
-          operator.store.stub(:with_issuer_lifecycle_lock, lifecycle) do
-            Process.stub(:uid, 0) { Process.stub(:euid, 0) do
-              result = operator.revoke_session(issuer_invocation: "a" * 32, unit: unit, invocation: "b" * 32)
-              assert_equal [records.first["id"]], result.map { |row| row["lease"] }
-            end }
-          end
-          assert_equal ["revoked", "issued", "issued", "issued"], records.map { |record| worker.store.load(record["id"])["state"] }
-          assert_equal ["token-0"], @fake.revoked
-        end
-
-        def test_session_cannot_claim_a_different_role_in_profile
-          skip "requires a non-root account for the fake peer" if Process.uid.zero?
-
-          document = YAML.safe_load(@document)
-          document["auth"]["profiles"]["developer"]["principals"] = ["session:reviewer"]
-          Process.stub(:euid, 0) do
-            isolated = Molecules::GrantResolver.stub(:read_verified, YAML.dump(document)) do
-              Service.new(session: session_identity, issuer_invocation: "b" * 32)
-            end
-            error = assert_raises(Refusal) do
-              isolated.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
-            end
-            assert_match(/principal.*not allowed/, error.message)
-            assert_empty @fake.issued
-          end
-        end
-
-        def test_session_uid_reuse_cannot_execute_another_invocations_lease
-          skip "requires a non-root account for the fake peer" if Process.uid.zero?
-
-          Process.stub(:euid, 0) do
-            isolated = Molecules::GrantResolver.stub(:read_verified, @document) do
-              Service.new(session: session_identity, issuer_invocation: "b" * 32)
-            end
-            account = Etc.getpwuid(Process.uid)
-            lease = isolated.store.create(profile: "developer", role: "developer", principal: account.name,
-              task: "t", assignment: "a", repos: ["ace"], use_until: (Time.now.utc + 60).iso8601,
-              provider_expiry: nil, session_uid: account.uid, session_id: "b" * 32,
-              session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: "c" * 32)
-            isolated.store.update(lease["id"]) { |record| record["state"] = "issued" }
-            error = assert_raises(Refusal) { isolated.exec(lease_id: lease["id"], argv: ["true"]) }
-            assert_match(/different principal/, error.message)
-          end
-        end
-
-        def test_same_session_cannot_execute_a_lease_owned_by_another_issuer
-          skip "requires a non-root account for the fake peer" if Process.uid.zero?
-
-          Process.stub(:euid, 0) do
-            isolated = Molecules::GrantResolver.stub(:read_verified, @document) do
-              Service.new(session: session_identity, issuer_invocation: "b" * 32)
-            end
-            account = Etc.getpwuid(Process.uid)
-            lease = isolated.store.create(profile: "developer", role: "developer", principal: account.name,
-              task: "t", assignment: "a", repos: ["ace"], use_until: (Time.now.utc + 60).iso8601,
-              provider_expiry: nil, session_uid: account.uid, session_id: "a" * 32,
-              session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: "c" * 32)
-            isolated.store.update(lease["id"]) { |record| record["state"] = "issued" }
-            error = assert_raises(Refusal) { isolated.exec(lease_id: lease["id"], argv: ["true"]) }
-            assert_match(/different issuer invocation/, error.message)
-            assert_raises(Refusal) { isolated.status(lease_id: lease["id"]) }
-            assert_empty isolated.status
-            assert_raises(Refusal) { isolated.revoke(lease_id: lease["id"]) }
-            assert_equal "issued", isolated.store.load(lease["id"])["state"]
-          end
-        end
-
         def test_root_exec_without_a_non_root_session_is_refused
           owner = Molecules::GrantResolver.stub(:read_verified, @document) do
             Service.new(principal: -> { "test-worker" })
@@ -592,7 +185,7 @@ module Ace
           error = Process.stub(:euid, 0) do
             assert_raises(Refusal) { owner.exec(lease_id: lease["id"], argv: ["true"]) }
           end
-          assert_match(/authenticated non-root session/, error.message)
+          assert_match(/configured executor account/, error.message)
         end
 
         def test_root_request_without_a_non_root_session_does_not_issue
@@ -604,7 +197,7 @@ module Ace
               owner.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
             end
           end
-          assert_match(/authenticated non-root session/, error.message)
+          assert_match(/configured executor account/, error.message)
           assert_empty @fake.issued
         end
 
@@ -787,27 +380,6 @@ module Ace
           report = svc.exec(lease_id: lease["id"], argv: %w[false])
           assert_equal 3, report["exit"]
           assert_equal "revoked", report["cleanup"]
-        end
-
-        def test_authenticated_session_runtime_overrides_issuer_and_provider_runtime
-          skip "requires a non-root account for the fake peer" if Process.uid.zero?
-          identity = session_identity
-          isolated = Process.stub(:euid, 0) do
-            Molecules::GrantResolver.stub(:read_verified, @document) do
-              Service.new(session: identity, issuer_invocation: "b" * 32)
-            end
-          end
-          # Exercise the same projection applied after the provider adds its
-          # child environment; the issuer PATH deliberately lacks runtime/bin.
-          original = ENV["PATH"]
-          ENV["PATH"] = "/usr/bin:/bin"
-          projected = isolated.send(:preserve_installed_runtime!, {
-            "ACE_TOOLCHAIN" => "auto", "PATH" => "/provider/bin", "GEM_HOME" => "/provider/gems",
-            "GEM_PATH" => "/provider/gems", "XDG_DATA_HOME" => "/credential-handoff"})
-          identity.runtime_environment.each { |key, value| assert_equal value, projected[key] }
-          assert_equal "/credential-handoff", projected["XDG_DATA_HOME"]
-        ensure
-          original ? ENV["PATH"] = original : ENV.delete("PATH") unless Process.uid.zero?
         end
 
         def test_exec_preserves_the_selected_installed_runtime
@@ -1124,10 +696,10 @@ module Ace
 
         def test_unconfirmed_containment_blocks_recovery_and_new_issuance
           svc = Molecules::GrantResolver.stub(:read_verified, @document) do
-            Service.new(principal: -> { "test-worker" }, runner: ->(*) { raise UncontainedSessionError, "unconfirmed" })
+            Service.new(principal: -> { "test-worker" }, runner: ->(*) { raise ExecutionCleanupError, "unconfirmed" })
           end
           lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
-          assert_raises(UncontainedSessionError) { svc.exec(lease_id: lease["id"], argv: ["true"]) }
+          assert_raises(ExecutionCleanupError) { svc.exec(lease_id: lease["id"], argv: ["true"]) }
           record = svc.status(lease_id: lease["id"])
           assert_equal "revoked", record["state"]
           assert_equal "unconfirmed", record["containment"]
@@ -1140,11 +712,11 @@ module Ace
 
         def test_cleanup_error_preserves_uncontained_failure_and_marker
           svc = Molecules::GrantResolver.stub(:read_verified, @document) do
-            Service.new(principal: -> { "test-worker" }, runner: ->(*) { raise UncontainedSessionError, "unconfirmed" })
+            Service.new(principal: -> { "test-worker" }, runner: ->(*) { raise ExecutionCleanupError, "unconfirmed" })
           end
           lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
           def @fake.revoke(**) = raise(Errno::EIO)
-          error = assert_raises(UncontainedSessionError) { svc.exec(lease_id: lease["id"], argv: ["true"]) }
+          error = assert_raises(ExecutionCleanupError) { svc.exec(lease_id: lease["id"], argv: ["true"]) }
           assert_kind_of Errno::EIO, error.cause
           assert_equal "unconfirmed", svc.store.load(lease["id"])["execution"]
         end
@@ -1199,12 +771,12 @@ module Ace
         def test_concurrent_revoke_cannot_hide_unconfirmed_command_containment
           started, finish = Queue.new, Queue.new
           svc = Molecules::GrantResolver.stub(:read_verified, @document) do
-            Service.new(principal: -> { "test-worker" }, runner: ->(*) { started << true; finish.pop; raise UncontainedSessionError, "unconfirmed" })
+            Service.new(principal: -> { "test-worker" }, runner: ->(*) { started << true; finish.pop; raise ExecutionCleanupError, "unconfirmed" })
           end
           lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
           execution = Thread.new do
             svc.exec(lease_id: lease["id"], argv: ["true"])
-          rescue UncontainedSessionError
+          rescue ExecutionCleanupError
             :uncontained
           end
           Timeout.timeout(3) { started.pop }
@@ -1241,87 +813,6 @@ module Ace
           assert_raises(Refusal) { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"]) }
           assert_raises(Refusal) { svc.exec(lease_id: lease["id"], argv: ["true"]) }
           assert_empty @fake.revoked
-        end
-
-        def test_session_runner_persists_the_exact_command_cgroup_before_launch
-          svc = service
-          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
-          unit = "ace-auth-session-worker-0123456789abcdef.service"
-          session_id = "c" * 32
-          path = "/sys/fs/cgroup/ace.slice/#{unit}/ace-exec-#{'d' * 32}"
-          svc.store.update(lease["id"]) do |record|
-            record["execution"] = "in-progress"
-            record["session_unit"] = unit
-            record["session_id"] = session_id
-            record["session_uid"] = 1234
-            record["issuer_invocation"] = "a" * 32
-          end
-          runner = Object.new
-          runner.define_singleton_method(:call) do |_argv, _env, before_start:, deadline:|
-            raise "lease deadline not propagated" unless deadline == Time.iso8601(lease.fetch("use_until"))
-            before_start.call(path)
-            raise "cgroup was not recorded before launch" unless svc.store.load(lease["id"])["execution_cgroup"] == path
-            0
-          end
-          svc.instance_variable_set(:@session_runner, runner)
-          svc.instance_variable_set(:@session_unit, unit)
-          svc.instance_variable_set(:@session_id, session_id)
-          assert_equal 0, svc.send(:run_leased_command, ["true"], {}, lease["id"])
-        end
-
-        def test_issuer_recovery_refuses_to_claim_a_marked_execution_complete
-          invocation = "a" * 32
-          svc = service
-          lease = svc.store.create(profile: "developer", role: "developer", principal: "test-worker",
-            task: "t", assignment: "a", repos: ["ace"], use_until: (Time.now.utc + 60).iso8601,
-            provider_expiry: nil, token_ref: "token", session_uid: 1234, session_id: "c" * 32,
-            session_unit: "ace-auth-session-worker-0123456789abcdef.service", issuer_invocation: invocation)
-          svc.store.update(lease["id"]) do |record|
-            record["state"] = "issued"
-            record["execution"] = "in-progress"
-          end
-          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
-          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
-            assert_raises(Error) { operator.revoke_issuer(invocation: invocation) }
-          end }
-          assert_equal ["token"], @fake.revoked
-          assert_equal "revoked", svc.store.load(lease["id"])["state"]
-          assert_equal "in-progress", svc.store.load(lease["id"])["execution"]
-        end
-
-        def test_issuer_recovery_contains_exact_recorded_command_before_revocation
-          invocation, session_id = "a" * 32, "c" * 32
-          unit = "ace-auth-session-worker-0123456789abcdef.service"
-          path = "/sys/fs/cgroup/ace.slice/#{unit}/ace-exec-#{'d' * 32}"
-          svc = service
-          lease = svc.store.create(profile: "developer", role: "developer", principal: "test-worker",
-            task: "t", assignment: "a", repos: ["ace"], use_until: (Time.now.utc + 60).iso8601,
-            provider_expiry: nil, token_ref: "token", session_uid: 1234, session_id: session_id,
-            session_unit: unit, issuer_invocation: invocation)
-          svc.store.update(lease["id"]) do |record|
-            record["state"] = "issued"
-            record["execution"] = "in-progress"
-            record["execution_cgroup"] = path
-          end
-          observed = nil
-          recover = ->(**values) { observed = values; :contained }
-          state_during_revoke = nil
-          @fake.define_singleton_method(:revoke) do |**|
-            state_during_revoke = svc.store.load(lease["id"])["state"]
-            :revoked
-          end
-          operator = Molecules::GrantResolver.stub(:read_verified, @document) { Service.new(principal: -> { "root" }) }
-          Process.stub(:uid, 0) { Process.stub(:euid, 0) do
-            SessionAttachment.stub(:recover_command!, recover) do
-              assert_equal "revoked", operator.revoke_issuer(invocation: invocation).fetch(0).fetch("cleanup")
-            end
-          end }
-          assert_equal({path: path, unit: unit, invocation_id: session_id}, observed)
-          assert_equal "revoke-pending", state_during_revoke
-          record = svc.store.load(lease["id"])
-          refute record.key?("execution")
-          refute record.key?("execution_cgroup")
-          assert_equal "revoked", record["state"]
         end
 
         def test_exec_refuses_credential_overrides_from_caller_environment
@@ -1643,28 +1134,6 @@ module Ace
           svc = service
           lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
           assert_match(/\A\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ\z/, lease.fetch("provider_expiry"))
-        end
-
-        def test_settlement_selects_handoff_from_the_previous_lease
-          svc = service
-          lease = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
-          unit = "ace-auth-session-worker-0123456789abcdef.service"
-          svc.store.update(lease.fetch("id")) do |record|
-            record.merge!("use_until" => "2020-01-01T00:00:00Z", "session_uid" => 1234,
-              "session_id" => "a" * 32, "session_unit" => unit, "issuer_invocation" => "b" * 32)
-          end
-          seen = []
-          select_handoff = lambda do |record|
-            seen << record.fetch("session_unit")
-            CredentialHandoff.new(File.join(@dir, "credentials"), recipient: record.fetch("principal"))
-          end
-
-          svc.stub(:handoff_for, select_handoff) do
-            replacement = svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
-            refute_equal lease.fetch("id"), replacement.fetch("id")
-          end
-          assert_equal [unit], seen
-          assert_equal "revoked", svc.store.load(lease.fetch("id"))["state"]
         end
 
         # R6 (re-review): a REALLY spawned child must not inherit any

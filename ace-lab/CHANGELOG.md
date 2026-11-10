@@ -9,17 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Replace per-connection issuer units with a single socket-activated service;
-  isolated-session auth commands share its invocation and authenticated socket
-  transport. Supervision and connection capacity are separate; installation
-  remains gated pending complete host readiness verification.
+- Launch configured roles as ordinary processes with explicit project-scoped
+  environment files; remove the systemd issuer, DynamicUser and mount namespace
+  machinery. Installation and verification no longer require an auth service.
 - Reuse identical read-only gem probes within a single verification pass to avoid repeated dependency traversal subprocesses.
 
 ### Fixed
 
-- Preserve the authenticated session’s installed PATH and gem environment for leased commands, instead of replacing them with the issuer service’s restricted PATH. Missing or ambiguous systemd runtime bindings fail authentication.
-
-- Refuse session lease execution by a different issuer instance than the one responsible for its cleanup.
 - Classify missing or malformed extension projections and preserve dry-run filesystem state; verify directory traversal and reject unsafe receipt paths.
 
 - Require root-controlled extension sources, destinations and receipts in
@@ -28,9 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   revocation instead of exposing an unusable or unbounded live lease.
 - Report a missing live credential handoff and require revocation before
   issuing a replacement instead of repeatedly returning an unusable lease.
-- Keep each leased command and its descendants in a root-controlled cgroup;
-  require confirmed emptiness before reporting command completion and block
-  replacement leases when containment is unconfirmed.
+- Run leased commands with an explicit environment in an ordinary process
+  group, enforce the lease deadline, and terminate descendants on completion
+  or interruption. Keep uncertain cleanup visible instead of claiming success.
 - Persist in-flight execution in the lease record so issuer crashes cannot
   silently make a running or uncontained command eligible for reuse.
 - Reject empty or malformed commands and malformed environment handoffs;
@@ -39,10 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   correlation; report individual recovery failures without masking other leases.
 - Accept confirmed already-invalid credentials as successful cleanup and
   refuse caller-supplied credential overrides in execution environments.
-- Terminate the pinned session cgroup if pidfd cancellation fails, and report
-  unavailable session cgroups as typed errors.
-- Preserve a session's verified private mount namespace when executing its
-  delegated command, and refuse namespace replacement or foreign ownership.
 - Keep identical repository-scoped credential requests idempotent regardless
   of the profile's repository order.
 - Preserve confirmed credential revocation when a concurrent execution's
@@ -59,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use Forgejo's Basic-authenticated user token API with administrator sudo,
   and require the response to confirm the requested scopes and repositories.
   The previously documented administrator-token endpoint is unavailable in
-  Forgejo 15; issuer credentials remain restricted to the host issuer.
+  Forgejo 15; source credentials stay out of child argv and reports.
   Reject malformed issuer origins, remote HTTP and invalid token responses.
 - Preserve the selected installed ACE toolchain and gem paths in leased child
   processes while continuing to strip ambient credential overrides.

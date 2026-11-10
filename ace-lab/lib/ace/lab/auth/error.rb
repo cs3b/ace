@@ -7,8 +7,7 @@ module Ace
     module Auth
       class Error < ::Ace::Lab::Error; end
       class Refusal < Error; end
-      class UncontainedSessionError < Error; end
-      class UnresolvedIssuanceError < Error; end
+      class ExecutionCleanupError < Error; end
     end
   end
 end

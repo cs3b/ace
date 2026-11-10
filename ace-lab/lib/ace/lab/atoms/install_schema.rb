@@ -21,7 +21,7 @@ module Ace
           "directories" => %w[path owner mode],
           "keys" => %w[account type path],
           "roles" => %w[id account instructions],
-          "projects" => %w[id path remote label],
+          "projects" => %w[id path remote label environment_files],
           "adapters" => %w[id kind command config]
         }.freeze
         USERNAME_PATTERN = /\A[a-z_][a-z0-9_-]{0,31}\z/
@@ -89,7 +89,7 @@ module Ace
 
           def normalize_coordinator(raw, projects)
             return nil if raw.nil?
-            unless raw.is_a?(Hash) && raw.keys.sort == %w[id path] &&
+            unless raw.is_a?(Hash) && (raw.keys - %w[id path environment_files]).empty? && (%w[id path] - raw.keys).empty? &&
                 raw["id"].is_a?(String) && ROLE_ID_PATTERN.match?(raw["id"]) &&
                 raw["path"].is_a?(String) && raw["path"].match?(%r{\A/lab(?:/[a-zA-Z0-9][a-zA-Z0-9_.-]*)?\z}) &&
                 File.expand_path(raw["path"]) == raw["path"] && !raw["path"].match?(/[[:cntrl:]]/)
@@ -98,7 +98,19 @@ module Ace
             if projects.any? { |project| project["id"] == raw["id"] || project["path"] == raw["path"] }
               raise_invalid "coordinator must be distinct from projects"
             end
-            raw.transform_values(&:dup)
+            raw.key?("environment_files") ? raw.merge("environment_files" => normalize_environment_files(raw["environment_files"])) : raw.dup
+          end
+
+          def normalize_environment_files(raw)
+            return {} if raw.nil?
+            roles = %w[lab-overseer project-overseer worker verifier integrator]
+            unless raw.is_a?(Hash) && raw.all? { |role, path|
+              roles.include?(role) && path.is_a?(String) && path.start_with?("/") &&
+                File.expand_path(path) == path && !path.match?(/[[:cntrl:]]/)
+            }
+              raise_invalid "environment_files must map execution roles to canonical absolute paths"
+            end
+            raw.dup
           end
 
           def normalize_session_runtime(raw)
@@ -281,7 +293,9 @@ module Ace
               remote = optional_string(entry, "projects", "remote")
               label = optional_string(entry, "projects", "label")
 
-              {"id" => id, "path" => path, "remote" => remote, "label" => label}
+              normalized = {"id" => id, "path" => path, "remote" => remote, "label" => label}
+              normalized["environment_files"] = normalize_environment_files(entry["environment_files"]) if entry.key?("environment_files")
+              normalized
             end.tap do |projects|
               duplicates_of(projects.map { |project| project["id"] }) do |_id|
                 raise_invalid_entry("projects", "id is declared more than once")
