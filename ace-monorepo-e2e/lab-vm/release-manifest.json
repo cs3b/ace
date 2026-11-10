@@ -128,10 +128,10 @@
     },
     {
       "name": "ace-overseer",
-      "version": "0.28.2.pre.utm130",
-      "sha256": "887ebde118f0630c4452307b4892eb04ecbf5a6876369f56789a6005343ea7bb",
+      "version": "0.28.2.pre.utm131",
+      "sha256": "c3a3dde9000987f4df9aa1a03cd51ef044033874d17aafce9f006b51316e356f",
       "source": "local",
-      "source_commit": "4dbc6fc37f506fa4a0f9ee54b702917a92cb6ec4"
+      "source_commit": "cbfb4a9292f387043aa17f0b32ba3c08cc9c9601"
     },
     {
       "name": "ace-review",
