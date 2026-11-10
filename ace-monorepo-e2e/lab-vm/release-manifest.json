@@ -109,10 +109,10 @@
     },
     {
       "name": "ace-lab",
-      "version": "0.14.2.pre.utm111",
-      "sha256": "44870abeb6030b85359f23c4ba353737fc4cbd4531137c979b931a0486879e7c",
+      "version": "0.14.2.pre.utm130",
+      "sha256": "dcb4b4c6817f3a80ffee9b7d024d3ac545b36ec415a3ac1a58f56de5b47dd623",
       "source": "local",
-      "source_commit": "97123d7026fc44cfbf3c9ef16e4c0d1cca7cb8b7"
+      "source_commit": "e1199328fd65af1c85a13f8918a6ec23c472b691"
     },
     {
       "name": "ace-llm",
