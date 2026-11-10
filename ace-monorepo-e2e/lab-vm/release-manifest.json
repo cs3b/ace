@@ -5,10 +5,10 @@
   "gems": [
     {
       "name": "ace-assign",
-      "version": "0.73.3.pre.utm111",
-      "sha256": "fc0f4118b1c88c2b7f4f2e6357c93a13b64d49ae61ec4aed7a83b5d779eb7718",
+      "version": "0.73.2",
+      "sha256": "cf87b7fe67704b11a5e5dd590146e234dca62bab8f2492bd7510efc6cb86cc2f",
       "source": "local",
-      "source_commit": "97123d7026fc44cfbf3c9ef16e4c0d1cca7cb8b7"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-b36ts",
@@ -30,17 +30,17 @@
     },
     {
       "name": "ace-coworker",
-      "version": "0.8.1.pre.utm131",
-      "sha256": "610eb77cdc004ee34db54854d5a68b8e5d1180d167178c8bb925928ea5d3817e",
+      "version": "0.9.0",
+      "sha256": "60d68df009f3c16c9d97c4d0466fcf0b46c1bd49fb407005f05fe3a473e5f68d",
       "source": "local",
-      "source_commit": "9415933d22187d6045ad98f8611d2906c3b82092"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-git",
-      "version": "0.32.1.pre.utm116",
-      "sha256": "90785352568c0e360b4a7c04ce5f5331c1039f38f95cef1d6bd60b261b2e7b6e",
+      "version": "0.33.0",
+      "sha256": "1bec6cb404a8e88ecf9a11eb1e2fa8265e154f54a2569cf48e5ffa0748563d97",
       "source": "local",
-      "source_commit": "867af48a82c4c3933af5873aa21b8d1f2f9c38e8"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-git-commit",
@@ -50,10 +50,10 @@
     },
     {
       "name": "ace-git-forgejo",
-      "version": "0.8.1.pre.utm114.2",
-      "sha256": "8a0beaec47979a63c2c52c80d0a6b1df70a148f657338b727075a1fcd5fc73bb",
+      "version": "0.9.0",
+      "sha256": "9f2ed48a8621b7cb652a6646eae41d21135336df9fb48e0d1089c55c72892aaf",
       "source": "local",
-      "source_commit": "4d1a88824ea34197821ad7621f0170bbd8e46c50"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-git-github",
@@ -63,10 +63,10 @@
     },
     {
       "name": "ace-git-worktree",
-      "version": "0.27.4.pre.utm103",
-      "sha256": "bcde5d7b49726a7024fb8da68d1ff5b9ca495f1470f926ada60cbdb9992e2fab",
+      "version": "0.27.4",
+      "sha256": "9c38d43d95433a83478836694d7d1f605d383ffc102fe58c19948d5fa447cbd8",
       "source": "local",
-      "source_commit": "84ee9113ee0903fbe52f4a39e960627283f7dcb7"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-handbook",
@@ -76,24 +76,24 @@
     },
     {
       "name": "ace-handbook-integration-pi",
-      "version": "0.8.1.pre.utm97",
-      "sha256": "fd3174bcbd8e7097d2f082d9b8b8e3be74393459b5c929cfd525b5461f8a8906",
+      "version": "0.8.1",
+      "sha256": "3867d5141ec534ddf6b0d4f6270e2ab480b00860add8e9df679d7ce568360aab",
       "source": "local",
-      "source_commit": "2fbe5cb60b10febd79af32ca661a3cd366909d49"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-herdr",
-      "version": "0.10.1.pre.utm101",
-      "sha256": "bfb58afb67167ea514e098f76e8acef5768578f4628a41a34215fa943058b653",
+      "version": "0.10.0",
+      "sha256": "1503a02cf818747b4be384acdb3b29f9a7411c0cf8191ba37e352b70312f4b22",
       "source": "local",
-      "source_commit": "783edcc5ee70f24af58a9b1d9a01c18950b5e068"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-hitl",
-      "version": "0.25.1.pre.utm119",
-      "sha256": "08ce8fd3a35b7975784c6ed4ac0fd129420bebd356ee5789ab9661fe190c96ee",
+      "version": "0.25.1",
+      "sha256": "5baebcb2b670bac26656560dd2b91c01d18fc719c9f9888bd25ac5faf75da60d",
       "source": "local",
-      "source_commit": "fd90918aec1cbe505902b9b5ece381885772c2f8"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-hitl-contract",
@@ -109,10 +109,10 @@
     },
     {
       "name": "ace-lab",
-      "version": "0.14.2.pre.utm130",
-      "sha256": "dcb4b4c6817f3a80ffee9b7d024d3ac545b36ec415a3ac1a58f56de5b47dd623",
+      "version": "0.15.0",
+      "sha256": "2b019ee961b7ca4d26e4ec3a18eba85dda085bd99016a8476c4ccb6e6a4a00d5",
       "source": "local",
-      "source_commit": "e1199328fd65af1c85a13f8918a6ec23c472b691"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-llm",
@@ -122,30 +122,31 @@
     },
     {
       "name": "ace-llm-providers-cli",
-      "version": "0.36.2",
-      "sha256": "3fe03423b02897377c85327044448397c8836779c185d7eb89084188bb687078",
-      "source": "https://rubygems.org"
+      "version": "0.36.3",
+      "sha256": "a117c697f03b2240d8bbc0b983b5f67a74aa836ae4c18e32a158ea8352c6c734",
+      "source": "local",
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-overseer",
-      "version": "0.28.2.pre.utm131",
-      "sha256": "c3a3dde9000987f4df9aa1a03cd51ef044033874d17aafce9f006b51316e356f",
+      "version": "0.29.0",
+      "sha256": "1464786cb922bfa44519bde3731f09d5e45b9f371ef3a4162ad194b883d2ec7e",
       "source": "local",
-      "source_commit": "cbfb4a9292f387043aa17f0b32ba3c08cc9c9601"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-review",
-      "version": "0.62.3.pre.utm129",
-      "sha256": "ac432abe28573fad63a71cdfdb0e39c1a764694ef533620730cefcf5a638d900",
+      "version": "0.62.3",
+      "sha256": "aeead93aa5655cc221994a9f87b9b55fd5555c76ccb04d53374fb34effd0e8f8",
       "source": "local",
-      "source_commit": "9e59575e82cda8a42108cd7bf6e369730ee75858"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-runtime",
-      "version": "0.4.2.pre.utm100",
-      "sha256": "16a6a836307bdcc4933732456af790ef90f80bb424074bc90e52a997dadaf42c",
+      "version": "0.4.2",
+      "sha256": "fac804dca5783479d38d034d55c6a4f8d16dc03f2b00e5dccdf9f67368d298e1",
       "source": "local",
-      "source_commit": "be2e2ae1ab9be0c4c14820df1e14c25052966911"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-support-cli",
@@ -155,10 +156,10 @@
     },
     {
       "name": "ace-support-config",
-      "version": "0.18.5.pre.utm111",
-      "sha256": "45cf4ceaa4bba1992193beaf9d09a29397179b9995c0be3c2b284b06abeeb885",
+      "version": "0.18.4",
+      "sha256": "e8f39c8a3d12b2eeee18fdea8f2745d65566001e3da2257e1706d5a10df5c584",
       "source": "local",
-      "source_commit": "97123d7026fc44cfbf3c9ef16e4c0d1cca7cb8b7"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-support-core",
@@ -174,10 +175,10 @@
     },
     {
       "name": "ace-support-items",
-      "version": "0.15.17.pre.utm103",
-      "sha256": "f7f4a754120dc2b3de89bf174ededb0fea84bd9ea01d5cbab5e6efb20e911bb3",
+      "version": "0.15.17",
+      "sha256": "abaef592e781d9f9ab4b8dd57616407fd1ede02d916fc845d5b105333c304c06",
       "source": "local",
-      "source_commit": "84ee9113ee0903fbe52f4a39e960627283f7dcb7"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-support-markdown",
@@ -205,10 +206,10 @@
     },
     {
       "name": "ace-task",
-      "version": "0.41.1.pre.utm101",
-      "sha256": "929559b838ba9082786b13092da2ff8d6288263656ca8032923b7b4ef8d54011",
+      "version": "0.41.1",
+      "sha256": "8232fc69d483bffba103d4d278fa2eddd63a8b7f585bf8e705c37d0119747469",
       "source": "local",
-      "source_commit": "783edcc5ee70f24af58a9b1d9a01c18950b5e068"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-test",
@@ -218,10 +219,10 @@
     },
     {
       "name": "ace-test-runner",
-      "version": "0.28.2.pre.utm111",
-      "sha256": "546887396f66e7354b0911f4551fa11142ccd620a0f6a21bf75b39be5cce3182",
+      "version": "0.28.2",
+      "sha256": "c598cb6da439cdc4e938de60c911415629b5e83f2e09c3b2ab278ac1eb8f4329",
       "source": "local",
-      "source_commit": "97123d7026fc44cfbf3c9ef16e4c0d1cca7cb8b7"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "ace-tmux",
@@ -231,10 +232,10 @@
     },
     {
       "name": "ace-wake",
-      "version": "0.2.1.pre.utm122",
-      "sha256": "89654b9bf7001d972a330e547988aeb88e35371da96d703c16eefd393afca69c",
+      "version": "0.3.0",
+      "sha256": "4b4608a5b0e901fa55ce11810922c09397525712fac53240934129504bbfdbd2",
       "source": "local",
-      "source_commit": "ad6d5eed690df73c1d4be42602211b15c85201f2"
+      "source_commit": "ae3dac03195d95ff986074f025edd6774a24afec"
     },
     {
       "name": "addressable",
