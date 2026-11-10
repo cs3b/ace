@@ -44,7 +44,20 @@ chmod 0755 "$input/artifacts/rustup-init"
 
 export DEBIAN_FRONTEND=noninteractive
 python3 - "$input/release-manifest.json" <<'PY'
-import hashlib, json, re, sys, urllib.request
+import hashlib, json, re, sys, time, urllib.error, urllib.request
+
+def fetch_release(url):
+    for attempt in range(1, 4):
+        try:
+            with urllib.request.urlopen(url, timeout=60) as response:
+                return response.read()
+        except (urllib.error.URLError, TimeoutError) as error:
+            if attempt == 3 or (isinstance(error, urllib.error.HTTPError)
+                    and error.code != 429 and not 500 <= error.code < 600):
+                raise
+            print(f'Debian snapshot Release fetch failed; retrying ({attempt}/3): {url}', file=sys.stderr)
+            time.sleep(5)
+
 s = json.load(open(sys.argv[1]))['apt_snapshot']
 stamp = s['timestamp']
 assert re.fullmatch(r'\d{8}T\d{6}Z', stamp)
@@ -52,9 +65,9 @@ lines = []
 for archive, suite, key in [('debian', 'trixie', 'debian_release_sha256'),
                             ('debian-security', 'trixie-security', 'security_release_sha256')]:
     base = 'https://snapshot.debian.org/archive/' + archive + '/' + stamp + '/'
-    with urllib.request.urlopen(base + 'dists/' + suite + '/Release', timeout=60) as response:
-        if hashlib.sha256(response.read()).hexdigest() != s[key]:
-            raise SystemExit('Debian snapshot Release checksum mismatch: ' + archive)
+    release = fetch_release(base + 'dists/' + suite + '/Release')
+    if hashlib.sha256(release).hexdigest() != s[key]:
+        raise SystemExit('Debian snapshot Release checksum mismatch: ' + archive)
     lines.append('deb [check-valid-until=no] ' + base + ' ' + suite + ' main\n')
 open('/var/lib/ace-e2e/debian-snapshot.list', 'w').writelines(lines)
 PY
