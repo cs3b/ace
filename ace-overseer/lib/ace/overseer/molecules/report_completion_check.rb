@@ -7,7 +7,7 @@ module Ace
       # the queue accepts success. This check owns no persisted state.
       class ReportCompletionCheck
         def initialize(handoff_probe: nil, assignment_probe_factory: nil, worktree_finder: nil)
-          @worktree_finder = worktree_finder || Ace::Git::Worktree::Organisms::WorktreeManager.new
+          @worktree_finder = worktree_finder
           @handoff_probe = handoff_probe || HandoffProbe.new
           @assignment_probe_factory = assignment_probe_factory || ->(root) {
             Ace::Coworker::Molecules::AssignmentProbe.new(project_root: root)
@@ -30,7 +30,13 @@ module Ace
           return "confirm-start requires coordinator session evidence" if role == "confirm-start"
           return "report assignment disagrees with the allocation" unless step.metadata["assignment"].to_s == assignment
 
-          found = @worktree_finder.switch(task)
+          project_root = manager.metadata["project_root"].to_s
+          if event["project_root"] && event["project_root"] != project_root
+            return "report project disagrees with the allocation"
+          end
+          finder = @worktree_finder || Ace::Git::Worktree::Organisms::WorktreeManager.new(
+            project_root: project_root.empty? ? Dir.pwd : project_root)
+          found = Dir.chdir(project_root.empty? ? Dir.pwd : project_root) { finder.switch(task) }
           return "task has no usable worktree: #{found[:error] || found[:message]}" unless found[:success]
           root = found.fetch(:worktree_path)
           legs = @handoff_probe.probe(root, task_id: task).fetch(:legs)

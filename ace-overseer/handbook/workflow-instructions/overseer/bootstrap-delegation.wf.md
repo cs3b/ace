@@ -249,7 +249,7 @@ the path returned by `ace-task show` supplement these fields, never replace them
 Read back the recorded identity before acknowledging the eyes revision.
 Never put a preparation readiness ID on a worker, verifier or confirm-start step.
 
-After accepting the worker's report, use `ace-overseer process-reports` to
+After accepting the worker's report, use `ace-overseer process-reports --owner <configured-lab-recipient>` to
 retire its recorded executor and continue the prepared sequence. Preserve
 the exact report and assignment identity before starting the verifier.
 Do not launch a second executor while a predecessor is active or unknown.

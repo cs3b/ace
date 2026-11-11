@@ -20,7 +20,7 @@ module Ace
           @completion_check = completion_check || Molecules::ReportCompletionCheck.new
           @inbox = inbox || Molecules::HitlInbox.new(owner: owner, scope: scope)
           @task_manager = task_manager || Ace::Task::Organisms::TaskManager.new
-          @handoff = handoff || Organisms::HandoffOrchestrator.new(task_loader: @task_manager)
+          @handoff = handoff
           @work_on = work_on || Organisms::WorkOnOrchestrator.new(task_loader: @task_manager)
           @retire = retire || Molecules::CoworkerLauncher.new.method(:retire)
         end
@@ -157,7 +157,15 @@ module Ace
 
           begin
             if family_worktree(manager)
-              result = @handoff.call(task_ref: manager.metadata["project_task"].to_s)
+              project_root = manager.metadata["project_root"].to_s
+              result = if @handoff
+                @handoff.call(task_ref: manager.metadata["project_task"].to_s)
+              else
+                Dir.chdir(project_root.empty? ? Dir.pwd : project_root) do
+                  Organisms::HandoffOrchestrator.new.call(task_ref: manager.metadata["project_task"].to_s,
+                    runtime: Ace::Support::Cli::Toolchain.installed? ? "herdr" : nil)
+                end
+              end
               record_allocation(next_step, result) if result[:execution]
               {action: "handoff", step_ref: next_step.id.to_s,
                next: result[:next], status: result[:status], worktree_path: result[:worktree_path],

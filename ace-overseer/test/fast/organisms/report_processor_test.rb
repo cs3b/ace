@@ -543,5 +543,40 @@ class ReportProcessorTest < AceOverseerTestCase
     assert_includes result[:outcomes].first[:message], "executor coworker-r1 started"
   end
 
+  def test_lab_continuation_uses_project_checkout_without_moving_private_task_owner
+    Dir.mktmpdir("report-project") do |root|
+      original = Dir.pwd
+      tasks = [manager(steps: [
+        step("8xg.t.mgr.0", status: "progress", metadata: {"assignment" => "w1"}),
+        step("8xg.t.mgr.1", status: "pending", dependencies: ["8xg.t.mgr.0"])
+      ], metadata: {"project_task" => "8xg.t.prj", "worktree" => "/wt/prj", "project_root" => root})]
+      task_owner = FakeTaskManager.new(tasks)
+      handoff = FakeHandoff.new
+      construction_roots = []
+      factory = ->(**) { construction_roots << Dir.pwd; handoff }
+      instance = Ace::Overseer::Organisms::ReportProcessor.new(inbox: FakeInbox.new([report]),
+        task_manager: task_owner, completion_check: ->(**) { nil }, retire: ->(**) {})
+      result = Ace::Overseer::Organisms::HandoffOrchestrator.stub(:new, factory) { instance.call }
+      assert_equal [File.realpath(root)], construction_roots
+      assert_equal ["8xg.t.prj"], handoff.calls
+      assert_equal "done", tasks.first.subtasks.first.status
+      assert_equal "handoff", result[:outcomes].first[:continuation][:action]
+      assert_equal original, Dir.pwd
+    end
+  end
+
+  def test_foreign_project_error_never_updates_or_retires_matching_assignment_id
+    tasks = [manager(steps: [step("8xg.t.mgr.0", metadata: {"assignment" => "w1", "worktree" => "/wt/prj"})],
+      metadata: {"project_task" => "8xg.t.prj", "project_root" => "/lab/a"})]
+    owner = FakeTaskManager.new(tasks)
+    event = report(result: "error").merge("project_root" => "/lab/b")
+    retirements = []
+    result = Ace::Overseer::Organisms::ReportProcessor.new(inbox: FakeInbox.new([event]),
+      task_manager: owner, retire: ->(**args) { retirements << args }).call
+    assert_equal 1, result[:counts][:unmatched]
+    assert_empty owner.updates
+    assert_empty retirements
+  end
+
 end
 

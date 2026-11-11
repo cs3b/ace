@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.2.pre.2] - 2026-11-11
+
+### Fixed
+
+- Consume configured project reports from the lab, bind all outcomes to their project, and resolve completion and continuation in the project checkout while retaining the lab task owner.
+
 ## [0.30.2.pre.1] - 2026-11-11
 
 ### Fixed

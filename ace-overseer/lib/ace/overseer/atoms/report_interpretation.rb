@@ -47,6 +47,9 @@ module Ace
         def self.evaluate(event:, managers:)
           return {status: :unmatched, reason: "event has no report identity"} if event["id"].to_s.strip.empty?
 
+          if event["project_root"]
+            managers = managers.select { |manager| manager.metadata["project_root"] == event["project_root"] }
+          end
           matched = match(event, managers)
           return {status: :unmatched, reason: unmatched_reason(event)} unless matched
 

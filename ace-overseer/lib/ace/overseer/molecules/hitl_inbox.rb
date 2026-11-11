@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ace/hitl/molecules/event_observation"
+require_relative "project_observations"
 
 module Ace
   module Overseer
@@ -12,13 +13,13 @@ module Ace
       # until answered — both are the overseer's inbox.
       class HitlInbox
         # @param manager [Ace::Hitl::Organisms::HitlManager, nil]
-        def initialize(manager: nil, owner: "overseer", scope: nil)
+        def initialize(manager: nil, owner: "overseer", scope: nil, projects: ProjectObservations.new)
           @manager = manager || Ace::Hitl::Organisms::HitlManager.new
           raise ArgumentError, "configured HITL owner is required" if owner.to_s.strip.empty?
           unless scope.nil? || %w[current all].include?(scope)
             raise ArgumentError, "HITL scope must be current or all"
           end
-          @owner, @scope = owner, scope
+          @owner, @scope, @projects = owner, scope, projects
           @observation = Ace::Hitl::Molecules::EventObservation.new(manager: @manager)
         end
 
@@ -30,7 +31,19 @@ module Ace
           events = @observation.incoming_events(owner: @owner, scope: @scope).select do |event|
             event.type == "report" || (event.type == "question" && event.status == "pending")
           end
-          events.sort_by { |event| event.created_at || Time.now }.map { |event| normalize(event) }
+          local = events.sort_by { |event| event.created_at || Time.now }.map { |event| normalize(event) }
+          projects = @projects.call(owner: @owner, scope: @scope || "all", limit: 500)
+          unless projects.fetch("sources").values.all? { |source| source["status"] == "ok" }
+            raise Ace::Overseer::Error, "project report sources are degraded; preserve pending reports"
+          end
+          remote = projects.fetch("events").select do |event|
+            event["type"] == "report" || (event["type"] == "question" && event["status"] == "pending")
+          end
+          combined = local + remote
+          if combined.group_by { |event| event.fetch("id") }.any? { |_, rows| rows.size > 1 }
+            raise Ace::Overseer::Error, "ambiguous report IDs across configured projects"
+          end
+          combined
         end
 
         private
