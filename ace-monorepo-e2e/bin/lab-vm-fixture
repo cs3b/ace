@@ -66,7 +66,7 @@ begin
       test ! -e /etc/lab/ace-lab/authorization.yml
       test ! -L /etc/lab/ace-lab/authorization.yml
       for path in /home/mo /home/mo/.pi /home/mo/.pi/agent; do test ! -L "$path"; done
-      for path in /lab/.git /lab/.ace /lab/.gitignore /lab/ace /etc/lab/ace-lab/pi-auth.json /tmp/ace-e2e-fixture.bundle /home/lab-operator/lab /home/lab-operator/fixture.bundle /home/lab-operator/ace-e2e-auth.json; do
+      for path in /lab/.git /lab/.ace /lab/.ace-local /lab/.gitignore /lab/ace /etc/lab/ace-lab/pi-auth.json /tmp/ace-e2e-fixture.bundle /home/lab-operator/lab /home/lab-operator/fixture.bundle /home/lab-operator/ace-e2e-auth.json; do
         test ! -e "$path"
         test ! -L "$path"
       done
@@ -97,13 +97,13 @@ begin
         test -d /lab
         test ! -L /lab
         for path in /home/mo /home/mo/.pi /home/mo/.pi/agent; do test ! -L "$path"; done
-        for path in /lab/.git /lab/.ace /lab/.gitignore /lab/ace /etc/lab/ace-lab/pi-auth.json /tmp/ace-e2e-fixture.bundle; do
+        for path in /lab/.git /lab/.ace /lab/.ace-local /lab/.gitignore /lab/ace /etc/lab/ace-lab/pi-auth.json /tmp/ace-e2e-fixture.bundle; do
           test ! -e "$path"
           test ! -L "$path"
         done
         test "$(stat -c '%U:%G' /lab)" = mo:mo
         cp -R /home/lab-operator/lab/. /lab/
-        chown -R mo:mo /lab/.ace /lab/.gitignore
+        chown -R mo:mo /lab/.ace /lab/.ace-local /lab/.gitignore
         test "$(stat -c '%U:%G' /lab)" = mo:mo
         install -o mo -g mo -m 0600 /home/lab-operator/ace-e2e-auth.json /etc/lab/ace-lab/pi-auth.json
         rm -f /home/lab-operator/ace-e2e-auth.json

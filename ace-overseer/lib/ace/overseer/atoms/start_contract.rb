@@ -11,7 +11,7 @@ module Ace
           Begin your first turn now. Execute the "First turn after start"
           protocol in your standing instructions in its listed order.
           Arm observation with the ace_eyes tool, action start, using configPath
-          set to your configured eyes path.
+          set to .ace-local/overseer/eyes.json relative to your working directory.
           Report reconciliation and new dispatch both require a successful
           observation with every required source healthy. If observation is
           unavailable or degraded, record its exact error through the existing

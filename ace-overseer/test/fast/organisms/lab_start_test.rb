@@ -38,7 +38,7 @@ module Organisms
       def workspace_create(label:)
         @workspaces_created << label
         @workspaces << {"workspace_id" => "ws-#{label}", "label" => label}
-        FakePaneResult.new({"result" => {"workspace_id" => "ws-#{label}"}})
+        FakePaneResult.new({"result" => {"workspace" => {"workspace_id" => "ws-#{label}"}}})
       end
 
       def pane_current
@@ -253,7 +253,8 @@ module Organisms
       executor.prompts.each do |entry|
         assert_includes entry[:text], "ace_eyes tool, action start"
         assert_includes entry[:text], "configPath"
-        refute_includes entry[:text], "/eyes"
+        assert_includes entry[:text], ".ace-local/overseer/eyes.json"
+        refute_includes entry[:text], "/eyes start"
       end
     end
 

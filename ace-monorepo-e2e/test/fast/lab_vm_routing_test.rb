@@ -9,7 +9,7 @@ class LabVmRoutingTest < AceMonorepoE2eTestCase
     fixtures = File.expand_path("../../lab-vm/fixtures", __dir__)
     lab = YAML.safe_load_file(File.join(fixtures, "lab/.ace/hitl/config.yml")).fetch("hitl")
     project = YAML.safe_load_file(File.join(fixtures, "ace/.ace/hitl/config.yml")).fetch("hitl")
-    eyes = JSON.parse(File.read(File.join(fixtures, "lab/.ace/overseer/eyes.json")))
+    eyes = JSON.parse(File.read(File.join(fixtures, "lab/.ace-local/overseer/eyes.json")))
     lab_address = lab.fetch("recipients").fetch(eyes.fetch("recipient"))
     assert_equal "/lab/.ace-local/hitl", lab_address.fetch("folder")
     assert_equal lab_address, project.fetch("recipients").fetch("lab-overseer")

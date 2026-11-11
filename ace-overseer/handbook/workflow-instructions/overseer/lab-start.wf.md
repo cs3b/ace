@@ -65,7 +65,7 @@ Captain order.
    the task → worker → observation → verification → start procedure. Do not
    dispatch during this initialization turn.
 3. Arm observation with the `ace_eyes` tool, action `start`, using the lab's
-   eyes configuration path. Check enabled=true, breaker=null, errors=0 and
+   eyes configuration path `<lab>/.ace-local/overseer/eyes.json`. Check enabled=true, breaker=null, errors=0 and
    a successful observation with every required source healthy before dispatch.
    A missing tool/configuration or degraded source is a blocking readiness gap.
    Record the returned error through the existing task/HITL owner and end this

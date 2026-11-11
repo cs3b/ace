@@ -116,3 +116,11 @@ The release stage must not consume a paid model or count deterministic test doub
 - **Read-only diagnostics review finding:** Bundler's ordinary check may write a lockfile. Use frozen `bundle check --dry-run`; never claim diagnostics are read-only without checking the underlying tool.
 
 Implementation and local evidence: [runtime correction record](../../.ace-tasks/8y0.t.x27-odtwarzalne-stanowisko-testowe-ace-na/docs/2026-11-11-runtime-start-simplification.md). This is not a live-autonomy acceptance.
+
+## Live resume after PR405 publication — 2026-11-11
+
+- Published/installed lab0.16.0, herdr0.11.0, overseer0.30.0 from main `2d0eb676a5cf1053345dab667973bf5a1011c487`. One VM bundle install completed successfully in39seconds,19:15:54–19:16:33UTC. Existing VM/Forgejo preserved.
+- Native workspace creation returns `result.workspace.workspace_id`; overseer expected the flat pane-current shape. Correcting the fake to native shape produced12failures+1error. Fix parses the workspace object; project start had previously received nil.
+- Lab fixture stored eyes in `.ace/overseer`, while delegation reads `.ace-local/overseer/eyes.json`; vague startup prompt made GLM search for configuration. Move fixture to canonical path and name it explicitly. Stop only the unproductive turn with Escape; preserve pane `w2:p2`. Native Herdr and GLM started successfully; autonomy NOT accepted. Last visible usage approximately9.6k input,1.9k output,20k cache-read; account quota not measured.
+- Independent reviewer caught root ownership of newly copied fixture `.ace-local`; converge ownership with other fixture directories.
+- Operator provisioning initially used `bundle exec ruby` without Ruby on SSH PATH; exited before changes. Use configured absolute Ruby executable. No reinstall needed.

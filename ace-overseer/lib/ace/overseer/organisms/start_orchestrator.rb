@@ -703,6 +703,9 @@ module Ace
           source = result.is_a?(Hash) ? result : json
           return nil unless source.is_a?(Hash)
 
+          workspace = source["workspace"]
+          return workspace["workspace_id"] if workspace.is_a?(Hash)
+
           source["workspace_id"] || source["workspaceId"]
         end
 
