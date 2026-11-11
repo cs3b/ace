@@ -74,6 +74,18 @@ module Ace
         end
 
 
+        def live_agent?(pane)
+          json = @executor.agent_get(pane).parsed_json
+          raise Error, "herdr returned malformed agent state" unless json.is_a?(Hash)
+          agent = json["agent"]
+          agent ||= json.dig("result", "agent") if json["result"].is_a?(Hash)
+          agent ||= json["result"] if json["result"].is_a?(Hash)
+          raise Error, "herdr returned no agent identity" unless agent.is_a?(Hash)
+          true
+        rescue Ace::Herdr::AgentNotFoundError
+          false
+        end
+
         def project_row(id, root, tabs, panes)
           label = Atoms::StartContract.session_label(root)
           owners = tabs.select { |tab| tab[:title] == label }.flat_map do |tab|
@@ -81,7 +93,12 @@ module Ace
             raise Error, "project overseer tab has no unique pane: #{label}" unless matches.length == 1
             matches
           end
-          raise Error, "project overseer has ambiguous sessions: #{label}" if owners.length > 1
+          if owners.length > 1
+            # Reconciliation preserves dead panels for diagnostics. Native
+            # agent presence, not the retained tab, identifies the live owner.
+            owners = owners.select { |owner| live_agent?(owner.fetch(:id)) }
+            raise Error, "project overseer has ambiguous sessions: #{label}" unless owners.length == 1
+          end
           pane = owners.first
           raise Error, "project overseer session did not report a working directory: #{label}" if pane && pane[:cwd].to_s.empty?
           if pane && @root_resolver.resolve(cwd: pane[:cwd]) != root
