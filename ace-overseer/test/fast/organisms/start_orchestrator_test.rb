@@ -131,7 +131,7 @@ module Organisms
       assert_equal 1, executor.tabs.size
       assert_equal @root, executor.tabs.first[:cwd]
       start = executor.agent_started.first
-      assert_equal "ace-overseer", start[:name]
+      assert_equal "ace-overseer-#{Digest::SHA256.hexdigest(@root)[0, 12]}", start[:name]
       assert_equal "pi", start[:kind]
       assert_equal ["--model", "zai/glm-5.3-flash", "--thinking", "high",
         "--append-system-prompt", File.join(@root, "guide.md")], start[:args]
