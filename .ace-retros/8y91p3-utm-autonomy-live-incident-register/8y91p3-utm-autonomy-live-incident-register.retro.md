@@ -247,3 +247,12 @@ Forgejo gate checkpoint: PR6OPEN finalHEAD6fd2fd44cb5c88b1e2c439e873a502f8b0e3a5
 Forgejo API confirms PR7closed/merged, merge/mainf0854378a94eb4405e357b1e9bba1fd6814cecc3, parents051f957972d6b6c3fd77562326a85682255811ef (already integrated primitive) and099ad61894751ec8424088b0d02291d7cc7248d5 (approved CLI candidate). Contents API blobSHAs for counter_cli.rb andlab_fixture_counter_cli_test.rb exactly match reviewedcandidate gitblobs. Integrator8yavwb2 completed1/1 and publishingreport; coordinator adoption still pending. No host merge.
 
 Host plain SSH gitfetch could not authenticate (no roleenv), so verification used existing project-scoped read token in memory viaAPI, not global credentials or manual source. No need to alter runtime/permissions. PR6stillopen at lastcheck; next acceptance remains docsmerge, reportreplay/restart and5minidle, releaseopen.
+
+
+### Docs integrated, report replay and restart probe
+
+- Forgejo API independently confirms PR6 merged at `6aa71d99606b9184cb88202faa6242f32d341a40`; main equals that SHA. Issues 1–3 closed, release issue4 open. Coordinator adopted reports `8yay2p`/`8yay5w`, completed private legs and retired executors.
+- Repeating `ace-coworker report` with original integrator config and installed mode returned the same event `8yay5w`; no new executor observed before restart.
+- Operator ended project session with `/quit`, then mistakenly used bare `start` over noninteractive SSH and again in old pane while lab reconciliation independently restored the managed project session. This produced a temporary duplicate. Source confirms bare start intentionally uses foreground bootstrap and does not discover/reuse managed sessions; this is not yet evidence of a race inside managed reconciliation. CLI description still promises reuse without explaining that distinction.
+- Manual pane stopped; managed replacement `w3:pD` / `term_6600809441ad314` remains, with first-turn eyes healthy and owner reconciliation in progress. No VM/data reset. Restart/no-duplicate acceptance is not yet passed.
+- Lesson: when testing automatic recovery, stop only the chosen session and observe the lab owner. Do not add a second manual bootstrap. Clarify public command help before repeating this probe.
