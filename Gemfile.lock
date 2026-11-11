@@ -206,7 +206,7 @@ PATH
 PATH
   remote: ace-herdr
   specs:
-    ace-herdr (0.11.0)
+    ace-herdr (0.11.1.pre.1)
       ace-hitl-contract (~> 0.3.0)
       ace-runtime (~> 0.3, >= 0.4.2)
       ace-support-cli (~> 0.6, >= 0.6.10)
@@ -296,7 +296,7 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.30.2.pre.10)
+    ace-overseer (0.30.2.pre.11)
       ace-assign (~> 0.70, >= 0.73.1)
       ace-coworker (~> 0.8, >= 0.9.0)
       ace-git (~> 0.30, >= 0.33.0)
