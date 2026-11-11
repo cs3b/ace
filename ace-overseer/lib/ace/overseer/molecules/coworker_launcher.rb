@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "shellwords"
 require "ace/coworker/molecules/execution_binding"
 require "ace/herdr"
 require "ace/herdr/atoms/native_agent_session"
@@ -51,6 +52,9 @@ module Ace::Overseer::Molecules
         end
         if document["execution"]
           execution = document.fetch("execution")
+          if %w[resuming resumed].include?(execution["state"])
+            next finish_resume(execution, brief, worktree_path, save)
+          end
           if %w[launching started].include?(execution["state"])
             unless %w[paused empty].include?(brief.assignment_snapshot&.state.to_s)
               raise Ace::Overseer::Error, "unconfirmed executor already has assignment activity"
@@ -58,7 +62,7 @@ module Ace::Overseer::Molecules
             recover_unprompted(execution, worktree_path, save)
             next submit_prompt(execution, brief, save)
           end
-          next reuse(execution)
+          next reuse(execution, brief, worktree_path, save)
         end
         unless %w[paused empty].include?(brief.assignment_snapshot&.state.to_s)
           raise Ace::Overseer::Error, "unbound assignment is not ready for a new executor"
@@ -177,7 +181,7 @@ module Ace::Overseer::Molecules
       save.call
     end
 
-    def reuse(execution)
+    def reuse(execution, brief, worktree_path, save)
       if execution["state"] == "retired"
         raise Ace::Overseer::Error, "recorded executor is retired; reconcile the assignment before starting another"
       end
@@ -185,14 +189,80 @@ module Ace::Overseer::Molecules
         raise Ace::Overseer::Error, "executor start is unconfirmed; inspect the recorded assignment before retrying"
       end
       pane = pane_identity(execution.fetch("pane"))
-      unless same_executor?(pane, execution)
+      unless pane["terminal_id"] == execution["terminal_id"]
         raise Ace::Overseer::Error, "recorded executor terminal no longer matches"
       end
-      agent = @executor.agent_get(execution.fetch("pane")).parsed_json&.dig("result", "agent")
+      begin
+        agent = @executor.agent_get(execution.fetch("pane")).parsed_json&.dig("result", "agent")
+      rescue Ace::Herdr::AgentNotFoundError
+        return resume_dead(execution, brief, worktree_path, pane, save)
+      end
       unless agent.is_a?(Hash) && agent["interactive_ready"] == true && same_executor?(agent, execution)
         raise Ace::Overseer::Error, "recorded executor is not a live interactive agent"
       end
       execution.reject { |key, _| key == "credentials_directory" }.merge("reused" => true)
+    end
+
+    def resume_dead(execution, brief, worktree_path, pane, save)
+      unless brief.assignment_snapshot&.state.to_s == "running" && pane["cwd"] == worktree_path
+        raise Ace::Overseer::Error, "dead executor recovery requires its running assignment and original directory"
+      end
+      transcript = resume_transcript(execution, worktree_path)
+      SessionEnvironment.cleanup(execution["credentials_directory"])
+      @environment.with_environment(root: worktree_path, role: brief.config.role) do |file, directory, args|
+        execution.merge!("state" => "resuming", "resume_transcript" => transcript,
+          "credentials_directory" => directory)
+        save.call # An uncertain native start must be inspected, never repeated.
+        @executor.agent_start(name: execution.fetch("agent"), kind: "pi", pane: execution.fetch("pane"),
+          timeout_ms: 60_000, env_file: file,
+          args: Array(args) + ["--session", transcript, "--append-system-prompt", brief.instructions_source])
+        identity = await_session(execution)
+        raise Ace::Overseer::Error, "resumed executor session changed" unless identity == execution["agent_session"]
+        execution["state"] = "resumed"
+        save.call
+      end
+      finish_resume(execution, brief, worktree_path, save)
+    end
+
+    def finish_resume(execution, brief, worktree_path, save)
+      raise Ace::Overseer::Error, "resumed assignment is no longer running" unless brief.assignment_snapshot&.state.to_s == "running"
+      agent = @executor.agent_get(execution.fetch("pane")).parsed_json&.dig("result", "agent")
+      unless agent.is_a?(Hash) && same_executor?(agent, execution) && agent["cwd"] == worktree_path &&
+          agent["name"] == execution["agent"] && agent["interactive_ready"] == true && agent["agent_status"] == "idle"
+        raise Ace::Overseer::Error, "resumed executor is not the expected idle session; inspect before retrying"
+      end
+      execution["state"] = "resume_prompting"
+      save.call
+      @executor.agent_prompt(pane: execution.fetch("pane"), text:
+        "Continue the existing assignment #{brief.config.assignment} after process interruption. " \
+        "Read its current owner state and preserved reports; resume unfinished work only. " \
+        "Do not repeat completed effects or create a replacement assignment. " \
+        "Use ace-coworker resume --config #{Shellwords.escape(brief.config.source_path)} to assess continuation.")
+      execution["state"] = "running"
+      save.call
+      execution.reject { |key, _| key == "credentials_directory" }.merge("reused" => true, "resumed" => true)
+    end
+
+    def resume_transcript(execution, worktree_path)
+      candidates = if execution["resume_transcript"]
+        [execution.fetch("resume_transcript")]
+      else
+        directory = execution["credentials_directory"]
+        raise Ace::Overseer::Error, "executor has no private session directory" unless directory
+        Dir.glob(File.join(directory, "sessions", "**", "*.jsonl")).select do |path|
+          Ace::Herdr::Atoms::NativeAgentSession.normalize({"agent" => "pi", "kind" => "path", "value" => path}, agent: "pi") == execution["agent_session"]
+        end
+      end
+      raise Ace::Overseer::Error, "executor transcript is missing or ambiguous" unless candidates.length == 1
+      path = candidates.first
+      raise Ace::Overseer::Error, "executor transcript is not a regular file" unless File.file?(path) && !File.symlink?(path)
+      header = File.open(path) { |file| JSON.parse(file.readline) }
+      unless header["type"] == "session" && header["id"] == execution.dig("agent_session", "value") && header["cwd"] == worktree_path
+        raise Ace::Overseer::Error, "executor transcript identity does not match"
+      end
+      path
+    rescue JSON::ParserError, EOFError, SystemCallError
+      raise Ace::Overseer::Error, "executor transcript is unavailable or invalid"
     end
 
     def pane_identity(pane)

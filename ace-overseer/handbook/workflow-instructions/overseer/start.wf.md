@@ -171,6 +171,21 @@ delivery was confirmed but the assignment still has no activity at the
 deadline. Keep the unfinished assignment pending or blocked. Reconcile
 reports through their owners before acknowledging events.
 
+### Interrupted executor processes
+
+When native Herdr positively reports that a previously running executor is
+absent, preserve its assignment and worktree. Assess unfinished work with
+`ace-coworker resume --config <recorded-prepare-config> --dry-run` from that
+worktree. For a running assignment, retry
+`ace-overseer work-on --task <same-project-task> --runtime herdr` from the
+project root. This resumes the recorded Pi transcript in the original terminal
+with fresh role credentials and a continuation prompt. It does not create a
+new assignment or advance to the next role. Record the returned identity and
+arm a single five-minute recovery deadline; cancel on verified progress.
+Do not use `handoff` to bypass an unfinished role. Missing transcript, changed
+terminal or uncertain start/prompt remains a blocker: preserve the binding and
+escalate; never clear it or mark steps complete to force another launch.
+
 ### Ended worker turns and provider failures
 
 An executor event's `completion_seq` means a native turn ended, not that its

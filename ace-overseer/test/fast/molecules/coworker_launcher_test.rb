@@ -8,7 +8,7 @@ class CoworkerLauncherTest < AceOverseerTestCase
 
   class Executor
     attr_reader :starts, :prompts, :closes
-    attr_accessor :session, :prompt_failure, :cwd, :interactive_ready, :agent_status, :name
+    attr_accessor :session, :prompt_failure, :cwd, :interactive_ready, :agent_status, :name, :dead
 
     def initialize
       @starts, @prompts, @closes = [], [], []
@@ -28,16 +28,18 @@ class CoworkerLauncherTest < AceOverseerTestCase
 
     def agent_start(**values)
       @starts << values
+      @dead = false
       raise "environment file missing at launch" unless File.file?(values.fetch(:env_file))
     end
 
     def pane_get(pane)
       raise Ace::Herdr::PaneNotFoundError, "gone" unless @closes.empty?
       Result.new({"result" => {"pane" => {"pane_id" => pane, "terminal_id" => "term_123",
-        "agent" => "pi", "agent_session" => session, "cwd" => cwd}}})
+        "agent" => "pi", "agent_session" => (dead ? nil : session), "cwd" => cwd}}})
     end
 
     def agent_get(pane)
+      raise Ace::Herdr::AgentNotFoundError, "exited" if dead
       row = pane_get(pane.start_with?("coworker-") ? "w1:p1" : pane).parsed_json.dig("result", "pane")
       Result.new({"result" => {"agent" => row.merge("interactive_ready" => interactive_ready, "name" => name, "agent_status" => agent_status)}})
     end
@@ -148,6 +150,7 @@ class CoworkerLauncherTest < AceOverseerTestCase
 
   def teardown
     FileUtils.remove_entry(@root)
+    FileUtils.remove_entry(@retained_directory) if @retained_directory && File.directory?(@retained_directory)
     FileUtils.remove_entry(@environment.directory) if @environment.directory && File.directory?(@environment.directory)
     super
   end
@@ -159,6 +162,81 @@ class CoworkerLauncherTest < AceOverseerTestCase
 
   def launch(worker = launcher)
     worker.call(worktree_path: @root, config_path: @path)
+  end
+
+  def test_dead_worker_resumes_same_assignment_and_transcript_in_same_terminal
+    launch
+    original_directory = @environment.directory
+    transcript = File.join(original_directory, "sessions", "project", "2026-11-11_#{Session.fetch('value')}.jsonl")
+    FileUtils.mkdir_p(File.dirname(transcript))
+    File.write(transcript, JSON.generate("type" => "session", "id" => Session.fetch("value"), "cwd" => @root) + "\n")
+    @state.state = "running"
+    @executor.dead = true
+    result = launch
+    assert_equal "running", result.fetch("state")
+    assert_equal 2, @executor.starts.length
+    assert_equal "w1:p1", @executor.starts.last.fetch(:pane)
+    assert_includes @executor.starts.last.fetch(:args), transcript
+    assert_equal Session, result.fetch("agent_session")
+    assert_equal "assignment-1", result.fetch("assignment")
+    assert_match(/continu/i, @executor.prompts.last.fetch(:text))
+    refute File.exist?(File.join(original_directory, "auth.json"))
+    assert File.file?(transcript)
+    launch
+    assert_equal 2, @executor.starts.length
+    assert_equal 2, @executor.prompts.length
+  ensure
+    FileUtils.remove_entry(original_directory) if original_directory && File.directory?(original_directory)
+  end
+
+  def interrupted_worker
+    launch
+    directory = @environment.directory
+    @retained_directory = directory
+    transcript = File.join(directory, "sessions", "project", "2026-11-11_#{Session.fetch('value')}.jsonl")
+    FileUtils.mkdir_p(File.dirname(transcript))
+    File.write(transcript, JSON.generate("type" => "session", "id" => Session.fetch("value"), "cwd" => @root) + "\n")
+    @state.state = "running"
+    @executor.dead = true
+    transcript
+  end
+
+  def test_uncertain_resume_start_adopts_same_live_session_without_second_start
+    interrupted_worker
+    @executor.define_singleton_method(:agent_start) do |**args|
+      super(**args)
+      raise Ace::Herdr::ExecutorTimeoutError, "reply lost"
+    end
+    assert_raises(Ace::Overseer::Error) { launch }
+    assert_equal "resuming", YAML.safe_load_file(@path).dig("execution", "state")
+    assert_equal "running", launch.fetch("state")
+    assert_equal 2, @executor.starts.length
+    assert_equal 2, @executor.prompts.length
+  end
+
+  def test_uncertain_resume_prompt_is_not_replayed
+    interrupted_worker
+    @executor.prompt_failure = true
+    assert_raises(Ace::Overseer::Error) { launch }
+    assert_equal "resume_prompting", YAML.safe_load_file(@path).dig("execution", "state")
+    @executor.prompt_failure = false
+    assert_raises(Ace::Overseer::Error) { launch }
+    assert_equal 2, @executor.starts.length
+    assert_equal 2, @executor.prompts.length
+  end
+
+  def test_missing_transcript_does_not_restart_dead_executor
+    transcript = interrupted_worker
+    File.unlink(transcript)
+    assert_raises(Ace::Overseer::Error) { launch }
+    assert_equal 1, @executor.starts.length
+  end
+
+  def test_native_transport_error_is_not_permission_to_resume
+    interrupted_worker
+    @executor.define_singleton_method(:agent_get) { |_| raise Ace::Herdr::ExecutorTimeoutError, "unreachable" }
+    assert_raises(Ace::Overseer::Error) { launch }
+    assert_equal 1, @executor.starts.length
   end
 
   def test_concurrent_retries_bind_one_real_start_and_one_prompt
