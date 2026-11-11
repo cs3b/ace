@@ -95,6 +95,9 @@ module Organisms
       end
 
       def agent_start(name:, kind:, pane:, timeout_ms:, args: [])
+        @names ||= {}
+        raise Ace::Herdr::ExecutorError, "agent name already used" if @names.key?(name)
+        @names[name] = pane
         @agents[pane] = "working"
         FakePaneResult.new({"status" => "ready"})
       end

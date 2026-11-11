@@ -11,6 +11,7 @@ require "ace/herdr/molecules/installed_pi_extensions"
 require "ace/lab"
 require "ace/support/cli/toolchain"
 require "json"
+require "digest"
 require "open3"
 
 module Ace
@@ -594,7 +595,7 @@ module Ace
               @executor.pane_run(pane, command)
               @executor.pane_wait_output(pane, pattern: marker, timeout_ms: START_TIMEOUT_MS)
             end
-            @executor.agent_start(name: AGENT_NAME, kind: plan["profile"]["harness"],
+            @executor.agent_start(name: "#{AGENT_NAME}-#{Digest::SHA256.hexdigest(root)[0, 12]}", kind: plan["profile"]["harness"],
               pane: pane, timeout_ms: START_TIMEOUT_MS, args: args)
           end
           pane
@@ -611,7 +612,7 @@ module Ace
           credentials = nil
           Molecules::SessionEnvironment.new(env: @env).with_environment(root: root, role: role) do |file, directory, _profile|
             credentials = directory
-            @executor.agent_start(name: AGENT_NAME, kind: plan["profile"]["harness"],
+            @executor.agent_start(name: "#{AGENT_NAME}-#{Digest::SHA256.hexdigest(root)[0, 12]}", kind: plan["profile"]["harness"],
               pane: pane, timeout_ms: START_TIMEOUT_MS, args: args, env_file: file)
           end
         rescue StandardError, Interrupt
