@@ -274,3 +274,14 @@ To close the distinct process-interruption check, project coordinator received a
 At23:24:28.360UTC operator sent SIGTERM only to Pi PID94521 after verifying /proc cwd=/lab/ace/.ace-wt/ace-t.yyf and comm=pi against native process-info. Native agent list then no longer contains that worker. Assignment was paused0/3 before signal; no completed steps or success report existed. Preserve assignment/panel/session/tmp/ace-session-20261111-94385-7jhyn4/sessions/--lab-ace-.ace-wt-ace-t.yyf--/2026-11-11T23-23-25-330Z_01a1ccec-5f0d-7472-9d0f-760cc1dca26b.jsonl. Await coordinator observation/recovery; do not manually mark success or create another commission.
 
 Post-signal public ace-assign status:running,active010work-on-task,0/3done. Worker had started010 between pre-signal snapshot and termination. Project eyes autonomously woke coordinatorstate324 on missing executor + running assignment; recovery decision pending, no false completion.
+
+
+### Failed native resume argument routing (local repair, acceptance pending)
+
+ace-overseer0.30.2.pre.10 was installed from source9c3ec4e57fe76b544eb5b37891e65b76227733d9, gem SHA256 faae1debe32d8bede0b3212b660a73314ae98819e5d2ebaf0dabcc35877bab04. Same assignment8yaz1k recovery reached native exec-env, but global Herdr option parsing consumed Pi's --session transcript path and rejected it as a Herdr session name longer than64bytes. No Pi replacement started; binding remained resuming and original shell94487/terminalterm_660087b3f371d16 remained. No false completion.
+
+Fix owner: native main dispatches internal exec-env before global session/remote/help parsing, preserving child argv. Regression failed before with the exact error (nextest5f43ca36-904a-4666-af26-78aeef581e65), then12 environment tests passed317e5a75-8c26-4a58-8780-124234b4188d;158 session tests passed384742f7-be09-4052-b437-b533b99790ac. Selected native source5176d899a567985490682c37eb7f0198eab159b0.
+
+A separate orchestration gap stranded a conclusively failed resuming attempt. pre11 allows retry only after native AgentNotFound plus same pane/terminal/cwd and authoritative guarded original shell as the sole foreground process. Missing/uncertain evidence and resume_prompting remain blocked. Regression failedbefore6fecf278-bda6-4ace-a344-b38a87773bc7; focused23/144pass2310f24d-feca-4f2b-9b66-7ee46be35d0e; related60/342pass6c1a92cb-16a2-41d7-9e10-9999838cea12. Independent reviewer approved both patches. Native ARM64 build ongoing; live resumption not yet credited.
+
+Lesson: ordinary process environment tests must include real child CLI arguments, especially overlapping --session/--help flags. A timeout alone cannot justify restarting, but positive process-owner evidence must permit continuation without editing binding state manually.
