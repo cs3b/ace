@@ -78,7 +78,11 @@ module Molecules
         "a completed turn without an assignment report must wake the coordinator"
       assert_equal finished_turn, executor.call, "unchanged completion must not wake again"
       worker["agent_status"] = "working"
-      assert_equal finished_turn, executor.call, "resuming a turn alone must not create wake chatter"
+      worker.delete("completion_seq") # Native Herdr omits completion while working.
+      resumed = executor.call
+      refute_equal finished_turn.fetch("revision"), resumed.fetch("revision")
+      assert_equal resumed, executor.call, "ongoing work with no completion remains stable"
+      worker["agent_status"] = "done"
       worker["completion_seq"] = 9
       refute_equal finished_turn.fetch("revision"), executor.call.fetch("revision")
 
