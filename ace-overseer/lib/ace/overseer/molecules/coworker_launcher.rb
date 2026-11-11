@@ -226,10 +226,17 @@ module Ace::Overseer::Molecules
 
     def finish_resume(execution, brief, worktree_path, save)
       raise Ace::Overseer::Error, "resumed assignment is no longer running" unless brief.assignment_snapshot&.state.to_s == "running"
+      if execution["replacement_pending"]
+        recover_replacement(execution, worktree_path, save)
+      end
       begin
         agent = @executor.agent_get(execution.fetch("pane")).parsed_json&.dig("result", "agent")
       rescue Ace::Herdr::AgentNotFoundError
         raise unless execution["state"] == "resuming"
+        pane = pane_identity(execution.fetch("pane"))
+        if pane["terminal_id"] != execution["terminal_id"]
+          return replace_resume_terminal(execution, brief, worktree_path, pane, save)
+        end
         pane = confirmed_resume_shell(execution, worktree_path)
         return resume_dead(execution, brief, worktree_path, pane, save)
       end
@@ -249,16 +256,76 @@ module Ace::Overseer::Molecules
       execution.reject { |key, _| key == "credentials_directory" }.merge("reused" => true, "resumed" => true)
     end
 
+    def resume_inventory
+      rows = @executor.agent_list.parsed_json&.dig("result", "agents")
+      unless rows.is_a?(Array) && rows.all? { |row| row.is_a?(Hash) && row["name"].is_a?(String) && row["pane_id"].is_a?(String) &&
+          Ace::Herdr::Atoms::NativeAgentSession.normalize(row["agent_session"], agent: row["agent"]) }
+        raise Ace::Overseer::Error, "native executor inventory is incomplete"
+      end
+      rows
+    end
+
+    def replacement_matches(execution)
+      resume_inventory.select do |row|
+        row["name"] == execution["agent"] ||
+          Ace::Herdr::Atoms::NativeAgentSession.normalize(row["agent_session"], agent: "pi") == execution["agent_session"]
+      end
+    end
+
+    def recover_replacement(execution, worktree_path, save)
+      rows = replacement_matches(execution)
+      row = rows.one? && rows.first
+      unless row && row["name"] == execution["agent"] && row["cwd"] == worktree_path && row["terminal_id"] &&
+          row["interactive_ready"] == true && row["agent_status"] == "idle" && session_identity(row) == execution["agent_session"]
+        raise Ace::Overseer::Error, "replacement resume is unconfirmed; inspect before retrying"
+      end
+      execution.merge!("pane" => row["pane_id"], "terminal_id" => row["terminal_id"])
+      execution.delete("replacement_pending")
+      save.call
+    end
+
+    def replace_resume_terminal(execution, brief, worktree_path, pane, save)
+      transcript = resume_transcript(execution, worktree_path)
+      info = @executor.pane_process_info(execution.fetch("pane")).parsed_json&.dig("result", "process_info")
+      unless pane["cwd"] == worktree_path && shell_only?(info, execution["pane"]) && replacement_matches(execution).empty?
+        raise Ace::Overseer::Error, "old executor absence is unconfirmed; replacement refused"
+      end
+      # A native live handoff may replace terminal identity. Never send input
+      # to or close that old pane; resume the same Pi transcript in a new pane.
+      SessionEnvironment.cleanup(execution["credentials_directory"])
+      @environment.with_environment(root: worktree_path, role: brief.config.role) do |file, directory, args|
+        execution["previous_terminal"] = execution.slice("pane", "terminal_id")
+        execution.merge!("replacement_pending" => true, "credentials_directory" => directory, "resume_transcript" => transcript)
+        save.call
+        dispatcher = Ace::Herdr::Organisms::Dispatcher.from_config(executor: @executor)
+        result = dispatcher.dispatch(label: execution.fetch("agent"), prompt: "", kind: "pi", cwd: worktree_path,
+          workspace_id: execution["workspace"], env_file: file,
+          args: Array(args) + ["--session", transcript, "--append-system-prompt", brief.instructions_source])
+        execution.merge!(result.to_h)
+        execution["terminal_id"] = pane_identity(execution.fetch("pane")).fetch("terminal_id")
+        save.call
+        identity = await_session(execution)
+        raise Ace::Overseer::Error, "replacement executor session changed" unless identity == execution["agent_session"]
+        execution.delete("replacement_pending")
+        save.call
+      end
+      finish_resume(execution, brief, worktree_path, save)
+    end
+
+    def shell_only?(info, pane)
+      info.is_a?(Hash) && info["pane_id"] == pane && info["shell_pid"].is_a?(Integer) && info["shell_pid"].positive? &&
+        info["foreground_process_group_id"] == info["shell_pid"] && info["foreground_processes"].is_a?(Array) &&
+        info["foreground_processes"].length == 1 && info["foreground_processes"].first.is_a?(Hash) &&
+        info["foreground_processes"].first["pid"] == info["shell_pid"]
+    end
+
     def confirmed_resume_shell(execution, worktree_path)
       pane = pane_identity(execution.fetch("pane"))
       info = @executor.pane_process_info(execution.fetch("pane")).parsed_json&.dig("result", "process_info")
       unless info.is_a?(Hash) && pane["terminal_id"] == execution["terminal_id"] && pane["cwd"] == worktree_path &&
           info["pane_id"] == execution["pane"] && info.dig("guarded_prompt_origin", "terminal_id") == execution["terminal_id"] &&
           info["guarded_prompt"] == true && info["guarded_input_drain"] == true &&
-          info["shell_pid"].is_a?(Integer) && info["shell_pid"].positive? &&
-          info["foreground_process_group_id"] == info["shell_pid"] &&
-          info["foreground_processes"].is_a?(Array) && info["foreground_processes"].length == 1 &&
-          info["foreground_processes"].first.is_a?(Hash) && info["foreground_processes"].first["pid"] == info["shell_pid"]
+          shell_only?(info, execution["pane"])
         raise Ace::Overseer::Error, "failed resume has no confirmed original shell; inspect before retrying"
       end
       pane
