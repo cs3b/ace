@@ -1,6 +1,6 @@
 # Preserved UTM live cycle — acceptance evidence
 
-Status: in progress; idle measurement and final audit outstanding.
+Status: in progress; delivery, replay, coordinator restart and both idle measurements passed; killed-worker resumption remains under repair.
 
 ## Scope
 
@@ -51,3 +51,8 @@ Started23:08:28UTC: project13 assistant responses, lab403. Both counters unchang
 A hard worker-process termination is not separately demonstrated by the provider-timeout evidence. Keep this explicit recovery check open; do not equate interrupted model streams with a killed worker process.
 
 Project idle PASS:23:08:28.410–23:13:31.639UTC,303.47seconds, assistant count13→13, last response23:07:13.554. Final eyes snapshot23:13:39:enabled true,pending0,errors0,breaker null,all6sources ok,observations22,wakes2/20. Technical custom observation snapshots continued; model did not turn. Lab403→403 is NOT credited: pending1,wakes20/20,all sources ok, reset23:33:07UTC.
+
+
+Lab idle PASS after wake-window reset:23:42:36.310–23:49:09.824UTC,393.514seconds across27 persisted observer snapshots. Last assistant response23:42:36.308, total418 throughout; every snapshot enabled/healthy, pending empty, errors0, breaker null, wakes6/20, maximum snapshot gap37.462seconds. This is unthrottled observation, unlike the earlier excluded window. Existing worker-recovery blocker remains explicit; idle proof does not mark that assignment successful.
+
+Worker process termination: SIGTERM to verified Pi94521 at23:24:28.360UTC. Assignment8yaz1k stayed running/010active, no false completion, project observation woke coordinator. pre10 attempted same-session recovery and exposed native exec-env global option interception; see incident register. Local native fix5176d899a567985490682c37eb7f0198eab159b0 and overseerpre11 verified/reviewed, ARM64 build pending; recovery not yet accepted.
