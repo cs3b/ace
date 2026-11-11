@@ -165,3 +165,16 @@ Canonical lifecycle namespace: `hitl.event.*`
 - Blockers always produce canonical `HITL: <id> <path>` failure reason.
 - Human-required completion handoffs generate approval HITL events.
 - Resolved HITL events are archived only after successful resume dispatch.
+
+## Withdraw an obsolete local question
+
+If the reason for an unanswered or unapplied question no longer exists, cancel
+the exact local case with the evidence. Do not manufacture a human answer:
+
+```bash
+ace-hitl cancel <case-id> --case --reason "Obsolete: verified new review commit and active next round"
+```
+
+This records terminal cancellation in the canonical case. Repetition is a no-op;
+an applied effect must be closed instead. Without `--case`, cancel addresses the
+relay request owner; it never guesses a different owner on lookup failure.

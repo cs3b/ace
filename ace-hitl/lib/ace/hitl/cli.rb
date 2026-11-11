@@ -47,7 +47,7 @@ module Ace
         ["wait", "Wait for an answer on a specific HITL event"],
         ["deliver", "Deliver an answer (stdin) to a pending HITL relay request"],
         ["consume", "Wait for and consume the answer of one own HITL relay request"],
-        ["cancel", "Cancel one HITL relay request with an audited reason"],
+        ["cancel", "Cancel a relay request or explicit local case (--case)"],
         ["pending", "List answerable HITL relay requests (transport)"],
         ["states", "List public HITL lifecycle projections (transport)"],
         ["duty", "Project pending and escalated HITL requests (transport)"],

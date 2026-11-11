@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.2.pre.1] - 2026-11-11
+
+### Fixed
+
+- Expose canonical local case cancellation through `cancel --case --reason`, preserving audited reasons and idempotence without fabricating human answers or contacting relay services.
+
 ## [0.25.1] - 2026-11-10
 
 ### Fixed
