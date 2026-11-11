@@ -50,7 +50,12 @@ assignment with an open publication step cannot produce a success report.
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle wfi://bundle`
+- Read and follow: `ace-bundle wfi://bundle`.
+- Load project context with `ace-bundle project --compressor-mode exact` and read
+  the returned context file. Context preparation must not launch another model
+  merely to summarize documentation; use agent compression only when the
+  commission explicitly requests it. This does not change the review model or
+  the commissioned execution and verification requirements.
 
 ## Process
 
