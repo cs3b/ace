@@ -160,7 +160,7 @@ If the exact session is still idle, interactive-ready, has no
 completed turn, and the pinned assignment has no activity or report, record
 one recovery attempt before sending the original commission to that same
 terminal. The commission must still name that exact assignment and role.
-Never submit a second dispatch or prompt a session that has begun work.
+Never repeat the original startup dispatch or commission after a session has begun work.
 After confirmed recovery delivery, arm one follow-up deadline
 `dispatch-recovery-<id>` with the same assignment revision and a fresh
 300000-millisecond window. Cancel it on assignment activity or a report.
@@ -170,6 +170,32 @@ ambiguous, record the blocker and escalate through HITL. Do the same when
 delivery was confirmed but the assignment still has no activity at the
 deadline. Keep the unfinished assignment pending or blocked. Reconcile
 reports through their owners before acknowledging events.
+
+### Ended worker turns and provider failures
+
+An executor event's `completion_seq` means a native turn ended, not that its
+assignment succeeded. Before acknowledging that revision, read the current
+native session, pinned assignment and reports. Do not reuse an earlier
+`working` observation. If the assignment is complete, adopt its report through
+`process-reports`. If the session is currently working, leave it alone.
+
+If the same interactive session ended with a provider error and its assignment
+is unfinished, inspect its last output and recorded progress. Record recovery
+in the existing coordination leg, then send a continuation to that same
+terminal naming the assignment and unfinished step. Preserve completed work,
+commits and PRs; do not resend the original commission or create another agent.
+This continuation is distinct from startup recovery above. Acknowledge the
+handled revision only after recording the outcome, then end the turn with eyes
+armed. A prompt receipt alone does not prove progress. After submission, arm
+one existing eyes deadline `provider-recovery-<assignment>` pinned to the
+assignment revision, with a 300000-millisecond window. Cancel it only on
+verified assignment or work-product progress. Do not rearm it merely because
+another timeout or completion event arrived. On expiry, inspect the current
+owners; if there has been no progress, stop automatic retries and escalate the
+concrete provider failure through HITL. Preserve the deadline while handling
+repeated failures so a stalled continuation cannot silently wait forever.
+An unknown outcome or ambiguous session also requires reconciliation/escalation,
+not a speculative continuation.
 
 ## Escalation (HITL)
 
