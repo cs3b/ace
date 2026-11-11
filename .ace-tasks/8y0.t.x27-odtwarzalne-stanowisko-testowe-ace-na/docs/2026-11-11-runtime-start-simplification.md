@@ -60,3 +60,18 @@ The first live start exposed the nested native workspace-response mismatch and a
 Published ace-overseer0.30.1 download matches SHA256 `ba298cb6e38677cfcdf4bf688d10e99563c19b8f4f817017a6271720c1d9b5dc`. Installed from the copied gem with one `bundle install --local`; configured manifest now selects0.30.1. Same Pi pane `w2:p2` resumed with the corrected first-turn prompt. Live autonomy acceptance remains pending.
 
 Captain explicitly authorized subsequent test iterations using local candidate gems, without RubyGems publication. For each candidate: local tests, concrete source commit, unique prerelease version, built artifact checksum, copy into VM bundle vendor/cache, update Gemfile and deployment manifest, one bundle install --local. Resume existing work and restart only processes that must reload code. Final public release still comes from main. RubyGems metadata may lag: in this iteration the version list omitted0.30.1 while its downloadable gem was already available and matched the prepared artifact.
+
+## Live acceptance checkpoint — same preserved run
+
+| Requirement | Observed evidence | Status |
+|---|---|---|
+| Lab delegates bootstrap | Manager8ya.t.tcy; worker8yatf4/report8yatrk; verifier8yatf41/report8yau1u; project coordinatorw3:p3 first turn + healthy eyes | Proven, with documented product repairs |
+| One issue through independent review and merge | Issue1 / PR5; candidate20fe7b91f7eae4748069edc7e1d4dc74b4b44a5e; Forgejo review1 APPROVED by e2e-reviewer for that HEAD; merge051f957972d6b6c3fd77562326a85682255811ef; issue closed | Proven, operator-assisted scope correction recorded |
+| Dependent CLI | Task8ya.t.vu0; assignment8yavwb; candidate5820ab55eb9bac44761cc76084a3d2d9575d4216; primitive5tests8assertions + CLI5tests20assertions reported passing; PR7 creation reported | In progress; independent gate/merge unproven |
+| Independent documentation | Task8ya.t.vu8; worker8yavwq completed; API verifies PR6open at4cf02503559edae9e09c1793347d432a16d0a1af | In progress; independent gate/merge unproven |
+| Provider failure and continuation | Native completion169 woke coordinator; same worker8yavwb/terminalterm_66006b88a50ade resumed without host notification after pre6 | Proven dispatch recovery; no false success |
+| Replay and coordinator restart | Earlier launch retries preserved executor; explicit final replay/restart exercise not yet executed | Pending |
+| Five minutes unchanged, no model turns | Not yet measured after all work settles | Pending |
+| Release remains queued | Forgejo issue4 OPEN; no release publication | Proven at checkpoint; recheck at final audit |
+
+Current VM runtime candidates: ace-overseer0.30.2.pre.6, ace-coworker0.9.1.pre.1, ace-assign0.73.3.pre.1. Artifact/source identifiers and each intervention are recorded in `.ace-retros/8y91p3-utm-autonomy-live-incident-register/`. This is a single repaired live run, not a clean immutable-release acceptance. Task8y0.t.x27 remains in-progress. Whole-run GLM quota/token accounting is not available.
