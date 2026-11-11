@@ -103,6 +103,35 @@ module Ace
             assert_match(/not applied:.*never re-opens/, error.message)
           end
 
+          def test_cli_cancels_local_case_without_a_human_answer_or_relay
+            cancelled = run_with_cli_root do
+              Cancel.new.call(id: @event.id, case: true, reason: "reviewer advanced to a new HEAD")
+            end
+            assert_equal "cancelled", cancelled["state"]
+            original = File.read(@event.file_path)
+            assert_includes original, "reviewer advanced to a new HEAD"
+            assert_equal "cancelled", @manager.case_lifecycle(@event.id)["application"]
+            duplicate = run_with_cli_root do
+              Cancel.new.call(id: @event.id, case: true, reason: "different retry reason")
+            end
+            assert_equal "duplicate", duplicate["state"]
+            assert_equal original, File.read(@event.file_path)
+            assert_raises(Ace::Support::Cli::Error) { deliver_answer("Late answer") }
+          end
+
+          def test_local_cancel_requires_a_reason_and_refuses_applied_cases
+            assert_raises(Ace::Support::Cli::Error) do
+              run_with_cli_root { Cancel.new.call(id: @event.id, case: true) }
+            end
+            deliver_answer
+            @manager.apply_answer_effect(@event.id, "pr:7")
+            original = File.read(@event.file_path)
+            assert_raises(Ace::Support::Cli::Error) do
+              run_with_cli_root { Cancel.new.call(id: @event.id, case: true, reason: "obsolete") }
+            end
+            assert_equal original, File.read(@event.file_path)
+          end
+
           def test_cancel_is_terminal_only_without_an_applied_effect
             cancelled = @manager.cancel_case(@event.id)
             assert_equal :cancelled, cancelled

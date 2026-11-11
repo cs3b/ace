@@ -267,7 +267,7 @@ module Ace
         # Only from the not-yet-applied states — an applied effect is
         # history and is closed, not cancelled.
         # @return [Symbol] :cancelled or :duplicate
-        def cancel_case(ref, scope: nil)
+        def cancel_case(ref, scope: nil, reason: nil)
           event = exact_case(ref, scope: scope)
 
           transition(event.file_path) do |frontmatter, _body|
@@ -276,6 +276,7 @@ module Ace
             when "", "pending"
               frontmatter["application"] = {"state" => "cancelled",
                 "cancelled_at" => timestamp}
+              frontmatter["application"]["reason"] = reason.to_s.strip unless reason.to_s.strip.empty?
               :cancelled
             when "cancelled"
               :duplicate
