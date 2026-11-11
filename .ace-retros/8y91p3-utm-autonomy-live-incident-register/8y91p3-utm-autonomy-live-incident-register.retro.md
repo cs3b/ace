@@ -174,3 +174,15 @@ Implementation and local evidence: [runtime correction record](../../.ace-tasks/
 - Existing coordinator w3:p3 notified to resume same handoff, not create another worker; live outcome pending.
 - Separate coordination incident: docs dependency removed but commission still told worker to wait for CLI. Worker entered minute-long shell polling. Operator interrupted only that turn and asked coordinator to reconcile its own commission. Coordinator resumed same w3:p8 with corrected brief, preserving assignment. This is operator-assisted evidence, not unassisted autonomy.
 - GLM quota/cost for this interval: not independently measured.
+
+- Live recovery confirmed: coordinator invoked public handoff, same CLI assignment8yavwb/pane w3:p7 began worker brief/context; no replacement process. Coordinator cleared hold and ended turn with eyes pending0.
+- Docs worker8yavwq/w3:p8 then observed provider retry exhaustion (three Request timed out), native status done but no proven assignment completion. Host notified coordinator to inspect owners and resume same executor; no direct worker implementation or synthetic success.
+
+### Worker provider failure invisible to standing observation
+
+- Live symptom: docs assignment8yavwq remained running at020, no final report, native workerw3:p8 remained present with done/completion_seq151 after three provider timeouts. Coordinator resumed the same executor after operator notification and owner-state inspection. No false completion was accepted.
+- Root cause: LocalSources executor projection included only terminal/name; a completed turn without a report or panel disappearance did not revise any event.
+- Product fix: include native completion_seq in the existing executor event. Unchanged sequence stays quiet; working/idle transitions stay excluded. A completion signals inspection, never assignment success. No new store or polling model turns.
+- Test: local_sources regression failed before change (8d4d8784-ef1c-427d-8cb8-b109fbe55592); combined local_sources/launcher25tests141assertions pass (1def507e-8451-4f0b-9959-65820a1084f9). Review/deployment pending.
+
+- Observation fix independently APPROVED, deployed as ace-overseer0.30.2.pre.6 from047d257a4099920c197b8c15d1d610e482dc18c8; gemSHA2565573d3399c4bb45df593b48f9eb45f796c906b464abbc89ea8701ccd555407b7. Local gemcopy+onebundle install successful, no reset. Existing observe subprocesses load candidate on next invocation; no model session restart needed. Docs worker resumed by coordinator after owner inspection; CLI worker autonomously synchronizes missing integrated counter prerequisite before implementation. Completion/liveness acceptance remains pending.
