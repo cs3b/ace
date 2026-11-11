@@ -8,12 +8,14 @@ class CoworkerLauncherTest < AceOverseerTestCase
 
   class Executor
     attr_reader :starts, :prompts, :closes
-    attr_accessor :session, :prompt_failure, :cwd, :interactive_ready
+    attr_accessor :session, :prompt_failure, :cwd, :interactive_ready, :agent_status, :name
 
     def initialize
       @starts, @prompts, @closes = [], [], []
       @session = Session.dup
       @interactive_ready = true
+      @agent_status = "idle"
+      @name = "coworker-assignment-1"
     end
 
     def pane_current
@@ -36,8 +38,8 @@ class CoworkerLauncherTest < AceOverseerTestCase
     end
 
     def agent_get(pane)
-      row = pane_get(pane).parsed_json.dig("result", "pane")
-      Result.new({"result" => {"agent" => row.merge("interactive_ready" => interactive_ready)}})
+      row = pane_get(pane.start_with?("coworker-") ? "w1:p1" : pane).parsed_json.dig("result", "pane")
+      Result.new({"result" => {"agent" => row.merge("interactive_ready" => interactive_ready, "name" => name, "agent_status" => agent_status)}})
     end
 
     def agent_prompt(**values)
@@ -140,6 +142,7 @@ class CoworkerLauncherTest < AceOverseerTestCase
     @brief = Ace::Coworker::Models::Brief.new(config: @config, instructions_source: "/packaged/worker.md",
       task_path: "/task.s.md", assignment_snapshot: @state, project_root: @root)
     @executor = Executor.new
+    @executor.cwd = @root
     @environment = Environment.new
   end
 
@@ -169,6 +172,82 @@ class CoworkerLauncherTest < AceOverseerTestCase
     assert_equal Session, saved.fetch("agent_session")
     assert_equal "assignment-1", saved.fetch("assignment")
     refute results.any? { |r| r.key?("credentials_directory") }
+  end
+
+  def test_native_session_can_be_absent_in_first_pane_receipt
+    reads = 0
+    @executor.define_singleton_method(:session) { reads += 1; (reads == 1) ? nil : Session.dup }
+    assert_equal "running", launch.fetch("state")
+    assert_equal 1, @executor.starts.size
+    assert_equal 1, @executor.prompts.size
+  end
+
+  def test_waits_for_asynchronously_published_session_without_restarting
+    @executor.session = nil
+    sleeps = 0
+    worker = launcher(sleeper: ->(_) { sleeps += 1; @executor.session = Session.dup })
+    assert_equal "running", launch(worker).fetch("state")
+    assert_equal 1, sleeps
+    assert_equal 1, @executor.starts.size
+    assert_equal 1, @executor.prompts.size
+  end
+
+  def test_identity_timeout_preserves_receipt_and_retry_prompts_existing_worker_once
+    @executor.session = nil
+    assert_raises(Ace::Overseer::Error) { launch(launcher(identity_timeout: 0)) }
+    saved = YAML.safe_load_file(@path).fetch("execution")
+    assert_equal "started", saved.fetch("state")
+    assert_equal "w1:p1", saved.fetch("pane")
+    assert_equal "term_123", saved.fetch("terminal_id")
+    assert_empty @executor.prompts
+    @executor.session = {"agent" => "pi", "kind" => "path",
+      "value" => File.join(@environment.directory, "sessions", "session_12345678-1234-1234-1234-123456789abc.jsonl")}
+    assert_equal "running", launch.fetch("state")
+    assert launch.fetch("reused")
+    assert_equal 1, @executor.starts.size
+    assert_equal 1, @executor.prompts.size
+  end
+
+  def test_saved_terminal_without_session_cannot_adopt_foreign_pi_session
+    @executor.session = nil
+    assert_raises(Ace::Overseer::Error) { launch(launcher(identity_timeout: 0)) }
+    @executor.session = {"agent" => "pi", "kind" => "path",
+      "value" => "/tmp/foreign/sessions/session_12345678-1234-1234-1234-123456789abc.jsonl"}
+    assert_raises(Ace::Overseer::Error) { launch }
+    assert_empty @executor.prompts
+    assert_equal 1, @executor.starts.size
+  end
+
+  def test_recovery_refuses_worker_that_has_already_started_work
+    @executor.session = nil
+    assert_raises(Ace::Overseer::Error) { launch(launcher(identity_timeout: 0)) }
+    @executor.session = Session.dup
+    @executor.agent_status = "working"
+    assert_raises(Ace::Overseer::Error) { launch }
+    assert_empty @executor.prompts
+    assert_equal 1, @executor.starts.size
+  end
+
+  def test_missing_receipt_recovery_requires_matching_private_session_provenance
+    @executor.session = nil
+    assert_raises(Ace::Overseer::Error) { launch(launcher(identity_timeout: 0)) }
+    document = YAML.safe_load_file(@path)
+    execution = document.fetch("execution")
+    execution.delete("pane")
+    execution.delete("terminal_id")
+    execution["state"] = "launching"
+    File.write(@path, YAML.safe_dump(document))
+    @executor.session = Session.dup
+    assert_raises(Ace::Overseer::Error) { launch }
+    assert_empty @executor.prompts
+    @executor.session = {"agent" => "pi", "kind" => "path",
+      "value" => File.join(@environment.directory, "sessions", "session_12345678-1234-1234-1234-123456789abc.jsonl")}
+    @executor.cwd = "/other-project"
+    assert_raises(Ace::Overseer::Error) { launch }
+    @executor.cwd = @root
+    assert_equal "running", launch.fetch("state")
+    assert_equal 1, @executor.starts.size
+    assert_equal 1, @executor.prompts.size
   end
 
   def test_missing_credentials_does_not_leave_a_false_uncertain_launch

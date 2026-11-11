@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.2.pre.5] - 2026-11-11
+
+### Fixed
+
+- Preserve native worker launch receipts while Pi publishes its session identity; resume the same verified idle executor without duplicating a process or an uncertain prompt.
+
 ## [0.30.2.pre.4] - 2026-11-11
 
 ### Fixed

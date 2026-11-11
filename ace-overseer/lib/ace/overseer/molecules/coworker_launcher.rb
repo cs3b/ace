@@ -12,7 +12,9 @@ module Ace::Overseer::Molecules
   class CoworkerLauncher
     def initialize(executor: Ace::Herdr::Molecules::HerdrExecutor.new, env: ENV,
       environment: nil, bindings: Ace::Coworker::Molecules::ExecutionBinding.new,
-      brief_factory: nil, readiness: nil, eyes: nil, root_resolver: nil)
+      brief_factory: nil, readiness: nil, eyes: nil, root_resolver: nil,
+      identity_timeout: 10, clock: -> { Process.clock_gettime(Process::CLOCK_MONOTONIC) }, sleeper: ->(seconds) { sleep(seconds) })
+      @identity_timeout, @clock, @sleeper = identity_timeout, clock, sleeper
       @executor, @env, @bindings = executor, env, bindings
       @environment = environment || SessionEnvironment.new(env: env)
       @brief_factory = brief_factory || ->(root, path) { Ace::Coworker::Organisms::StartOrchestrator.new(project_root: root).call(config_path: path) }
@@ -48,7 +50,15 @@ module Ace::Overseer::Molecules
           raise Ace::Overseer::Error, "executor commission changed during validation"
         end
         if document["execution"]
-          next reuse(document.fetch("execution"))
+          execution = document.fetch("execution")
+          if %w[launching started].include?(execution["state"])
+            unless %w[paused empty].include?(brief.assignment_snapshot&.state.to_s)
+              raise Ace::Overseer::Error, "unconfirmed executor already has assignment activity"
+            end
+            recover_unprompted(execution, worktree_path, save)
+            next submit_prompt(execution, brief, save)
+          end
+          next reuse(execution)
         end
         unless %w[paused empty].include?(brief.assignment_snapshot&.state.to_s)
           raise Ace::Overseer::Error, "unbound assignment is not ready for a new executor"
@@ -72,20 +82,14 @@ module Ace::Overseer::Molecules
           result = dispatcher.dispatch(label: name, prompt: "", kind: "pi", cwd: worktree_path,
             env_file: file, args: Array(profile_args) + ["--append-system-prompt", brief.instructions_source])
           execution.merge!(result.to_h).merge!("state" => "started")
+          save.call # Preserve the native receipt before asynchronous session publication.
           pane = pane_identity(execution.fetch("pane"))
           execution["terminal_id"] = pane.fetch("terminal_id")
-          execution["agent_session"] = session_identity(pane)
+          save.call
+          execution["agent_session"] = await_session(execution)
           save.call
         end
-        # Record uncertainty BEFORE submission. A crash after input reaches Pi
-        # cannot cause the same task to be submitted again automatically.
-        execution["state"] = "prompting"
-        save.call
-        prompt = "#{brief.config.start_prompt}\n\n#{Ace::Coworker::Atoms::BriefFormatter.format_table(brief)}"
-        @executor.agent_prompt(pane: execution.fetch("pane"), text: prompt)
-        execution["state"] = "running"
-        save.call
-        execution.reject { |key, _| key == "credentials_directory" }.merge("reused" => false)
+        submit_prompt(execution, brief, save)
       end
     rescue Ace::Coworker::Error, Ace::Herdr::ExecutorError => e
       raise Ace::Overseer::Error, "executor launch blocked: #{e.message}"
@@ -119,6 +123,59 @@ module Ace::Overseer::Molecules
     end
 
     private
+
+    def submit_prompt(execution, brief, save)
+      # A crash after input reaches Pi must never repeat the commission.
+      execution["state"] = "prompting"
+      save.call
+      prompt = "#{brief.config.start_prompt}\n\n#{Ace::Coworker::Atoms::BriefFormatter.format_table(brief)}"
+      @executor.agent_prompt(pane: execution.fetch("pane"), text: prompt)
+      execution["state"] = "running"
+      save.call
+      execution.reject { |key, _| key == "credentials_directory" }.merge("reused" => false)
+    end
+
+    def await_session(execution)
+      deadline = @clock.call + @identity_timeout
+      loop do
+        pane = pane_identity(execution.fetch("pane"))
+        unless pane["terminal_id"] == execution.fetch("terminal_id")
+          raise Ace::Overseer::Error, "executor terminal changed before session publication"
+        end
+        identity = Ace::Herdr::Atoms::NativeAgentSession.normalize(pane["agent_session"], agent: "pi")
+        return identity if identity
+        raise Ace::Overseer::Error, "native executor session identity is unavailable; retry the same handoff" if @clock.call >= deadline
+        @sleeper.call(0.2)
+      end
+    end
+
+    def recover_unprompted(execution, worktree_path, save)
+      row = @executor.agent_get(execution["pane"] || execution.fetch("agent")).parsed_json&.dig("result", "agent")
+      unless row.is_a?(Hash) && row["name"] == execution["agent"] &&
+          row["cwd"] == worktree_path && row["agent_status"] == "idle" &&
+          row["interactive_ready"] == true && row["pane_id"] && row["terminal_id"]
+        raise Ace::Overseer::Error, "unconfirmed launch is not the expected idle executor"
+      end
+      if execution["terminal_id"] && execution["terminal_id"] != row["terminal_id"]
+        raise Ace::Overseer::Error, "executor terminal changed before recovery"
+      end
+      identity = session_identity(row)
+      if execution["agent_session"] && execution["agent_session"] != identity
+        raise Ace::Overseer::Error, "executor session changed before recovery"
+      end
+      # Without a saved Pi identity, bind only the unique private session
+      # directory allocated for this dispatch, never an arbitrary same-name pane.
+      unless execution["agent_session"]
+        directory = execution["credentials_directory"]
+        native_session = row.fetch("agent_session")
+        unless directory && native_session["kind"] == "path" && native_session["value"].start_with?("#{directory}/sessions/")
+          raise Ace::Overseer::Error, "unconfirmed launch has no matching session provenance"
+        end
+      end
+      execution.merge!("pane" => row["pane_id"], "terminal_id" => row["terminal_id"],
+        "agent_session" => identity, "state" => "started")
+      save.call
+    end
 
     def reuse(execution)
       if execution["state"] == "retired"
