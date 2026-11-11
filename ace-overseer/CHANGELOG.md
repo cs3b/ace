@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.2.pre.12] - 2026-11-12
+
+### Fixed
+
+- Resume a failed executor in a fresh pane after native terminal identity replacement, preserving assignment/session and reconciling uncertain dispatch without duplicates.
+
 ## [0.30.2.pre.11] - 2026-11-11
 
 ### Fixed

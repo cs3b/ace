@@ -8,7 +8,7 @@ class CoworkerLauncherTest < AceOverseerTestCase
 
   class Executor
     attr_reader :starts, :prompts, :closes
-    attr_accessor :session, :prompt_failure, :cwd, :interactive_ready, :agent_status, :name, :dead
+    attr_accessor :session, :prompt_failure, :cwd, :interactive_ready, :agent_status, :name, :dead, :terminal_id
 
     def initialize
       @starts, @prompts, @closes = [], [], []
@@ -16,6 +16,7 @@ class CoworkerLauncherTest < AceOverseerTestCase
       @interactive_ready = true
       @agent_status = "idle"
       @name = "coworker-assignment-1"
+      @terminal_id = "term_123"
     end
 
     def pane_current
@@ -34,7 +35,7 @@ class CoworkerLauncherTest < AceOverseerTestCase
 
     def pane_get(pane)
       raise Ace::Herdr::PaneNotFoundError, "gone" unless @closes.empty?
-      Result.new({"result" => {"pane" => {"pane_id" => pane, "terminal_id" => "term_123",
+      Result.new({"result" => {"pane" => {"pane_id" => pane, "terminal_id" => terminal_id,
         "agent" => "pi", "agent_session" => (dead ? nil : session), "cwd" => cwd}}})
     end
 
@@ -260,6 +261,61 @@ class CoworkerLauncherTest < AceOverseerTestCase
     @executor.define_singleton_method(:pane_process_info) { |_| raise Ace::Herdr::ExecutorTimeoutError, "unreachable" }
     assert_raises(Ace::Overseer::Error) { launch }
     assert_equal 2, @executor.starts.size
+  end
+
+  def replaced_resume_terminal
+    info = failed_resume_start
+    @executor.terminal_id = "handoff-terminal"
+    @executor.define_singleton_method(:agent_list) { Result.new({"result" => {"agents" => []}}) }
+    @executor.define_singleton_method(:tab_create) do |**_|
+      self.terminal_id = "fresh-terminal"
+      Result.new({"pane_id" => "w1:p2"})
+    end
+    info.delete("guarded_prompt_origin")
+    info.delete("guarded_prompt")
+    info.delete("guarded_input_drain")
+  end
+
+  def test_terminal_replacement_resumes_same_session_in_fresh_pane_without_touching_old
+    replaced_resume_terminal
+    result = launch
+    assert_equal "w1:p2", result.fetch("pane")
+    assert_equal "fresh-terminal", result.fetch("terminal_id")
+    assert_equal({"pane" => "w1:p1", "terminal_id" => "term_123"}, result.fetch("previous_terminal"))
+    assert_equal Session, result.fetch("agent_session")
+    assert_equal "w1:p2", @executor.prompts.last.fetch(:pane)
+    assert_empty @executor.closes
+    assert_equal 3, @executor.starts.size
+  end
+
+  def test_replacement_refuses_live_original_session_or_incomplete_inventory
+    replaced_resume_terminal
+    [nil, [{"name" => "unclassified", "pane_id" => "w1:p9"}],
+      [{"agent" => "unknown", "name" => "unclassified", "pane_id" => "w1:p9"}],
+      [{"agent" => "pi", "name" => "different-name", "pane_id" => "w1:p9", "agent_session" => Session}],
+      [{"agent" => "pi", "name" => "unknown-session", "pane_id" => "w1:p9"}]].each do |rows|
+      @executor.define_singleton_method(:agent_list) { Result.new({"result" => {"agents" => rows}}) }
+      assert_raises(Ace::Overseer::Error) { launch }
+      assert_equal 2, @executor.starts.size
+      assert_empty @executor.closes
+    end
+  end
+
+  def test_lost_replacement_reply_adopts_exact_session_and_does_not_dispatch_twice
+    replaced_resume_terminal
+    @executor.define_singleton_method(:agent_start) do |**args|
+      super(**args)
+      raise Ace::Herdr::ExecutorTimeoutError, "reply lost"
+    end
+    assert_raises(Ace::Overseer::Error) { launch }
+    assert YAML.safe_load_file(@path).dig("execution", "replacement_pending")
+    @executor.define_singleton_method(:agent_list) do
+      Result.new({"result" => {"agents" => [agent_get("w1:p2").parsed_json.dig("result", "agent")]}})
+    end
+    assert_equal "running", launch.fetch("state")
+    assert_equal 3, @executor.starts.size
+    assert_equal 2, @executor.prompts.size
+    assert_equal "w1:p2", @executor.prompts.last.fetch(:pane)
   end
 
   def test_uncertain_resume_prompt_is_not_replayed
