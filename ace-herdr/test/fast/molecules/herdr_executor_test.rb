@@ -100,6 +100,24 @@ module Ace
         end
 
 
+        def test_configured_installed_mode_reaches_extension_selection_without_shell_setup
+          previous = ENV["ACE_TOOLCHAIN"]
+          ENV.delete("ACE_TOOLCHAIN")
+          observed = nil
+          flags = ["--no-extensions", "--extension", "/installed/wake/index.js"]
+          selector = ->(env:) { observed = env["ACE_TOOLCHAIN"]; flags }
+          executor = StubbedExecutor.new(binary: "herdr", config: {"toolchain" => "installed"})
+          InstalledPiExtensions.stub(:arguments, selector) do
+            executor.agent_start(name: "worker", kind: "pi", pane: "p1", timeout_ms: 1000)
+          end
+          assert_equal "installed", observed
+          assert_includes executor.commands.last, "/installed/wake/index.js"
+          ENV["ACE_TOOLCHAIN"] = "installed"
+          assert_equal "installed", HerdrExecutor.environment({"toolchain" => "auto"}).fetch("ACE_TOOLCHAIN")
+        ensure
+          ENV["ACE_TOOLCHAIN"] = previous
+        end
+
         def test_agent_start_passes_harness_args_after_separator
           executor = StubbedExecutor.new(binary: "herdr")
 

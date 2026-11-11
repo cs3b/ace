@@ -11,6 +11,7 @@ require_relative "cli/commands/close"
 require_relative "cli/commands/tidy"
 require_relative "cli/commands/list"
 require_relative "cli/commands/status"
+require_relative "cli/commands/start"
 require_relative "cli/commands/send"
 require_relative "cli/commands/capture"
 require_relative "cli/commands/workspace"
@@ -28,6 +29,7 @@ module Ace
 
       # Application commands with descriptions (for help output)
       REGISTERED_COMMANDS = [
+        ["start", "Start or attach to Herdr using its native configuration"],
         ["deliver", "Push an answer to an agent pane (ace-hitl delivery contract)"],
         ["inbox", "Durable agent message queue and reconciliation"],
         ["dispatch", "Start an agent in one command: tab + agent + prompt"],
@@ -77,6 +79,7 @@ module Ace
       register "native-source", CLI::Commands::NativeSource.new
       register "list", CLI::Commands::List.new
       register "status", CLI::Commands::Status.new
+      register "start", CLI::Commands::Start.new
       register "send", CLI::Commands::Send.new
       register "capture", CLI::Commands::Capture.new
       register "wait", CLI::Commands::Wait.new

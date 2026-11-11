@@ -31,7 +31,7 @@ module Ace
         DEFAULT_MODE = "0755"
         DEFAULT_KEY_TYPE = "ed25519"
         KEY_TYPES = [DEFAULT_KEY_TYPE].freeze
-        GEMSET_KEYS = %w[gem_home gems extensions].freeze
+        GEMSET_KEYS = %w[gem_home gems extensions bin_dir].freeze
         GEM_KEYS = %w[name version].freeze
         GEM_NAME_PATTERN = /\A[A-Za-z0-9._-]+\z/
         EXTENSION_KEYS = %w[gem path account].freeze
@@ -420,8 +420,14 @@ module Ace
               raise_invalid "gemset gem_home is required and must be an absolute path"
             end
 
-            {"gem_home" => gem_home.strip, "gems" => normalize_gems(raw["gems"]),
-             "extensions" => normalize_extensions(raw["extensions"], raw["gems"], usernames)}
+            normalized = {"gem_home" => gem_home.strip, "gems" => normalize_gems(raw["gems"]),
+              "extensions" => normalize_extensions(raw["extensions"], raw["gems"], usernames)}
+            if raw.key?("bin_dir")
+              bin_dir = required_string(raw, "gemset", "bin_dir")
+              raise_invalid "gemset bin_dir must be an absolute path" unless absolute_path?(bin_dir)
+              normalized["bin_dir"] = bin_dir
+            end
+            normalized
           end
 
           # Harness extension projections: each entry names a DECLARED

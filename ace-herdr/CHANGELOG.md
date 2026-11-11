@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-11
+
+### Added
+
+- Add ace-herdr start using native configuration; apply configured binary, socket, native config and toolchain consistently to startup and agent dispatch, including managed Pi extensions.
+
 ## [0.10.0] - 2026-11-10
 
 ### Added

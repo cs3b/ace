@@ -16,7 +16,7 @@ class ProjectObservationsTest < AceOverseerTestCase
       "projects" => [{"id" => "ace", "path" => @project, "environment_files" => {"project-overseer" => @credentials}}],
       "roles" => [{"id" => "project-overseer", "instructions" => "wfi://overseer/start"}],
       "gemset" => {"gem_home" => "/installed/gems"},
-      "session_runtime" => {"node" => "/usr/bin/node", "pi" => "/installed/bin/pi", "path" => ["/usr/bin", "/bin"]}}
+      "session_runtime" => {"herdr" => {"socket" => "/tmp/configured-herdr.sock"}, "node" => "/usr/bin/node", "pi" => "/installed/bin/pi", "path" => ["/usr/bin", "/bin"]}}
     @rows = {"schema" => "ace.hitl.observation/v1", "events" => [
       {"key" => "report-key", "id" => "report-id", "revision" => "rev-1", "type" => "report", "result" => "success"}],
       "settled" => [], "sources" => Ace::Overseer::Atoms::ObservationSources::REQUIRED.to_h { |name| [name, {"status" => "ok"}] }}

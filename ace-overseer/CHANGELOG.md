@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-11-11
+
+### Added
+
+- Select installed toolchain from overseer configuration without shell setup; derive child Herdr socket from the configured session runtime.
+
 ## [0.29.0] - 2026-11-10
 
 ### Added

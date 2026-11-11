@@ -84,10 +84,10 @@ module Organisms
                 version: 0.13.0
         YAML
         with_manifest(manifest) do |organism, _dir|
-          report = organism.call
+          report = with_local_gem_source(gem_home) { organism.call }
 
           assert_equal true, report["ok"], report.inspect
-          assert_equal "exists", report["gems"].first["status"]
+          assert_equal "installed", report["gems"].first["status"]
           assert_equal "ace-lab-probe", report["gems"].first["name"]
           assert_equal gem_home, report["gems"].first["gem_home"]
         end
@@ -96,7 +96,7 @@ module Organisms
 
     def test_dry_run_predicts_gem_installation_without_touching_the_runtime
       Dir.mktmpdir do |gemdir|
-        gem_home = File.join(gemdir, "runtime")
+        gem_home = File.join(gemdir, "runtime", RUBY_ENGINE, RbConfig::CONFIG.fetch("ruby_version"))
         FileUtils.mkdir_p(gem_home)
         manifest = MANIFEST + <<~YAML
           gemset:
@@ -121,7 +121,7 @@ module Organisms
     # loaded version plus the restart need.
     def test_gemset_extensions_project_from_the_installed_exact_version
       Dir.mktmpdir do |gemdir|
-        gem_home = File.join(gemdir, "runtime")
+        gem_home = File.join(gemdir, "runtime", RUBY_ENGINE, RbConfig::CONFIG.fetch("ruby_version"))
         FileUtils.mkdir_p(gem_home)
         source = File.join(gem_home, "gems", "ace-wake-probe-0.1.0", "handbook", "extensions")
         FileUtils.mkdir_p(File.join(source, "ace-wake-probe"))
@@ -152,7 +152,7 @@ module Organisms
         with_manifest(manifest, runner: runner) do |organism, _dir|
           report = organism.call
 
-          assert_equal "exists", report["gems"].first["status"]
+          assert_equal "installed", report["gems"].first["status"]
           extension = report["extensions"].first
           assert_equal "projected", extension["status"]
           assert_equal "0.1.0", extension["version"]

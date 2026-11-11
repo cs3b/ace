@@ -3,30 +3,15 @@
 require_relative "../errors"
 require "open3"
 require "fileutils"
-require_relative "gem_payload_permissions"
+require "yaml"
+require "rbconfig"
 
 module Ace
   module Lab
     module Molecules
-      # Idempotently converges the install manifest's declared gem set
-      # into the declared target runtime (GEM_HOME; gad.2 gap #1, owner
-      # spec 8xg.t.sbz.7): a gem whose exact declared version is already
-      # present is a no-op (`exists`), a missing gem is installed
-      # (`installed`), a gem present at a different version is updated
-      # (the declared version installed alongside — RubyGems keeps
-      # versions side by side; verify judges the declared set). Probes
-      # and installs run the `gem` executable with GEM_HOME/GEM_PATH
-      # pinned to the target runtime through the SAME argv runner seam
-      # the other prepare molecules use (POSIX `env`, never a shell
-      # string, ADR-031) — so the lab runtime stays isolated from the
-      # installer's own gems and the runner stays injectable for
-      # dry-run and tests. The runtime directory itself is created only
-      # with administrator privileges (the same seam
-      # AccountProvisioner gates creation with) and a symlink or
-      # non-directory at the declared path is refused (the
-      # DirectoryProvisioner takeover posture). Every failure is a
-      # classified per-gem item with an actionable message; command
-      # failures surface only the exit status and the first stderr line.
+      # Install the declared runtime as one Bundler bundle. Dependency
+      # resolution belongs to Bundler; read-only probes below are used only
+      # by explicit diagnostics.
       class GemsetProvisioner
         attr_reader :runner, :privileged, :dry_run
 
@@ -46,18 +31,69 @@ module Ace
 
           gem_home = runtime["gem_home"]
           runtime_failure = ensure_runtime(gem_home)
-          gems.map do |gem|
-            if runtime_failure
-              base(gem, gem_home).merge("status" => "failed", "message" => runtime_failure)
-            else
-              report = converge(base(gem, gem_home), gem, gem_home)
-              if %w[exists installed updated].include?(report["status"])
-                converge_post_presence(report, gem, gem_home)
-              else
-                report
-              end
-            end
+          if runtime_failure
+            return gems.map { |gem| base(gem, gem_home).merge("status" => "failed", "message" => runtime_failure) }
           end
+          if dry_run
+            return gems.map { |gem| base(gem, gem_home).merge("status" => "would_install", "message" => nil) }
+          end
+
+          scope = File.join(RUBY_ENGINE, RbConfig::CONFIG.fetch("ruby_version"))
+          unless gem_home.end_with?("/#{scope}")
+            raise Ace::Lab::InvalidConfigurationError,
+              "gemset gem_home must end in /#{scope} for the Bundler runtime"
+          end
+          bundle_root = File.dirname(File.dirname(gem_home))
+          gemfile = File.join(bundle_root, "Gemfile")
+          raise Ace::Lab::InvalidConfigurationError, "runtime Gemfile must not be a symlink" if File.symlink?(gemfile)
+          content = "source #{Gem.sources.first.to_s.dump}\n" + gems.map do |gem|
+            "gem #{gem.fetch('name').dump}, #{gem.fetch('version').dump}\n"
+          end.join
+          settings_dir = File.join(bundle_root, ".bundle")
+          settings_path = File.join(settings_dir, "config")
+          if File.symlink?(settings_dir) || File.symlink?(settings_path) || File.symlink?("#{gemfile}.lock")
+            raise Ace::Lab::InvalidConfigurationError, "runtime bundle configuration must not be a symlink"
+          end
+          previous = [gemfile, "#{gemfile}.lock", settings_path].to_h do |path|
+            [path, File.file?(path) ? [File.binread(path), File.stat(path).mode & 0o777] : nil]
+          end
+          begin
+            File.write(gemfile, content) unless File.file?(gemfile) && File.read(gemfile) == content
+            FileUtils.mkdir_p(settings_dir)
+            File.write(settings_path, YAML.dump(
+              "BUNDLE_PATH" => bundle_root, "BUNDLE_BIN" => File.join(gem_home, "bin"),
+              "BUNDLE_SHEBANG" => Gem.ruby))
+            result = @runner.call(runtime_argv(gem_home,
+              ["BUNDLE_GEMFILE=#{gemfile}", "BUNDLE_USER_CONFIG=#{File::NULL}", "bundle", "install"]))
+            failure = command_failure("bundle install", result) unless result["status"] == "ok"
+            install_entrypoints(gem_home, runtime["bin_dir"]) unless failure
+          rescue StandardError, Interrupt
+            restore_bundle(previous)
+            raise
+          end
+          restore_bundle(previous) if failure
+          gems.map do |gem|
+            base(gem, gem_home).merge("status" => failure ? "failed" : "installed", "message" => failure)
+          end
+        end
+
+        # A configured bundle controls activation even when another version
+        # is installed beside it. Bundler owns checking its locked closure.
+        def bundle_status(name:, version:, gem_home:)
+          gemfile = File.join(File.dirname(File.dirname(gem_home)), "Gemfile")
+          return nil unless File.file?(gemfile)
+          lock = "#{gemfile}.lock"
+          return [:failed, "runtime bundle lock is missing; rerun ace-lab install"] unless File.file?(lock)
+          require "bundler"
+          specs = Bundler::LockfileParser.new(File.read(lock)).specs
+          unless specs.any? { |spec| spec.name == name && spec.version.to_s == version }
+            return [:failed, "runtime bundle does not lock #{name} at #{version}; rerun ace-lab install"]
+          end
+          result = @runner.call(runtime_argv(gem_home,
+            ["BUNDLE_GEMFILE=#{gemfile}", "BUNDLE_USER_CONFIG=#{File::NULL}", "BUNDLE_FROZEN=true", "bundle", "check", "--dry-run"]))
+          result["status"] == "ok" ? [:ok, nil] : [:failed, command_failure("bundle check", result)]
+        rescue Bundler::BundlerError, SystemCallError => error
+          [:failed, "runtime bundle is unavailable (#{error.class}); rerun ace-lab install"]
         end
 
         # Public READ-ONLY probe (L8.5): the local versions of `name`
@@ -135,6 +171,31 @@ module Ace
 
         private
 
+        def restore_bundle(previous)
+          previous.each do |path, saved|
+            if saved
+              File.binwrite(path, saved.first)
+              File.chmod(saved.last, path)
+            else
+              File.unlink(path) if File.file?(path)
+            end
+          end
+        end
+
+        def install_entrypoints(gem_home, directory)
+          return unless directory
+          FileUtils.mkdir_p(directory)
+          Dir.glob(File.join(gem_home, "bin", "ace-*")).each do |source|
+            target = File.join(directory, File.basename(source))
+            if File.symlink?(target)
+              next if File.expand_path(File.readlink(target), directory) == source
+              raise Ace::Lab::InvalidConfigurationError, "executable already belongs to another runtime: #{target}"
+            end
+            raise Ace::Lab::InvalidConfigurationError, "executable already exists: #{target}" if File.exist?(target)
+            File.symlink(source, target)
+          end
+        end
+
         def base(gem, gem_home)
           {"name" => gem["name"], "version" => gem["version"], "gem_home" => gem_home}
         end
@@ -161,147 +222,6 @@ module Ace
             "rerun ace-lab prepare with sudo or adjust ownership manually"
         rescue SystemCallError => e
           "gem runtime '#{gem_home}' could not be created (#{e.class.name}); rerun ace-lab prepare"
-        end
-
-        def converge(base, gem, gem_home)
-          kind, versions_or_message = runtime_versions(name: gem["name"], gem_home: gem_home)
-          # Prepare's fail-closed posture: an unprobeable runtime (no
-          # `gem` executable — the :unknown probe kind) fails the item in
-          # wet AND dry runs, exactly as the wet run would fail; verify
-          # maps the same probe kind to its offline `unknown` posture.
-          return base.merge("status" => "failed", "message" => versions_or_message) if kind != :ok
-
-          versions = versions_or_message
-          return base.merge("status" => "exists", "message" => nil) if versions.include?(gem["version"])
-
-          status = versions.empty? ? "install" : "update"
-          return base.merge("status" => "would_#{status}", "message" => nil) if @dry_run
-
-          failure = install(gem, gem_home)
-          return base.merge("status" => "failed", "message" => failure) if failure
-
-          if status == "install"
-            base.merge("status" => "installed", "message" => nil)
-          else
-            base.merge("status" => "updated", "message" => nil)
-          end
-        end
-
-        # Post-presence convergence (task 8xs.t.pu0.0): the declared
-        # version being present is necessary but not sufficient.
-        #   1. NEWER versions of the declared gem sitting beside the
-        #      declared one would win RubyGems activation and take over
-        #      the runtime's CLI — the manifest is the single owner of
-        #      the declared set, so convergence removes them from the
-        #      target runtime.
-        #   2. The dependency closure must actually resolve in the
-        #      runtime: a gem whose version already figures in
-        #      `gem list` can still miss a transitive runtime
-        #      dependency (the manually-repaired `json` class of gap);
-        #      missing dependencies are converged by installing them
-        #      at the parent's requirement, and an unsatisfiable
-        #      dependency is a classified failure — never readiness.
-        # A dry run predicts both without writing (would_uninstall /
-        # would_install) and stops recursion at the prediction.
-        def converge_post_presence(report, gem, gem_home)
-          removal = converge_newer_versions(gem, gem_home)
-          return report.merge("status" => "failed", "message" => removal) if removal.is_a?(String)
-          report["removed_newer_versions"] = removal
-
-          closure = converge_closure(gem, gem_home)
-          return report.merge("status" => "failed", "message" => closure) if closure.is_a?(String)
-          report["closure"] = closure
-          permissions = GemPayloadPermissions.new(gem_home: gem_home, dry_run: @dry_run,
-            privileged: @privileged.call).call(name: gem["name"], version: gem["version"])
-          report["permissions"] = permissions
-          report
-        rescue GemPayloadPermissions::Error => e
-          report.merge("status" => "failed", "message" => e.message)
-        end
-
-        # @return [Array<Hash>, String] per-version removal reports or a
-        #   classified failure message
-        def converge_newer_versions(gem, gem_home)
-          kind, versions_or_message = runtime_versions(name: gem["name"], gem_home: gem_home)
-          return versions_or_message if kind != :ok
-
-          declared = Gem::Version.new(gem["version"])
-          newer = versions_or_message.select { |version| Gem::Version.new(version) > declared }
-          return [] if newer.empty?
-
-          return newer.map { |version| {"version" => version, "status" => "would_uninstall"} } if @dry_run
-
-          newer.map do |version|
-            result = @runner.call(runtime_argv(gem_home,
-              ["gem", "uninstall", gem["name"], "--version", version, "-x", "--force"]))
-            if result["status"] != "ok"
-              break command_failure("gem uninstall #{gem["name"]} #{version}", result)
-            end
-            {"version" => version, "status" => "uninstalled"}
-          end
-        end
-
-        # Breadth-first walk of the gem's RUNTIME dependency closure in
-        # the target runtime. `gem dependency` output is plain text (no
-        # marshaled objects), development dependencies are ignored.
-        # @return [Array<Hash>, String] per-dependency convergence
-        #   actions or a classified failure message
-        def converge_closure(gem, gem_home)
-          queue = [[gem["name"], gem["version"]]]
-          seen = {}
-          actions = []
-          until queue.empty?
-            name, version = queue.shift
-            next if seen[[name, version]]
-
-            seen[[name, version]] = true
-            deps = runtime_dependencies(name: name, version: version, gem_home: gem_home)
-            return deps if deps.is_a?(String)
-
-            deps.each do |dep|
-              kind, versions_or_message = runtime_versions(name: dep["name"], gem_home: gem_home)
-              return versions_or_message if kind != :ok
-
-              satisfying = satisfying_versions(dep, versions_or_message)
-              if satisfying.empty?
-                if @dry_run
-                  actions << {"name" => dep["name"], "requirement" => dep["requirement"],
-                              "status" => "would_install"}
-                  next # recursion stops at the prediction
-                end
-
-                failure = install_dependency(dep, gem_home)
-                return failure if failure
-
-                kind, versions_or_message = runtime_versions(name: dep["name"], gem_home: gem_home)
-                return versions_or_message if kind != :ok
-                satisfying = satisfying_versions(dep, versions_or_message)
-                if satisfying.empty?
-                  return "dependency '#{dep["name"]} (#{dep["requirement"]})' required by gem " \
-                    "'#{name}' is not satisfiable in runtime '#{gem_home}' after install; " \
-                    "check the gem source or the manifest declaration"
-                end
-                actions << {"name" => dep["name"], "requirement" => dep["requirement"],
-                            "status" => "installed"}
-              end
-
-              chosen = satisfying.max_by { |v| Gem::Version.new(v) }
-              queue << [dep["name"], chosen]
-            end
-          end
-          actions
-        end
-
-        # Installs a missing dependency at the parent requirement: the
-        # requirement string the runtime's own resolver would accept
-        # (`gem install name -v "~> 2.7"`).
-        # @return [String, nil] classified failure, nil on success
-        def install_dependency(dep, gem_home)
-          result = @runner.call(runtime_argv(gem_home,
-            ["gem", "install", dep["name"], "--version", dep["requirement"], "--no-document"]))
-          return nil if result["status"] == "ok"
-
-          command_failure("gem install #{dep["name"]}", result)
         end
 
         # The runtime (non-development) dependencies of an installed
@@ -344,19 +264,6 @@ module Ace
           end
         end
 
-        # Installs the EXACT declared version into the runtime. Sources
-        # are the gem command's own defaults — fetching from the
-        # configured gem source is provisioning network access, the same
-        # envelope as cloning a declared repository remote.
-        # @return [String, nil] the classified failure, nil on success
-        def install(gem, gem_home)
-          result = @runner.call(runtime_argv(gem_home,
-            ["gem", "install", gem["name"], "--version", gem["version"], "--no-document"]))
-          return nil if result["status"] == "ok"
-
-          command_failure("gem install", result)
-        end
-
         # Environment variables that would drag the INVOKING process's
         # bundler context into the gem subprocess: RUBYOPT carries
         # `-rbundler/setup` under `bundle exec ace-lab` (the documented
@@ -375,7 +282,7 @@ module Ace
         # sees ONLY the target runtime.
         def runtime_argv(gem_home, argv)
           ["env"] +
-            BUNDLER_ENV_KEYS.flat_map { |key| ["-u", key] } +
+            (BUNDLER_ENV_KEYS + ENV.keys.grep(/\ABUNDLER?_/)).uniq.flat_map { |key| ["-u", key] } +
             ["GEM_HOME=#{gem_home}", "GEM_PATH=#{gem_home}"] + argv
         end
 

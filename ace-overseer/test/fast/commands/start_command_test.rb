@@ -35,6 +35,25 @@ module Commands
       out
     end
 
+    def test_toolchain_is_selected_by_configuration_before_start_and_restored
+      previous = ENV["ACE_TOOLCHAIN"]
+      ENV.delete("ACE_TOOLCHAIN")
+      observed = nil
+      operation = Object.new
+      operation.define_singleton_method(:bootstrap) do |**|
+        observed = ENV["ACE_TOOLCHAIN"]
+        {"status" => "dry_run"}
+      end
+      capture_io do
+        Ace::Overseer::CLI::Commands::Start.new(config: {"toolchain" => "installed"},
+          orchestrator: operation).call
+      end
+      assert_equal "installed", observed
+      assert_nil ENV["ACE_TOOLCHAIN"]
+    ensure
+      ENV["ACE_TOOLCHAIN"] = previous
+    end
+
     def test_foreground_report_execs_the_harness_without_rendering_a_success_report
       command = ["pi", "--model", "zai/glm-5.3-flash"]
       launched = nil
