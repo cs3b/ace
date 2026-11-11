@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1.pre.1] - 2026-11-11
+
+### Fixed
+
+- Load coworker project context deterministically instead of invoking model compression before every role. Explicitly commissioned compression remains available.
+
 ## [0.9.0] - 2026-11-10
 
 ### Added
