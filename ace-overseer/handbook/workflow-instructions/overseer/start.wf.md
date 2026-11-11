@@ -224,10 +224,9 @@ settlement alone is not proof of handling.
   grant. Credentials and OTP values never enter prompts, reports or tracked
   files. Configured credential files must remain private (`0600`).
   When forge access is missing, do not search host credential stores or set up
-  a persistent `fj` login yourself. Request the existing session-scoped auth
-  handoff for the required role and repository using the procedure below; if
-  it is unavailable, create a precise HITL blocker and end the turn. Never ask a human
-  to paste a token or replace the lease with a durable shared credential.
+  a persistent `fj` login yourself. Use the configured client as described below.
+  If that client reports missing access, record its exact error and end the turn.
+  Never ask a human to paste a token.
 - Remote issue and PR observation (`observe.remote.issues` and
   `observe.remote.pull_requests`) and the HITL reply
   receiver (`ace-hitl reply CASE --stdin`) are delivered surfaces: watch the
@@ -239,7 +238,12 @@ settlement alone is not proof of handling.
 ## Project-scoped forge access
 
 The session starts with the selected project's read or role credential in its
-environment or private provider config. Use that configured forge normally.
+environment or private provider config. For Forgejo, use the installed `fj`
+client with the configured host/repository (consult its help for command syntax).
+It reads its prepared login from the session's XDG_DATA_HOME; no interactive login
+or auth lease request is needed for a static role credential. An anonymous curl
+403 is not evidence that the configured client lacks access. Do not probe host
+lease inventory or search credential stores before trying the configured client.
 Continuous observation needs a read credential valid for the observer's
 lifetime. An unavailable login is a visible configuration blocker; do not
 read host administrator credentials or invent another login method.
