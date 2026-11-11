@@ -214,6 +214,54 @@ class CoworkerLauncherTest < AceOverseerTestCase
     assert_equal 2, @executor.prompts.length
   end
 
+  def failed_resume_start
+    interrupted_worker
+    @executor.define_singleton_method(:agent_start) do |**args|
+      super(**args)
+      self.dead = true
+      raise Ace::Herdr::ExecutorTimeoutError, "child failed before readiness"
+    end
+    assert_raises(Ace::Overseer::Error) { launch }
+    @executor.singleton_class.remove_method(:agent_start)
+    info = {"pane_id" => "w1:p1", "shell_pid" => 42, "foreground_process_group_id" => 42,
+      "foreground_processes" => [{"pid" => 42}], "guarded_prompt" => true,
+      "guarded_input_drain" => true, "guarded_prompt_origin" => {"terminal_id" => "term_123"}}
+    @executor.define_singleton_method(:pane_process_info) { |_| Result.new({"result" => {"process_info" => info}}) }
+    info
+  end
+
+  def test_failed_resume_retries_same_assignment_after_positive_shell_proof
+    failed_resume_start
+    assert_equal "running", launch.fetch("state")
+    assert_equal 3, @executor.starts.size
+    assert_equal 2, @executor.prompts.size
+    assert_equal Session, YAML.safe_load_file(@path).dig("execution", "agent_session")
+    launch
+    assert_equal 3, @executor.starts.size
+  end
+
+  def test_failed_resume_does_not_retry_without_positive_shell_proof
+    info = failed_resume_start
+    original = Marshal.load(Marshal.dump(info))
+    [
+      {"foreground_processes" => []},
+      {"foreground_processes" => [{"pid" => 42}, {"pid" => 43}]},
+      {"foreground_process_group_id" => 43},
+      {"shell_pid" => nil},
+      {"guarded_prompt" => false},
+      {"guarded_input_drain" => false},
+      {"guarded_prompt_origin" => {"terminal_id" => "foreign"}},
+      {"pane_id" => "w1:p9"}
+    ].each do |change|
+      info.replace(original.merge(change))
+      assert_raises(Ace::Overseer::Error) { launch }
+      assert_equal 2, @executor.starts.size
+    end
+    @executor.define_singleton_method(:pane_process_info) { |_| raise Ace::Herdr::ExecutorTimeoutError, "unreachable" }
+    assert_raises(Ace::Overseer::Error) { launch }
+    assert_equal 2, @executor.starts.size
+  end
+
   def test_uncertain_resume_prompt_is_not_replayed
     interrupted_worker
     @executor.prompt_failure = true
