@@ -1,7 +1,7 @@
 # Runtime correction during the preserved UTM run — 2026-11-11
 
-Task remains in progress. No reset, fixture reseed, provider request or autonomous
-acceptance has been performed during this correction.
+Task remains in progress. Initial correction below preceded model execution; later
+sections record the preserved live continuation. No reset or fixture reseed occurred.
 
 ## Observed failure
 
@@ -67,11 +67,11 @@ Captain explicitly authorized subsequent test iterations using local candidate g
 |---|---|---|
 | Lab delegates bootstrap | Manager8ya.t.tcy; worker8yatf4/report8yatrk; verifier8yatf41/report8yau1u; project coordinatorw3:p3 first turn + healthy eyes | Proven, with documented product repairs |
 | One issue through independent review and merge | Issue1 / PR5; candidate20fe7b91f7eae4748069edc7e1d4dc74b4b44a5e; Forgejo review1 APPROVED by e2e-reviewer for that HEAD; merge051f957972d6b6c3fd77562326a85682255811ef; issue closed | Proven, operator-assisted scope correction recorded |
-| Dependent CLI | Task8ya.t.vu0; assignment8yavwb; candidate5820ab55eb9bac44761cc76084a3d2d9575d4216; primitive5tests8assertions + CLI5tests20assertions reported passing; PR7 creation reported | In progress; independent gate/merge unproven |
-| Independent documentation | Task8ya.t.vu8; worker8yavwq completed; API verifies PR6open at4cf02503559edae9e09c1793347d432a16d0a1af | In progress; independent gate/merge unproven |
+| Dependent CLI | Task8ya.t.vu0; worker8yavwb, reviewer8yavwb1, integrator8yavwb2; final candidate099ad61894751ec8424088b0d02291d7cc7248d5; exact-HEAD approval2; PR7 mergedf0854378a94eb4405e357b1e9bba1fd6814cecc3 after primitive; report8yay2p adopted | Proven; reviewed blobs and merge parents independently checked |
+| Independent documentation | Task8ya.t.vu8; worker8yavwq, reviewer8yavwq1, integrator8yavwq2; candidate6fd2fd44cb5c88b1e2c439e873a502f8b0e3a5b4; exact-HEAD approval3; PR6 merged6aa71d99606b9184cb88202faa6242f32d341a40; report8yay5w adopted | API confirms merge and issue3 closed |
 | Provider failure and continuation | Native completion169 woke coordinator; same worker8yavwb/terminalterm_66006b88a50ade resumed without host notification after pre6 | Proven dispatch recovery; no false success |
-| Replay and coordinator restart | Earlier launch retries preserved executor; explicit final replay/restart exercise not yet executed | Pending |
+| Replay and coordinator restart | Replayed integrator report returns same8yay5w; new project sessionw3:pD recognizes12 already-processed reports. Operator manual foreground start overlapped automatic lab recovery; extra manual session stopped | Replay evidence obtained; clean restart check still pending |
 | Five minutes unchanged, no model turns | Not yet measured after all work settles | Pending |
 | Release remains queued | Forgejo issue4 OPEN; no release publication | Proven at checkpoint; recheck at final audit |
 
-Current VM runtime candidates: ace-overseer0.30.2.pre.6, ace-coworker0.9.1.pre.1, ace-assign0.73.3.pre.1. Artifact/source identifiers and each intervention are recorded in `.ace-retros/8y91p3-utm-autonomy-live-incident-register/`. This is a single repaired live run, not a clean immutable-release acceptance. Task8y0.t.x27 remains in-progress. Whole-run GLM quota/token accounting is not available.
+Current VM runtime candidates: ace-overseer0.30.2.pre.8, ace-coworker0.9.1.pre.1, ace-assign0.73.3.pre.1, ace-hitl0.25.2.pre.1. Artifact/source identifiers and each intervention are recorded in `.ace-retros/8y91p3-utm-autonomy-live-incident-register/`. This is a single repaired live run, not a clean immutable-release acceptance. Task8y0.t.x27 remains in-progress. Whole-run GLM quota/token accounting is not available.
