@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.2.pre.11] - 2026-11-11
+
+### Fixed
+
+- Retry failed session resumption only after native proof that the original terminal contains only its shell.
+
 ## [0.30.2.pre.10] - 2026-11-11
 
 ### Fixed

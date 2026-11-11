@@ -226,7 +226,13 @@ module Ace::Overseer::Molecules
 
     def finish_resume(execution, brief, worktree_path, save)
       raise Ace::Overseer::Error, "resumed assignment is no longer running" unless brief.assignment_snapshot&.state.to_s == "running"
-      agent = @executor.agent_get(execution.fetch("pane")).parsed_json&.dig("result", "agent")
+      begin
+        agent = @executor.agent_get(execution.fetch("pane")).parsed_json&.dig("result", "agent")
+      rescue Ace::Herdr::AgentNotFoundError
+        raise unless execution["state"] == "resuming"
+        pane = confirmed_resume_shell(execution, worktree_path)
+        return resume_dead(execution, brief, worktree_path, pane, save)
+      end
       unless agent.is_a?(Hash) && same_executor?(agent, execution) && agent["cwd"] == worktree_path &&
           agent["name"] == execution["agent"] && agent["interactive_ready"] == true && agent["agent_status"] == "idle"
         raise Ace::Overseer::Error, "resumed executor is not the expected idle session; inspect before retrying"
@@ -241,6 +247,21 @@ module Ace::Overseer::Molecules
       execution["state"] = "running"
       save.call
       execution.reject { |key, _| key == "credentials_directory" }.merge("reused" => true, "resumed" => true)
+    end
+
+    def confirmed_resume_shell(execution, worktree_path)
+      pane = pane_identity(execution.fetch("pane"))
+      info = @executor.pane_process_info(execution.fetch("pane")).parsed_json&.dig("result", "process_info")
+      unless info.is_a?(Hash) && pane["terminal_id"] == execution["terminal_id"] && pane["cwd"] == worktree_path &&
+          info["pane_id"] == execution["pane"] && info.dig("guarded_prompt_origin", "terminal_id") == execution["terminal_id"] &&
+          info["guarded_prompt"] == true && info["guarded_input_drain"] == true &&
+          info["shell_pid"].is_a?(Integer) && info["shell_pid"].positive? &&
+          info["foreground_process_group_id"] == info["shell_pid"] &&
+          info["foreground_processes"].is_a?(Array) && info["foreground_processes"].length == 1 &&
+          info["foreground_processes"].first.is_a?(Hash) && info["foreground_processes"].first["pid"] == info["shell_pid"]
+        raise Ace::Overseer::Error, "failed resume has no confirmed original shell; inspect before retrying"
+      end
+      pane
     end
 
     def resume_transcript(execution, worktree_path)
