@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.2.pre.8] - 2026-11-11
+
+### Fixed
+
+- Judge recovery progress from changed owner artifacts against the recorded baseline, rather than an unchanged native state-transition counter or missing final report.
+
 ## [0.30.2.pre.7] - 2026-11-11
 
 ### Fixed

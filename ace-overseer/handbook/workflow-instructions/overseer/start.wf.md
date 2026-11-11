@@ -178,6 +178,16 @@ assignment succeeded. Before acknowledging that revision, read the current
 native session, pinned assignment and reports. Do not reuse an earlier
 `working` observation. If the assignment is complete, adopt its report through
 `process-reports`. If the session is currently working, leave it alone.
+`state_change_seq` records state transitions, not a progress heartbeat: an
+unchanged value while working does not establish a stall. At a recovery
+deadline, inspect the active command and current owner artifacts before
+escalating. A reviewer may have saved rounds in `.ace-local/review/sessions/`,
+feedback dispositions, commits or a new PR HEAD while its assignment step is
+still unfinished; preserve those results and continue that step. Count progress
+only when artifacts are new or changed since the recovery baseline recorded
+in the existing coordination leg (assignment revision, review round, commit or
+PR HEAD). Historical artifacts alone cannot cancel its deadline. Absence of a
+final assignment report does not mean absence of work.
 
 If the same interactive session ended with a provider error and its assignment
 is unfinished, inspect its last output and recorded progress. Record recovery
