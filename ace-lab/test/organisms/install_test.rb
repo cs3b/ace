@@ -403,6 +403,22 @@ module Organisms
       end
     end
 
+    def test_reinstall_accepts_declared_coordinator_grants
+      manifest = manifest_yaml("/tmp/install-coordinator") + "coordinator:\n  id: lab\n  path: /lab\n"
+      manifest = manifest.sub("[atlas, borealis]", "[atlas, borealis, lab]")
+      authorization = YAML.dump({"principals" => {"ace-overseer" => {"projects" => %w[atlas borealis lab]}}})
+      prepare = FakePrepare.new(OK_PREPARE)
+      project_add = FakeProjectAdd.new("atlas" => ok_project("atlas"), "borealis" => ok_project("borealis"))
+      with_install(manifest: manifest, authorization: authorization, prepare: prepare,
+        project_add: project_add) do |organism, _dir, auth_path|
+        report = organism.call
+        assert_equal true, report["ok"], report.inspect
+        assert_equal "exists", report["grants"]["status"]
+        assert_equal authorization, File.read(auth_path)
+        assert_equal %w[atlas borealis], project_add.calls.map { |call| call[:id] }
+      end
+    end
+
     def test_invalid_manifest_is_a_classified_error
       with_install(manifest: "---\nschema_version: 2\nmachine: lab01\n") do |organism|
         error = assert_raises(Ace::Lab::InvalidConfigurationError) do

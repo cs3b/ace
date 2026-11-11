@@ -76,6 +76,7 @@ module Ace
           effective_dry_run = dry_run.nil? ? self.dry_run : dry_run
           manifest = Molecules::InstallManifestLoader.load(path: manifest_path, platform: platform)
           declared_projects = manifest["projects"].map { |project| project["id"] }
+          declared_projects << manifest["coordinator"]["id"] if manifest["coordinator"]
 
           conflict = grants_molecule.foreign_grants?(declared_projects)
           if conflict
