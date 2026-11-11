@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1.pre.1] - 2026-11-11
+
+### Fixed
+
+- Preserve child session, remote and help arguments when launching with an explicit environment.
+
 ## [0.11.0] - 2026-11-11
 
 ### Added

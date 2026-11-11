@@ -1,7 +1,7 @@
 From 7a2e78b4e92d2b694bd8a06c1ef4943915c399b2 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 7 Oct 2026 00:43:20 +0100
-Subject: [PATCH 1/6] feat: guard and permanently drain original-terminal input
+Subject: [PATCH 1/7] feat: guard and permanently drain original-terminal input
 
 ---
  docs/next/api/herdr-api.schema.json           |  338 ++++++
@@ -3495,10 +3495,10 @@ index 9171340..a971ef6 100644
 2.54.0 (Apple Git-157)
 
 
-From 78b571c45ebe80425d8e69bc6f19e16357043131 Mon Sep 17 00:00:00 2001
+From 5d98e178453958691f17b58d26fd20b51a985cd7 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 02:57:12 +0000
-Subject: [PATCH 2/6] fix: validate Pi report acknowledgements before accepting
+Subject: [PATCH 2/7] fix: validate Pi report acknowledgements before accepting
  delivery
 
 ---
@@ -3644,10 +3644,10 @@ index 673225a..546289d 100644
 2.54.0 (Apple Git-157)
 
 
-From 27ff0cfe4255c3b31c81e8e42964b318f1d8fbd4 Mon Sep 17 00:00:00 2001
+From b6d67f318c260b3c0efcbef89bf1034544852776 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 04:17:44 +0000
-Subject: [PATCH 3/6] fix: resolve agent queries by immutable terminal identity
+Subject: [PATCH 3/7] fix: resolve agent queries by immutable terminal identity
 
 ---
  src/app/terminal_targets.rs | 35 +++++++++++++++++++++++++++++++++++
@@ -3710,10 +3710,10 @@ index 658eeaa..003c30c 100644
 2.54.0 (Apple Git-157)
 
 
-From 18242eabb417277aa2ab987c000e63c6ffc208e2 Mon Sep 17 00:00:00 2001
+From 93e768dcacbfd63171957935ae9e2637a91689e6 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Tue, 10 Nov 2026 22:59:15 +0000
-Subject: [PATCH 4/6] feat: launch ordinary agents with private explicit
+Subject: [PATCH 4/7] feat: launch ordinary agents with private explicit
  environments
 
 ---
@@ -4801,10 +4801,10 @@ index 0000000..afe8c3a
 2.54.0 (Apple Git-157)
 
 
-From 4462e31354e9fe88c929f5961023fd75694768c1 Mon Sep 17 00:00:00 2001
+From 83939be994e8b911140adbb9ba64aa4858cce96b Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Tue, 10 Nov 2026 23:06:09 +0000
-Subject: [PATCH 5/6] fix: require fresh environments on cold agent restoration
+Subject: [PATCH 5/7] fix: require fresh environments on cold agent restoration
 
 ---
  src/app/agents.rs                   |  3 ++
@@ -4916,10 +4916,10 @@ index b6d6187..66ae240 100644
 2.54.0 (Apple Git-157)
 
 
-From b6eef16bbbeb5210f5414b67104d2656576e0e5c Mon Sep 17 00:00:00 2001
+From f475b86b1fc0a72103fbdf5cc0aba7dfc54cdcb4 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Tue, 10 Nov 2026 23:16:46 +0000
-Subject: [PATCH 6/6] fix: clean ordinary session credentials when agents exit
+Subject: [PATCH 6/7] fix: clean ordinary session credentials when agents exit
 
 ---
  src/persist/restore.rs              |  13 +--
@@ -5263,6 +5263,85 @@ index afe8c3a..9dedb83 100644
 +    assert!(!directory.join("auth.json").exists());
 +    assert!(directory.join("session.jsonl").exists());
 +    std::fs::remove_dir_all(environment.parent().unwrap()).unwrap();
++}
+-- 
+2.54.0 (Apple Git-157)
+
+
+From 5176d899a567985490682c37eb7f0198eab159b0 Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 11 Nov 2026 23:46:22 +0000
+Subject: [PATCH 7/7] fix: preserve child options in explicit environment
+ launcher
+
+---
+ src/main.rs                  |  9 +++++++++
+ tests/process_environment.rs | 36 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 45 insertions(+)
+
+diff --git a/src/main.rs b/src/main.rs
+index 45a6409..eb5a40d 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -512,6 +512,15 @@ fn main() -> io::Result<()> {
+             std::process::exit(2);
+         }
+     };
++    // Everything after exec-env's executable belongs to the child, including
++    // --session, --remote and --help. Do not parse it as Herdr options.
++    if raw_args.get(1).map(String::as_str) == Some("agent")
++        && raw_args.get(2).map(String::as_str) == Some("exec-env")
++    {
++        return finish_cli(
++            platform::process_environment::exec(&raw_args[3..]).map(cli::CommandOutcome::Handled),
++        );
++    }
+     if let Some(outcome) = cli::maybe_run_machine(&raw_args) {
+         return finish_cli(outcome);
+     }
+diff --git a/tests/process_environment.rs b/tests/process_environment.rs
+index 9dedb83..64d4645 100644
+--- a/tests/process_environment.rs
++++ b/tests/process_environment.rs
+@@ -193,3 +193,39 @@ fn process_environment_cleanup_forwards_termination_and_keeps_evidence() {
+     assert!(directory.join("session.jsonl").exists());
+     std::fs::remove_dir_all(environment.parent().unwrap()).unwrap();
+ }
++
++#[test]
++fn process_environment_child_flags_are_not_global_herdr_options() {
++    let path = environment_file("{}");
++    let session = format!("/tmp/{}/session.jsonl", "long-session-path".repeat(8));
++    for flags in [
++        vec!["--session", session.as_str()],
++        vec!["--remote", "child-target"],
++        vec!["--help"],
++        vec!["--version"],
++    ] {
++        let output = Command::new(env!("CARGO_BIN_EXE_herdr"))
++            .args([
++                "agent",
++                "exec-env",
++                path.to_str().unwrap(),
++                "/bin/sh",
++                "-c",
++                "printf '%s\\n' \"$@\"",
++                "child",
++            ])
++            .args(&flags)
++            .output()
++            .unwrap();
++        assert!(
++            output.status.success(),
++            "{}",
++            String::from_utf8_lossy(&output.stderr)
++        );
++        assert_eq!(
++            String::from_utf8(output.stdout).unwrap(),
++            format!("{}\n", flags.join("\n"))
++        );
++    }
++    std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
 +}
 -- 
 2.54.0 (Apple Git-157)
