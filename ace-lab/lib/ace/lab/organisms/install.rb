@@ -115,11 +115,11 @@ module Ace
                 "(trusted grants are configured only for a converged install)"}
           end
 
-          verify_report = verify_stage(manifest, effective_dry_run)
+          verify_report = {"ready" => nil, "status" => "not_run",
+            "message" => "Diagnostics are explicit: run ace-lab verify when needed."}
 
           {
-            "ok" => prepare_ok && projects_ok && grants["status"] != "failed" &&
-              verify_stage_ok?(verify_report),
+            "ok" => prepare_ok && projects_ok && grants["status"] != "failed",
             "dry_run" => effective_dry_run,
             "machine" => manifest["machine"],
             "manifest" => manifest_path,
@@ -134,35 +134,6 @@ module Ace
         end
 
         private
-
-        # Final install verification (LAB-3): read-only, over the
-        # converged artifacts. A wet run's readiness gates `ok`; a dry
-        # run has nothing converged to verify and reports the stage
-        # skipped instead of a guaranteed failure.
-        def verify_stage(manifest, dry_run)
-          return {"ready" => nil, "status" => "skipped",
-                  "message" => "verification runs on the converged lab; dry-run predicts the " \
-                    "steps above only"} if dry_run
-
-          verify_organism.call
-        rescue Ace::Lab::InvalidConfigurationError => e
-          {"ready" => false, "status" => "failed",
-           "message" => "final verification could not run: #{e.message}"}
-        rescue StandardError => e
-          {"ready" => false, "status" => "failed",
-           "message" => "final verification crashed: #{e.class}: #{e.message}"}
-        end
-
-        def verify_stage_ok?(report)
-          report["ready"] != false
-        end
-
-        def verify_organism
-          @verify || Verify.new(
-            manifest_path: manifest_path, runner: @runner, account_lookup: @account_lookup,
-            authorization_path: grants_molecule.authorization_path, platform: platform
-          )
-        end
 
         # The project's target executor account: the owner of the
         # declared directory the project lives in (longest prefix

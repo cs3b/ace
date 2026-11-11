@@ -19,8 +19,26 @@ module Ace
         WAKE_OUTPUT_LIMIT = 65_536
         DEFAULT_PROBE_TIMEOUT_S = 60
 
-        def initialize(binary: DEFAULT_BINARY, process: BoundedProcess)
-          @binary = binary
+        def self.environment(config)
+          {"socket" => "HERDR_SOCKET_PATH", "native_config" => "HERDR_CONFIG_PATH", "toolchain" => "ACE_TOOLCHAIN"}
+            .each_with_object({}) do |(key, variable), environment|
+              next unless config.key?(key)
+              value = config.fetch(key)
+              unless value.is_a?(String) && !value.empty? && !value.include?("\0")
+                raise ExecutorUnavailableError, "invalid Herdr configuration: #{key}"
+              end
+              if key == "toolchain"
+                raise ExecutorUnavailableError, "toolchain must be auto or installed" unless %w[auto installed].include?(value)
+                value = "installed" if ENV["ACE_TOOLCHAIN"] == "installed"
+              end
+              environment[variable] = value
+            end
+        end
+
+        def initialize(binary: nil, process: BoundedProcess, config: nil)
+          config ||= Ace::Herdr.config
+          @binary = binary || config.fetch("binary", DEFAULT_BINARY)
+          @environment = self.class.environment(config)
           @process = process
         end
 
@@ -38,7 +56,7 @@ module Ace
         # killed at the deadline and the timeout classifies as a retryable
         # pre-submission failure.
         def pane_get_bounded(pane, timeout_s: DEFAULT_PROBE_TIMEOUT_S)
-          result = @process.call([@binary, "pane", "get", pane], stdin_data: "",
+          result = @process.call(native_command([@binary, "pane", "get", pane]), stdin_data: "",
             timeout_s: timeout_s, output_limit: WAKE_OUTPUT_LIMIT)
           execution = ExecutionResult.new(
             stdout: result.stdout.strip, stderr: result.stderr.strip,
@@ -61,7 +79,7 @@ module Ace
         # after `--` (e.g. pi's --model/--thinking/--append-system-prompt;
         # the overseer start contract, 8xs.t.pu0.1).
         def agent_start(name:, kind:, pane:, timeout_ms:, args: [], env_file: nil)
-          managed = kind == "pi" ? InstalledPiExtensions.arguments : []
+          managed = kind == "pi" ? InstalledPiExtensions.arguments(env: ENV.to_h.merge(@environment)) : []
           InstalledPiExtensions.reject_override!(args) unless managed.empty?
           args = managed + args
           cmd = [@binary, "agent", "start", name, "--kind", kind,
@@ -92,7 +110,7 @@ module Ace
         # keep the inbox event lock through Open3.capture3 cleanup.
         def agent_prompt_bounded(pane:, text:, timeout_ms:)
           cmd = [@binary, "agent", "prompt", pane, text]
-          result = @process.call(cmd, stdin_data: "",
+          result = @process.call(native_command(cmd), stdin_data: "",
             timeout_s: timeout_ms / 1000.0, output_limit: WAKE_OUTPUT_LIMIT)
           execution = ExecutionResult.new(
             stdout: result.stdout.strip, stderr: result.stderr.strip,
@@ -257,6 +275,11 @@ module Ace
 
         private
 
+        def native_command(command)
+          return command if @environment.empty?
+          ["env", *@environment.map { |key, value| "#{key}=#{value}" }, *command]
+        end
+
         def run!(cmd)
           result = run(cmd)
           raise classify(result, cmd) unless result.success?
@@ -274,7 +297,7 @@ module Ace
         end
 
         def run(cmd)
-          stdout, stderr, status = Open3.capture3(*cmd)
+          stdout, stderr, status = Open3.capture3(*native_command(cmd))
           ExecutionResult.new(
             stdout: stdout.strip, stderr: stderr.strip,
             success: status.success?, exit_code: status.exitstatus || -1
@@ -284,7 +307,7 @@ module Ace
         end
 
         def run_raw_stdout(cmd)
-          stdout, stderr, status = Open3.capture3(*cmd)
+          stdout, stderr, status = Open3.capture3(*native_command(cmd))
           ExecutionResult.new(
             stdout: stdout, stderr: stderr.strip,
             success: status.success?, exit_code: status.exitstatus || -1

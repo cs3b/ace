@@ -32,6 +32,12 @@ module Ace
           end
 
           def call(dry_run: false, format: "table", scope: nil, reconcile: false, **options)
+            previous_toolchain = ENV["ACE_TOOLCHAIN"]
+            configured = (@config || Ace::Overseer.config)["toolchain"]
+            unless configured.nil? || %w[auto installed].include?(configured)
+              raise Ace::Support::Cli::Error, "toolchain must be auto or installed"
+            end
+            ENV["ACE_TOOLCHAIN"] = configured if configured && previous_toolchain != "installed"
             unless scope.nil? || Atoms::StartContract::SCOPES.include?(scope)
               raise Ace::Support::Cli::Error, "scope must be lab or project"
             end
@@ -70,6 +76,8 @@ module Ace
             raise
           rescue => e
             raise Ace::Support::Cli::Error.new(e.message)
+          ensure
+            ENV["ACE_TOOLCHAIN"] = previous_toolchain
           end
 
           private

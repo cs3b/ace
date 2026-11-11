@@ -113,7 +113,7 @@ module Ace
               assert_equal "lab01", parsed["machine"]
               assert_equal %w[prepare projects grants adapters tools gemset verify],
                 parsed.keys - %w[ok dry_run machine manifest]
-              assert_equal true, parsed.dig("verify", "ready")
+              assert_nil parsed.dig("verify", "ready")
               assert_empty parsed["adapters"]
               assert_empty parsed["tools"]
               assert_equal({"gem_home" => nil, "gems" => [], "extensions" => []}, parsed["gemset"])
@@ -135,7 +135,7 @@ module Ace
                 "(repository: created, overseer: created, registry: created, owner: skipped)"
               assert_includes out, "Grants"
               assert_includes out, "ace-overseer"
-              assert_includes out, "Verify: ready"
+              assert_includes out, "Verify: skipped"
               assert_includes out, "Result: ok"
             end
           end

@@ -621,26 +621,27 @@ module Organisms
       end
     end
 
-    def test_install_reports_adapter_and_tool_declarations_and_runs_final_verify
+    def test_install_reports_declarations_and_diagnostics_are_explicit
       with_lab(extra_manifest: "tools:\n  - git\nadapters:\n  - id: hermes\n    kind: communication\n    command: git") do |fixture|
         report = install_run(fixture, lookup_for(fixture), real_verify: true)
 
         assert report["ok"], report["verify"].inspect
         assert_equal %w[hermes], report["adapters"].map { |a| a["id"] }
         assert_equal %w[git], report["tools"]
-        assert_equal true, report["verify"]["ready"]
-        assert_equal "pass", report["verify"]["checks"]["adapters"].first["status"]
-        assert_equal "pass", report["verify"]["checks"]["tools"].first["status"]
+        assert_equal "not_run", report["verify"]["status"]
+        assert_equal true, verify_run(fixture)["ready"]
+        assert_equal "pass", verify_run(fixture)["checks"]["adapters"].first["status"]
+        assert_equal "pass", verify_run(fixture)["checks"]["tools"].first["status"]
       end
     end
 
-    def test_install_with_a_missing_tool_reports_not_ok_through_final_verify
+    def test_missing_tool_is_reported_by_explicit_verify
       with_lab(extra_manifest: "tools:\n  - definitely-not-a-lab-tool-xyz") do |fixture|
         report = install_run(fixture, lookup_for(fixture), real_verify: true)
 
-        refute report["ok"], "missing tool must block install success"
-        assert_equal false, report["verify"]["ready"]
-        assert_equal "fail", report["verify"]["checks"]["tools"].first["status"]
+        assert report["ok"], "installation must not run diagnostic tools"
+        assert_equal false, verify_run(fixture)["ready"]
+        assert_equal "fail", verify_run(fixture)["checks"]["tools"].first["status"]
       end
     end
 
@@ -665,7 +666,7 @@ module Organisms
           document = YAML.safe_load_file(path)
           assert_equal [{"adapter" => "console", "runtime" => "tmux"}],
             document.dig("hitl", "adapters", "routes")
-          assert_equal "pass", report["verify"]["checks"]["adapters"].first["status"]
+          assert_equal "pass", verify_run(fixture)["checks"]["adapters"].first["status"]
         end
       end
     end
@@ -772,9 +773,9 @@ module Organisms
         gem_home = build_and_install_gem(gemdir, "ace-lab-probe", "0.13.0")
 
         with_lab(extra_manifest: gemset_manifest(gem_home)) do |fixture|
-          install_report = install_run(fixture, lookup_for(fixture), real_verify: true)
+          install_report = with_local_gem_source(gem_home) { install_run(fixture, lookup_for(fixture), real_verify: true) }
           assert_equal true, install_report["ok"], install_report["verify"].inspect
-          assert_equal "exists", install_report["prepare"]["gems"].first["status"]
+          assert_equal "installed", install_report["prepare"]["gems"].first["status"]
 
           report = verify_run(fixture)
 

@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- **ace-lab v0.16.0, ace-herdr v0.11.0, ace-overseer v0.30.0:** install one locked runtime bundle; keep diagnostics explicit; start Herdr and Overseer from configuration without manual shell setup. Failed bundle updates preserve the previously working runtime.
 - **Simple delegated sessions (8y0.t.x27):** prepare ACE workers as worktrees and ordinary Herdr processes with explicit installed environments and project credentials. Real executor bindings, observation-driven report acceptance, independent review and exact-HEAD integration share the existing state owners. Remove the experimental system issuer and mount isolation requirement. Prepare 19 coordinated packages plus native Herdr; local deterministic verification and artifact rehearsal are distinct from the still-open UTM autonomy acceptance. TS-MONO-003/004 retain local Forgejo and can repeat fixtures without reinstalling the OS.
 
 ### Added

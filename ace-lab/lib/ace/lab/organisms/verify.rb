@@ -613,6 +613,9 @@ module Ace
           reason = gem_version_reason(gem, versions, gem_home)
           return [FAIL, reason] if reason
 
+          bundle = provisioner.bundle_status(name: gem["name"], version: gem["version"], gem_home: gem_home)
+          return [bundle.first == :ok ? PASS : FAIL, bundle.last] if bundle
+
           newer_kind, newer_or_message = provisioner.newer_versions(
             name: gem["name"], declared_version: gem["version"], gem_home: gem_home
           )

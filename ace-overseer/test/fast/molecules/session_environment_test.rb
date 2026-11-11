@@ -21,7 +21,7 @@ class SessionEnvironmentTest < AceOverseerTestCase
       "projects" => [{"id" => "ace", "path" => "/lab/ace", "environment_files" => {"worker" => @role, "verifier" => @role}}],
       "roles" => %w[worker verifier].map { |role| {"id" => role, "instructions" => "wfi://coworker/#{role}"} },
       "gemset" => {"gem_home" => "/installed/gems"},
-      "session_runtime" => {"node" => @runtime, "pi" => @runtime, "provider" => "test", "model" => "local",
+      "session_runtime" => {"herdr" => {"socket" => "/tmp/configured-herdr.sock"}, "node" => @runtime, "pi" => @runtime, "provider" => "test", "model" => "local",
         "credentials" => @auth, "path" => ["/installed/bin", "/usr/bin", "/bin"]}}
     @env = {"HOME" => @root, "PATH" => "/wrong/source/bin", "ACE_TOOLCHAIN" => "installed",
       "BUNDLE_GEMFILE" => "/wrong/Gemfile", "ADMIN_TOKEN" => "must-not-leak", "GH_TOKEN" => "must-not-leak"}
@@ -51,6 +51,7 @@ class SessionEnvironmentTest < AceOverseerTestCase
       assert_equal 0o600, File.stat(file).mode & 0o777
       values = JSON.parse(File.read(file))
       assert_equal "installed", values["ACE_TOOLCHAIN"]
+      assert_equal "/tmp/configured-herdr.sock", values["HERDR_SOCKET_PATH"]
       assert_equal "/installed/gems", values["GEM_HOME"]
       assert_equal "project-token", values["FORGEJO_TOKEN"]
       refute values.key?("BUNDLE_GEMFILE")

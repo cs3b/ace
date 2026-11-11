@@ -100,7 +100,8 @@ module Ace::Overseer::Molecules
         environment.merge!(values)
       end
       runtime = selection.runtime
-      environment.merge("ACE_TOOLCHAIN" => "installed", "GEM_HOME" => selection.gem_home,
+      environment.merge("HERDR_SOCKET_PATH" => runtime.fetch("herdr").fetch("socket"),
+        "ACE_TOOLCHAIN" => "installed", "GEM_HOME" => selection.gem_home,
         "GEM_PATH" => selection.gem_home,
         "PATH" => ([File.join(selection.gem_home, "bin"), File.dirname(runtime.fetch("node")), File.dirname(runtime.fetch("pi"))] + runtime.fetch("path")).uniq.join(File::PATH_SEPARATOR))
     end

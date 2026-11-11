@@ -103,7 +103,7 @@ module Ace
           # Final install verification stage: the readiness verdict with
           # every failed check named (adapters and tools included).
           def render_verify(verify_report)
-            return ["Verify: skipped (#{verify_report['message']})"] if verify_report["status"] == "skipped"
+            return ["Verify: skipped (#{verify_report['message']})"] if %w[skipped not_run].include?(verify_report["status"])
 
             counts = verify_report["counts"] || {}
             verdict = verify_report["ready"] ? "ready" : "NOT READY"

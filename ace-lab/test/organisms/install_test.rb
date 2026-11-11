@@ -147,7 +147,7 @@ module Organisms
                        remote: File.join(dir, "origin.git"), label: nil, owner: nil,
                        hitl_adapters: [], dry_run: false}],
           project_add.calls
-        assert_equal true, report["verify"]["ready"]
+        assert_nil report["verify"]["ready"]
         assert_empty report["adapters"]
         assert_empty report["tools"]
         assert_equal "created", report["grants"]["status"]
@@ -551,14 +551,14 @@ module Organisms
     end
   end
 
-  def test_unexpected_verify_crash_is_a_classified_failed_stage_not_a_raw_error
-    with_install(verify: CrashingVerify.new) do |organism, _dir, _auth|
+  def test_successful_install_does_not_invoke_diagnostics
+    with_install(verify: CrashingVerify.new, prepare: FakePrepare.new(OK_PREPARE),
+      project_add: FakeProjectAdd.new("atlas" => ok_project("atlas"), "borealis" => ok_project("borealis"))) do |organism, _dir, _auth|
       report = organism.call
 
-      refute report["ok"]
-      assert_equal false, report["verify"]["ready"]
-      assert_equal "failed", report["verify"]["status"]
-      assert_match(/RuntimeError: boom from verify internals/, report["verify"]["message"])
+      assert report["ok"]
+      assert_nil report["verify"]["ready"]
+      assert_equal "not_run", report["verify"]["status"]
     end
   end
   end

@@ -49,6 +49,8 @@ module LabTestHelper
         s.summary = "lab test fixture"
         s.authors = ["ace-lab tests"]
         s.files = #{files.keys.inspect}
+        s.bindir = "exe"
+        s.executables = #{files.keys.grep(%r{\Aexe/}).map { |path| File.basename(path) }.inspect}
 #{dependency_lines}
       end
     SPEC
@@ -56,7 +58,7 @@ module LabTestHelper
     gem_file = File.join(dir, "#{name}-#{version}.gem")
     skip "gem build unavailable" unless built && File.file?(gem_file)
 
-    gem_home = File.join(dir, "runtime")
+    gem_home = File.join(dir, "runtime", RUBY_ENGINE, RbConfig::CONFIG.fetch("ruby_version"))
     FileUtils.mkdir_p(gem_home)
     install_argv = ["gem", "install", "--local", gem_file, "--no-document"]
     install_argv << "--ignore-dependencies" if ignore_dependencies
@@ -68,6 +70,27 @@ module LabTestHelper
     skip "gem install unavailable" unless installed
 
     gem_home
+  end
+
+  def with_local_gem_source(gem_home)
+    require "rubygems/package"
+    require "zlib"
+    Dir.mktmpdir do |repository|
+      FileUtils.mkdir_p(File.join(repository, "gems"))
+      FileUtils.cp(Dir.glob(File.join(gem_home, "cache", "*.gem")), File.join(repository, "gems"))
+      specs = Dir.glob(File.join(repository, "gems", "*.gem")).map { |path| Gem::Package.new(path).spec }
+      quick = File.join(repository, "quick", "Marshal.4.8")
+      FileUtils.mkdir_p(quick)
+      specs.each do |spec|
+        File.binwrite(File.join(quick, "#{spec.full_name}.gemspec.rz"), Zlib::Deflate.deflate(Marshal.dump(spec)))
+      end
+      %w[specs latest_specs prerelease_specs].each do |name|
+        rows = specs.select { |spec| name == "prerelease_specs" ? spec.version.prerelease? : !spec.version.prerelease? }
+          .map { |spec| [spec.name, spec.version, spec.platform] }.sort_by(&:first)
+        Zlib::GzipWriter.open(File.join(repository, "#{name}.4.8.gz")) { |file| file.write(Marshal.dump(rows)) }
+      end
+      Gem.stub(:sources, ["file://#{repository}"]) { yield }
+    end
   end
 
   # Rekey authorization principals to the verified local process identity so
