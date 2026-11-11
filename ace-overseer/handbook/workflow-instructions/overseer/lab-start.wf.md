@@ -61,9 +61,12 @@ Captain order.
 1. Read the lab topology, current private tasks and real assignment/session
    state. Resume this commissioned bootstrap before unrelated backlog. Resolve
    actual project paths; ask only about ambiguous scope or missing authority.
-2. Read `wfi://overseer/bootstrap-delegation` through `ace-bundle` to understand
+2. Run exactly `ace-bundle wfi://overseer/bootstrap-delegation` (there is no
+   `read` subcommand). Read the output file that command returns to understand
    the task → worker → observation → verification → start procedure. Do not
-   dispatch during this initialization turn.
+   dispatch during this initialization turn. In installed mode use the packaged
+   workflow, never a similarly named file in the project checkout. If resolution
+   fails, record that error and end the turn; do not substitute checkout instructions.
 3. Arm observation with the `ace_eyes` tool, action `start`, using the lab's
    eyes configuration path `<lab>/.ace-local/overseer/eyes.json`. Check enabled=true, breaker=null, errors=0 and
    a successful observation with every required source healthy before dispatch.

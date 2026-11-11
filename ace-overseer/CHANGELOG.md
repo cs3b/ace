@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.2.pre.1] - 2026-11-11
+
+### Fixed
+
+- Specify the supported bootstrap workflow command and refuse substituting checkout instructions in installed mode. Local VM candidate.
+
 ## [0.30.1] - 2026-11-11
 
 ### Fixed
