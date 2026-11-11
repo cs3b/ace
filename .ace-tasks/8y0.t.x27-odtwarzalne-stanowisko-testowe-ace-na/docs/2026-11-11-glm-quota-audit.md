@@ -4,9 +4,21 @@
 
 The Captain reports that a little over 2 billion tokens exhausted the weekly
 allowance, whereas earlier weeks reached 8–14 billion tokens with only a
-five-hour limit. These are user-reported account totals, not totals independently
-reconstructed in this audit. Current plan generation, the earlier comparison
-week and whether both figures came from the same dashboard are pending.
+five-hour limit. Screenshots supplied on 11 November confirm the same Z.AI
+dashboard: Max Monthly **Legacy Plan V2**, weekly remaining 0%, five-hour
+remaining 99%, 2.1B tokens over the displayed 4–10 November range (1.9B Flash,
+156.3M flagship), and a historical weekly tile labelled 24 October with 16.2B.
+The observed volume ratio is approximately 7.7, not yet a measured billing-rate
+ratio: chart weeks and the quota's anchored seven-day windows must be aligned.
+
+The Captain additionally confirms that the annual subscription lasted until
+4 November, followed by two or three months possibly supplied for free. This
+matches the provider's legacy migration mechanism and the current weekly reset
+display of 11 November, 17:03. The leading explanation is expiration of the
+old no-weekly-limit annual plan and activation of the complimentary V2 plan.
+The old plan label and grant/order history have not been independently read.
+The screenshots show current validity to 5 December and a subsequent V2 period
+through 5 January; they do not establish which periods were paid or gifted.
 
 No model inference, VM boot or paid test was performed for this audit. Account
 credentials were not read. Existing local reports, source and host Pi session
@@ -34,9 +46,21 @@ usage fields were inspected; message content was not exported.
   week for GLM-5.3, versus 2.047–4.095 billion for Flash. These are vendor
   estimates under stated assumptions, not a fixed token allowance.
 
-Thus a new weekly ceiling is a supported explanation; a confirmed migration
-date for this account is still needed. Do not claim a recent silent account
-change or a cache regression from these documents alone.
+The new-credit examples above are comparative context only: **the screenshots
+prove this account is Legacy V2, so those credit prices do not apply**. V2 Max
+lists approximately 1,600 prompts per five hours and 8,000 per week, again only
+five full short-window allowances. A week contains 33.6 five-hour periods;
+33.6 / 5 = 6.72. Holding the short-window allowance constant, adding this weekly
+ceiling can reduce theoretical sustained weekly capacity by about 6.7 times.
+This explains how a change of this magnitude is possible without a code or
+cache regression. It is not an exact reconstruction of the former V1 allowance
+or of token billing. Published prompt figures are approximate.
+
+Most current usage is Flash (about 92% of the rounded model totals), so a simple
+switch of all work to the flagship cannot explain the observed drop. Peak/off-
+peak rates differ threefold under V2, not enough alone for 7.7x with otherwise
+identical usage. Input/output/cache and request counts remain unmeasured for
+the compared periods; do not apply the new credit formula to fill that gap.
 
 ## Confirmed project findings
 
@@ -89,5 +113,8 @@ change or a cache regression from these documents alone.
   changed artifacts as diagnostic. Do not weaken independent review merely to
   reduce accounting totals.
 
-The historical 2B-versus-8–14B comparison remains open until account plan and
-matching usage windows are supplied. No product code changed in this audit.
+The account-specific evidence now strongly supports annual-plan expiry and
+the new weekly ceiling as the main explanation. Exact attribution still needs
+aligned quota windows and grant/order history; retrospective inefficiency
+findings are separate and do not prove a 7.7x efficiency regression in ACE.
+No product code changed in this audit.
