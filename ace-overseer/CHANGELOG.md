@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.2.pre.4] - 2026-11-11
+
+### Fixed
+
+- Direct Forgejo sessions to their configured client before treating anonymous API refusal as missing access or requesting temporary credentials.
+
 ## [0.30.2.pre.3] - 2026-11-11
 
 ### Fixed
