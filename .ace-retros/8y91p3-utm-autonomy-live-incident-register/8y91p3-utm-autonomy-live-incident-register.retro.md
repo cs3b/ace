@@ -256,3 +256,12 @@ Host plain SSH gitfetch could not authenticate (no roleenv), so verification use
 - Operator ended project session with `/quit`, then mistakenly used bare `start` over noninteractive SSH and again in old pane while lab reconciliation independently restored the managed project session. This produced a temporary duplicate. Source confirms bare start intentionally uses foreground bootstrap and does not discover/reuse managed sessions; this is not yet evidence of a race inside managed reconciliation. CLI description still promises reuse without explaining that distinction.
 - Manual pane stopped; managed replacement `w3:pD` / `term_6600809441ad314` remains, with first-turn eyes healthy and owner reconciliation in progress. No VM/data reset. Restart/no-duplicate acceptance is not yet passed.
 - Lesson: when testing automatic recovery, stop only the chosen session and observe the lab owner. Do not add a second manual bootstrap. Clarify public command help before repeating this probe.
+
+
+### Retained dead panel broke observation after restart — repaired
+
+Live `observe` remained degraded because ProjectSessions counted retained tabs, while managed StartOrchestrator already selected the unique live native agent. This is an observer bug separate from the operator-induced foreground duplicate. Added native presence checks for multiple candidates; only AgentNotFound excludes an owner, errors and zero/multiple live candidates remain unavailable.
+
+Regression failed before: bedeaf9a-62b5-461c-af48-48c7a8478acc. After:10tests32assertionspass da2ab3c0-7ffa-43f1-9d03-482aa00fd89a; related start/local sources47tests238assertions0failures0errors1skip 4d0fffd9-9854-4228-bba0-3ddd587902e4. Independent reviewer approved. Source822b69ee60ff8e2f25b1fd06fdad59bf722f9260; ace-overseer0.30.2.pre.9 SHA256bdd75f87d523b4043863d0d832519fb30e3a30334d434dce6a75caceef9754c0. Copied local gem, one bundleinstalllocal completed, manifest pin updated, mo version confirmed. Live public observe now reports project pane w3:pD and ALL source statuses ok without deleting predecessor panels or resetting data.
+
+Project replacement reconciled12 duplicate reports, dispatched nobody, archived completed bootstrap task and committed existing records/configuration. Lab question8yaycc appears statusanswered despite instruction to cancel; canonical lifecycle must be inspected, do not claim a human answer or clean HITL acceptance. Remaining: settled live eyes, clean automatic restart probe if needed, five-minute idle measurement, final audit/report.
