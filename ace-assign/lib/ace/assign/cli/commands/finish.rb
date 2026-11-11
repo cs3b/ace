@@ -11,17 +11,13 @@ module Ace
 
           desc "Complete active step with report content"
 
-          argument :step, required: false, desc: "Step number to finish (active assignment only)"
+          argument :step, required: false, desc: "Step number to finish"
           option :message, aliases: ["-m"], desc: "Report content: string, file path, or pipe stdin"
           option :assignment, desc: "Target specific assignment ID"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
 
           def call(step: nil, **options)
-            if step && options[:assignment]
-              raise Error, "Positional STEP targeting is only supported for active assignment. Use --assignment without STEP for cross-assignment finish."
-            end
-
             target = resolve_assignment_target(options)
             executor = build_executor_for_target(target)
             report_content = resolve_report_content(options)

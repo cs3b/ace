@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.73.3.pre.1] - 2026-11-11
+
+### Fixed
+
+- Allow exact step numbers with explicit assignment selection in start and finish, preserving subtree checks and avoiding accidental completion of another active step.
+
 ## [0.73.2] - 2026-11-10
 
 ### Fixed
