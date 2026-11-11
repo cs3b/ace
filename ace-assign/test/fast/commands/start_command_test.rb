@@ -156,11 +156,25 @@ class StartCommandTest < AceAssignTestCase
     end
   end
 
-  def test_start_rejects_step_with_assignment_option
-    error = assert_raises(Ace::Support::Cli::Error) do
-      Ace::Assign::CLI::Commands::Start.new.call(step: "010", assignment: "abc123")
+  def test_start_exact_step_in_selected_assignment_preserves_other_steps
+    with_temp_cache do |cache_dir|
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      selected = executor.start(create_test_config(cache_dir, name: "selected"))[:assignment]
+      other = executor.start(create_test_config(cache_dir, name: "other"))[:assignment]
+      capture_io { Ace::Assign::CLI::Commands::Start.new.call(step: "020", assignment: selected.id) }
+      error = assert_raises(Ace::Assign::StepErrors::InvalidState) do
+        Ace::Assign::CLI::Commands::Start.new.call(step: "030", assignment: "#{selected.id}@010")
+      end
+      assert_includes error.message, "outside scoped subtree"
+      scanner = Ace::Assign::Molecules::QueueScanner.new
+      state = scanner.scan(selected.steps_dir, assignment: selected)
+      assert_equal :pending, state.find_by_number("010").status
+      assert_equal :active, state.find_by_number("020").status
+      other_state = scanner.scan(other.steps_dir, assignment: other)
+      assert_equal :pending, other_state.find_by_number("020").status
+    ensure
+      Ace::Assign.reset_config!
     end
-
-    assert_includes error.message, "Positional STEP targeting is only supported"
   end
 end

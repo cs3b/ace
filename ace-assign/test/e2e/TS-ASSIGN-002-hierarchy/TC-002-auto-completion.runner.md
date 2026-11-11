@@ -39,8 +39,9 @@ Required captures:
 - Select the created assignment after each create and capture
   `select-*.stdout`, `select-*.stderr`, and `select-*.exit`; the runner must not
   continue that flow if selection exits non-zero.
-- Use `--assignment <id>` to target cross-assignment commands, but do not pass a
-  positional `STEP` together with `--assignment`.
+- Use `--assignment <id>` to target cross-assignment commands. Supply a positional
+  `STEP` when a specific step must be started or finished; verify other active
+  steps and assignments remain unchanged.
 - For cross-assignment execution, explicitly start work with
   `ace-assign start --assignment <id>` before each `ace-assign finish --assignment <id> --message <report-file>`.
   Do not rely on create/add/select implicitly activating descendants.

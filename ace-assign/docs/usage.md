@@ -101,6 +101,10 @@ Show instructions for the active, next, or explicit step.
 
 Start the next workable pending step, or an explicit step number.
 
+Use `ace-assign start 020 --assignment abc123` to start an exact step in a
+selected assignment. Scoped targets (`abc123@010`) still reject steps outside
+that subtree.
+
 ### `ace-assign finish [STEP] --message VALUE`
 
 Complete the active step with report content.
@@ -180,7 +184,7 @@ If several assignments are open, scope every command to the exact assignment
 
 ```bash
 ace-assign status --assignment abc123
-ace-assign finish --message report.md --assignment abc123
+ace-assign finish 020 --message report.md --assignment abc123
 ```
 
 ### Recovery from failure
