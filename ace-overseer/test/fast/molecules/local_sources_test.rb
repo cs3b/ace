@@ -58,7 +58,7 @@ module Molecules
     def test_native_executor_disappearance_revises_the_worktree_without_assignment_change
       worktree = Worktree.new("/lab/ace/.ace-wt/task-1", "work", false)
       worker = {"terminal_id" => "term_123abc", "cwd" => worktree.path,
-        "name" => "coworker-job-7", "agent_status" => "working"}
+        "name" => "coworker-job-7", "agent_status" => "working", "completion_seq" => 7}
       agents = [worker, worker.merge("terminal_id" => "term_456def", "cwd" => "/lab/other")]
       response = Struct.new(:parsed_json).new({"result" => {"agents" => agents}})
       herdr = Object.new
@@ -67,9 +67,20 @@ module Molecules
       executor = -> { observer.call.fetch("events").find { |row| row["type"] == "executor" } }
 
       running = executor.call
-      assert_equal [{"terminal" => "term_123abc", "agent" => "coworker-job-7"}], running.fetch("sessions")
+      assert_equal [{"terminal" => "term_123abc", "agent" => "coworker-job-7", "completion_seq" => 7}], running.fetch("sessions")
       worker["agent_status"] = "done"
       assert_equal running, executor.call, "transient turn status is not executor disappearance"
+
+      worker["completion_seq"] = 8
+      finished_turn = executor.call
+      assert_equal running.fetch("key"), finished_turn.fetch("key")
+      refute_equal running.fetch("revision"), finished_turn.fetch("revision"),
+        "a completed turn without an assignment report must wake the coordinator"
+      assert_equal finished_turn, executor.call, "unchanged completion must not wake again"
+      worker["agent_status"] = "working"
+      assert_equal finished_turn, executor.call, "resuming a turn alone must not create wake chatter"
+      worker["completion_seq"] = 9
+      refute_equal finished_turn.fetch("revision"), executor.call.fetch("revision")
 
       agents.delete(worker)
       stopped = executor.call

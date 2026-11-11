@@ -195,7 +195,12 @@ module Ace
                 cwd.is_a?(String) && cwd.start_with?("/")
               raise Error, "executor session identity is invalid"
             end
-            sessions[cwd] << {"terminal" => terminal, "agent" => agent["name"]}
+            # A provider failure can end a turn while its panel stays alive and
+            # no report is written. Native completion sequence wakes once per
+            # ended turn; transient working/idle changes do not cause chatter.
+            # This is a signal to inspect the assignment, never success proof.
+            sessions[cwd] << {"terminal" => terminal, "agent" => agent["name"],
+              "completion_seq" => agent["completion_seq"]}
           end
           sessions.transform_values { |rows| rows.sort_by { |row| row.fetch("terminal") } }
         end

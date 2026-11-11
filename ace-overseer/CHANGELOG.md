@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.2.pre.6] - 2026-11-11
+
+### Fixed
+
+- Observe native worker turn completions even when provider failures leave a live panel without an assignment report; unchanged completion sequences remain silent.
+
 ## [0.30.2.pre.5] - 2026-11-11
 
 ### Fixed
