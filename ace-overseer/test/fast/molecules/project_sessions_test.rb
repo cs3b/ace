@@ -49,9 +49,30 @@ class ProjectSessionsTest < Minitest::Test
     @control.tabs = [{id: "t1", title: "overseer-ace"}, {id: "t2", title: "overseer-ace"}]
     @control.panes = [{id: "p1", tab: "t1", cwd: @project, agent_status: "idle"},
                       {id: "p2", tab: "t2", cwd: @project, agent_status: "idle"}]
+    executor = Object.new
+    def executor.agent_get(_pane)
+      Struct.new(:parsed_json).new({"agent" => {"agent_status" => "idle"}})
+    end
+    @observer.instance_variable_set(:@executor, executor)
     row = @observer.call.fetch(0)
     assert_equal "unavailable", row.fetch("state")
     assert_match(/ambiguous/, row.fetch("error"))
+  end
+
+  def test_dead_previous_panel_does_not_hide_live_replacement
+    @control.tabs = [{id: "t1", title: "overseer-ace"}, {id: "t2", title: "overseer-ace"}]
+    @control.panes = [{id: "p1", tab: "t1", cwd: @project, agent_status: "idle"},
+                      {id: "p2", tab: "t2", cwd: @project, agent_status: "working"}]
+    executor = Object.new
+    def executor.agent_get(pane)
+      raise Ace::Herdr::AgentNotFoundError, "gone" if pane == "p1"
+      Struct.new(:parsed_json).new({"result" => {"agent" => {"agent_status" => "working"}}})
+    end
+    @observer.instance_variable_set(:@executor, executor)
+    row = @observer.call.fetch(0)
+    assert_equal "working", row.fetch("state")
+    assert_equal "p2", row.fetch("pane")
+    assert_equal row, @observer.call.fetch(0)
   end
 
   def test_missing_project_does_not_hide_healthy_project

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.2.pre.9] - 2026-11-11
+
+### Fixed
+- Project-session observation recognizes one live replacement when a dead predecessor panel remains after restart, matching managed start ownership checks.
+
 ## [0.30.2.pre.8] - 2026-11-11
 
 ### Fixed
