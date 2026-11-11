@@ -174,4 +174,32 @@ class HitlInboxTest < AceOverseerTestCase
     end
   end
 
+  def test_lab_consumes_project_report_from_the_same_projection_as_eyes
+    report = {"id" => "worker-report", "type" => "report", "result" => "success",
+      "assignment" => "worker", "task" => "8ya.t.tdu", "project_root" => "/lab/ace"}
+    calls = []
+    projects = Object.new
+    projects.define_singleton_method(:call) do |**args|
+      calls << args
+      {"events" => [report, {"id" => "health", "type" => "source-health"}],
+       "sources" => {"project:ace:hitl" => {"status" => "ok"}}}
+    end
+    inbox = Ace::Overseer::Molecules::HitlInbox.new(manager: FakeManager.new([]), projects: projects)
+    assert_equal [report], inbox.incoming_events
+    assert_equal [{owner: "overseer", scope: "all", limit: 500}], calls
+  end
+
+  def test_degraded_project_or_ambiguous_report_blocks_adoption
+    projects = Object.new
+    projects.define_singleton_method(:call) do |**|
+      {"events" => [], "sources" => {"project:ace" => {"status" => "degraded"}}}
+    end
+    inbox = Ace::Overseer::Molecules::HitlInbox.new(manager: FakeManager.new([]), projects: projects)
+    assert_raises(Ace::Overseer::Error) { inbox.incoming_events }
+    projects.define_singleton_method(:call) do |**|
+      {"events" => [{"id" => "same", "type" => "report"}] * 2, "sources" => {}}
+    end
+    assert_raises(Ace::Overseer::Error) { inbox.incoming_events }
+  end
+
 end

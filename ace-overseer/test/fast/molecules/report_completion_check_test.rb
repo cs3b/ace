@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
+require_relative "../../support/prune_git_fixtures"
 
 class ReportCompletionCheckTest < AceOverseerTestCase
   Task = Struct.new(:metadata)
@@ -21,9 +22,10 @@ class ReportCompletionCheckTest < AceOverseerTestCase
 
   def check
     legs = @legs
+    expected_root = @step.metadata["worktree"]
     handoff = Object.new
     handoff.define_singleton_method(:probe) do |root, task_id:|
-      raise "wrong root" unless root == "/tmp/commission"
+      raise "wrong root" unless root == expected_root
       raise "wrong task" unless task_id == "8xu.t.jh8"
       {legs: legs}
     end
@@ -86,4 +88,27 @@ class ReportCompletionCheckTest < AceOverseerTestCase
     @step.metadata["role"] = "confirm-start"
     assert_includes check, "coordinator session evidence"
   end
+  def test_project_report_must_match_private_manager_project
+    @manager.metadata["project_root"] = Dir.pwd
+    @event["project_root"] = "/lab/other"
+    assert_includes check, "report project disagrees"
+    @event["project_root"] = Dir.pwd
+    assert_nil check
+  end
+
+  def test_real_project_worktree_is_resolved_from_a_separate_lab_repository
+    Dir.mktmpdir("lab-report-owner") do |dir|
+      lab = PruneGitFixtures::Repo.new(File.join(dir, "lab")).init
+      lab.commit("lab")
+      project = PruneGitFixtures::Repo.new(File.join(dir, "project")).init
+      project.commit("project")
+      worktree = project.add_worktree(File.join(dir, "ace-t.jh8"), "jh8-bootstrap")
+      @manager.metadata["project_root"] = project.path
+      @event["project_root"] = project.path
+      @step.metadata["worktree"] = File.realpath(worktree.path)
+      @finder = nil
+      Dir.chdir(lab.path) { assert_nil check }
+    end
+  end
+
 end
