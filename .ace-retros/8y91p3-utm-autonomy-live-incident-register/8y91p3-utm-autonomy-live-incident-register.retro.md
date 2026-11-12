@@ -613,3 +613,67 @@ found defects that happy-path role tests missed. No VM/model acceptance claimed.
   same manager after correcting the conflict. Crash fixtures now retain the
   actual observed revision, matching the new acceptance write. These failures
   were not all fixture drift; the mutation-order defect required a product fix.
+
+### 2026-11-12 — connection simplification, preserved UTM VM live acceptance
+
+- Candidate packages (`ace-overseer 0.31.0.pre.12`, `ace-coworker 0.9.3.pre.1`,
+  `ace-hitl 0.25.2.pre.2`, `ace-wake 0.8.2.pre.1`) were built from commit
+  `c43490e360da68eede30f99b807c93e36de84caa`, copied into `/opt/ace/runtime/vendor/cache`
+  on the preserved UTM ARM64 VM (`192.168.64.84`), installed with a single
+  `bundle install --local` (`5.14s`), and projected via `ExtensionProvisioner`
+  without resetting the VM, Forgejo, or task/session history.
+- Historical report settlement: split two multi-report historical managers
+  (`8yb.t.mgd` -> `8yb.t.su3` for `8yb.t.mgy`, `8yb.t.mgd` retained for `8yb.t.m5n`)
+  and settled all 3 lab reports and 28 project reports cleanly (`settled: 28,
+  report events: 0`).
+- **Stage 1 (`8y0.t.x27.e` — automatic `eyes` arming and `/reload` preservation)**:
+  `ACE_TOOLCHAIN=installed ace-overseer start --scope lab --format json` booted
+  `w2:p8` (`/lab`, `overseer-lab`) and `w3:pZ` (`/lab/ace`, `overseer-ace`) with
+  `ACE_OVERSEER_EYES_CONFIG` arming `eyes` (`scope: "all"`) at session entries
+  `4-6` before the first user prompt (`entry 8`). `/reload` on `w3:pZ` preserved
+  `window` (`start: 1794511490668, wakes: 4`), `acknowledged` (`79`), and `pending`
+  (`20`) without zeroing; calling `start --scope lab` 3s into `/reload` while
+  rebinding observation was in flight (`observedAt: null`) returned `partial`,
+  and re-running 5s later confirmed `"status": "ready", "ready": true`.
+- **Stage 2 (`8y0.t.x27.b`, `8y0.t.x27.c`, `8y0.t.x27.d` — operational configuration verification)**:
+  `w3:pZ` delegated `8yb.t.toh` under private manager `8yb.t.toc`
+  (`roles: [bootstrap-worker, bootstrap-verifier]`). `ManagerBinding` wrote
+  `8yb.t.toc.0` (`bootstrap-worker`, `8ybtpx`), `8yb.t.toc.1` (`bootstrap-verifier`,
+  `8ybtpx1`), and `8yb.t.toc.2` (`confirm-start`). Both coworkers executed real
+  operational checks without `ace-review`/PR/`integrator`, published reports
+  `8ybtsm` and `8ybtvs` with `Execution evidence` (`models: [["zai", "glm-5.3-flash"]]`),
+  and `ace_eyes(action: "process-reports")` verified receipts, retired both panes,
+  confirmed project start readiness on `8yb.t.toc.2`, and closed `8yb.t.toc` (`done`).
+- **Live integration defects caught and repaired during Stages 3 & 4**:
+  1. `ReportProcessor#pending_decision` called `.answered?` directly on
+     `HitlManager#show(ref, scope: "all")`, which returns `{event: HitlEvent, ...}`
+     rather than a bare `HitlEvent`. Unwrapped `shown.is_a?(Hash) ? shown[:event] : shown`
+     and added unit regression `test_pending_decision_unwraps_hitl_manager_show_hash_and_closes_only_after_applied_or_closed`.
+  2. `CoworkerLauncher#finish_resume` and `recover_replacement` required
+     `agent_status == "idle"`, but when `pi --session <transcript>` is resumed on a
+     pane that previously settled a turn (`completion_seq > 0`), `herdr` reports
+     `agent_status == "done"` (matching `Inbox::WAKE_STATUSES = %w[idle done]`).
+     Updated both checks to `%w[idle done].include?(...)` and added unit regression
+     `test_resume_dead_accepts_done_agent_status_from_previous_turn_on_pane`.
+- **Stage 3 (`8y0.t.x27.b`, `8y0.t.x27.d`, `8y0.t.x27.g` — code delivery, interruption/resume, and report replay)**:
+  `w3:pZ` delegated Forgejo Issue #14 (`LabFixtureCounter#decrement`, `8yb.t.ud1`)
+  under private manager `8yb.t.ud0` (`roles: [worker, reviewer, integrator]`).
+  `coworker-8ybudl` (`w3:p13`) was interrupted (`ctrl+c`/`ctrl+d`) and resumed via
+  `ace-overseer work-on --task 8yb.t.ud1 --manager 8yb.t.ud0 --runtime herdr` on the
+  same session (`01a1d166-6da3-7783-a636-163d5bad857f.jsonl`) without duplicate tasks
+  or assignments. `worker` (report `8ybuqa`, PR #15 `f6ffc23c...`) -> `reviewer`
+  (report `8ybv8y`, 3/2/10 `ace-review` rounds `review-8ybuu7`/`review-8ybuzs`/`review-8ybv3h`
+  + formal `APPROVED` by `e2e-reviewer` on `f6ffc23c...`) -> `integrator` (report `8ybvd9`,
+  PR #15 merged at `e00f33f6...`, Issue #14 closed, Issue #4 open) completed and closed
+  `8yb.t.ud0` (`done` in `_overseer`). Replay `process-reports --json` returned
+  `duplicate: 34, success: 0, error: 0, unmatched: 0`.
+- **Stage 4 (`8y0.t.x27.f` — Captain decision, `second-captain`, and atomic lesson close)**:
+  HITL question `8ybubn` (`--to captain`) received `second-captain` suggestion `A`
+  (`coworker-8ybucf`, report `8ybufn`). Real Captain answer `A` was delivered via
+  `ace-hitl reply 8ybubn --stdin`, applied (`ace-hitl apply 8ybubn --ref 8yb.t.ubv`),
+  atomically closed with comparison lesson (`ace-hitl close 8ybubn --lesson-file ...`,
+  `relation: accepted`), and `process-reports` closed manager `8yb.t.ubv` (`done` in `_overseer`).
+- **Stage 5 (`8y0.t.x27.g` — 5-minute healthy idle window)**:
+  6 samples over 300s (`21:01:30Z`–`21:06:31Z`) on `w2:p8` and `w3:pZ` showed
+  `completion_seq_delta: 0`, `wakes_delta: 0`, `pending: 0`, `errors: 0`, and
+  advancing 30s observations with all required sources `"ok"`.
