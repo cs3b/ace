@@ -75,3 +75,8 @@ Captain explicitly authorized subsequent test iterations using local candidate g
 | Release remains queued | Forgejo issue4 OPEN; no release publication | Proven at checkpoint; recheck at final audit |
 
 Current VM runtime candidates: ace-overseer0.30.2.pre.8, ace-coworker0.9.1.pre.1, ace-assign0.73.3.pre.1, ace-hitl0.25.2.pre.1. Artifact/source identifiers and each intervention are recorded in `.ace-retros/8y91p3-utm-autonomy-live-incident-register/`. This is a single repaired live run, not a clean immutable-release acceptance. Task8y0.t.x27 remains in-progress. Whole-run GLM quota/token accounting is not available.
+
+
+## Final preserved-run checkpoint (2026-11-12)
+
+Delivery, replay, automatic project restart, both healthy five-minute idle measurements and killed-worker recovery are now recorded in [live-cycle-acceptance](2026-11-11-live-cycle-acceptance.md), which supersedes the earlier pending table above. Runtime ends at overseer0.30.2.pre.12 andherdr0.11.1.pre.1/native5176d899. Report8yb04e accepted,workerretired,credentialsremoved,HITL8yazhccancelled. This is a completed repaired/operator-assisted run; broader task8y0.t.x27 remainsin-progress with disclosed followups.

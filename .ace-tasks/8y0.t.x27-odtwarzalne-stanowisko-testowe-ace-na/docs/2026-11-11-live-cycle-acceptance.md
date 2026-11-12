@@ -1,6 +1,6 @@
 # Preserved UTM live cycle — acceptance evidence
 
-Status: in progress; delivery, replay, coordinator restart and both idle measurements passed; killed-worker resumption remains under repair.
+Status: preserved, operator-assisted delivery/recovery run complete. Parent task remains in-progress for recorded product/process follow-ups.
 
 ## Scope
 
@@ -36,7 +36,7 @@ Provider streaming failures required several operator recovery prompts; independ
 
 ## Runtime and local update
 
-ace-overseer0.30.2.pre.9 SHA256bdd75f87d523b4043863d0d832519fb30e3a30334d434dce6a75caceef9754c0; ace-coworker0.9.1.pre.1; ace-assign0.73.3.pre.1; ace-hitl0.25.2.pre.1. Existing manifest pins installed bundle; native Herdr sourcef475b86b1fc0a72103fbdf5cc0aba7dfc54cdcb4, binarySHA2560ee169b8ec16b4678fd2e1c2b0ee0ff2fb2aca5396419787758884972c82acf6.
+Current installed candidates: ace-overseer0.30.2.pre.12 (code c4ce37d05707325c4e397db5c4fc11244026f966, gemSHA256459cdd783dd8a8b3cc0b933cd0a41303d47c2265170c354af188c40c36b9d8c4); ace-herdr0.11.1.pre.1 (gemSHA2568ba7632f424694508b8ecf800a1fab8dfb1d086da40771f3ffc8cc5dd2238ffa); ace-coworker0.9.1.pre.1; ace-assign0.73.3.pre.1; ace-hitl0.25.2.pre.1. Native Herdr source5176d899a567985490682c37eb7f0198eab159b0, binarySHA25602030a0b8fb3598a444b6af97d4b81b5b83336cf192eb4b9992029cf9f23aeb9. Manifest pins the installed bundle. Native ARM64 build, provenance verification, and live child-argument smoke passed.
 
 Local update: build unique candidate from recorded SHA, copy gem to VM vendor/cache, one bundle install --local, update manifest, verify ordinary-user CLI. No RubyGems/OTP required. Gemfile update before bundle completion creates a brief non-atomic window; encountered and documented, not advertised as atomic deployment.
 
@@ -44,15 +44,39 @@ Local update: build unique candidate from recorded SHA, copy gem to VM vendor/ca
 
 CLI integrator receipt `/lab/ace/.ace-wt/ace-t.vu0/.ace-local/assign/8yavwb2/reports/010-integrate-candidate.r.md` records executed installed-mode primitive5/8 and CLI5/22 passing at099ad618, matching review2 receipt and merge expected-head. Docs integrator receipt under correspondingvu8 assignment8yavwq2 records primitive5/8, full-range diffcheck and byte-exact README example at6fd2fd44, matching review3 and merge expected-head. These are agent-owned receipts, independently corroborated for forge identity/content by API; the host did not rerun their implementation work.
 
-## Idle measurement in progress
+## Idle measurements
 
 Started23:08:28UTC: project13 assistant responses, lab403. Both counters unchanged through212seconds. Project eyes enabled, healthy, pending0, wakes2/20. Lab eyes healthy but pending1 and wakes20/20, reset due23:33:07UTC; lab silence is NOT accepted as idle proof while throttled. Remaining event is project-session transition. Observer polling continues every30s; no configuration changed to bypass the limit.
 
-A hard worker-process termination is not separately demonstrated by the provider-timeout evidence. Keep this explicit recovery check open; do not equate interrupted model streams with a killed worker process.
+The following worker-process termination is a separate probe; provider-timeout evidence alone would not demonstrate it.
 
 Project idle PASS:23:08:28.410–23:13:31.639UTC,303.47seconds, assistant count13→13, last response23:07:13.554. Final eyes snapshot23:13:39:enabled true,pending0,errors0,breaker null,all6sources ok,observations22,wakes2/20. Technical custom observation snapshots continued; model did not turn. Lab403→403 is NOT credited: pending1,wakes20/20,all sources ok, reset23:33:07UTC.
 
 
-Lab idle PASS after wake-window reset:23:42:36.310–23:49:09.824UTC,393.514seconds across27 persisted observer snapshots. Last assistant response23:42:36.308, total418 throughout; every snapshot enabled/healthy, pending empty, errors0, breaker null, wakes6/20, maximum snapshot gap37.462seconds. This is unthrottled observation, unlike the earlier excluded window. Existing worker-recovery blocker remains explicit; idle proof does not mark that assignment successful.
+Lab idle PASS after wake-window reset:23:42:36.310–23:49:09.824UTC,393.514seconds across27 persisted observer snapshots. Last assistant response23:42:36.308, total418 throughout; every snapshot enabled/healthy, pending empty, errors0, breaker null, wakes6/20, maximum snapshot gap37.462seconds. This is unthrottled observation, unlike the earlier excluded window. At that measurement, worker recovery remained pending; idle proof did not mark that assignment successful.
 
-Worker process termination: SIGTERM to verified Pi94521 at23:24:28.360UTC. Assignment8yaz1k stayed running/010active, no false completion, project observation woke coordinator. pre10 attempted same-session recovery and exposed native exec-env global option interception; see incident register. Local native fix5176d899a567985490682c37eb7f0198eab159b0 and overseerpre11 verified/reviewed, ARM64 build pending; recovery not yet accepted.
+Worker process termination: SIGTERM to verified Pi94521 at23:24:28.360UTC. Assignment8yaz1k stayed running/010active, no false completion, project observation woke coordinator. pre10 attempted same-session recovery and exposed native exec-env global option interception; see incident register. Native fix5176d899a567985490682c37eb7f0198eab159b0 deployed after verification/review; pre12 additionally handles the terminal replacement described below. Final recovery report adoption is recorded below.
+
+
+Live recovery verified: public work-on resumed SAME assignment8yaz1k and Pi UUID01a1ccec-5f0d-7472-9d0f-760cc1dca26b with original transcript in NEW panew3:pG/terminalterm_66008f7634fd07. Binding state running; previous_terminal explicitly retainsw3:pF/term_660087b3f371d16. New private credentials directory/tmp/ace-session-20261111-104350-vr52zs. Native agent inventory shows exactly one coworker for that session, actively reading verification fixture. Coordinator records recovered-pre12 in private leg. Old pane untouched; no new assignment. Final verification report adoption is recorded below.
+
+
+Post-recovery worker receipt010-work-on-task.r.md records a fresh fetch and detached checkout of remote main6aa71d99606b9184cb88202faa6242f32d341a40, primitive5/8PASS,CLI5/22PASS, executed README example, issues1–3closed and release4open. No product edits/push/PR/merge/publication. This is the worker's independently executed verification, not host implementation.
+
+Known native limitation: live server handoff preserves processes/Pi sessions but regenerates terminal IDs and drops guarded-origin metadata. pre12 explicitly records old→new terminal recovery in a fresh pane after verified absence; it does not claim to repair native identity retention. Live update remains operator-assisted and was not atomic.
+
+
+## Recovered worker completion
+
+Worker assignment8yaz1k completed3/3 and published event8yb04e at2026-11-12T00:04:58Z. Public process-reports recorded processed_report=8yb04e,report_result=success,status=done on private leg8ya.t.yyg.0. Manager8ya.t.yyg is done. Executor binding is retired; fresh credential projection auth.json was independently confirmed absent; original transcript remains. No second worker assignment/executor executed. Remote Forgejo main and issues1–4 independently rechecked after completion: main6aa71d99606b9184cb88202faa6242f32d341a40,issues1–3closed,4open.
+
+Report processing first exceeded the coordinator's60s tool timeout; retry with150s preserved progress and adopted the report. Duration/root performance cause is not diagnosed; agent piping output hid progress. Record as follow-up rather than claiming instantaneous receipt.
+
+Two unused role assignments8yazfc(reviewer) and8yazfc1(integrator) were prepared at23:37:04 from the default three-role sequence during recovery; neither executed. These are excess prepared roles for a verification-only commission, not another worker or duplicated implementation. Strict absence of extra assignment records is therefore NOT claimed. Their records remain historical; task completion prevents normal work-on restarting the task. Host explicitly instructed coordinator not to run those roles and to cancel obsolete HITL8yazhc through its local lifecycle instead of fabricating a human answer. This extra closeout instruction is another disclosed intervention.
+
+## Result and remaining work
+
+The preserved run delivered bootstrap, separate execution/review/integration, correct merge ordering, queued release, idempotent report replay, automatic coordinator recovery, process-kill recovery and healthy five-minute idle windows. It required local product fixes and operator interventions; it does not establish unattended autonomy, strict role-process compliance, a clean immutable release or repeatability after reset. Parent8y0.t.x27 remains in-progress. Outstanding follow-ups: native handoff terminal identity, coordinator source-inspection/output-piping habits, unnecessary prepared roles for report-only work, and report sweep latency. No RubyGems publication was required for live iterations.
+
+
+Final closeout: canonical HITL8yazhc.application.state=cancelled at2026-11-12T00:09:05UTC, audited reason links completed8yaz1k/report8yb04e; answered=false and no invented answer. Project returned idle with eyes enabled/pending0. Independent reviewer approved this qualified evidence report; it does not warrant completing the broader parent task or claiming unattended autonomy.
