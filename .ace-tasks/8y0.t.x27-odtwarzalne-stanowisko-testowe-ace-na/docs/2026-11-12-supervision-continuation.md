@@ -93,3 +93,32 @@ Delivered next goal forissues8/9/10 after reading this receipt. Operator also
 supplied factual maintenance context when lab misclassified the intentional
 upgrade stop as a spontaneous third crash. No HITL answer was supplied; this
 assistance is disclosed and will be assessed separately from autonomy.
+
+
+### Active assignments, handoff and unthrottled lab silence
+
+A fifth live handoff preserved both real worker bindings and processes:
+8ybis5 / w3:pJ / term_6601383a0e5c86 / Pi235592 and
+8ybisn / w3:pK / term_6601384a79a5e7 / Pi235847. Each worker.yml execution
+binding, native origin, terminal, pane and transcript were identical before/after.
+Evidence: handoff-workers.json in the local candidate evidence directory.
+Native independent review PASS at84753e6, including actual Linux reparenting and
+no pidfd inheritance; Linux negative child-exit/origin-rejection tests remain unrun.
+
+Lab silence was measured over569.082seconds while project workers were active:
+assistant messages25→25, completed turns2→2, total tokens571664→571664;
+observation count20→38, wakes1→1 of20, pending0, all sourceshealthy. Same Pi
+session and terminal. This proves relevant lab silence, not yet final project idle.
+Evidence: lab-idle-before.json and lab-idle-after.json.
+
+Controlled SIGTERM to docs Pi235847 at2026-11-12T12:36:18UTC occurred during
+initial preparation, before implementation. Project Overseer detected missing
+session, dry-ran existing assignment resume and used work-on to restart8ybisn
+in the same pane/terminal and transcript; new Pi237557, no second assignment.
+Evidence: worker-fault.json plus native process-info and coordinator transcript.
+Do not describe this as a mid-implementation fault or host-directed recovery.
+
+Measured actual process-reports sweeps: lab collect0.196s/readtasks0.032s;
+project collect0.083s/readtasks0.097s for16events, closed-history cleanup each
+0–0.071s. No fixed60second wait. These stage timings exclude CLI startup;
+fresh report verification/continuation measurements remain pending.

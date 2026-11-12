@@ -375,3 +375,23 @@ keys only for the foreground launch; delegate destination context remains owned
 by native Herdr. Real-child regression failed before fix (ea3d4c94-020b-43d5-bfe7-b40b98f98b86).
 Stopped only the new incomplete Pi first turn via /quit; task/eyes files retained.
 No autonomous completion credited. Candidate pre.2/live retest pending.
+
+
+### 2026-11-12 — live worker prerequisites and deadline units
+
+- Worker ace-test failed before any test with `bundler: command not found: ruby`.
+  Fixture session_runtime.path included Node and installed CLI wrappers but
+  omitted its installed Ruby interpreter directory. Corrected session-fixture.rb
+  and the retained VM manifest (backup install.yml.before-ruby-path). Existing
+  worker independently diagnosed the same cause and ran with the interpreter
+  path;128tests387assertions passed,19skips. Future sessions receive the corrected
+  configured path. No source runtime fallback or manual shell-source required.
+- Coordinator supplied `at:300000` for a five-minute recovery deadline. Eyes
+  correctly interpreted an epoch timestamp, making it immediately due. Tool
+  schema only said integer, unlike the terminal command's EPOCH_MS help. Clarify
+  absolute milliseconds and current-time-plus-duration in the tool schema.
+  No new scheduler or timeout increase. New wake candidate pre.2 pending deploy.
+- VM workers piped test output despite repository guidance. Owner reports remain
+  available and must be checked for actual run/test status; do not accept truncated
+  tails or a no-test target as successful coverage. This instruction-compliance
+  limitation is disclosed rather than silently credited as perfect autonomy.

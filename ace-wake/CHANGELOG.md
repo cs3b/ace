@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1.pre.2] - 2026-11-12
+
+### Fixed
+
+- Describe the eyes deadline timestamp as absolute epoch milliseconds in the agent tool schema, preventing durations from being mistaken for future deadlines.
+
 ## [0.3.1.pre.1] - 2026-11-12
 
 ### Changed

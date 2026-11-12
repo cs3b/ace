@@ -511,7 +511,7 @@ PATH
 PATH
   remote: ace-wake
   specs:
-    ace-wake (0.3.1.pre.1)
+    ace-wake (0.3.1.pre.2)
       ace-runtime (~> 0.4, >= 0.4.2)
 
 GEM

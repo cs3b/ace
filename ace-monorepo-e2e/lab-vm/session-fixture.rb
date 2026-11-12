@@ -30,7 +30,9 @@ manifest["roles"] = {"worker" => "coworker/worker", "verifier" => "coworker/revi
 manifest["session_runtime"] = {
   "node" => "/opt/ace/toolchains/node-v#{release.fetch('node').fetch('version')}-linux-arm64/bin/node",
   "pi" => "/opt/ace/runtime/pi/node_modules/@earendil-works/pi-coding-agent/dist/cli.js",
-  "path" => ["/opt/ace/runtime/bin", "/opt/ace/runtime/pi/node_modules/.bin", "/opt/ace/toolchains/node-v#{release.fetch('node').fetch('version')}-linux-arm64/bin", "/usr/bin"],
+  "path" => ["/opt/ace/runtime/bin", "/opt/ace/runtime/pi/node_modules/.bin",
+    "/opt/ace/toolchains/ruby-#{release.fetch('ruby').fetch('version')}/bin",
+    "/opt/ace/toolchains/node-v#{release.fetch('node').fetch('version')}-linux-arm64/bin", "/usr/bin"],
   "provider" => "zai", "model" => "glm-5.3-flash", "credentials" => "/etc/lab/ace-lab/pi-auth.json",
   "herdr" => {"account" => "mo", "socket" => "/run/lab/herdr/herdr.sock"}}
 # Provision ready, repository-restricted role credentials once. The source

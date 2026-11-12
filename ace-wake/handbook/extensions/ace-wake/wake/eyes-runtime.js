@@ -161,7 +161,8 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
     parameters: { type: "object", properties: {
       action: { type: "string", enum: ["start", "status", "ack", "deadline", "cancel"] },
       configPath: { type: "string" },
-      key: { type: "string" }, revision: { type: "string" }, at: { type: "integer" }
+      key: { type: "string" }, revision: { type: "string" },
+      at: { type: "integer", description: "Absolute Unix epoch timestamp in milliseconds, NOT a duration. For five minutes from now use the current epoch milliseconds plus 300000; a past timestamp is immediately due." }
     }, required: ["action"], additionalProperties: false },
     execute: async (_id, args, _signal, _onUpdate, ctx) => {
       if (!eyes) {
