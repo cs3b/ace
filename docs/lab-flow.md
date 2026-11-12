@@ -3,8 +3,8 @@ doc-type: bundle
 title: Lab State Owners and Local Flow
 purpose: Canonical state ownership map and executable local flow for the ACE lab
 ace-docs:
-  last-updated: '2026-11-10'
-  last-checked: '2026-11-10'
+  last-updated: '2026-11-12'
+  last-checked: '2026-11-12'
 ---
 
 # Lab State Owners and Local Flow
@@ -127,24 +127,30 @@ does not contain the named task, the executor reports the missing task.
 9. **Close** — mark the project task done with `ace-task update <ref> --set status=done` (archive when the family is terminal).
 
 For native Herdr delegation, `ace-overseer work-on --task <project-task>
---runtime herdr` joins worktree preparation, role assignment, brief validation
-and a real executor start. `ace-coworker start` alone only renders the brief.
-The overseer records returned identifiers on its private coordination step
-and ends the turn. `process-reports` records acceptance before retiring the
-executor and handing off to the next role. Replayed reports reconcile cleanup
-and continuation without launching duplicate work. Readiness requires the
-coordinator's completed first turn and active eyes, so both lab and project
-first turns arm observation and settle before dispatch.
+--manager <private-manager> --runtime herdr` binds the manager's role steps and
+assignments via `ManagerBinding`, prepares the worktree and role briefs, launches
+the real executor, and records its live terminal/executor references on the
+private step before ending the turn. `ace-coworker start` alone only renders the
+brief. `ace_eyes(action: "process-reports")` (and `ace-overseer process-reports
+--json`) verifies exact report revisions, records `report_receipt`, retires the
+executor, hands off to the next role (`handoff --manager`), and closes the
+private manager via `ace-task` after all required steps and decisions are
+satisfied. Replayed reports reconcile cleanup and continuation without launching
+duplicate work. `ace-overseer start` prepares `.ace-local/overseer/eyes.json` and
+passes `ACE_OVERSEER_EYES_CONFIG` so `ace-wake` arms observation automatically at
+session initialization before the first model turn.
 
 Delegation requires explicit role metadata. Implementation selects worker,
 reviewer and integrator; bootstrap selects bootstrap-worker and
-bootstrap-verifier; report-only verification selects its one required role.
-Missing roles fail before a worktree is created. Second Captain is a configured
-ordinary execution role at either coordinator or project scope. The private
-step records `hitl_case`; its one-step assignment attaches a suggestion to that
-exact existing case. The overseer sends the case to the Captain only after a
-suggestion or a recorded advisor failure. A suggestion never supplies consent;
-a Captain answer takes precedence. Secret cases bypass the advisor.
+bootstrap-verifier (which adds a `confirm-start` step without `ace-review`/PR);
+report-only verification selects its one required role. Missing roles fail before
+a worktree is created. Second Captain is a configured ordinary execution role at
+either coordinator or project scope. The private decision manager and advisor
+task record `hitl_case`; the advisor attaches a suggestion to that exact
+existing case. After the Captain's answer is applied (`ace-hitl apply`), the
+overseer atomically records the comparison lesson and closes the case (`ace-hitl
+close <case> --lesson-file <file>`), which unblocks and closes the decision
+manager. A suggestion never supplies consent; secret cases bypass the advisor.
 
 Visibility and wake relevance differ. Assignment progress remains readable
 without revising its actionable state. The lab reads project HITL rows addressed

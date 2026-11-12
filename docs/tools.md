@@ -168,8 +168,11 @@ Always use `ace-test` instead of `bundle exec rake test` or raw `bundle exec rub
 
 | Tool | Purpose |
 |------|---------|
-| `ace-overseer work-on --task REF` | Create/reuse a worktree, prepare the assignment, open a terminal |
-| `ace-overseer status` | Show active task worktrees |
+| `ace-overseer start --scope lab` | Start or reconcile lab and project overseer sessions with armed `eyes` |
+| `ace-overseer work-on --task REF --manager MGR --runtime herdr` | Bind manager role steps, prepare worktree/assignments, and launch executor |
+| `ace-overseer handoff --task REF --manager MGR` | Advance a multi-role sequence to the next unblocked role |
+| `ace-overseer process-reports --json` | Verify and accept `ace-hitl` reports, retire executors, and continue or close managers |
+| `ace-overseer status --format json` | Show active task worktrees, sources, attention, and operation summary |
 | `ace-overseer prune --dry-run` | Preview removable worktrees |
 | `ace-git-worktree create --task REF` | Create only the worktree |
 
@@ -180,8 +183,10 @@ Always use `ace-test` instead of `bundle exec rake test` or raw `bundle exec rub
 | `ace-hitl create "Title" --kind decision --question "..."` | Create an event in `.ace-local/hitl/` |
 | `ace-hitl list --status pending` | List events |
 | `ace-hitl show REF --content` | Show event details |
-| `ace-hitl update REF --answer "..."` | Answer an event |
-| `ace-hitl wait REF` | Poll until answered |
+| `ace-hitl reply REF --stdin` | Deliver a human answer for an exact case on stdin |
+| `ace-hitl suggest REF --stdin` | Record the Second Captain advisory suggestion on a case |
+| `ace-hitl apply REF --ref OWNER_REF` | Record the verified applied effect of an answered decision |
+| `ace-hitl close REF --lesson-file FILE` | Atomically record the comparison lesson and close an applied case |
 | `ace-hitl send REF` | Deliver an event through the configured adapter routes (per-route results) |
 
 ## Assignment Management
