@@ -48,6 +48,7 @@ module Ace
           attention = snapshot[:attention]
           {
             sources: snapshot[:sources],
+            operation: operation_summary(snapshot),
             unknown_keys: Array(snapshot[:unknown_keys]),
             # Always the three-array contract (never null), so partial or
             # hand-built snapshots render consistently with the table.
@@ -55,6 +56,22 @@ module Ace
                                      failures: Array(attention[:failures]),
                                      missing_data: Array(attention[:missing_data])}
           }
+        end
+
+        def operation_summary(snapshot)
+          sources = snapshot[:sources] || {}
+          tasks = %w[project_tasks overseer_tree].flat_map do |name|
+            source = sources[name]
+            source && source[:status] == "ok" && source[:data].is_a?(Array) ? source[:data] : []
+          end
+          coworkers = sources.dig("coworkers", :data)
+          coworkers = [] unless coworkers.is_a?(Array)
+          attention = snapshot[:attention] || {}
+          {completed: tasks.select { |row| row[:status] == "done" }.map { |row| row[:id] },
+           running: coworkers.select { |row| row[:active] }.map { |row| row[:worktree] },
+           waiting: tasks.reject { |row| %w[done cancelled skipped].include?(row[:status]) }.map { |row| row[:id] },
+           blocked: Array(attention[:blockers]) + Array(attention[:failures]) + Array(attention[:missing_data]),
+           evidence: sources.map { |name, source| {source: name, origin: source[:origin], status: source[:status]} }}
         end
 
         def to_sources_table(snapshot)

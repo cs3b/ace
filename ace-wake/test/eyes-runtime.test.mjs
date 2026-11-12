@@ -508,3 +508,82 @@ it("binds the real local process once with exact native birth", () => {
   assert.match(identity.startedAt, /^(linux:[0-9a-f-]{36}:[1-9][0-9]*|darwin:[1-9][0-9]*:[0-9]{1,6})$/);
   assert.strictEqual(eyesProcessIdentity(), identity);
 });
+
+it("process-reports acknowledges only completed exact report revisions", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ace-report-ack-"));
+  const host = createFakeHost(), tools = new Map();
+  host.pi.registerTool = tool => tools.set(tool.name, tool);
+  const other = "c".repeat(64), newer = "d".repeat(64);
+  let receiptRevision = revision;
+  const session = await startSession(host, {eyes: {
+    now: host.clock.now, schedule: host.setIntervalFn, cancel: host.clearIntervalFn,
+    observe: async () => ({schema: "ace.hitl.observation/v1", events: [
+      {key, revision: newer, id: "report1", type: "report"},
+      {key: other, revision, id: "question1", type: "question"}], sources: {hitl: {status: "ok"}}}),
+    processReports: async () => ({dry_run: false, outcomes: [
+      {key, revision: receiptRevision, accepted: true, cleanup: "complete", acknowledge: true},
+      {key: other, revision, accepted: false, cleanup: "pending", acknowledge: false}]})
+  }});
+  try {
+    const file = path.join(dir, "eyes.json"); fs.writeFileSync(file, "{}");
+    const tool = tools.get("ace_eyes");
+    await tool.execute("start", {action: "start", configPath: file}, null, null, host.commandContext);
+    const result = await tool.execute("process", {action: "process-reports"}, null, null, host.commandContext);
+    assert.equal(result.details.pending[key].revision, newer, "older receipt must retain the newer observation");
+    assert.equal(result.details.pending[other].revision, revision, "question must remain pending");
+    receiptRevision = newer;
+    const completed = await tool.execute("process-again", {action: "process-reports"}, null, null, host.commandContext);
+    assert.equal(completed.details.pending[key], undefined);
+    assert.equal(completed.details.pending[other].revision, revision);
+  } finally { await session.shutdown(); fs.rmSync(dir, {recursive: true, force: true}); }
+});
+
+it("session initialization arms the configured observer without a model tool call", async () => {
+  const host = createFakeHost();
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ace-auto-eyes-"));
+  host.commandContext.cwd = dir;
+  const folder = path.join(dir, ".ace-local/overseer");
+  fs.mkdirSync(folder, {recursive: true});
+  const file = path.join(folder, "eyes.json");
+  const original = fs.existsSync(file) ? fs.readFileSync(file) : null;
+  fs.writeFileSync(file, JSON.stringify({scope: "all", recipient: "overseer", maxWakesPerHour: 7}));
+  let reads = 0;
+  let session;
+  try {
+    session = await startSession(host, {eyes: {
+      env: {ACE_OVERSEER_EYES_CONFIG: file}, now: host.clock.now,
+      schedule: host.setIntervalFn, cancel: host.clearIntervalFn,
+      observe: async config => { reads++; assert.equal(config.scope, "all");
+        return {schema: "ace.hitl.observation/v1", events: [], sources: {hitl: {status: "ok"}}}; }
+    }});
+    assert.equal(reads, 1);
+    const snapshot = host.sessionEntries.filter(e => e.customType === "ace-wake-eyes").at(-1).data;
+    assert.equal(snapshot.enabled, true);
+    assert.equal(snapshot.config.maxWakesPerHour, 7);
+    assert.equal(host.sends.length, 0);
+  } finally {
+    await session?.shutdown();
+    if (original) fs.writeFileSync(file, original); else fs.rmSync(file, {force: true});
+    fs.rmSync(dir, {recursive: true, force: true});
+  }
+});
+
+it("refuses report processing while an observation source is degraded", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ace-report-degraded-"));
+  const host = createFakeHost(), tools = new Map();
+  host.pi.registerTool = tool => tools.set(tool.name, tool);
+  let calls = 0;
+  const session = await startSession(host, {eyes: {
+    now: host.clock.now, schedule: host.setIntervalFn, cancel: host.clearIntervalFn,
+    observe: async () => ({schema: "ace.hitl.observation/v1", events: [],
+      sources: {hitl: {status: "error", error: "unavailable"}}}),
+    processReports: async () => { calls++; return {dry_run: false, outcomes: []}; }
+  }});
+  try {
+    const file = path.join(dir, "eyes.json"); fs.writeFileSync(file, "{}");
+    const tool = tools.get("ace_eyes");
+    await tool.execute("start", {action: "start", configPath: file}, null, null, host.commandContext);
+    await assert.rejects(tool.execute("process", {action: "process-reports"}, null, null, host.commandContext), /observation.*degraded/);
+    assert.equal(calls, 0);
+  } finally { await session.shutdown(); fs.rmSync(dir, {recursive: true, force: true}); }
+});

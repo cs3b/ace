@@ -95,6 +95,8 @@ class OverseerEventObservationTest < AceOverseerTestCase
       tasks.update(step.id, set: {"status" => "done"})
       # Auto-archive/parent closure belongs to TaskManager, not the observer.
       assert_equal "done", tasks.show(manager.id).status
+      receipt = work_events(original).first.slice("key", "revision").merge("cleanup" => "complete", "continuation" => "complete")
+      tasks.update(step.id, set: {"report_receipt" => receipt})
       assert_empty work_events(observer.call(owner: "self"))
       assert_equal work_events(original), observer.call(owner: "self")["settled"]
       assert_equal "success", tasks.show(step.id).metadata["report_result"]
@@ -125,10 +127,15 @@ class OverseerEventObservationTest < AceOverseerTestCase
       tasks.update(manager.id, set: {"project_root" => "/lab/other"})
       assert_equal [event], work_events(observer.call(owner: "overseer"))
       tasks.update(manager.id, set: {"project_root" => "/lab/ace"})
+      receipt = event.slice("key", "revision").merge("cleanup" => "complete", "continuation" => "complete")
+      tasks.update(step.id, set: {"report_receipt" => receipt})
       settled = observer.call(owner: "overseer")
       assert_empty work_events(settled)
       assert_equal [event], settled["settled"]
       assert_equal "/lab/ace", settled["settled"].first["project_root"]
+      event["revision"] = "rev-2"
+      assert_equal [event], work_events(observer.call(owner: "overseer")), "a changed report is not the accepted revision"
+      assert_empty observer.call(owner: "overseer")["settled"]
     end
   end
 

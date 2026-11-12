@@ -9,230 +9,42 @@ ace-docs:
   last-updated: '2026-10-18'
   last-checked: '2026-10-18'
 ---
+# Private coordination tasks
 
-# Overseer Queue Workflow
+Use `.ace-tasks/_overseer/` through ace-task, never another queue or journal.
+Keep it Git-ignored. An executable commission is a separate ordinary task. Create
+the private manager and commission text, then use `work-on --manager` to bind them.
+The product writes role children and references. Do not copy allocation fields.
+Use explicit role sequences and dependencies; a predecessor unlocks work only after
+its required integration is accepted. Reuse existing tasks on restart.
 
-## Goal
+`ace_eyes` action `process-reports` owns the receipt/cleanup/continuation/ack order.
+For terminal inspection `ace-overseer process-reports --json` returns the same receipts
+without acknowledging the observer. Questions, mismatches and failed continuation
+remain pending. No report receipt substitutes for tests, independent review or merge.
+Managers remain private after completion. Bootstrap's confirm-start condition requires
+first-turn and eyes evidence; pending decisions and missing integration keep work open.
 
-Coordinate delegated work exclusively through the overseer's private task tree
-in `.ace-tasks/_overseer/` (gitignored, managed via `ace-task list --in _overseer`),
-existing subtasks/dependencies, and `ace-hitl` reports tied to a concrete step.
-The tree decides order, dependencies, and assignments. There is no second queue
-engine: no daemon, no journal, no state cache, no lease registry, and no
-role/name guards inside `ace-task`, `ace-assign`, or `ace-git-worktree`. Every
-policy below is executed by the overseer role reading and writing the ordinary
-task files.
+## Decision outside the mandate
 
-## Contract rules (non-negotiable)
-
-1. **One list, one owner.** The overseer's coordination state lives only in
-   `.ace-tasks/_overseer/`. A coworker reports through messages (ace-hitl) and
-   never writes the overseer's list. Reading or writing any other location
-   must not create a hidden second list.
-2. **Merge is modeled by integration steps.** A dependent step waits for the
-   predecessor's *integration* subtask, never for "worker finished". Error,
-   no result, or cancellation of a required predecessor is not satisfaction;
-   an archived or skipped dependency without proof of the required result is
-   not satisfaction either, even if a generic task sorter displays it as ready.
-3. **One active executor per worktree.** Roles (planner → worker → reviewer →
-   integrator) work sequentially in the same task worktree. The next role
-   starts only after the previous assignment finished and handed over. A busy
-   worktree gets no second executor; missing data or a lost session means
-   investigate or resume, never launch a second agent.
-4. **Implementation completion does not close the managing task.** While
-   review, integration, or another required step remains, the managing task
-   stays open.
-5. **Reports are matched, then recorded, then acted on.** Match the message ID
-   and task/assignment/step references against the current order before
-   accepting a report. Record the result and the processed report ID in the
-   existing managing task (no separate dedup table). A repeated report checks
-   the recorded result and the existing assignment instead of re-running a
-   role. A non-matching report or an escalation stays open for clarification
-   and is never treated as success.
-
-## Instructions
-
-Run the loaded workflow as the source of truth and execute it end-to-end
-instead of only summarizing it.
-
-### 1) Ensure the private list
-
-Prepare (once) and re-verify on resume:
-
-```bash
-mkdir -p .ace-tasks/_overseer
-git check-ignore .ace-tasks/_overseer && echo ignored
-git status --short -- .ace-tasks/_overseer   # must print nothing
-ace-task list --in _overseer
-```
-
-Folder creation and the `.gitignore` entry (`/.ace-tasks/_overseer/`) belong
-to project configuration; the installer consumes this in L8. If the folder is
-missing, create it before any `--in _overseer` call. If git shows files there
-as trackable, stop and fix the ignore rule -- do not commit overseer state.
-
-### 2) Record received work as a managing task
-
-For each received scope of work, create an ordinary managing task and its
-lifecycle subtasks with explicit dependencies and a reference to the project
-task:
-
-```bash
-ace-task create "Manage: <scope>" --in _overseer --tags queue
-ace-task create "Prepare <scope>" --child-of <manager-ref>
-ace-task update <prep-ref> --set role=planner
-ace-task create "Implement <scope>" --child-of <manager-ref>
-ace-task create "Review <scope>" --child-of <manager-ref>
-ace-task create "Integrate <scope>" --child-of <manager-ref>
-ace-task update <manager-ref> --set project_task=<project-task-ref>
-ace-task update <impl-ref> --set dependencies=<prep-ref>
-ace-task update <review-ref> --set dependencies=<impl-ref>
-ace-task update <integrate-ref> --set dependencies=<review-ref>
-```
-
-Rules:
-
-- Add worktree/assignment references only after they really exist (the
-  planner prepares them); never fabricate references ahead of preparation.
-  Record them on the step that owns them, e.g.
-  `ace-task update <step-ref> --set assignment=<actual-id> --set role=<allocated-role> --set worktree=<actual-path>`.
-  Read back the fields; notes alone do not bind reports. `role=planner` denotes
-  only the allocation that prepares assignments, never bootstrap-worker or
-  confirmation of a running project. Resolve note folders from `ace-task show`;
-  never guess their title-derived paths.
-
-- Cross-task ordering goes through the integration step: a step of task B
-  that requires A's merge depends on A's *integrate* subtask, not on A's
-  implement subtask:
-  `ace-task update <B-step-ref> --set dependencies=<A-integrate-ref>`.
-
-- Read the tree back with `ace-task show <manager-ref>` and
-  `ace-task list --in _overseer` after every structural change. The root view
-  (`ace-task list`) must stay free of overseer tasks.
-
-### 3) Start only unblocked steps
-
-Before starting any step:
-
-1. Resolve its `dependencies` refs and inspect each predecessor's *status
-   and evidence*: the required result must be produced by the predecessor's
-   integration (merge) step, verified by tests/review records -- not merely
-   announced.
-2. Treat error, missing result, cancelled, skipped, or archived-without-proof
-   predecessors as unsatisfied.
-3. Check the step's worktree is free: the previous assignment on it must be
-   finished and the current state read back from the task tree, worktree, and
-   assignment files. Unknown state is not a free resource and never permits
-   overwriting changes.
-4. Only then dispatch the role for that step and mark it
-   `ace-task update <step-ref> --set status=progress`.
-
-The start decision belongs to the overseer; this is reading dependencies and
-real state, not a new runtime scheduler. `ace-overseer work-on` enforces the
-same gate mechanically: it refuses to provision a worktree or assignment for
-a step whose recorded dependencies are not satisfied (predecessor status
-`done` = accepted and integrated), and reports the blocking reasons.
-
-### 4) Hand the worktree to the next role
-
-Worker finishes → reviewer starts → integrator starts, in the same worktree:
-
-- The previous assignment's completion (and handover of any fixes) ends the
-  previous allocation; only then does the next role begin there.
-
-- `ace-overseer handoff --task <project-task-ref>` enforces this gate
-  mechanically in the prepared worktree: it reads the role-sequence
-  assignments (ace-assign state), the per-leg start configs, and the
-  worktree's executor truth, and hands the worktree to the next role ONLY
-  when every earlier leg reached assignment state `completed` and no
-  executor holds the worktree. A busy, in-flight, failed, or unreadable
-  predecessor refuses with reasons; unknown state is never a free resource.
-  With `--runtime herdr`, success starts the actual next executor from the
-  existing start config and records its native identity. The accepted report
-  retires the preceding process before this handoff. `--dry-run` checks without
-  effects; a printed brief or dry-run result is not proof of a running agent.
-
-- Two different tasks may run in parallel in two different worktrees; one
-  worktree never has two active executors.
-
-- Reviewer fixes belong to the reviewer's own assignment and stay inside its
-  bounds; they do not rewrite the parent goal or the private-tree
-  dependencies.
-
-### 5) Process reports and continue
-
-When a report arrives (ace-hitl event or message):
-
-1. Match its message ID plus task/assignment/step references to the current
-   order. A report that fits no open allocation is kept for clarification,
-   not counted as success.
-2. Persist the exact accepted event ID and result on the owning step:
-   `ace-task update <step-ref> --set processed_report=<event-id> --set report_result=<result>`.
-   Add evidence notes in the folder returned by `ace-task show`, then update statuses:
-   `ace-task update <step-ref> --set status=done` (or keep open / escalate).
-3. For success: end the current allocation, then continue with the next
-   unblocked step per rule 3. For a repeated report: check the recorded
-   result and the existing allocation; do not start the next step twice.
-   For error/escalation: keep the step open, escalate via ace-hitl.
-4. After an interruption between recording a result and the next allocation,
-   resume by re-reading the task tree and the real worktree/assignment state.
-
-`ace-overseer process-reports --owner <configured-recipient>` uses the same
-recipient as your eyes observer (default `overseer`). Set `--scope current|all`
-to match an explicit observation scope; without it, HITL uses all linked
-worktrees in the canonical checkout and current scope inside a task worktree.
-Never process another
-coordinator's reports; use the address configured for this commission. It
-executes rules 1-3 mechanically: it matches
-each incoming event (assignment recorded on a step, or the managing task's
-project_task with exactly one explicitly allocated `role=planner` non-terminal
-step having no assignment). Task and any supplied role must agree; an event
-without an ID is refused. Unassigned readiness never closes worker, verifier,
-integration or confirm-start allocations. Before recording assigned success, the processor reads the actual coworker role
-allocation and ace-assign state: exact task/assignment/role, a completed nonempty
-plan, and every step done are required in dry-run and apply. Unavailable owner
-state refuses acceptance. It records the outcome and
-the processed report ID on the step through the ordinary ace-task update
-surface, and continues with the next unblocked step through the existing
-gates — `ace-overseer handoff` for the next role when the family records a
-worktree, otherwise the `work-on` dependency gate. A repeated delivery is
-answered from the recorded `processed_report` and re-runs nothing; an error
-report or question never advances a step; a report matching no open
-allocation stays for clarification. A `role=confirm-start` continuation remains
-a coordinator operation; no generic worker is dispatched and no managing task
-closes until first-turn and observation evidence is accepted. `--dry-run`
-interprets without effects.
-
-### 6) Close
-
-A managing task closes only when every required subtask (preparation,
-implementation, review, integration, and any project-required step) is
-terminal with verified results. Implementation completion alone never closes
-it. Closing a step family updates the owning project task with the results.
-
-Mark private coordination tasks done in `.ace-tasks/_overseer/`; do not use
-`--move-to archive` for these families. The ordinary archive is not necessarily
-Git-ignored. Keep their accepted-report and assignment references in the private
-owner location so restart/replay can still reconcile them. If a private family
-was moved out, restore that same family with `ace-task update ID --move-to _overseer`
-and verify Git ignores its actual path; preserve its terminal status and evidence.
-Ordinary executable project tasks follow their normal archive workflow.
-
-## Worked example
-
-Two features, B needing A's merge:
-
-```text
-8xh.t.grm Manage: deliver feature A   (project_task: <A-ref>)
-  8xh.t.grm.0 Prepare A               (done)
-  8xh.t.grm.1 Implement A             (done, depends: grm.0)
-  8xh.t.grm.2 Review A                (done, depends: grm.1)
-  8xh.t.grm.3 Integrate A             (done, depends: grm.2)
-8xh.t.grn Manage: deliver feature B   (project_task: <B-ref>)
-  8xh.t.grn.0 Implement B             (depends: 8xh.t.grm.3)  <-- integration, not impl
-  8xh.t.grn.1 Integrate B             (depends: grn.0)
-```
-
-While `grm.1` is done but `grm.3` is not, `grn.0` stays blocked. After
-`grm.3` is confirmed done (merge verified), `grn.0` becomes startable. While
-`grm.2`/`grm.3` remain open, `8xh.t.grm` itself is not closed.
+1. Reuse the decision's existing private manager and HITL case. If absent, create the
+   manager and `ace-hitl create --kind decision --to captain`; record `hitl_case` on
+   the manager. Creation is local publication, not external delivery.
+2. Create an ordinary advisor commission with `role: second-captain` and that same
+   `hitl_case`, the precise choices and references. Delegate with
+   `ace-overseer work-on --task <advisor-task> --manager <decision-manager> --runtime herdr`.
+   Keep a separate direct decision child open until the human answer is applied.
+   End the turn and continue unrelated work.
+3. Receive the advisor report through `ace_eyes process-reports`. Read the same case.
+   The Captain reads it directly on the VM with `ace-hitl list` / `ace-hitl show CASE`
+   and answers with `ace-hitl reply CASE --stdin`. Do not fabricate a reply or claim
+   that local publication was delivered by an external adapter. If the advisor fails,
+   record the missing recommendation and expose the same question; do not retry forever.
+   A human answer wins over a late recommendation.
+4. Apply the actual decision through its effect owner. Record `ace-hitl apply CASE
+   --ref <verified-effect-reference>`. Prepare the factual lesson (by, relation,
+   takeaway, optional refs) when a suggestion exists; close with
+   `ace-hitl close CASE --lesson-file <path>`. The owner writes lesson and closure
+   atomically. Never invent a lesson or reopen a closed case.
+5. Accept the decision child only after the effect is proven. Resume dependants;
+   unrelated commissions do not wait. Secrets and OTP bypass Second Captain entirely.

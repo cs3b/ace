@@ -387,7 +387,45 @@ class ReportProcessorTest < AceOverseerTestCase
     assert_includes result[:outcomes].first[:message], "dry-run"
   end
 
-  def test_all_steps_terminal_reports_manager_closable
+  def test_exact_receipt_is_acknowledgeable_only_after_cleanup_and_continuation
+    event = report.merge("key" => "a" * 64, "revision" => "b" * 64)
+    tree = manager(steps: [step("8xg.t.mgr.0", metadata: {"assignment" => "w1"})])
+    tasks = FakeTaskManager.new([tree])
+    cleanup_attempts = 0
+    processor = Ace::Overseer::Organisms::ReportProcessor.new(
+      inbox: FakeInbox.new([event]), task_manager: tasks, completion_check: ->(**) { nil },
+      retire: ->(**) { cleanup_attempts += 1; raise Ace::Overseer::Error, "busy" if cleanup_attempts == 1 })
+    tree.subtasks.first.metadata["worktree"] = "/wt/prj"
+    first = processor.call[:outcomes].first
+    assert first[:accepted]
+    refute first[:acknowledge]
+    assert_equal "pending", first[:cleanup]
+    second = processor.call[:outcomes].first
+    assert second[:acknowledge]
+    assert_equal "b" * 64, second[:revision]
+    assert_equal "complete", second[:cleanup]
+    event["revision"] = "c" * 64
+    third = processor.call[:outcomes].first
+    refute third[:acknowledge]
+    assert_equal :unmatched, third[:status]
+    tree.subtasks.first.metadata.delete("processed_report_revision")
+    event["revision"] = "b" * 64
+    unknown = processor.call[:outcomes].first
+    refute unknown[:acknowledge], "missing historical revision is not proof of adoption"
+    assert_equal :unmatched, unknown[:status]
+  end
+
+  def test_pending_decision_keeps_manager_open
+    tree = manager(steps: [step("8xg.t.mgr.0", metadata: {"assignment" => "w1"})])
+    processor = Ace::Overseer::Organisms::ReportProcessor.new(
+      inbox: FakeInbox.new([report]), task_manager: FakeTaskManager.new([tree]),
+      completion_check: ->(**) { nil }, retire: ->(**) {}, decision_check: ->(_) { "Captain decision pending" })
+    result = processor.call[:outcomes].first
+    assert_equal "blocked", result[:continuation][:action]
+    assert_equal "in-progress", tree.status
+  end
+
+  def test_all_required_steps_done_closes_manager_through_task_owner
     managers = [manager(steps: [
       step("8xg.t.mgr.0", status: "progress", metadata: {"assignment" => "w1"}),
       step("8xg.t.mgr.1", status: "done")
@@ -398,7 +436,8 @@ class ReportProcessorTest < AceOverseerTestCase
 
     continuation = result[:outcomes].first[:continuation]
     assert_equal "none", continuation[:action]
-    assert_includes continuation[:reason], "close the managing task"
+    assert_includes continuation[:reason], "closed by ace-task"
+    assert_equal "done", managers.first.status
     assert_empty work_on.calls
   end
 
@@ -558,20 +597,21 @@ class ReportProcessorTest < AceOverseerTestCase
     assert_empty work_on.calls
   end
 
-  def test_records_actual_next_executor_binding_on_the_private_step
+  def test_passes_private_manager_to_handoff_owner_for_execution_binding
     steps = [step("8xg.t.mgr.0", metadata: {"assignment" => "w1"}),
       step("8xg.t.mgr.1", status: "pending", dependencies: ["8xg.t.mgr.0"])]
     tasks = FakeTaskManager.new([manager(steps: steps, metadata: {"project_task" => "8xg.t.prj", "worktree" => "/wt/prj"})])
     handoff = Object.new
-    handoff.define_singleton_method(:call) do |**|
+    received = []
+    handoff.define_singleton_method(:call) do |**arguments|
+      received << arguments
       {status: "ready", worktree_path: "/wt/prj", next: {"assignment" => "r1", "role" => "reviewer"},
        execution: {"assignment" => "r1", "role" => "reviewer", "terminal_id" => "term_123", "agent" => "coworker-r1"}}
     end
     result = Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
       inbox: FakeInbox.new([report]), task_manager: tasks, handoff: handoff, retire: ->(**) {}).call
-    assert_equal "r1", steps.last.metadata["assignment"]
-    assert_equal "term_123", steps.last.metadata["terminal"]
-    assert_equal "reviewer", steps.last.metadata["role"]
+    assert_equal [{task_ref: "8xg.t.prj", manager_ref: "8xg.t.mgr"}], received
+    assert_nil steps.last.metadata["assignment"], "report processor must not duplicate handoff writes"
     assert_equal "pending", steps.last.status
     assert_includes result[:outcomes].first[:message], "executor coworker-r1 started"
   end

@@ -34,17 +34,19 @@ module Ace
               dry_run: options[:"dry-run"] == true
             )
 
-            # Exit semantics first: quiet suppresses output, never the
-            # non-zero exit an error outcome or delivery failure must keep.
+            if options[:format] == "json" && !options[:quiet]
+              puts JSON.pretty_generate(to_h(result))
+            end
+
+            # Structured evidence is emitted even when the reported work failed.
+            # Keep the error exit; quiet suppresses output, never the error.
             if result.exit_code != 0
               raise Ace::Support::Cli::Error, result.message
             end
 
             return if options[:quiet]
 
-            if options[:format] == "json"
-              puts JSON.pretty_generate(to_h(result))
-            else
+            unless options[:format] == "json"
               puts render(result)
             end
           rescue Ace::Coworker::Error => e
@@ -59,7 +61,11 @@ module Ace
               "record" => result.record_path,
               "event_id" => result.event_id,
               "delivery" => result.delivery,
-              "message" => result.message
+              "message" => result.message,
+              "operation" => {"completed" => result.record_path ? ["outcome recorded"] : [],
+                "running" => [], "waiting" => result.event_id ? ["overseer acceptance"] : [],
+                "blocked" => result.exit_code.zero? ? [] : [result.message],
+                "evidence" => [result.record_path, result.event_id].compact}
             }
           end
 

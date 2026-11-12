@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ace/assign"
+require "ace/assign/molecules/assignment_discoverer"
 require "yaml"
 
 module Ace

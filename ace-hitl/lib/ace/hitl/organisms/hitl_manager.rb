@@ -238,27 +238,27 @@ module Ace
         # close is a no-op; a close without the applied proof fails —
         # exactly-once belongs to the EFFECT, never to the close itself.
         # @return [Symbol] :closed or :duplicate
-        def close_case(ref, scope: nil)
+        def close_case(ref, scope: nil, lesson: nil)
           event = exact_case(ref, scope: scope)
-          ensure_answered!(event)
-
-          transition(event.file_path) do |frontmatter, _body|
+          rewrite_case(event.file_path) do |frontmatter, body|
             application = frontmatter["application"] || {}
-            case application["state"].to_s
-            when "", "pending"
+            next [:duplicate, nil, nil] if application["state"] == "closed"
+            unless frontmatter["answered"] == true && application["state"] == "applied"
               raise LifecycleTransitionError,
-                "case '#{event.id}' has no applied effect; close only after the " \
-                  "applied proof (ace-hitl apply CASE --ref OWNER_REF)"
-            when "applied"
-              frontmatter["application"] = application.merge("state" => "closed",
-                "closed_at" => timestamp)
-              :closed
-            when "closed"
-              :duplicate
-            else
-              raise LifecycleTransitionError,
-                "case '#{event.id}' is #{application["state"]}; it cannot be closed"
+                "case '#{event.id}' has no applied effect from a human decision; close only after ace-hitl apply CASE --ref OWNER_REF"
             end
+            if lesson
+              unless lesson.is_a?(Hash) && (lesson.keys.map(&:to_s) - %w[by relation takeaway refs]).empty?
+                raise LessonRefusedError, "lesson must contain by, relation, takeaway and optional refs"
+              end
+              fields = lesson.transform_keys(&:to_sym)
+              body = lesson_body(event.id, frontmatter, body, **fields)
+            end
+            if body.include?("## Suggestion") && !body.include?("## Lesson")
+              raise LessonRefusedError, "case '#{event.id}' has a suggestion; supply a lesson before closing"
+            end
+            frontmatter["application"] = application.merge("state" => "closed", "closed_at" => timestamp)
+            [:closed, frontmatter, body]
           end
         end
 
@@ -354,40 +354,33 @@ module Ace
         # @return [Symbol] :written or :duplicate
         def add_lesson(ref, by:, relation:, takeaway:, refs: [], scope: nil)
           event = exact_case(ref, scope: scope)
-
           rewrite_case(event.file_path) do |frontmatter, body|
             refuse_terminal!(frontmatter, event.id)
-            unless body.include?("## Suggestion")
-              raise LessonRefusedError,
-                "case '#{event.id}' carries no suggestion; there is nothing to compare"
-            end
-            unless frontmatter["answered"] == true
-              raise LessonRefusedError,
-                "case '#{event.id}' has no accepted human decision to learn from"
-            end
-
-            if body.include?("## Lesson")
-              next [:duplicate, nil, nil] if lesson_matches?(body, by, takeaway)
-
-              raise LessonRefusedError,
-                "case '#{event.id}' already carries a lesson; reprocessing does not multiply them"
-            end
-
-            unless %w[accepted rejected modified].include?(relation.to_s)
-              raise LessonRefusedError,
-                "relation must be accepted, rejected or modified (got '#{relation}')"
-            end
-
-            decision_refs = ["case:#{event.id}", "suggestion:#{event.id}-s1"]
-            decision_refs << "decision:#{frontmatter["answered_at"]}" if frontmatter["answered_at"]
-            lesson = {"id" => "#{event.id}-l1", "author" => by.to_s,
-              "relation" => relation.to_s, "takeaway" => takeaway.to_s.strip,
-              "refs" => Array(refs).map(&:to_s).reject(&:empty?).push(*decision_refs).uniq,
-              "at" => timestamp}
-            updated = Molecules::HitlLessonEditor.apply(body, lesson)
-
-            [:written, frontmatter, updated]
+            updated = lesson_body(event.id, frontmatter, body,
+              by: by, relation: relation, takeaway: takeaway, refs: refs)
+            updated == body ? [:duplicate, nil, nil] : [:written, frontmatter, updated]
           end
+        end
+
+        private def lesson_body(id, frontmatter, body, by: nil, relation: nil, takeaway: nil, refs: [])
+          unless body.include?("## Suggestion") && frontmatter["answered"] == true
+            raise LessonRefusedError, "case '#{id}' has no suggestion or no accepted human decision"
+          end
+          unless %w[accepted rejected modified].include?(relation.to_s) &&
+              !by.to_s.strip.empty? && !takeaway.to_s.strip.empty? && refs.is_a?(Array)
+            raise LessonRefusedError, "lesson requires by, takeaway, relation accepted/rejected/modified and an array of refs"
+          end
+          if body.include?("## Lesson")
+            return body if lesson_matches?(body, by, takeaway) &&
+              body_section(body, "Lesson").match?(/^relation: #{Regexp.escape(relation.to_s)}$/)
+            raise LessonRefusedError, "case '#{id}' already carries a lesson; reprocessing does not multiply them"
+          end
+          decision_refs = ["case:#{id}", "suggestion:#{id}-s1"]
+          decision_refs << "decision:#{frontmatter['answered_at']}" if frontmatter["answered_at"]
+          lesson = {"id" => "#{id}-l1", "author" => by.to_s,
+            "relation" => relation.to_s, "takeaway" => takeaway.to_s.strip,
+            "refs" => refs.map(&:to_s).reject(&:empty?).push(*decision_refs).uniq, "at" => timestamp}
+          Molecules::HitlLessonEditor.apply(body, lesson)
         end
 
         # Decision history for the advisory agent's NEXT suggestion (task

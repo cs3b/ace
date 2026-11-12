@@ -572,3 +572,44 @@ shared-bundle hot-update window remains a disclosed maintenance caveat.
   release4 open; actual Captain C closed in same case. Assisted run complete,
   not unattended autonomy. Missing Captain transport, historical lesson gap and
   incomplete aggregate model-usage accounting remain explicit limitations.
+
+## 2026-11-12 — connection simplification, local verification
+
+Candidate not deployed yet; source SHA will be recorded after commit. VM preserved,
+read-only inventory confirms both coordinators idle and terminal identities unchanged.
+
+- Manager retry could use an alias lock, overwrite external dependencies, or lose
+  the executor binding after launch → canonical task/manager locks, owner write
+  failures surfaced, durable prepared role bindings, real execution recovery.
+- A closed task tree could settle a newer report revision → settlement now requires
+  the exact owner receipt after cleanup/continuation. Missing historical revision
+  is unknown, never silently adopted. Regression covers changed/missing revision.
+- Pi accounting expected a path in a normalized identity → launcher now preserves
+  the transcript reference separately in its existing execution configuration.
+  Nested review evidence follows explicit assignment references, including actual
+  multi-model results; missing counts remain unknown and retries do not accumulate.
+- New auto-arm awaited an old session's in-flight observation and hung a wake test
+  → restored asynchronous resume for existing enabled checkpoints; explicit new
+  initialization still performs its initial read. Owned test process stopped;
+  rerun passed. This was local only, no VM agent interruption.
+- Full coworker suite exposed a missing explicit AssignmentDiscoverer require
+  hidden by test order → dependency declared, full425 tests/2017 assertions passed.
+- Start fixtures still expected model-created eyes and omitted env_file → fixtures
+  now check automatic eyes environment. Bare foreground lab startup must still
+  work before a Git repository exists; canonical Git roots apply when present.
+- JSON error receipt was unreachable behind an early exception → emit machine
+  evidence before retaining nonzero exit. Real CLI regression4/50 passed.
+- Independent review caught stale wake guidance and a health-gate omission → wake
+  instructs the composed action; processing requires fresh healthy observation.
+
+Review-cycle lesson: component success did not establish the complete report →
+owner → observation contract. Exact revision tests and real CLI failure output
+found defects that happy-path role tests missed. No VM/model acceptance claimed.
+
+- Real queue integration found an additional product defect: role preparation
+  created a missing earlier child before discovering a later conflicting role.
+  Correcting the original role then left a duplicate. Preflight now checks the
+  complete existing sequence before any task mutation; integration retries the
+  same manager after correcting the conflict. Crash fixtures now retain the
+  actual observed revision, matching the new acceptance write. These failures
+  were not all fixture drift; the mutation-order defect required a product fix.

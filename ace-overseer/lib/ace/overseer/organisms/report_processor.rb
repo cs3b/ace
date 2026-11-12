@@ -16,7 +16,8 @@ module Ace
       class ReportProcessor
         OUTCOME_STATUSES = %i[success error needs_answer duplicate unmatched].freeze
 
-        def initialize(inbox: nil, task_manager: nil, handoff: nil, work_on: nil, completion_check: nil, owner: "overseer", scope: nil, retire: nil)
+        def initialize(inbox: nil, task_manager: nil, handoff: nil, work_on: nil, completion_check: nil, owner: "overseer", scope: nil, retire: nil, decision_check: nil)
+          @decision_check = decision_check || method(:pending_decision)
           @completion_check = completion_check || Molecules::ReportCompletionCheck.new
           @inbox = inbox || Molecules::HitlInbox.new(owner: owner, scope: scope)
           @task_manager = task_manager || Ace::Task::Organisms::TaskManager.new
@@ -37,6 +38,15 @@ module Ace
 
           outcomes = events.map do |event|
             result = process_event(event, dry_run: dry_run, progress: progress)
+            if result[:acknowledge]
+              receipt = {"key" => result[:key], "revision" => result[:revision],
+                "cleanup" => "complete", "continuation" => "complete",
+                "timings" => result[:timings]}
+              unless @task_manager.update(result[:step_ref], set: {"report_receipt" => receipt})
+                result[:acknowledge] = false
+                result[:continuation] = {action: "blocked", reason: "report receipt could not be recorded"}
+              end
+            end
             if !dry_run && result[:manager_ref]
               ref = result[:manager_ref]
               current = @task_manager.show(ref)
@@ -47,16 +57,33 @@ module Ace
           end
 
           counts = OUTCOME_STATUSES.to_h { |status| [status, outcomes.count { |o| o[:status] == status }] }
-          {dry_run: dry_run, outcomes: outcomes, counts: counts}
+          operation = {
+            completed: outcomes.select { |row| row[:accepted] }.map { |row| row[:event_id] },
+            running: outcomes.filter_map { |row| row.dig(:continuation, :execution, "agent") }.uniq,
+            waiting: outcomes.reject { |row| row[:acknowledge] }.map { |row| row[:event_id] },
+            blocked: outcomes.filter_map { |row| row.dig(:continuation, :reason) if row.dig(:continuation, :action) == "blocked" },
+            evidence: outcomes.map { |row| row.slice(:event_id, :key, :revision, :manager_ref, :step_ref) }}
+          {dry_run: dry_run, outcomes: outcomes, counts: counts, operation: operation}
         ensure
           @manager_snapshot = nil
+          @receipt = nil
         end
 
         private
 
         def process_event(event, dry_run:, progress:)
+          @receipt = {accepted: false, cleanup: false, timings: {}, dry_run: dry_run}
           verdict = timed(progress, "match #{event['id']}") do
             Atoms::ReportInterpretation.evaluate(event: event, managers: private_managers)
+          end
+          if verdict[:status] == :duplicate
+            step = @task_manager.show(verdict[:step_ref])
+            recorded = step&.metadata&.fetch("processed_report_revision", nil)
+            if event["revision"] && recorded != event["revision"]
+              return outcome({status: :unmatched}, event, nil,
+                "accepted report revision is missing or changed; inspect the revision before reconciling")
+            end
+            @receipt[:accepted] = true
           end
           if verdict[:status] == :duplicate && (reason = duplicate_identity_error(verdict, event))
             return outcome({status: :unmatched, reason: reason}, event, nil, reason)
@@ -130,12 +157,14 @@ module Ace
             return outcome(verdict, event, nil, message)
           end
 
+          verdict[:set] = verdict[:set].merge("processed_report_revision" => event["revision"]) if event["revision"]
           unless timed(progress, "accept #{event['id']}") { @task_manager.update(verdict[:step_ref], set: verdict[:set]) }
             reason = "task #{verdict[:step_ref]} no longer resolves - moved or archived since the event matched"
             message = "report #{event['id']} not recorded: #{reason}; kept in ace-hitl for clarification"
             progress.call("Event #{event['id']}: #{message}")
             return outcome(verdict, event, {action: "blocked", reason: reason}, message)
           end
+          @receipt[:accepted] = true
           progress.call("Event #{event['id']}: recorded #{verdict[:status]} on #{verdict[:step_ref]}")
           retirement = timed(progress, "retire #{event['id']}") { retire_executor(verdict, event) }
           return outcome(verdict, event, retirement, retirement[:reason]) if retirement
@@ -165,7 +194,17 @@ module Ace
           if next_step.nil?
             active = active_steps(manager)
             reason = if active.empty?
-              "every step of #{manager_ref} is terminal; close the managing task per the queue workflow"
+              required = Array(manager.subtasks)
+              if required.any? { |step| step.status.to_s != "done" }
+                return {action: "blocked", reason: "required steps were cancelled or skipped; manager is not successful"}
+              end
+              if (blocker = @decision_check.call(manager))
+                return {action: "blocked", reason: blocker}
+              end
+              unless @task_manager.update(manager_ref, set: {"status" => "done"})
+                return {action: "blocked", reason: "manager disappeared before closure"}
+              end
+              "managing task #{manager_ref} closed by ace-task after accepted required steps"
             else
               "no unblocked step in #{manager_ref}: #{active.map { |s| blocking_summary(s) }.join(' | ')}"
             end
@@ -181,14 +220,14 @@ module Ace
             if family_worktree(manager)
               project_root = manager.metadata["project_root"].to_s
               result = if @handoff
-                @handoff.call(task_ref: manager.metadata["project_task"].to_s)
+                @handoff.call(task_ref: manager.metadata["project_task"].to_s, manager_ref: manager.id.to_s)
               else
                 Dir.chdir(project_root.empty? ? Dir.pwd : project_root) do
-                  Organisms::HandoffOrchestrator.new.call(task_ref: manager.metadata["project_task"].to_s,
+                  Organisms::HandoffOrchestrator.new(task_loader: @task_manager).call(task_ref: manager.metadata["project_task"].to_s,
+                    manager_ref: manager.id.to_s,
                     runtime: Ace::Support::Cli::Toolchain.installed? ? "herdr" : nil)
                 end
               end
-              record_allocation(next_step, result) if result[:execution]
               {action: "handoff", step_ref: next_step.id.to_s,
                next: result[:next], status: result[:status], worktree_path: result[:worktree_path],
                execution: result[:execution], start_command: start_command_of(result[:next])}
@@ -216,6 +255,19 @@ module Ace
           nil
         rescue Ace::Overseer::Error, Ace::Herdr::ExecutorError, Ace::Coworker::Error => e
           {action: "blocked", reason: "report recorded; executor retirement failed: #{e.message}"}
+        end
+
+        def pending_decision(manager)
+          refs = [manager, *Array(manager.subtasks)].filter_map { |task| task.metadata["hitl_case"] }.uniq
+          refs.each do |ref|
+            event = Ace::Hitl::Organisms::HitlManager.new.show(ref, scope: "all")
+            unless event && event.answered? && %w[applied closed].include?(event.metadata.dig("application", "state"))
+              return "decision #{ref} is not applied; manager remains open"
+            end
+          end
+          nil
+        rescue StandardError => error
+          "decision state unavailable: #{error.message}"
         end
 
         def record_allocation(step, result)
@@ -300,6 +352,8 @@ module Ace
           started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
           progress.call("Starting #{label}")
           result = yield
+          @receipt[:timings][label] = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started if @receipt
+          @receipt[:cleanup] = result.nil? if @receipt && label.start_with?("retire ")
           progress.call("Completed #{label} (#{format('%.3f', Process.clock_gettime(Process::CLOCK_MONOTONIC) - started)}s)")
           result
         rescue StandardError
@@ -310,6 +364,14 @@ module Ace
         def outcome(verdict, event, continuation, message)
           {
             event_id: event["id"],
+            key: event["key"], revision: event["revision"],
+            accepted: @receipt[:accepted], cleanup: @receipt[:cleanup] ? "complete" : "pending",
+            timings: @receipt[:timings].dup,
+            acknowledge: !@receipt[:dry_run] && @receipt[:accepted] && @receipt[:cleanup] &&
+              !!event["key"] && !!event["revision"] && event["type"] == "report" &&
+              (verdict[:status] == :success || verdict[:status] == :duplicate && verdict[:recorded_result] == "success") &&
+              (continuation.nil? || continuation[:action] == "none" ||
+                %w[handoff work-on].include?(continuation[:action]) && !!continuation[:execution]),
             status: verdict[:status],
             manager_ref: verdict[:manager_ref],
             step_ref: verdict[:step_ref],

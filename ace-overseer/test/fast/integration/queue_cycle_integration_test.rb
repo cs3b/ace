@@ -78,7 +78,7 @@ module Ace
             # state a process death leaves on disk.
             impl_step = "#{manager}.1"
             run_task("update", impl_step, "--set",
-              "status=done,processed_report=#{worker_event},report_result=success")
+              "status=done,processed_report=#{worker_event},processed_report_revision=#{report_revision(worker_event)},report_result=success")
 
             # Run 2: the persisted report is a duplicate with recorded
             # success whose continuation never ran — it must be
@@ -140,7 +140,7 @@ module Ace
             drive_assignment_to_completion(worktree, assignment)
             update_task(impl_step, "role=reviewer")
             out = process_reports
-            assert_includes out, "assignment role disagrees"
+            assert_includes out, "belongs to a different manager role"
             assert_nil step_metadata(impl_step)["processed_report"]
             update_task(impl_step, "role=worker")
             out = process_reports
@@ -160,7 +160,7 @@ module Ace
             prep_step = "#{manager}.0"
             readiness_event = prepared["report"]["event"]
             run_task("update", prep_step, "--set",
-              "status=done,processed_report=#{readiness_event},report_result=success")
+              "status=done,processed_report=#{readiness_event},processed_report_revision=#{report_revision(readiness_event)},report_result=success")
 
             out = process_reports
             assert_includes out,
@@ -172,6 +172,12 @@ module Ace
           end
 
           private
+
+          def report_revision(id)
+            out, err, status = run_cli(OVERSEER_BIN, "observe", "--owner", "overseer", "--scope", "all")
+            assert status.success?, out + err
+            JSON.parse(out).fetch("events").find { |event| event["id"] == id }.fetch("revision")
+          end
 
           def prepare_sequence
             out, err, status = run_cli(COWORKER_BIN, "prepare",

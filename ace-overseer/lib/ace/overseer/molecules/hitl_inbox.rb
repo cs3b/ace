@@ -49,7 +49,7 @@ module Ace
         private
 
         def normalize(event)
-          {
+          @observation.project(event).merge(
             "id" => event.id,
             "type" => event.type,
             "result" => event.result,
@@ -57,7 +57,7 @@ module Ace
             "assignment" => event.metadata["assignment"],
             "role" => event.metadata["role"],
             "title" => event.title
-          }
+          )
         end
       end
     end

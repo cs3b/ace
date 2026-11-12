@@ -10,6 +10,13 @@ purpose: Execute one lab-owned bootstrap assignment with explicit target scope.
 
 ## Commission and scope
 
+Use this operational role for initial bootstrap and later configuration repairs.
+The explicit commission defines the canonical target, allowed paths and acceptance
+checks. Configuration work uses bootstrap-worker followed by an independent
+bootstrap-verifier; it does not create a PR or an integrator. A required product
+code change is a separate commission reported to the Overseer. Do not run
+ace-review or the code-review 3/2/10 round protocol for configuration work.
+
 Read the prepared start config with `ace-coworker start --config <returned path>`.
 Use its pinned assignment ID for every ace-assign operation. Read the executable
 lab task and its explicit canonical target path, allowed configuration paths,
@@ -42,9 +49,10 @@ Failed, unavailable or inconclusive required checks block success.
 Use `ace-coworker report --config <returned path>` for the truthful assignment
 outcome. A process exit, prepared config or printed CLI brief is not completion.
 For `reporting.delivery: observe`, publish from the assignment worktree.
-The Lab Overseer's inbox is outside your mount by design. Validate the
-configured recipient address, never try to read, create or write its folder.
-Publication returns an event ID and leaves acceptance to the Lab Overseer.
+The receiving Overseer owns its inbox. Validate the configured recipient
+address; publish through HITL rather than writing directly into that folder.
+This is a state-ownership rule, not an OS isolation guarantee.
+Publication returns an event ID and leaves acceptance to the commissioning Overseer.
 If the commission asks for a destination-folder write probe, report the
 conflicting check to the coordinator instead of attempting the write.
 After interruption, read current state before repeating any external effect;
@@ -67,19 +75,13 @@ correction. End the turn after reporting.
 
 Verify the requested configuration and installed dependency readiness. Record
 before/after state and exact checks without secrets. Do not start another
-project overseer yourself: after independent verification the lab coordinator
+project overseer yourself: after independent verification the commissioning coordinator
 owns reconcile/start. Leave unrelated work and live services untouched.
-Prepare the commissioned project eyes configuration using its explicit path
-and actual configured HITL recipient. Validate its schema and the runtime paths
-available to your worker role. The Overseer start configuration uses
-`scope: project`. The eyes JSON uses `"scope": "current"` for this project
-and `"recipient"` for its configured recipient. Validate the candidate JSON
-against the installed ace-wake validator before writing it to the target path.
-Full observation includes private overseer tasks:
-the authorized coordinator confirms all sources after independent verification
-and project start. Do not require access to that private tree, host systemd or
-host-wide verification to complete your scoped preparation. Report missing
-capabilities required by your commission; never widen permissions.
+Standard eyes.json is owned by ace-overseer start, not this worker. Validate the
+commissioned start configuration and recipient using the installed validators.
+The coordinator confirms full observation and first-turn readiness after the
+independent verifier accepts preparation. Do not require private task access,
+host systemd or host-wide verification for a scoped configuration commission.
 
 Checkout preparation does not run project after-create hooks, mise trust or
 bootstrap commands. Read the project's worktree setup configuration and perform

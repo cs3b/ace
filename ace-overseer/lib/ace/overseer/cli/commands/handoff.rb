@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require "json"
 
 module Ace
   module Overseer
@@ -10,6 +11,8 @@ module Ace
           desc "Hand the task worktree to the next role in the sequence"
 
           option :task, aliases: ["-t"], desc: "Task reference whose worktree receives the next role"
+          option :json, type: :boolean, default: false, desc: "Machine result; progress on stderr"
+          option :manager, desc: "Private managing task reference"
           option :runtime, desc: "Terminal backend (auto, tmux, herdr)"
           option :dry_run, type: :boolean, default: false, desc: "Check handoff readiness without effects"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
@@ -21,7 +24,7 @@ module Ace
             @config = config
           end
 
-          def call(task: nil, runtime: nil, dry_run: false, **options)
+          def call(task: nil, runtime: nil, dry_run: false, manager: nil, json: false, **options)
             selected_runtime = runtime || (@config || Ace::Overseer.config)["runtime"] || "auto"
             unless %w[auto tmux herdr].include?(selected_runtime)
               raise Ace::Support::Cli::Error, "unsupported runtime: #{selected_runtime}"
@@ -34,14 +37,23 @@ module Ace
               raise Ace::Support::Cli::Error.new("--task is required. Usage: ace-overseer handoff --task <ref>")
             end
 
-            progress = options[:quiet] ? nil : ->(msg) { puts msg }
+            progress = options[:quiet] ? nil : ->(msg) { json ? $stderr.puts(msg) : puts(msg) }
             result = @orchestrator.call(
               task_ref: task_ref,
               dry_run: dry_run,
               on_progress: progress,
-              runtime: selected_runtime
+              runtime: selected_runtime, **(manager ? {manager_ref: manager} : {})
             )
 
+            execution = result[:execution]
+            result[:operation] = {
+              completed: ["delegation prepared"], running: execution ? [execution["agent"]] : [],
+              waiting: execution ? ["executor report"] : [], blocked: [],
+              evidence: result.slice(:manager_ref, :task_ref, :worktree_path, :assignment_id, :next)}
+            if json
+              puts JSON.generate(result)
+              return
+            end
             return if options[:quiet]
 
             if result[:status] == "sequence_complete"

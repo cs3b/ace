@@ -94,7 +94,8 @@ module Organisms
         FakePaneResult.new({"result" => {}})
       end
 
-      def agent_start(name:, kind:, pane:, timeout_ms:, args: [])
+      def agent_start(name:, kind:, pane:, timeout_ms:, args: [], env_file: nil)
+        raise "missing eyes environment" unless JSON.parse(File.read(env_file))["ACE_OVERSEER_EYES_CONFIG"]
         @names ||= {}
         raise Ace::Herdr::ExecutorError, "agent name already used" if @names.key?(name)
         @names[name] = pane
@@ -254,9 +255,8 @@ module Organisms
         entry[:text] == Ace::Overseer::Atoms::StartContract::FIRST_TURN_PROMPT
       end)
       executor.prompts.each do |entry|
-        assert_includes entry[:text], "ace_eyes tool, action start"
-        assert_includes entry[:text], "configPath"
-        assert_includes entry[:text], ".ace-local/overseer/eyes.json"
+        assert_includes entry[:text], "session initialization"
+        refute_includes entry[:text], "action start"
         refute_includes entry[:text], "/eyes start"
       end
     end

@@ -3,8 +3,10 @@
 require_relative "../atoms/start_contract"
 require_relative "../atoms/observation_sources"
 require_relative "../molecules/project_root_resolver"
+require "pathname"
 require_relative "../molecules/project_bundle"
 require_relative "../molecules/eyes_readiness"
+require_relative "../molecules/eyes_configuration"
 require_relative "../molecules/session_environment"
 require "ace/herdr"
 require "ace/herdr/molecules/installed_pi_extensions"
@@ -103,6 +105,7 @@ module Ace
               "message" => "dry-run: session would start with this plan; nothing was created")
           end
 
+          prepare_eyes(root, plan)
           owner = owner_pane(label)
           if owner
             conflict = owner_conflict(owner, root)
@@ -155,7 +158,13 @@ module Ace
           unless plan["profile"]["harness"] == "pi"
             raise Ace::Overseer::Error, "foreground start requires the configured pi harness"
           end
+          raise Errno::ENOENT, @cwd unless File.directory?(@cwd)
           root = File.realpath(@cwd)
+          # A new lab may not yet be a repository; an existing project/worktree
+          # must resolve through Git to its canonical owner.
+          if Pathname.new(root).ascend.any? { |directory| directory.join(".git").exist? }
+            root = @root_resolver.resolve(cwd: root)
+          end
           source = plan["instructions"]
           guide = if %w[wfi://overseer/lab-start wfi://overseer/start].include?(source)
             filename = source.end_with?("lab-start") ? "lab-start.wf.md" : "start.wf.md"
@@ -169,7 +178,8 @@ module Ace
           thinking = plan["profile"]["thinking"]
           command += ["--thinking", thinking] if thinking
           command += ["--append-system-prompt", guide, Atoms::StartContract::FIRST_TURN_PROMPT]
-          {"status" => dry_run ? "dry_run" : "foreground", "scope" => plan["scope"],
+          eyes_path = dry_run ? nil : prepare_eyes(root, plan)
+          {"eyes_config" => eyes_path, "status" => dry_run ? "dry_run" : "foreground", "scope" => plan["scope"],
             "root" => root, "profile" => plan["profile_name"],
             "instructions" => {"source" => source, "path" => guide},
             "command" => command, "message" => "launch the coordinator in the current terminal"}
@@ -338,6 +348,7 @@ module Ace
         # owner is matched by its cwd directly — never through
         # project-root resolution.
         def boot_lab_session(workspace, plan, instructions_path, lab_root)
+          prepare_eyes(lab_root, plan)
           label = Atoms::StartContract.session_label(lab_root)
           owner = owner_pane(label)
           replaced = nil
@@ -597,8 +608,11 @@ module Ace
               @executor.pane_run(pane, command)
               @executor.pane_wait_output(pane, pattern: marker, timeout_ms: START_TIMEOUT_MS)
             end
-            @executor.agent_start(name: "#{AGENT_NAME}-#{Digest::SHA256.hexdigest(root)[0, 12]}", kind: plan["profile"]["harness"],
-              pane: pane, timeout_ms: START_TIMEOUT_MS, args: args)
+            Molecules::SessionEnvironment.new(env: @env).with_environment(root: root, role: "project-overseer",
+              eyes_config: prepare_eyes(root, plan)) do |file, _directory, _profile|
+              @executor.agent_start(name: "#{AGENT_NAME}-#{Digest::SHA256.hexdigest(root)[0, 12]}", kind: plan["profile"]["harness"],
+                pane: pane, timeout_ms: START_TIMEOUT_MS, args: args, env_file: file)
+            end
           end
           pane
         rescue Ace::Herdr::WaitTimeoutError => e
@@ -610,9 +624,14 @@ module Ace
         # A failed native start can still have created a process. Close the
         # pane before deleting its credentials; if closure is unconfirmed,
         # preserve the directory and report that recovery is required.
+        def prepare_eyes(root, plan)
+          Molecules::EyesConfiguration.prepare(root: root,
+            recipient: @config["owner"] || (plan["scope"] == "lab" ? "lab-overseer" : "overseer"))
+        end
+
         def start_installed_agent(pane, root, role, plan, args)
           credentials = nil
-          Molecules::SessionEnvironment.new(env: @env).with_environment(root: root, role: role) do |file, directory, _profile|
+          Molecules::SessionEnvironment.new(env: @env).with_environment(root: root, role: role, eyes_config: prepare_eyes(root, plan)) do |file, directory, _profile|
             credentials = directory
             @executor.agent_start(name: "#{AGENT_NAME}-#{Digest::SHA256.hexdigest(root)[0, 12]}", kind: plan["profile"]["harness"],
               pane: pane, timeout_ms: START_TIMEOUT_MS, args: args, env_file: file)

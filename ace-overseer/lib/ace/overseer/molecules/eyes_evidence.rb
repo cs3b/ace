@@ -12,7 +12,7 @@ module Ace
         BINDING = "ace-wake-eyes-binding"
         BIRTH = /\A(?:linux:[0-9a-f-]{36}:[1-9][0-9]*|darwin:[1-9][0-9]*:[0-9]{1,6})\z/
 
-        def self.ready?(branch:, root:, process:, prompt:, required_sources:, now_ms:)
+        def self.ready?(branch:, root:, process:, prompt:, required_sources:, now_ms:, expected_config: nil)
           return false unless branch.is_a?(Array) && root.is_a?(String) && process.is_a?(Hash) &&
             prompt.is_a?(String) && !prompt.empty? && required_sources.is_a?(Array) &&
             !required_sources.empty? && required_sources.all? { |name| name.is_a?(String) && !name.empty? } &&
@@ -20,6 +20,10 @@ module Ace
             process["started_at"].match?(BIRTH) && now_ms.is_a?(Integer)
           eye_index = branch.rindex { |entry| entry.is_a?(Hash) && entry["type"] == "custom" && entry["customType"] == ENTRY }
           return false unless eye_index
+          if expected_config
+            actual = branch[eye_index].dig("data", "config")
+            return false unless actual.is_a?(Hash) && expected_config.all? { |key, value| actual[key] == value }
+          end
 
           identity = {"pid" => process["pid"], "startedAt" => process["started_at"]}
 
@@ -86,7 +90,7 @@ module Ace
           evidence = eye["observerEvidence"]
           return false unless evidence.is_a?(Hash) && evidence["process"] == identity
           observed, sources, config = evidence.values_at("observedAt", "sources") + [eye["config"]]
-          return false unless observed.is_a?(Integer) && observed >= prompt_at && observed <= now_ms && config.is_a?(Hash) &&
+          return false unless observed.is_a?(Integer) && observed <= now_ms && config.is_a?(Hash) &&
             config["intervalSeconds"].is_a?(Integer) && config["intervalSeconds"].between?(1, 3600) &&
             config["maxObservationsPerHour"].is_a?(Integer) && config["maxObservationsPerHour"].between?(1, 3600) &&
             config["timeoutMs"].is_a?(Integer) && config["timeoutMs"].between?(100, 120_000)

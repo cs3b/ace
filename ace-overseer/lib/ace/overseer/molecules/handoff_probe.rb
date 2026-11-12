@@ -43,6 +43,7 @@ module Ace
             {
               "role" => mapping["role"],
               "start_config" => mapping["start_config"],
+              "execution" => mapping["execution"],
               "assignment" => record["id"],
               "name" => record["name"],
               "state" => states.fetch(record["id"], "")
@@ -91,7 +92,7 @@ module Ace
             role = data["role"].to_s
             next if assignment.empty? || role.strip.empty?
 
-            [assignment, {"role" => role,
+            [assignment, {"role" => role, "execution" => data["execution"],
                           "start_config" => File.join(PREPARE_DIR, File.basename(path))}]
           end.to_h
         end

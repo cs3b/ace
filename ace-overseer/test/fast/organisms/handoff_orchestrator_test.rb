@@ -103,6 +103,25 @@ class HandoffOrchestratorTest < AceOverseerTestCase
     assert_equal({worktree_path: "/wt/task-a", task_id: "8xg.t.abc"}, probe.calls.first)
   end
 
+  def test_retry_reconciles_the_already_launched_leg_through_launcher
+    active_leg = leg("reviewer", "r1", "running").merge("execution" => {"state" => "running"})
+    probe = FakeProbe.new(legs: [leg("worker", "w1", "completed"), active_leg],
+      assignments: [{"id" => "r1", "state" => "running"}])
+    calls = []
+    launcher = Object.new
+    launcher.define_singleton_method(:call) do |**args|
+      calls << args
+      {"agent" => "coworker-r1", "terminal_id" => "existing-terminal"}
+    end
+    subject = Ace::Overseer::Organisms::HandoffOrchestrator.new(
+      task_loader: FakeTaskManager.new(FakeTask.new(id: "8xg.t.abc", status: "in-progress")),
+      worktree_finder: @finder, probe: probe, config: {}, lifecycle_exclusion: @exclusion,
+      coworker_launcher: launcher)
+    result = subject.call(task_ref: "8xg.t.abc", runtime: "herdr")
+    assert_equal "existing-terminal", result[:execution]["terminal_id"]
+    assert_equal [{worktree_path: "/wt/task-a", config_path: active_leg["start_config"]}], calls
+  end
+
   def test_dry_run_reports_next_leg_without_effects
     probe = FakeProbe.new(legs: [leg("worker", "w1", "completed"), leg("reviewer", "r1", "paused")])
 

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative "../molecules/coworker_launcher"
+require_relative "../molecules/manager_binding"
 require "ace/task/molecules/git_ignored_path"
 
 module Ace
@@ -21,7 +22,7 @@ module Ace
           @coworker_launcher = coworker_launcher
         end
 
-        def call(task_ref:, task_refs: nil, cli_preset: nil, on_progress: nil, runtime: nil)
+        def call(task_ref:, task_refs: nil, cli_preset: nil, on_progress: nil, runtime: nil, manager_ref: nil)
           progress = on_progress || ->(_msg) {}
 
           requested_refs = normalize_requested_refs(task_ref, task_refs)
@@ -44,6 +45,13 @@ module Ace
           guard_dependencies_satisfied!(resolved_refs)
           if native_delegation?(runtime)
             raise Error, "delegate one task per worktree" unless resolved_refs.size == 1
+            if manager_ref
+              manager = @task_manager.show(manager_ref)
+              raise Error, "Manager not found: #{manager_ref}" unless manager
+              return lifecycle_exclusion.with_exclusive("manager:#{manager.id}") do
+                delegate(resolved_refs.first, progress: progress, manager_ref: manager.id)
+              end
+            end
             return delegate(resolved_refs.first, progress: progress)
           end
 
@@ -130,13 +138,13 @@ module Ace
           selected == "herdr" || selected.to_s.empty? && Ace::Runtime::Atoms::Detector.detect == :herdr
         end
 
-        def delegate(entry, progress:)
+        def delegate(entry, progress:, manager_ref: nil)
           launcher = @coworker_launcher || Molecules::CoworkerLauncher.new
-          ref = entry.fetch(:ref)
           task = entry.fetch(:task)
+          ref = task.id.to_s
           if Ace::Task::Molecules::GitIgnoredPath.ignored_task?(task)
             raise Error, "task #{task.id} is Git-ignored coordination state and cannot be loaded in an executor worktree; " \
-              "create a separate project task with the commission, roles and existing hitl_case, then record its assignment on this coordination task"
+              "create a separate project task with the commission, roles and existing hitl_case, pass this private task with --manager"
           end
           launcher.ready!
           roles = task.metadata["roles"] || (task.metadata["role"] && [task.metadata["role"]])
@@ -148,12 +156,16 @@ module Ace
           end
           lifecycle_exclusion.with_shared(lifecycle_exclusion.task_key(ref), reset_removed: true) do
             lifecycle_exclusion.with_exclusive("delegate:#{ref}") do
+              binding = Molecules::ManagerBinding.new(task_manager: @task_manager) if manager_ref
+              binding&.validate!(manager_ref: manager_ref, task: task, roles: roles)
               worktree = @worktree_provisioner.provision(ref)
               root = worktree.fetch(:worktree_path)
               sequence = Ace::Coworker::Molecules::RoleSequenceComposer.new(project_root: root).call(task: task.id, roles: roles)
               configs = Ace::Coworker::Organisms::StartConfigWriter.new(worktree_path: root).call(
                 task: task.id, sequence: sequence, overseer: @config["owner"] || launcher.recipient,
                 hitl_case: task.metadata["hitl_case"])
+              binding&.prepare(manager_ref: manager_ref, task: task, sequence: sequence,
+                worktree_path: root, project_root: Molecules::ProjectRootResolver.new.resolve(cwd: root))
               state = Molecules::HandoffProbe.new.probe(root, task_id: task.id)
               leg = state.fetch(:legs).find { |candidate| candidate["state"] != "completed" }
               raise Error, "all prepared roles are complete; reconcile the task instead of starting again" unless leg
@@ -162,9 +174,11 @@ module Ace
               end
               config = configs.find { |row| row["assignment"] == leg["assignment"] }
               raise Error, "prepared role has no start configuration" unless config
+              binding&.ready!(manager_ref: manager_ref, assignment: leg["assignment"])
               execution = launcher.call(worktree_path: root, config_path: config.fetch("path"))
+              binding&.record_execution(manager_ref: manager_ref, assignment: leg["assignment"], execution: execution)
               progress.call("Executor #{execution['agent']} bound to assignment #{leg['assignment']}")
-              {task_ref: task.id, task_refs: [task.id], worktree_path: root, branch: worktree[:branch],
+              {manager_ref: manager_ref, task_ref: task.id, task_refs: [task.id], worktree_path: root, branch: worktree[:branch],
                worktree_created: worktree[:created], assignment_id: leg["assignment"],
                assignment_created: sequence.find { |row| row["assignment"] == leg["assignment"] }["disposition"] == "created",
                execution: execution}

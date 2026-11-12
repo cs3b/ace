@@ -25,7 +25,7 @@ module Ace
 
           def call(format:, runtime: nil, **options)
             selected_runtime = runtime || (@config || Ace::Overseer.config)["runtime"] || "auto"
-            unless %w[auto tmux].include?(selected_runtime)
+            unless %w[auto tmux herdr].include?(selected_runtime)
               raise Ace::Support::Cli::Error, "unsupported local runtime: #{selected_runtime}"
             end
 

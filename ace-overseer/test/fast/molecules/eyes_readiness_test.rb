@@ -8,8 +8,12 @@ class EyesReadinessTest < Minitest::Test
     local = Object.new
     local.define_singleton_method(:ready?) { |**args| calls << args; false }
     reader = Ace::Overseer::Molecules::EyesReadiness.new(env: {"ACE_LAB_SESSION" => "1"}, local: local)
-    args = {pane: "w1:p2", root: "/lab/ace", prompt: "start", required_sources: ["tasks"]}
-    refute reader.ready?(**args)
-    assert_equal [args], calls
+    Dir.mktmpdir do |root|
+      FileUtils.mkdir_p(File.join(root, ".ace-local/overseer"))
+      File.write(File.join(root, ".ace-local/overseer/eyes.json"), JSON.generate({scope: "all", recipient: "overseer"}))
+      args = {pane: "w1:p2", root: root, prompt: "start", required_sources: ["tasks"]}
+      refute reader.ready?(**args)
+      assert_equal [args.merge(expected_config: {"scope" => "all", "recipient" => "overseer"})], calls
+    end
   end
 end

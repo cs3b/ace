@@ -15,18 +15,21 @@ module Ace
 
         def call(scope: "current", limit: 500, owner: nil, in_folder: "next")
           events = incoming_events(scope: scope, limit: limit, owner: owner, in_folder: in_folder)
-          rows = events.map do |event|
-            semantic = [event.id, event.type, event.status, event.result, event.kind,
-              event.title, event.content, event.answer, event.questions,
-              Array(event.tags).sort, canonical(event.recipient), canonical(event.reply_to),
-              event.metadata.values_at("task", "assignment", "step", "step_name", "resume_instructions")]
-            {"key" => Digest::SHA256.hexdigest(event.file_path.to_s),
-             "id" => event.id, "revision" => Digest::SHA256.hexdigest(JSON.generate(canonical(semantic))),
-             "type" => event.type, "status" => event.status, "result" => event.result,
-             "task" => event.metadata["task"], "assignment" => event.metadata["assignment"],
-             "recipient" => event.recipient}
-          end
+          rows = events.map { |event| project(event) }
           {"schema" => "ace.hitl.observation/v1", "events" => rows.sort_by { |row| row["key"] }}
+        end
+
+        # Project the same immutable event read by the report consumer.
+        def project(event)
+          semantic = [event.id, event.type, event.status, event.result, event.kind,
+            event.title, event.content, event.answer, event.questions,
+            Array(event.tags).sort, canonical(event.recipient), canonical(event.reply_to),
+            event.metadata.values_at("task", "assignment", "role", "step", "step_name", "resume_instructions")]
+          {"key" => Digest::SHA256.hexdigest(event.file_path.to_s),
+           "id" => event.id, "revision" => Digest::SHA256.hexdigest(JSON.generate(canonical(semantic))),
+           "type" => event.type, "status" => event.status, "result" => event.result,
+           "task" => event.metadata["task"], "assignment" => event.metadata["assignment"],
+           "recipient" => event.recipient}
         end
 
         # Shared read boundary for observation and report consumers. Preserve

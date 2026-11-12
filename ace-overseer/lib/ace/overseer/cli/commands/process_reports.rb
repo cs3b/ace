@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require "json"
 
 module Ace
   module Overseer
@@ -9,6 +10,7 @@ module Ace
 
           desc "Process incoming ace-hitl reports and continue the overseer queue"
 
+          option :json, type: :boolean, default: false, desc: "Machine result on stdout; progress on stderr"
           option :scope, type: :string, desc: "HITL scope: current or all (default: owner checkout scope)"
           option :owner, type: :string, default: "overseer", desc: "Configured HITL recipient, matching the eyes observer"
           option :dry_run, type: :boolean, default: false, desc: "Interpret reports without writes or continuation"
@@ -20,15 +22,19 @@ module Ace
             @processor = processor
           end
 
-          def call(dry_run: false, owner: "overseer", scope: nil, **options)
+          def call(dry_run: false, owner: "overseer", scope: nil, json: false, **options)
             Atoms::RepoGuard.ensure_repo!
 
             processor = @processor || Organisms::ReportProcessor.new(owner: owner, scope: scope)
             result = processor.call(
               dry_run: dry_run,
-              on_progress: options[:quiet] ? nil : ->(msg) { puts msg }
+              on_progress: options[:quiet] ? nil : ->(msg) { json ? $stderr.puts(msg) : puts(msg) }
             )
 
+            if json
+              puts JSON.generate(result)
+              return
+            end
             return if options[:quiet]
 
             puts

@@ -76,6 +76,10 @@ module Ace
             verdict = Atoms::ReportInterpretation.evaluate(event: event, managers: managers)
             next false unless verdict[:status] == :duplicate
             manager = managers.find { |task| task.id.to_s == verdict[:manager_ref] }
+            step = Array(manager&.subtasks).find { |candidate| candidate.id.to_s == verdict[:step_ref] } || manager
+            receipt = step&.metadata&.fetch("report_receipt", nil)
+            next false unless receipt.is_a?(Hash) && receipt["key"] == event["key"] &&
+              receipt["revision"] == event["revision"] && receipt["cleanup"] == "complete" && receipt["continuation"] == "complete"
             # A persisted report alone is not proof its continuation ran. Keep
             # active managers eligible after restart; their existing gates reconcile
             # the same attempt. Only completed trees suppress historical reports.

@@ -7,7 +7,7 @@ require "stringio"
 class HitlCliTest < AceHitlTestCase
   def test_library_contract
     assert_kind_of String, Ace::Hitl::VERSION
-    assert_match(/\A\d+\.\d+\.\d+\z/, Ace::Hitl::VERSION)
+    assert Gem::Version.correct?(Ace::Hitl::VERSION)
     assert_respond_to Ace::Hitl::HitlCLI, :start
   end
 

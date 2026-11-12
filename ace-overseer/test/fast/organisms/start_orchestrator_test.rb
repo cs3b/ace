@@ -76,8 +76,8 @@ module Organisms
         FakePaneResult.new({"result" => {}})
       end
 
-      def agent_start(name:, kind:, pane:, timeout_ms:, args: [])
-        @agent_started << {name: name, kind: kind, pane: pane, timeout_ms: timeout_ms, args: args}
+      def agent_start(name:, kind:, pane:, timeout_ms:, args: [], env_file: nil)
+        @agent_started << {name: name, kind: kind, pane: pane, timeout_ms: timeout_ms, args: args, environment: env_file && JSON.parse(File.read(env_file))}
         FakePaneResult.new({"status" => "ready"})
       end
 
@@ -133,6 +133,7 @@ module Organisms
       start = executor.agent_started.first
       assert_equal "ace-overseer-#{Digest::SHA256.hexdigest(@root)[0, 12]}", start[:name]
       assert_equal "pi", start[:kind]
+      assert_equal File.join(@root, ".ace-local/overseer/eyes.json"), start[:environment]["ACE_OVERSEER_EYES_CONFIG"]
       assert_equal ["--model", "zai/glm-5.3-flash", "--thinking", "high",
         "--append-system-prompt", File.join(@root, "guide.md")], start[:args]
     end

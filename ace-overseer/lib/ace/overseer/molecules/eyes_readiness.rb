@@ -13,7 +13,12 @@ module Ace
         end
 
         def ready?(pane:, root:, prompt:, required_sources:)
-          @local.ready?(pane: pane, root: root, prompt: prompt, required_sources: required_sources)
+          path = File.join(root, ".ace-local/overseer/eyes.json")
+          expected = JSON.parse(File.read(path))
+          return false unless expected.is_a?(Hash) && expected["scope"] == "all" && !expected["recipient"].to_s.empty?
+          @local.ready?(expected_config: expected.slice("scope", "recipient"), pane: pane, root: root, prompt: prompt, required_sources: required_sources)
+        rescue SystemCallError, JSON::ParserError
+          false
         end
       end
     end

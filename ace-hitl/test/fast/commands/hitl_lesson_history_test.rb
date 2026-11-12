@@ -151,6 +151,32 @@ module Ace
             assert_match(/Stop the rollout/, body)
           end
 
+          def test_close_with_lesson_file_writes_both_once
+            suggest_and_answer
+            @manager.apply_answer_effect(@event.id, "decision:used")
+            path = File.join(@dir, "lesson.yml")
+            File.write(path, YAML.dump({"by" => "second-captain", "relation" => "rejected",
+              "takeaway" => "Respect the chosen scope", "refs" => ["task:scope"]}))
+            out, = with_cli { Close.new.call(case_id: @event.id, lesson_file: path) }
+            assert_equal "closed", JSON.parse(out)["state"]
+            original = File.read(@event.file_path)
+            out, = with_cli { Close.new.call(case_id: @event.id, lesson_file: path) }
+            assert_equal "duplicate", JSON.parse(out)["state"]
+            assert_equal original, File.read(@event.file_path)
+            assert_equal 1, original.scan(/^## Lesson$/).length
+          end
+
+          def test_failed_lesson_leaves_applied_case_unchanged
+            suggest_and_answer
+            @manager.apply_answer_effect(@event.id, "decision:used")
+            original = File.read(@event.file_path)
+            assert_raises(Organisms::HitlManager::LessonRefusedError) { @manager.close_case(@event.id) }
+            assert_raises(Organisms::HitlManager::LessonRefusedError) do
+              @manager.close_case(@event.id, lesson: {"by" => "advisor", "relation" => "invented", "takeaway" => "x"})
+            end
+            assert_equal original, File.read(@event.file_path)
+          end
+
           # Regression (feedback 8xte508c): history captures the Answer up
           # to the next `## ` header — a Resume Dispatch appended after the
           # Answer never becomes part of the citable decision.

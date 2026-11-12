@@ -13,6 +13,7 @@ require_relative "../molecules/task_record_writer"
 require_relative "../molecules/report_state_store"
 require_relative "../atoms/outcome_planner"
 require_relative "../atoms/report_record_formatter"
+require_relative "../molecules/execution_evidence"
 
 module Ace
   module Coworker
@@ -74,9 +75,10 @@ module Ace
 
           return dry_run_result(outcome, cfg) if dry_run
 
+          @execution_evidence = Molecules::ExecutionEvidence.new(project_root: @project_root).read(cfg)
           relative_record = placeholder_record_path(cfg, assignment_id, task_path)
           record_path = record_writer.write(assignment_id,
-            Atoms::ReportRecordFormatter.format(outcome, cfg, record_path: relative_record))
+            Atoms::ReportRecordFormatter.format(outcome, cfg, record_path: relative_record, execution_evidence: @execution_evidence))
 
           # Retry an unchanged outcome using its existing event. A completed
           # follow-up step is a new report even when the result stays success.
@@ -120,7 +122,7 @@ module Ace
               record_writer.write(assignment_id,
                 Atoms::ReportRecordFormatter.format(outcome, cfg,
                   event_id: event_id, delivery: "failed: #{send_result.message}",
-                  record_path: relative_record))
+                  record_path: relative_record, execution_evidence: @execution_evidence))
               return failure_result(outcome, cfg, record_path, event_id,
                 "outcome recorded: #{outcome.result} at #{record_path}; delivery failed: #{send_result.message}")
             end
@@ -165,7 +167,7 @@ module Ace
           record_writer.write(assignment_id,
             Atoms::ReportRecordFormatter.format(outcome, cfg,
               event_id: event_id, delivery: delivery || "not attempted",
-              record_path: relative_record))
+              record_path: relative_record, execution_evidence: @execution_evidence))
         end
 
         def dry_run_result(outcome, cfg)

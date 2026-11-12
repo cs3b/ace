@@ -46,7 +46,7 @@ module Ace
           @executor, @identity, @clock, @file_opener = executor, identity, clock, file_opener
         end
 
-        def ready?(pane:, root:, prompt:, required_sources:, expected_terminal: nil)
+        def ready?(pane:, root:, prompt:, required_sources:, expected_terminal: nil, expected_config: nil)
           executor = @executor || Ace::Herdr::Molecules::BoundedObservation.new(
             deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5)
           before = pane_binding(executor, pane)
@@ -68,7 +68,7 @@ module Ace
           process = @identity.capture(pid)
           return false unless process && process["uid"] == stat.uid
           return false unless EyesEvidence.ready?(branch: branch, root: root, process: process,
-            prompt: prompt, required_sources: required_sources, now_ms: @clock.call)
+            prompt: prompt, required_sources: required_sources, expected_config: expected_config, now_ms: @clock.call)
           # The owner or its session may change while the file is read.
           return false unless @identity.capture(pid) == process && foreground?(executor, pane, pid) && pane_binding(executor, pane) == before
           final = file.stat

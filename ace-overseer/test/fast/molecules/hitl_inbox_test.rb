@@ -7,6 +7,10 @@ class HitlInboxTest < AceOverseerTestCase
   FakeEvent = Struct.new(:id, :type, :status, :result, :metadata, :title, :created_at,
     keyword_init: true) do
     def file_path = "/inbox/#{id}.md"
+    def kind = nil
+    def content = nil
+    def answer = nil
+    def questions = []
     def tags = []
     def recipient = {"machine" => "lab", "panel" => "overseer"}
     def reply_to = nil
@@ -73,7 +77,8 @@ class HitlInboxTest < AceOverseerTestCase
 
     events = Ace::Overseer::Molecules::HitlInbox.new(manager: manager).incoming_events
 
-    assert_equal ["id", "type", "result", "task", "assignment", "role", "title"], events.first.keys
+    assert_equal %w[key id revision type status result task assignment recipient role title].sort, events.first.keys.sort
+    assert_match(/\A[0-9a-f]{64}\z/, events.first["revision"])
     assert_equal "r1", events.first["id"]
     assert_equal "report", events.first["type"]
     assert_equal "success", events.first["result"]

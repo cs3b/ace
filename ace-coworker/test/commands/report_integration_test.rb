@@ -97,8 +97,13 @@ module Ace
             run_assign("start", "--assignment", @assignment_id)
             run_assign("fail", "--assignment", @assignment_id, "--message", "verifier crashed with exit 1")
 
-            out, err, status = run_cli(COWORKER_BIN, "report", "--no-send")
+            out, err, status = run_cli(COWORKER_BIN, "report", "--no-send", "--format", "json")
             refute status.success?, "error outcome never exits success"
+            receipt = JSON.parse(out)
+            assert_equal "error", receipt["result"]
+            refute_nil receipt["event_id"]
+            assert File.file?(receipt["record"])
+            refute_empty receipt.dig("operation", "blocked")
             assert_includes err, "outcome recorded: error"
 
             assert_equal 1, hitl_events.size

@@ -13,7 +13,7 @@ module Ace::Overseer::Molecules
   class SessionEnvironment
     BASE_KEYS = %w[HOME USER LOGNAME SHELL TERM LANG LC_ALL TZ TMPDIR PATH GEM_HOME GEM_PATH ACE_TOOLCHAIN
       HERDR_SOCKET_PATH HERDR_WORKSPACE_ID].freeze
-    RESERVED = %w[ACE_TOOLCHAIN GEM_HOME GEM_PATH PATH PI_CODING_AGENT_DIR ACE_SESSION_CREDENTIALS_DIRECTORY BUNDLE_GEMFILE RUBYOPT RUBYLIB].freeze
+    RESERVED = %w[ACE_TOOLCHAIN GEM_HOME GEM_PATH PATH PI_CODING_AGENT_DIR ACE_SESSION_CREDENTIALS_DIRECTORY BUNDLE_GEMFILE RUBYOPT RUBYLIB ACE_OVERSEER_EYES_CONFIG].freeze
     MAX_BYTES = 65_536
     ENVIRONMENT_ROLES = {"reviewer" => "verifier", "bootstrap-verifier" => "verifier", "bootstrap-worker" => "worker"}.freeze
 
@@ -22,7 +22,7 @@ module Ace::Overseer::Molecules
       @env, @loader, @manifest_path = env, manifest_loader, manifest_path
     end
 
-    def with_environment(root:, role:)
+    def with_environment(root:, role:, eyes_config: nil)
       environment = @env.to_h.slice(*BASE_KEYS)
       directory = nil
       handed_off = false
@@ -46,6 +46,7 @@ module Ace::Overseer::Molecules
       else
         environment.merge!(ProjectBundle.environment(root, env: @env)).compact!
       end
+      environment["ACE_OVERSEER_EYES_CONFIG"] = eyes_config if eyes_config
       Tempfile.create(["ace-environment-", ".json"]) do |file|
         file.chmod(0o600)
         file.write(JSON.generate(environment))

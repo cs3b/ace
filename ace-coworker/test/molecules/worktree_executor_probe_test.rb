@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require "ace/assign/molecules/assignment_manager"
 
 module Ace
   module Coworker

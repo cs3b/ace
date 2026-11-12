@@ -15,13 +15,13 @@ module Atoms
 
     def test_lab_instruction_first_turn_settles_before_the_delegation_readiness_gate
       guide = File.read(File.join(Ace::Overseer.gem_root, "handbook/workflow-instructions/overseer/lab-start.wf.md"))
-      first_turn = guide.split("## First turn after start", 2).last.split("## On an eyes wake or a new commission", 2).first
+      first_turn = guide.split("## First turn after start", 2).last.split("## Delegate and receive", 2).first
       assert_match(/Once observation is healthy, END THIS TURN/, first_turn)
       assert_match(/Do not dispatch or process/, first_turn)
       assert_match(/Leave initial revisions pending/, first_turn)
-      wake = guide.split("## On an eyes wake or a new commission", 2).last
-      assert_match(/create\/reconcile the task and dispatch its/, wake)
-      assert_match(/After dispatch.*END YOUR/m, wake)
+      wake = guide.split("## Delegate and receive", 2).last
+      assert_match(/work-on --task <project-task> --manager <private-manager>/, wake)
+      assert_match(/End the turn after dispatch/, wake)
     end
 
     def test_valid_project_start_normalizes

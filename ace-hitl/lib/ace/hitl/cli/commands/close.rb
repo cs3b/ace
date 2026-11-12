@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
+require "yaml"
 
 module Ace
   module Hitl
@@ -20,14 +21,17 @@ module Ace
 
           argument :case_id, required: true, desc: "Exact HITL case id"
 
+          option :lesson_file, desc: "YAML lesson: by, relation, takeaway, optional refs"
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
 
-          def call(case_id:, **)
-            state = Ace::Hitl::Organisms::HitlManager.new.close_case(case_id)
+          def call(case_id:, lesson_file: nil, **)
+            lesson = lesson_file ? YAML.safe_load_file(lesson_file, aliases: false) : nil
+            state = Ace::Hitl::Organisms::HitlManager.new.close_case(case_id, lesson: lesson)
             puts JSON.generate({"case" => case_id, "state" => state.to_s})
           rescue Ace::Hitl::Organisms::HitlManager::UnknownCaseError,
             Ace::Hitl::Organisms::HitlManager::AmbiguousReferenceError,
-            Ace::Hitl::Organisms::HitlManager::LifecycleTransitionError => e
+            Ace::Hitl::Organisms::HitlManager::LifecycleTransitionError,
+            Ace::Hitl::Organisms::HitlManager::LessonRefusedError, Psych::Exception, SystemCallError => e
             raise Ace::Support::Cli::Error.new("not closed: #{e.message}")
           end
         end

@@ -147,7 +147,11 @@ module Ace::Overseer::Molecules
           raise Ace::Overseer::Error, "executor terminal changed before session publication"
         end
         identity = Ace::Herdr::Atoms::NativeAgentSession.normalize(pane["agent_session"], agent: "pi")
-        return identity if identity
+        if identity
+          raw = pane["agent_session"]
+          execution["session_path"] = raw["value"] if raw.is_a?(Hash) && raw["kind"] == "path"
+          return identity
+        end
         raise Ace::Overseer::Error, "native executor session identity is unavailable; retry the same handoff" if @clock.call >= deadline
         @sleeper.call(0.2)
       end
@@ -178,6 +182,8 @@ module Ace::Overseer::Molecules
       end
       execution.merge!("pane" => row["pane_id"], "terminal_id" => row["terminal_id"],
         "agent_session" => identity, "state" => "started")
+      raw = row["agent_session"]
+      execution["session_path"] = raw["value"] if raw.is_a?(Hash) && raw["kind"] == "path"
       save.call
     end
 

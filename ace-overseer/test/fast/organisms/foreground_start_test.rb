@@ -27,7 +27,7 @@ module Organisms
       assert_equal "wfi://overseer/lab-start", report["instructions"]["source"]
       assert File.file?(report["instructions"]["path"])
       refute File.exist?(File.join(@root, ".ace"))
-      assert_equal [".", ".."], Dir.children(@root).sort + [".", ".."]
+      assert File.file?(File.join(@root, ".ace-local/overseer/eyes.json"))
     end
 
     def test_dry_run_does_not_launch_or_query_herdr

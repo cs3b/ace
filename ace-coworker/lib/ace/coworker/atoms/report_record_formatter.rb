@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "time"
+require "json"
 
 module Ace
   module Coworker
@@ -11,7 +12,7 @@ module Ace
         # @param cfg [Models::Config]
         # @param extras [Hash] event_id:, delivery:, record_path:
         # @return [String] markdown document
-        def self.format(outcome, cfg, event_id: nil, delivery: nil, record_path: nil)
+        def self.format(outcome, cfg, event_id: nil, delivery: nil, record_path: nil, execution_evidence: nil)
           lines = []
           lines << "---"
           lines << "task: #{cfg.task}"
@@ -49,6 +50,10 @@ module Ace
           lines << "- reports: .ace-local/assign/#{cfg.assignment}/reports/"
           lines << "- event: .ace-local/hitl/ (#{event_id})" if event_id
           lines << ""
+          if execution_evidence
+            lines << "## Execution evidence" << "" << "```json"
+            lines << JSON.pretty_generate(execution_evidence) << "```" << ""
+          end
           lines << "## Delivery"
           lines << ""
           lines << (delivery ? "- #{delivery}" : "- (not attempted)")

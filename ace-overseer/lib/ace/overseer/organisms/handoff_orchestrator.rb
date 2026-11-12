@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative "../molecules/coworker_launcher"
+require_relative "../molecules/manager_binding"
 
 module Ace
   module Overseer
@@ -41,7 +42,21 @@ module Ace
         #   "start_config"}|nil, legs: [...], dry_run}
         # @raise [Error] when the task or its worktree cannot be
         #   resolved, or the handoff is refused (with every reason)
-        def call(task_ref:, dry_run: false, on_progress: nil, runtime: nil)
+        def call(task_ref:, dry_run: false, on_progress: nil, runtime: nil, manager_ref: nil)
+          arguments = {task_ref: task_ref, dry_run: dry_run, on_progress: on_progress,
+            runtime: runtime, manager_ref: manager_ref}
+          return perform(**arguments) unless manager_ref
+
+          manager = @task_manager.show(manager_ref)
+          raise Error, "Manager not found: #{manager_ref}" unless manager
+          lifecycle_exclusion.with_exclusive("manager:#{manager.id}") do
+            perform(**arguments.merge(manager_ref: manager.id))
+          end
+        end
+
+        private
+
+        def perform(task_ref:, dry_run:, on_progress:, runtime:, manager_ref:)
           progress = on_progress || ->(_msg) {}
 
           task = @task_manager.show(task_ref.to_s)
@@ -62,16 +77,43 @@ module Ace
               progress.call("Reading role-sequence state in #{worktree_path}...")
               state = probe.probe(worktree_path, task_id: task.id.to_s)
 
+              binding = Molecules::ManagerBinding.new(task_manager: @task_manager) if manager_ref
+              if binding
+                roles = state.fetch(:legs).map { |leg| leg.fetch("role") }
+                binding.validate!(manager_ref: manager_ref, task: task, roles: roles)
+                unless dry_run
+                  binding.prepare(manager_ref: manager_ref, task: task, sequence: state.fetch(:legs),
+                    worktree_path: worktree_path,
+                    project_root: Molecules::ProjectRootResolver.new.resolve(cwd: worktree_path))
+                end
+              end
               active = Ace::Coworker::Atoms::ActiveExecutorRule.evaluate(
                 config: state[:executor][:config], assignments: state[:executor][:assignments])
               verdict = Atoms::HandoffReadiness.evaluate(legs: state[:legs], active_executor: active)
 
+              # Recover a launched leg through the launcher's existing identity
+              # check, rather than treating a retry as a new handoff.
+              next_leg = state[:legs].find { |leg| leg["state"] != "completed" }
+              selected = Atoms::RuntimeSetting.normalize(runtime || @config["runtime"]) || ENV["ACE_RUNTIME"]
+              native = selected == "herdr" || selected.to_s.empty? && Ace::Runtime::Atoms::Detector.detect == :herdr
+              if native && next_leg && %w[paused empty running].include?(next_leg["state"]) &&
+                  next_leg["execution"].is_a?(Hash) &&
+                  %w[launching started running resuming resumed].include?(next_leg["execution"]["state"]) &&
+                  (!active[:active] || active.dig(:evidence, "assignment") == next_leg["assignment"])
+                verdict = {status: :ready, next: next_leg}
+              end
               if verdict[:status] == :refused
                 raise Error, "Handoff refused: #{verdict[:reasons].join("; ")}"
               end
 
+              binding&.ready!(manager_ref: manager_ref, assignment: verdict[:next]["assignment"], allow_unbound: dry_run) if verdict[:next]
               outcome = ready_outcome(task: task, worktree_path: worktree_path, branch: found[:branch],
                 verdict: verdict, dry_run: dry_run, runtime: runtime, progress: progress)
+              if binding && outcome[:execution]
+                binding.record_execution(manager_ref: manager_ref,
+                  assignment: outcome.fetch(:next).fetch("assignment"), execution: outcome[:execution])
+              end
+              outcome[:manager_ref] = manager_ref if manager_ref
             end
           end
 

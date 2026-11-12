@@ -87,7 +87,7 @@ module Ace
 
             role = report["scope"] == "lab" ? "lab-overseer" : "project-overseer"
             directory = nil
-            Molecules::SessionEnvironment.new.with_environment(root: report.fetch("root"), role: role) do |path, credentials, _args|
+            Molecules::SessionEnvironment.new.with_environment(root: report.fetch("root"), role: role, eyes_config: report["eyes_config"]) do |path, credentials, _args|
               directory = credentials
               environment = JSON.parse(File.read(path))
               # Foreground Pi occupies this terminal; delegated launches receive
