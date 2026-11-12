@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0.pre.5] - 2026-11-12
+
+### Fixed
+- Emit a stable, session-bound project readiness confirmation after the first turn and active eyes, so lab supervision can finish reconciliation without waking again for inconclusive transcript samples or ordinary project turns.
+
 ## [0.31.0.pre.4] - 2026-11-12
 
 ### Fixed

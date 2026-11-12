@@ -169,3 +169,47 @@ approved; full overseer594tests2855assertions,0fail/errors1skip
 b0105d88ff1b85a4be8b8105202b12927d195c3dbbb00de076765abf5430fc97 installed
 in3.72s, standalone gem load passed. Public CLI gets the new diagnostic;
 existing actor instructions were not forcibly restarted mid-review.
+
+
+### Coordinator restart fault and all-dead-panel correction
+
+Idle project Pi232138 was deliberately terminated after both reviewers started
+(receipt coordinator-fault.json). Lab woke for project unavailability, but product
+mistook zero live agents among retained old panels for multiple-live ambiguity.
+Both projection and start fixed at30c41a30072ee76e0afd896402c2855d4b52658f;
+92tests496assertions,0fail/errors1skip; independent review PASS.
+ace-overseer0.31.0.pre.4 SHA256
+2d75beff3a05ed22e36166363876f45903e6098ab403ba0e1c12cba6ad661146
+installed locally in5.87s; standalone installed load passed.
+
+Healthy source revision woke lab without operator retry. Its own reconcile
+started projectw3:pP /term_66013edf4717d6 at13:02:55UTC,
+session01a1cfda-a4f9-7594-9344-9d1680dff810, with active eyes on first turn.
+No workers/VM/Forgejo reset. This is a genuinely new process, hence a new terminal;
+live native handoff preservation remains separately proved. No duplicate reviewer
+assignment was created. Formal ready receipt still being observed.
+
+Lab inferred that an operator deleted stale panels. Explicit factual correction
+was sent: no panels removed; product zero-live handling was fixed. This maintenance
+message is another disclosed operator intervention, not Captain consent or a
+workflow-step hint. Lab had discussed escalation but transcript audit found no
+ace-hitl command after the fault; no actual new decision case is credited here.
+Both reviewer processes have installed mode and the corrected Ruby path natively
+(pid244651,246258), without sourcing shell scripts.
+
+
+### Readiness confirmation after coordinator replacement
+
+Live restart exposed a missing observation transition: project working/idle/done
+are intentionally normalized, but the lab then received no confirmation when the
+new first turn and eyes became ready. A sampled ready boolean was rejected in
+independent review because concurrent transcript writes can temporarily make the
+proof inconclusive. The corrected projection emits a stable project-ready event
+bound to native terminal and Pi session identity, rechecked after proof. Existing
+eyes acknowledgements suppress its reappearance; no new state owner is added.
+This confirms readiness only, not continuous observation health. The lab still
+reconciles actual start readiness before recording success.
+
+Focused regression:16tests/56assertions; ace-wake wrapper2tests/7assertions
+executes the JavaScript suite including ack/disappearance/restart. Independent
+read-only review PASS; reviewer did not independently rerun tests. No VM reset.

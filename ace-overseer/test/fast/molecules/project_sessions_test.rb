@@ -23,7 +23,10 @@ class ProjectSessionsTest < Minitest::Test
     def @executor.agent_get(_pane)
       Struct.new(:parsed_json).new({"agent" => {"agent_status" => "idle"}})
     end
-    @observer = Ace::Overseer::Molecules::ProjectSessions.new(root: @root, control: @control, root_resolver: resolver, executor: @executor)
+    @readiness = Struct.new(:ready).new(false)
+    def @readiness.ready?(**_args) = ready
+    @observer = Ace::Overseer::Molecules::ProjectSessions.new(root: @root, control: @control,
+      root_resolver: resolver, executor: @executor, eyes_evidence: @readiness)
   end
 
   def teardown
@@ -60,6 +63,70 @@ class ProjectSessionsTest < Minitest::Test
     assert_equal "absent", dead["state"]
     refute_equal live["revision"], dead["revision"]
     assert_equal dead, @observer.call.first
+  end
+
+  def ready_project
+    @control.tabs = [{id: "tab1", title: "overseer-ace"}]
+    @control.panes = [{id: "p1", tab: "tab1", cwd: @project, agent_status: "working"}]
+    agent = {"terminal_id" => "terminal-1", "agent_session" => {"value" => "session-1"}}
+    @executor.define_singleton_method(:agent_get) do |_pane|
+      Struct.new(:parsed_json).new({"agent" => agent.dup})
+    end
+    agent
+  end
+
+  def test_readiness_confirmation_is_stable_across_inconclusive_samples_and_ordinary_turns
+    ready_project
+    initializing = @observer.call
+    assert_equal 1, initializing.length
+    @readiness.ready = true
+    ready = @observer.call
+    assert_equal initializing.first, ready.first
+    marker = ready.fetch(1)
+    assert_equal "project-ready", marker.fetch("type")
+    assert marker.fetch("ready")
+    %w[idle done working].each do |state|
+      @control.panes.first[:agent_status] = state
+      current = @observer.call
+      assert_equal initializing.first.fetch("revision"), current.first.fetch("revision")
+      assert_equal marker, current.fetch(1)
+    end
+    @readiness.ready = false
+    assert_equal 1, @observer.call.length
+    @readiness.ready = true
+    assert_equal marker, @observer.call.fetch(1)
+  end
+
+  def test_replacement_session_has_a_distinct_confirmation_even_in_the_same_terminal
+    agent = ready_project
+    @readiness.ready = true
+    original = @observer.call.fetch(1)
+    agent["agent_session"] = {"value" => "session-2"}
+    replacement = @observer.call.fetch(1)
+    refute_equal original.fetch("key"), replacement.fetch("key")
+    refute_equal original.fetch("revision"), replacement.fetch("revision")
+  end
+
+  def test_agent_exit_during_proof_does_not_emit_readiness
+    ready_project
+    executor = @executor
+    @readiness.define_singleton_method(:ready?) do |**_args|
+      executor.define_singleton_method(:agent_get) do |_pane|
+        raise Ace::Herdr::AgentNotFoundError, "exited during proof"
+      end
+      true
+    end
+    assert_equal 1, @observer.call.length
+    assert_equal "absent", @observer.call.first.fetch("state")
+  end
+
+  def test_replacement_during_proof_does_not_emit_old_session_readiness
+    agent = ready_project
+    @readiness.define_singleton_method(:ready?) do |**_args|
+      agent["agent_session"] = {"value" => "replacement"}
+      true
+    end
+    assert_equal 1, @observer.call.length
   end
 
   def test_ambiguous_owner_never_looks_healthy
@@ -156,7 +223,7 @@ class ProjectSessionsTest < Minitest::Test
       {"topology" => {"projects" => [{"id" => "ace", "path" => nested}]}}.to_yaml)
     @control.tabs = [{id: "tab1", title: "overseer-ace"}]
     @control.panes = [{id: "p1", tab: "tab1", cwd: @project, agent_status: "working"}]
-    observer = Ace::Overseer::Molecules::ProjectSessions.new(root: @root, control: @control, executor: @executor)
+    observer = Ace::Overseer::Molecules::ProjectSessions.new(root: @root, control: @control, executor: @executor, eyes_evidence: @readiness)
     row = observer.call.fetch(0)
     assert_equal "working", row.fetch("state")
     assert_equal File.realpath(@project), row.fetch("root")
@@ -172,7 +239,7 @@ class ProjectSessionsTest < Minitest::Test
       {"topology" => {"projects" => [{"id" => "ace", "path" => linked}]}}.to_yaml)
     @control.tabs = [{id: "tab1", title: "overseer-ace"}]
     @control.panes = [{id: "p1", tab: "tab1", cwd: @project, agent_status: "idle"}]
-    observer = Ace::Overseer::Molecules::ProjectSessions.new(root: @root, control: @control, executor: @executor)
+    observer = Ace::Overseer::Molecules::ProjectSessions.new(root: @root, control: @control, executor: @executor, eyes_evidence: @readiness)
     row = observer.call.fetch(0)
     assert_equal "idle", row.fetch("state")
     assert_equal File.realpath(@project), row.fetch("root")

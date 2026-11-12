@@ -5,6 +5,7 @@ require "ace/herdr"
 require "digest"
 require "json"
 require_relative "project_root_resolver"
+require_relative "eyes_readiness"
 
 module Ace
   module Overseer
@@ -13,12 +14,14 @@ module Ace
       # herdr. This projection has no persisted copy of either.
       class ProjectSessions
         def initialize(root: Dir.pwd, control: nil, locations: Ace::Lab::Molecules::ProjectLocations,
-          root_resolver: ProjectRootResolver.new, executor: Ace::Herdr::Molecules::HerdrExecutor.new, env: ENV)
+          root_resolver: ProjectRootResolver.new, executor: Ace::Herdr::Molecules::HerdrExecutor.new,
+          eyes_evidence: EyesReadiness.new, env: ENV)
           @root = File.realpath(root)
           @control = control || Ace::Herdr::Organisms::ControlSurface.new
           @locations = locations
           @root_resolver = root_resolver
           @executor, @env = executor, env
+          @eyes_evidence = eyes_evidence
         end
 
         def configured?
@@ -54,7 +57,7 @@ module Ace
 
           tabs = @control.list_tabs
           panes = @control.list_panes
-          failures + resolved.map do |id, root, project|
+          failures + resolved.flat_map do |id, root, project|
             begin
               project_row(id, root, tabs, panes)
             rescue StandardError => e
@@ -74,16 +77,16 @@ module Ace
         end
 
 
-        def live_agent?(pane)
+        def live_agent(pane)
           json = @executor.agent_get(pane).parsed_json
           raise Error, "herdr returned malformed agent state" unless json.is_a?(Hash)
           agent = json["agent"]
           agent ||= json.dig("result", "agent") if json["result"].is_a?(Hash)
           agent ||= json["result"] if json["result"].is_a?(Hash)
           raise Error, "herdr returned no agent identity" unless agent.is_a?(Hash)
-          true
+          agent
         rescue Ace::Herdr::AgentNotFoundError
-          false
+          nil
         end
 
         def project_row(id, root, tabs, panes)
@@ -93,24 +96,55 @@ module Ace
             raise Error, "project overseer tab has no unique pane: #{label}" unless matches.length == 1
             matches
           end
-          if owners.length > 1
-            # Reconciliation preserves dead panels for diagnostics. Native
-            # agent presence, not the retained tab, identifies the live owner.
-            owners = owners.select { |owner| live_agent?(owner.fetch(:id)) }
-            raise Error, "project overseer has ambiguous sessions: #{label}" if owners.length > 1
+          # Reconciliation preserves dead panels for diagnostics. Native agent
+          # presence, not retained tabs, identifies the live owner.
+          live = owners.filter_map do |owner|
+            agent = live_agent(owner.fetch(:id))
+            [owner, agent] if agent
           end
-          pane = owners.first
-          pane = nil if pane && !live_agent?(pane.fetch(:id))
+          raise Error, "project overseer has ambiguous sessions: #{label}" if live.length > 1
+          pane, agent = live.first
           raise Error, "project overseer session did not report a working directory: #{label}" if pane && pane[:cwd].to_s.empty?
           if pane && @root_resolver.resolve(cwd: pane[:cwd]) != root
             raise Error, "project overseer session has a different root: #{label}"
           end
           state = pane ? (pane[:agent_status] || "unknown").to_s : "absent"
           payload = {"project" => id, "root" => root, "pane" => pane && pane[:id], "state" => state}
-          {"key" => "project-session:#{Digest::SHA256.hexdigest(root)}",
+          row = {"key" => "project-session:#{Digest::SHA256.hexdigest(root)}",
            "revision" => Digest::SHA256.hexdigest(JSON.generate(payload.merge(
              "state" => (%w[working idle done].include?(state) ? "available" : state)))),
            "type" => "project-session"}.merge(payload)
+          [row, readiness_event(id, root, pane, agent)].compact
+        end
+
+        # A successful first-turn proof is a stable confirmation, not a sampled
+        # boolean lifecycle. A concurrent transcript append can make a proof
+        # inconclusive; omitting this marker then does not undo eyes' existing ack.
+        # The recipient still rechecks start readiness before recording success.
+        def readiness_event(id, root, pane, agent)
+          return unless pane
+          required = Atoms::ObservationSources::REQUIRED.dup
+          required << Atoms::ObservationSources::PROJECT_SESSIONS if File.file?(File.join(root, ".ace/lab/config.yml"))
+          return unless @eyes_evidence.ready?(pane: pane.fetch(:id), root: root,
+            prompt: Atoms::StartContract::FIRST_TURN_PROMPT, required_sources: required)
+          identity = readiness_identity(agent)
+          current = live_agent(pane.fetch(:id))
+          return unless current && readiness_identity(current) == identity
+
+          payload = {"project" => id, "root" => root, "pane" => pane.fetch(:id),
+            "terminal" => identity[0], "session" => identity[1], "ready" => true}
+          key = Digest::SHA256.hexdigest(JSON.generate([root, *identity]))
+          {"key" => "project-ready:#{key}", "revision" => Digest::SHA256.hexdigest("ready:#{key}"),
+           "type" => "project-ready"}.merge(payload)
+        end
+
+        def readiness_identity(agent)
+          terminal = agent["terminal_id"]
+          session = agent.dig("agent_session", "value")
+          unless terminal.is_a?(String) && !terminal.empty? && session.is_a?(String) && !session.empty?
+            raise Error, "ready project agent has no terminal/session identity"
+          end
+          [terminal, session]
         end
       end
     end

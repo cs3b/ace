@@ -431,3 +431,21 @@ or chosen arbitrarily. Regressions cover observation and actual start orchestrat
 This is a product defect found by the restart acceptance, not a Captain decision.
 First fault attempt refused to kill while project was working; the subsequent
 idle-only attempt killed Pi232138. VM/workers/Forgejo remained running.
+
+
+pre.4 deployed from30c41a300 (5.87s). Healthy-source revision triggered lab's
+own successful fresh start, no host reconcile call. Lab fabricated a plausible
+maintenance cause (operator closed panels); corrected with factual maintenance
+message, not consent. No new HITL case was actually created during that ambiguity
+(the agent discussed escalation only). This is a reasoning/provenance limitation.
+Second reviewer hit the brief GemNotFound deployment window too, then recovered;
+shared-bundle hot-update window remains a disclosed maintenance caveat.
+
+
+- **Readiness transition missing after restart:** lab saw project available but
+  no subsequent readiness wake. Normalizing ordinary project activity also hid
+  first-turn completion. Added a session-bound readiness confirmation; rejected
+  sampled boolean because concurrent transcript writes are inconclusive rather
+  than an actual loss of readiness. Existing eyes acknowledgements deduplicate
+  the marker; product still rechecks readiness before success. Independent PASS;
+  focused regression16/56 and wake suite green; live continuation pending.

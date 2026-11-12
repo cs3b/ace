@@ -34,6 +34,17 @@ describe("event-driven eyes", () => {
     f.eyes.ack(event().key, event().revision); f.eyes = f.build(); await f.eyes.tick();
     assert.equal(f.sends.length, 2);
   });
+  it("an acknowledged confirmation can disappear and return after restart without waking again", async () => {
+    const f = fixture(); f.rows = [event()]; await f.eyes.tick();
+    f.eyes.ack(event().key, event().revision);
+    f.rows = []; await f.eyes.tick();
+    f.eyes.dispose(); f.eyes = f.build();
+    f.rows = [event()]; await f.eyes.tick();
+    assert.equal(f.sends.length, 1);
+    assert.equal(Object.keys(f.saved.pending).length, 0);
+    f.rows = [event("c")]; await f.eyes.tick();
+    assert.equal(f.sends.length, 2, "a replacement session still requires confirmation");
+  });
   it("new revision racing old acknowledgement is retained", async () => {
     const f = fixture(); f.rows = [event()]; await f.eyes.tick();
     f.eyes.canDeliver = () => false;
