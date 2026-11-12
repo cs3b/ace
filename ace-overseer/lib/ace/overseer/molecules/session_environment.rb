@@ -59,12 +59,6 @@ module Ace::Overseer::Molecules
       raise
     end
 
-    # A projection needs this project's read credentials and installed CLI,
-    # not the coordinator's token or a new model-auth directory per poll.
-    def observation_environment(root:)
-      configured_environment(selection_for(root, "project-overseer"))
-    end
-
     def self.cleanup(directory)
       return unless directory
       # Only our exact scratch directory; never a caller's home/config root.

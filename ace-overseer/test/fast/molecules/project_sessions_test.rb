@@ -19,7 +19,11 @@ class ProjectSessionsTest < Minitest::Test
     @control = Control.new([], [])
     resolver = Object.new
     def resolver.resolve(cwd:) = File.realpath(cwd)
-    @observer = Ace::Overseer::Molecules::ProjectSessions.new(root: @root, control: @control, root_resolver: resolver)
+    @executor = Object.new
+    def @executor.agent_get(_pane)
+      Struct.new(:parsed_json).new({"agent" => {"agent_status" => "idle"}})
+    end
+    @observer = Ace::Overseer::Molecules::ProjectSessions.new(root: @root, control: @control, root_resolver: resolver, executor: @executor)
   end
 
   def teardown
@@ -41,8 +45,21 @@ class ProjectSessionsTest < Minitest::Test
     assert_equal [working], @observer.call
     @control.panes.first[:agent_status] = "idle"
     idle = @observer.call.fetch(0)
-    refute_equal working.fetch("revision"), idle.fetch("revision")
+    assert_equal working.fetch("revision"), idle.fetch("revision"), "ordinary project turns do not require lab action"
     assert_equal "idle", idle.fetch("state")
+  end
+
+  def test_retained_single_terminal_without_agent_is_absent
+    @control.tabs = [{id: "tab1", title: "overseer-ace"}]
+    @control.panes = [{id: "p1", tab: "tab1", cwd: @project, agent_status: "idle"}]
+    live = @observer.call.first
+    executor = Object.new
+    def executor.agent_get(_pane) = raise(Ace::Herdr::AgentNotFoundError, "exited")
+    @observer.instance_variable_set(:@executor, executor)
+    dead = @observer.call.first
+    assert_equal "absent", dead["state"]
+    refute_equal live["revision"], dead["revision"]
+    assert_equal dead, @observer.call.first
   end
 
   def test_ambiguous_owner_never_looks_healthy
@@ -126,7 +143,7 @@ class ProjectSessionsTest < Minitest::Test
       {"topology" => {"projects" => [{"id" => "ace", "path" => nested}]}}.to_yaml)
     @control.tabs = [{id: "tab1", title: "overseer-ace"}]
     @control.panes = [{id: "p1", tab: "tab1", cwd: @project, agent_status: "working"}]
-    observer = Ace::Overseer::Molecules::ProjectSessions.new(root: @root, control: @control)
+    observer = Ace::Overseer::Molecules::ProjectSessions.new(root: @root, control: @control, executor: @executor)
     row = observer.call.fetch(0)
     assert_equal "working", row.fetch("state")
     assert_equal File.realpath(@project), row.fetch("root")
@@ -142,7 +159,7 @@ class ProjectSessionsTest < Minitest::Test
       {"topology" => {"projects" => [{"id" => "ace", "path" => linked}]}}.to_yaml)
     @control.tabs = [{id: "tab1", title: "overseer-ace"}]
     @control.panes = [{id: "p1", tab: "tab1", cwd: @project, agent_status: "idle"}]
-    observer = Ace::Overseer::Molecules::ProjectSessions.new(root: @root, control: @control)
+    observer = Ace::Overseer::Molecules::ProjectSessions.new(root: @root, control: @control, executor: @executor)
     row = observer.call.fetch(0)
     assert_equal "idle", row.fetch("state")
     assert_equal File.realpath(@project), row.fetch("root")

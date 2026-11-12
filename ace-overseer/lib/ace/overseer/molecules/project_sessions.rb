@@ -100,6 +100,7 @@ module Ace
             raise Error, "project overseer has ambiguous sessions: #{label}" unless owners.length == 1
           end
           pane = owners.first
+          pane = nil if pane && !live_agent?(pane.fetch(:id))
           raise Error, "project overseer session did not report a working directory: #{label}" if pane && pane[:cwd].to_s.empty?
           if pane && @root_resolver.resolve(cwd: pane[:cwd]) != root
             raise Error, "project overseer session has a different root: #{label}"
@@ -107,7 +108,8 @@ module Ace
           state = pane ? (pane[:agent_status] || "unknown").to_s : "absent"
           payload = {"project" => id, "root" => root, "pane" => pane && pane[:id], "state" => state}
           {"key" => "project-session:#{Digest::SHA256.hexdigest(root)}",
-           "revision" => Digest::SHA256.hexdigest(JSON.generate(payload)),
+           "revision" => Digest::SHA256.hexdigest(JSON.generate(payload.merge(
+             "state" => (%w[working idle done].include?(state) ? "available" : state)))),
            "type" => "project-session"}.merge(payload)
         end
       end

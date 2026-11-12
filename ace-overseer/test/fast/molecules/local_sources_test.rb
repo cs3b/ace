@@ -180,6 +180,20 @@ module Molecules
         task_row["revision"]
     end
 
+    def test_assignment_progress_is_visible_without_revising_actionable_state
+      assignment = {"id" => "job-7", "state" => "running", "progress" => {"done" => 1, "total" => 3}}
+      observer = sources(worktrees: [Worktree.new("/lab/ace/.ace-wt/feature", "work", false)],
+        probe: FakeProbe.new({config: nil, assignments: [assignment]}))
+      row = -> { observer.call.fetch("events").find { |event| event["type"] == "assignment" } }
+      before = row.call
+      assignment["progress"] = {"done" => 2, "total" => 3}
+      progressed = row.call
+      assert_equal before["revision"], progressed["revision"]
+      assert_equal 2, progressed.dig("progress", "done")
+      assignment["state"] = "completed"
+      refute_equal progressed["revision"], row.call["revision"]
+    end
+
     def test_worktree_failure_degrades_only_the_worktree_dependent_sources
       result = sources(worktree_error: "tmux socket gone").call
 

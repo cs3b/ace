@@ -1,7 +1,7 @@
 From 7a2e78b4e92d2b694bd8a06c1ef4943915c399b2 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 7 Oct 2026 00:43:20 +0100
-Subject: [PATCH 1/7] feat: guard and permanently drain original-terminal input
+Subject: [PATCH 1/8] feat: guard and permanently drain original-terminal input
 
 ---
  docs/next/api/herdr-api.schema.json           |  338 ++++++
@@ -3498,7 +3498,7 @@ index 9171340..a971ef6 100644
 From 5d98e178453958691f17b58d26fd20b51a985cd7 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 02:57:12 +0000
-Subject: [PATCH 2/7] fix: validate Pi report acknowledgements before accepting
+Subject: [PATCH 2/8] fix: validate Pi report acknowledgements before accepting
  delivery
 
 ---
@@ -3647,7 +3647,7 @@ index 673225a..546289d 100644
 From b6d67f318c260b3c0efcbef89bf1034544852776 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 4 Nov 2026 04:17:44 +0000
-Subject: [PATCH 3/7] fix: resolve agent queries by immutable terminal identity
+Subject: [PATCH 3/8] fix: resolve agent queries by immutable terminal identity
 
 ---
  src/app/terminal_targets.rs | 35 +++++++++++++++++++++++++++++++++++
@@ -3713,7 +3713,7 @@ index 658eeaa..003c30c 100644
 From 93e768dcacbfd63171957935ae9e2637a91689e6 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Tue, 10 Nov 2026 22:59:15 +0000
-Subject: [PATCH 4/7] feat: launch ordinary agents with private explicit
+Subject: [PATCH 4/8] feat: launch ordinary agents with private explicit
  environments
 
 ---
@@ -4804,7 +4804,7 @@ index 0000000..afe8c3a
 From 83939be994e8b911140adbb9ba64aa4858cce96b Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Tue, 10 Nov 2026 23:06:09 +0000
-Subject: [PATCH 5/7] fix: require fresh environments on cold agent restoration
+Subject: [PATCH 5/8] fix: require fresh environments on cold agent restoration
 
 ---
  src/app/agents.rs                   |  3 ++
@@ -4919,7 +4919,7 @@ index b6d6187..66ae240 100644
 From f475b86b1fc0a72103fbdf5cc0aba7dfc54cdcb4 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Tue, 10 Nov 2026 23:16:46 +0000
-Subject: [PATCH 6/7] fix: clean ordinary session credentials when agents exit
+Subject: [PATCH 6/8] fix: clean ordinary session credentials when agents exit
 
 ---
  src/persist/restore.rs              |  13 +--
@@ -5271,7 +5271,7 @@ index afe8c3a..9dedb83 100644
 From 5176d899a567985490682c37eb7f0198eab159b0 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 11 Nov 2026 23:46:22 +0000
-Subject: [PATCH 7/7] fix: preserve child options in explicit environment
+Subject: [PATCH 7/8] fix: preserve child options in explicit environment
  launcher
 
 ---
@@ -5343,6 +5343,474 @@ index 9dedb83..64d4645 100644
 +    }
 +    std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
 +}
+-- 
+2.54.0 (Apple Git-157)
+
+
+From 84753e6b9955fac56a316e1e99d3cbe7219fad9b Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Thu, 12 Nov 2026 11:55:39 +0000
+Subject: [PATCH 8/8] fix: preserve terminal identity and origin handles across
+ live handoff
+
+---
+ src/handoff_runtime.rs               |  4 ++
+ src/pane.rs                          | 23 +++++++--
+ src/persist/restore.rs               | 16 +++++-
+ src/platform/guarded_prompt.rs       |  4 ++
+ src/platform/linux.rs                |  2 +-
+ src/platform/linux/guarded_origin.rs | 77 ++++++++++++++++++++++++++++
+ src/platform/mod.rs                  |  9 ++++
+ src/pty/actor/unix.rs                |  4 ++
+ src/server/handoff.rs                | 22 +++++++-
+ src/server/headless/bootstrap.rs     | 11 +++-
+ src/server/headless/lifecycle.rs     |  8 ++-
+ src/terminal/runtime.rs              |  8 ++-
+ 12 files changed, 174 insertions(+), 14 deletions(-)
+
+diff --git a/src/handoff_runtime.rs b/src/handoff_runtime.rs
+index 12481f6..c85134d 100644
+--- a/src/handoff_runtime.rs
++++ b/src/handoff_runtime.rs
+@@ -12,6 +12,8 @@ use serde::{Deserialize, Serialize};
+ #[derive(Debug, Clone, Serialize, Deserialize)]
+ pub(crate) struct HandoffRuntimeState {
+     pub pane_id: u32,
++    pub terminal_id: crate::terminal::TerminalId,
++    pub guarded_origin: Option<crate::platform::guarded_prompt::GuardedPromptOrigin>,
+     pub child_pid: u32,
+     pub rows: u16,
+     pub cols: u16,
+@@ -44,5 +46,7 @@ pub(crate) struct ImportedHandoffRuntime {
+     #[cfg(unix)]
+     pub master_fd: std::os::fd::RawFd,
+     #[cfg(unix)]
++    pub origin_fd: Option<std::os::fd::OwnedFd>,
++    #[cfg(unix)]
+     pub state: HandoffRuntimeState,
+ }
+diff --git a/src/pane.rs b/src/pane.rs
+index eebd3ef..08246c1 100644
+--- a/src/pane.rs
++++ b/src/pane.rs
+@@ -2148,11 +2148,14 @@ impl PaneRuntime {
+     pub fn handoff_runtime_state(
+         &self,
+         pane_id: u32,
++        terminal_id: crate::terminal::TerminalId,
+     ) -> crate::handoff_runtime::HandoffRuntimeState {
+         let child_pid = self.child_pid.load(Ordering::Acquire);
+         let (rows, cols, cell_width_px, cell_height_px) = self.current_size.get();
+         crate::handoff_runtime::HandoffRuntimeState {
+             pane_id,
++            guarded_origin: self.captured_input_origin(terminal_id.as_str()),
++            terminal_id,
+             child_pid,
+             rows,
+             cols,
+@@ -2364,9 +2367,11 @@ impl PaneRuntime {
+         render_notify: Arc<Notify>,
+         render_dirty: Arc<RenderSignal>,
+     ) -> std::io::Result<Self> {
+-        let crate::handoff_runtime::ImportedHandoffRuntime { master_fd, state } = import;
++        let crate::handoff_runtime::ImportedHandoffRuntime { master_fd, origin_fd, state } = import;
+         let crate::handoff_runtime::HandoffRuntimeState {
+             pane_id,
++            guarded_origin,
++            terminal_id,
+             child_pid,
+             rows,
+             cols,
+@@ -2381,8 +2386,9 @@ impl PaneRuntime {
+         } = state;
+         let pane_id = PaneId::from_raw(pane_id);
+         use std::os::fd::FromRawFd;
+-
+         let master_fd = unsafe { std::os::fd::OwnedFd::from_raw_fd(master_fd) };
++        let origin = crate::platform::import_guarded_child(guarded_origin, origin_fd)?;
++        let _ = terminal_id;
+ 
+         let (response_tx, _response_rx) = mpsc::channel::<Bytes>(1);
+         let mut terminal = crate::ghostty::Terminal::new(cols, rows, scrollback_limit_bytes)
+@@ -2494,7 +2500,7 @@ impl PaneRuntime {
+             });
+             PaneRuntimeIo::Actor(PtyIoActor::spawn(PtyIoActorConfig {
+                 pane_id: pane_id.raw(),
+-                origin: None,
++                origin,
+                 master_fd,
+                 initially_quiesced: true,
+                 on_read,
+@@ -3531,6 +3537,15 @@ impl PaneRuntime {
+         self.io.try_send_bytes(bytes)
+     }
+ 
++    #[cfg(unix)]
++    pub(crate) fn duplicate_guarded_origin_fd(&self) -> std::io::Result<Option<std::os::fd::OwnedFd>> {
++        match &self.io {
++            PaneRuntimeIo::Actor(actor) => actor.duplicate_guarded_origin_fd(),
++            #[cfg(test)]
++            PaneRuntimeIo::TestChannel { .. } => Ok(None),
++        }
++    }
++
+     pub(crate) fn guarded_prompt_origin(
+         &self,
+         terminal_id: &str,
+@@ -4962,7 +4977,7 @@ mod tests {
+         runtime.test_process_pty_bytes("\x1b]2;✳ 修复🙂标题\x1b\\".as_bytes());
+         runtime.terminal.clear_agent_osc_state();
+         assert_eq!(runtime.agent_osc_title(), "");
+-        let pane = runtime.handoff_runtime_state(12);
++        let pane = runtime.handoff_runtime_state(12, crate::terminal::TerminalId::alloc());
+ 
+         assert_eq!(pane.keyboard_protocol_flags, 5);
+         assert_eq!(pane.terminal_title.as_deref(), Some("✳ 修复🙂标题"));
+diff --git a/src/persist/restore.rs b/src/persist/restore.rs
+index 3b0ca57..1374ff6 100644
+--- a/src/persist/restore.rs
++++ b/src/persist/restore.rs
+@@ -581,6 +581,10 @@ fn restore_tab(
+         let imported_runtime = old_pane_id.and_then(|old_id| imported_panes.remove(&old_id));
+         let was_imported = imported_runtime.is_some();
+         #[cfg(unix)]
++        let imported_terminal_id = imported_runtime.as_ref().map(|imported| imported.state.terminal_id.clone());
++        #[cfg(not(unix))]
++        let imported_terminal_id: Option<TerminalId> = None;
++        #[cfg(unix)]
+         let handoff_agent_state = imported_runtime
+             .as_ref()
+             .and_then(|imported| imported.state.agent_state.clone());
+@@ -637,6 +641,7 @@ fn restore_tab(
+                 TerminalRuntime::from_handoff_fd(
+                     crate::handoff_runtime::ImportedHandoffRuntime {
+                         master_fd: imported.master_fd,
++                        origin_fd: imported.origin_fd,
+                         state: imported.state.with_pane_id(*id),
+                     },
+                     runtime_context.scrollback_limit_bytes,
+@@ -686,7 +691,7 @@ fn restore_tab(
+ 
+         match runtime_result {
+             Ok(runtime) => {
+-                let terminal_id = TerminalId::alloc();
++                let terminal_id = imported_terminal_id.unwrap_or_else(TerminalId::alloc);
+                 let mut terminal = TerminalState::new(terminal_id.clone(), cwd.clone());
+                 if was_imported {
+                     if let Some(argv) = saved_launch_argv {
+@@ -1957,13 +1962,15 @@ mod tests {
+             runtime
+                 .pause_handoff_reader(std::time::Duration::from_secs(2))
+                 .unwrap();
+-            let mut state = runtime.handoff_runtime_state(pane_id.raw());
++            let original_terminal_id = terminals.keys().next().unwrap().clone();
++            let mut state = runtime.handoff_runtime_state(pane_id.raw(), original_terminal_id.clone());
+             state.agent_state = terminals.values().next().unwrap().handoff_agent_state();
+             let state = serde_json::from_value(serde_json::to_value(state).unwrap()).unwrap();
+             let mut imports = HashMap::from([(
+                 pane_id.raw(),
+                 crate::handoff_runtime::ImportedHandoffRuntime {
+                     master_fd: runtime.duplicate_handoff_fd().unwrap(),
++                    origin_fd: runtime.duplicate_guarded_origin_fd().unwrap(),
+                     state,
+                 },
+             )]);
+@@ -1978,6 +1985,11 @@ mod tests {
+                 Arc::new(RenderSignal::new()),
+             )
+             .unwrap();
++            assert!(restored_terminals.contains_key(&original_terminal_id));
++            assert_ne!(TerminalId::alloc(), original_terminal_id);
++            let restored_runtime = restored_runtimes.get(&original_terminal_id).unwrap();
++            assert_eq!(restored_runtime.guarded_prompt_origin(original_terminal_id.as_str()),
++                runtime.guarded_prompt_origin(original_terminal_id.as_str()));
+             drop(restored_runtimes);
+             drop(runtimes);
+             let terminal = restored_terminals.values_mut().next().unwrap();
+diff --git a/src/platform/guarded_prompt.rs b/src/platform/guarded_prompt.rs
+index e35245d..ca14377 100644
+--- a/src/platform/guarded_prompt.rs
++++ b/src/platform/guarded_prompt.rs
+@@ -103,6 +103,10 @@ impl GuardedPromptError {
+ 
+ pub(crate) trait OriginLiveness: Send + Sync {
+     fn is_live(&self) -> std::io::Result<bool>;
++    #[cfg(unix)]
++    fn duplicate_fd(&self) -> std::io::Result<std::os::fd::OwnedFd> {
++        Err(std::io::Error::other("origin handle cannot be transferred"))
++    }
+ }
+ 
+ pub(crate) struct GuardedChildOrigin {
+diff --git a/src/platform/linux.rs b/src/platform/linux.rs
+index 9edf05b..2298846 100644
+--- a/src/platform/linux.rs
++++ b/src/platform/linux.rs
+@@ -27,7 +27,7 @@ pub(crate) use super::unix_common::{
+ mod config_file_tests;
+ 
+ mod guarded_origin;
+-pub(crate) use guarded_origin::capture_guarded_child;
++pub(crate) use guarded_origin::{capture_guarded_child, import_guarded_child};
+ 
+ mod shutdown;
+ pub(crate) use shutdown::monitor_host_shutdown;
+diff --git a/src/platform/linux/guarded_origin.rs b/src/platform/linux/guarded_origin.rs
+index 2a44e8f..ffa6b49 100644
+--- a/src/platform/linux/guarded_origin.rs
++++ b/src/platform/linux/guarded_origin.rs
+@@ -10,6 +10,7 @@ use std::{
+ 
+ struct LinuxChildHandle(OwnedFd);
+ impl OriginLiveness for LinuxChildHandle {
++    fn duplicate_fd(&self) -> io::Result<OwnedFd> { self.0.try_clone() }
+     fn is_live(&self) -> io::Result<bool> {
+         let mut item = libc::pollfd {
+             fd: self.0.as_raw_fd(),
+@@ -85,3 +86,79 @@ pub(crate) fn capture_guarded_child(pid: u32) -> io::Result<Arc<GuardedChildOrig
+         handle: Arc::new(handle),
+     }))
+ }
++
++// Import the original kernel handle, never reopen a PID from a snapshot.
++pub(crate) fn import_guarded_child(
++    expected: Option<crate::platform::guarded_prompt::GuardedPromptOrigin>,
++    fd: Option<OwnedFd>,
++) -> io::Result<Option<Arc<GuardedChildOrigin>>> {
++    match (expected, fd) {
++        (None, None) => Ok(None),
++        (Some(expected), Some(fd)) => {
++            if !expected.valid() { return Err(io::Error::other("invalid handoff origin")); }
++            if unsafe { libc::fcntl(fd.as_raw_fd(), libc::F_SETFD, libc::FD_CLOEXEC) } == -1 {
++                return Err(io::Error::last_os_error());
++            }
++            let handle = LinuxChildHandle(fd);
++            let live = handle.is_live()?;
++            let same_process = if live {
++                let mut current = identity(expected.child.pid)?;
++                // Handoff reparents the surviving child when the old server exits.
++                // The original parent remains provenance, not a liveness condition.
++                current.parent_pid = expected.child.parent_pid;
++                current == expected.child
++            } else { true };
++            if !same_process {
++                return Err(io::Error::other("handoff child identity mismatch"));
++            }
++            Ok(Some(Arc::new(GuardedChildOrigin {
++                child: expected.child,
++                runtime_incarnation: expected.runtime_incarnation,
++                exited: AtomicBool::new(!live),
++                handle: Arc::new(handle),
++            })))
++        }
++        _ => Err(io::Error::other("handoff origin descriptor mismatch")),
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use std::process::Command;
++
++    #[test]
++    fn handoff_transfers_original_handle_and_survives_parent_change() {
++        let mut child = Command::new("sleep").arg("30").spawn().unwrap();
++        let origin = capture_guarded_child(child.id()).unwrap();
++        let mut expected = origin.projection("term_ab12");
++        // A previous server was the spawn parent; reparenting must not rewrite
++        // that provenance or invalidate the still-live original pidfd.
++        expected.child.parent_pid = expected.child.parent_pid.saturating_add(1);
++        let fd = origin.handle.duplicate_fd().unwrap();
++        let imported_fd = fd.as_raw_fd();
++        assert_eq!(unsafe { libc::fcntl(imported_fd, libc::F_SETFD, 0) }, 0);
++        let imported = import_guarded_child(Some(expected.clone()), Some(fd)).unwrap().unwrap();
++        assert_ne!(unsafe { libc::fcntl(imported_fd, libc::F_GETFD) } & libc::FD_CLOEXEC, 0);
++        assert_eq!(imported.projection("term_ab12"), expected);
++        assert!(imported.check(&expected).is_ok());
++        let fd = imported.handle.duplicate_fd().unwrap();
++        assert_ne!(unsafe { libc::fcntl(fd.as_raw_fd(), libc::F_GETFD) } & libc::FD_CLOEXEC, 0);
++        let again = import_guarded_child(Some(expected.clone()), Some(fd)).unwrap().unwrap();
++        child.kill().unwrap();
++        child.wait().unwrap();
++        assert!(again.check(&expected).is_err());
++    }
++
++    #[test]
++    fn handoff_rejects_changed_process_birth() {
++        let mut child = Command::new("sleep").arg("30").spawn().unwrap();
++        let origin = capture_guarded_child(child.id()).unwrap();
++        let mut expected = origin.projection("term_ab12");
++        expected.child.started_at.push('1');
++        let result = import_guarded_child(Some(expected), Some(origin.handle.duplicate_fd().unwrap()));
++        child.kill().unwrap();
++        child.wait().unwrap();
++        assert!(result.is_err());
++    }
++}
+diff --git a/src/platform/mod.rs b/src/platform/mod.rs
+index 2470ff5..43faa74 100644
+--- a/src/platform/mod.rs
++++ b/src/platform/mod.rs
+@@ -740,3 +740,12 @@ pub(crate) fn capture_guarded_child(
+         "guarded child origin requires Linux",
+     ))
+ }
++
++#[cfg(all(unix, not(target_os = "linux")))]
++pub(crate) fn import_guarded_child(
++    origin: Option<guarded_prompt::GuardedPromptOrigin>,
++    fd: Option<std::os::fd::OwnedFd>,
++) -> std::io::Result<Option<std::sync::Arc<guarded_prompt::GuardedChildOrigin>>> {
++    if origin.is_some() || fd.is_some() { return Err(std::io::Error::other("origin import requires Linux")); }
++    Ok(None)
++}
+diff --git a/src/pty/actor/unix.rs b/src/pty/actor/unix.rs
+index 7740265..cbe4203 100644
+--- a/src/pty/actor/unix.rs
++++ b/src/pty/actor/unix.rs
+@@ -260,6 +260,10 @@ impl PtyIoActorHandle {
+         Ok(result)
+     }
+ 
++    pub(crate) fn duplicate_guarded_origin_fd(&self) -> std::io::Result<Option<std::os::fd::OwnedFd>> {
++        self.origin.as_ref().map(|origin| origin.handle.duplicate_fd()).transpose()
++    }
++
+     pub(crate) fn guarded_origin(&self, terminal_id: &str) -> Option<GuardedPromptOrigin> {
+         let origin = self.origin.as_ref()?;
+         let expected = origin.projection(terminal_id);
+diff --git a/src/server/handoff.rs b/src/server/handoff.rs
+index aaa87f3..490fd63 100644
+--- a/src/server/handoff.rs
++++ b/src/server/handoff.rs
+@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
+ use tracing::{info, warn};
+ 
+ #[cfg(unix)]
+-const HANDOFF_VERSION: u32 = 1;
++const HANDOFF_VERSION: u32 = 2;
+ #[cfg(unix)]
+ const READY_TIMEOUT: Duration = Duration::from_secs(30);
+ #[cfg(unix)]
+@@ -262,9 +262,18 @@ pub(crate) fn receive(socket_path: &Path, token: &str) -> io::Result<ReceivedHan
+             crate::build_info::version()
+         )));
+     }
++    let mut terminals = std::collections::HashSet::new();
++    let mut panes = std::collections::HashSet::new();
++    for pane in &manifest.panes {
++        if !terminals.insert(&pane.terminal_id) || !panes.insert(pane.pane_id) ||
++            pane.guarded_origin.as_ref().is_some_and(|origin| !origin.valid() || origin.terminal_id != pane.terminal_id.as_str() || origin.child.pid != pane.child_pid) {
++            return Err(io::Error::other("invalid or duplicate handoff terminal identity"));
++        }
++    }
+     stream.write_all(b"validated\n")?;
+     stream.flush()?;
+-    let fds = recv_fds(&stream, manifest.panes.len())?;
++    let count = manifest.panes.iter().map(|pane| 1 + usize::from(pane.guarded_origin.is_some())).sum();
++    let fds = recv_fds(&stream, count)?;
+     Ok(ReceivedHandoff {
+         manifest,
+         fds,
+@@ -517,6 +526,15 @@ fn recv_fd_batch(stream: &UnixStream, wanted: usize) -> io::Result<Vec<RawFd>> {
+     if out.is_empty() {
+         return Err(io::Error::other("handoff fd message missing SCM_RIGHTS"));
+     }
++    // SCM_RIGHTS does not preserve close-on-exec. Protect every received
++    // handle before restoration can spawn any replacement shell.
++    for fd in &out {
++        if unsafe { libc::fcntl(*fd, libc::F_SETFD, libc::FD_CLOEXEC) } == -1 {
++            let error = io::Error::last_os_error();
++            close_raw_fds(&out);
++            return Err(error);
++        }
++    }
+     Ok(out)
+ }
+ 
+diff --git a/src/server/headless/bootstrap.rs b/src/server/headless/bootstrap.rs
+index e5ff400..183636f 100644
+--- a/src/server/headless/bootstrap.rs
++++ b/src/server/headless/bootstrap.rs
+@@ -136,12 +136,19 @@ fn run_handoff_import_server(socket_path: &Path, token: &str) -> io::Result<()>
+     let should_quit = Arc::new(AtomicBool::new(false));
+ 
+     let mut imports = HashMap::new();
+-    for (pane, fd) in received.manifest.panes.into_iter().zip(received.fds) {
++    use std::os::fd::{FromRawFd, IntoRawFd, OwnedFd};
++    let mut fds = received.fds.into_iter().map(|fd| unsafe { OwnedFd::from_raw_fd(fd) });
++    for pane in received.manifest.panes {
++        let fd = fds.next().ok_or_else(|| io::Error::other("missing handoff PTY"))?;
++        let origin_fd = if pane.guarded_origin.is_some() {
++            Some(fds.next().ok_or_else(|| io::Error::other("missing handoff origin"))?)
++        } else { None };
+         let pane_id = pane.pane_id;
+         imports.insert(
+             pane_id,
+             crate::handoff_runtime::ImportedHandoffRuntime {
+-                master_fd: fd,
++                master_fd: fd.into_raw_fd(),
++                origin_fd,
+                 state: pane,
+             },
+         );
+diff --git a/src/server/headless/lifecycle.rs b/src/server/headless/lifecycle.rs
+index c700a9d..1a04ef9 100644
+--- a/src/server/headless/lifecycle.rs
++++ b/src/server/headless/lifecycle.rs
+@@ -82,7 +82,7 @@ impl HeadlessServer {
+             let Some(pane_id) = pane_by_terminal.get(terminal_id).copied() else {
+                 continue;
+             };
+-            let mut handoff_runtime = runtime.handoff_runtime_state(pane_id);
++            let mut handoff_runtime = runtime.handoff_runtime_state(pane_id, terminal_id.clone());
+             handoff_runtime.agent_state = self
+                 .app
+                 .state
+@@ -128,11 +128,15 @@ impl HeadlessServer {
+ 
+         let mut fds = Vec::new();
+         let duplicate_result = (|| {
+-            for (terminal_id, _) in &handoff_entries {
++            for (terminal_id, state) in &handoff_entries {
+                 let Some(runtime) = self.app.terminal_runtimes.get(terminal_id) else {
+                     continue;
+                 };
+                 fds.push(runtime.duplicate_handoff_fd()?);
++                if state.guarded_origin.is_some() {
++                    use std::os::fd::IntoRawFd;
++                    fds.push(runtime.duplicate_guarded_origin_fd()?.ok_or_else(|| io::Error::other("handoff origin disappeared"))?.into_raw_fd());
++                }
+             }
+             Ok::<(), io::Error>(())
+         })();
+diff --git a/src/terminal/runtime.rs b/src/terminal/runtime.rs
+index a971ef6..f80a69b 100644
+--- a/src/terminal/runtime.rs
++++ b/src/terminal/runtime.rs
+@@ -50,8 +50,9 @@ impl TerminalRuntime {
+     pub fn handoff_runtime_state(
+         &self,
+         pane_id: u32,
++        terminal_id: crate::terminal::TerminalId,
+     ) -> crate::handoff_runtime::HandoffRuntimeState {
+-        self.0.handoff_runtime_state(pane_id)
++        self.0.handoff_runtime_state(pane_id, terminal_id)
+     }
+ 
+     #[cfg(unix)]
+@@ -478,6 +479,11 @@ impl TerminalRuntime {
+         self.0.try_send_bytes(bytes)
+     }
+ 
++    #[cfg(unix)]
++    pub(crate) fn duplicate_guarded_origin_fd(&self) -> std::io::Result<Option<std::os::fd::OwnedFd>> {
++        self.0.duplicate_guarded_origin_fd()
++    }
++
+     pub(crate) fn guarded_prompt_origin(
+         &self,
+         terminal_id: &str,
 -- 
 2.54.0 (Apple Git-157)
 

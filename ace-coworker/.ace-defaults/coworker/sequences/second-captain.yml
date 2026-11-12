@@ -1,0 +1,13 @@
+---
+role: second-captain
+description: "Decision recommendation for task {{task}}"
+outcome: >-
+  One marked recommendation on the commissioned HITL case, or an explicit
+  inability to recommend; never a human answer or authorization.
+steps:
+  - name: recommend-decision
+    workflow: wfi://coworker/second-captain
+    instructions:
+      - "Read the exact case from the commissioned config and the referenced task evidence. Never create another case."
+      - "Write one suggestion with rationale using ace-hitl suggest. If the Captain already answered, preserve that answer and report the obsolete commission."
+      - "If unable to recommend, report the concrete reason to the overseer. Never send the case or answer on behalf of the Captain."

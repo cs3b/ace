@@ -118,7 +118,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         calls << config
         {"agent" => "worker-#{config['assignment']}", "assignment" => config["assignment"], "state" => "running"}
       end
-      manager = FakeTaskManager.new(ref => {id: ref, status: "pending", metadata: {}})
+      manager = FakeTaskManager.new(ref => {id: ref, status: "pending", metadata: {"roles" => %w[worker reviewer integrator]}})
       work_on = Ace::Overseer::Organisms::WorkOnOrchestrator.new(task_loader: manager,
         lifecycle_exclusion: @exclusion, coworker_launcher: launcher, config: {"runtime" => "herdr"},
         worktree_provisioner: FakeWorktreeProvisioner.new(worktree_path: root, branch: "fixture", created: false))
@@ -132,6 +132,21 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       assert_equal true, first[:assignment_created]
       assert_equal false, second[:assignment_created]
       assert_equal %w[worker worker], calls.map { |config| config.fetch("role") }
+    end
+  end
+
+  def test_native_delegation_requires_roles_before_creating_a_worktree
+    [nil, [], "worker", ["worker", "worker"], ["worker", " worker "]].each do |roles|
+      launcher = Object.new
+      launcher.define_singleton_method(:ready!) { true }
+      provisioner = FakeWorktreeProvisioner.new({})
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: FakeTaskManager.new("task" => {id: "task", status: "pending", metadata: {"roles" => roles}}),
+        lifecycle_exclusion: @exclusion, coworker_launcher: launcher,
+        config: {"runtime" => "herdr"}, worktree_provisioner: provisioner)
+      error = assert_raises(Ace::Overseer::Error) { orchestrator.call(task_ref: "task") }
+      assert_includes error.message, "explicit nonempty role sequence"
+      assert_empty provisioner.calls
     end
   end
 

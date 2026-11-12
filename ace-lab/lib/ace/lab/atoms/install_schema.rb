@@ -103,7 +103,7 @@ module Ace
 
           def normalize_environment_files(raw)
             return {} if raw.nil?
-            roles = %w[lab-overseer project-overseer worker verifier integrator]
+            roles = %w[lab-overseer project-overseer worker verifier integrator second-captain]
             unless raw.is_a?(Hash) && raw.all? { |role, path|
               roles.include?(role) && path.is_a?(String) && path.start_with?("/") &&
                 File.expand_path(path) == path && !path.match?(/[[:cntrl:]]/)

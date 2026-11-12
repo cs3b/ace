@@ -93,7 +93,7 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
         } });
       },
       status: (state) => {
-        ctx.ui?.setStatus?.("ace-eyes", `eyes ${state.retired ? "retired" : state.breaker?.reason || (state.observationUnavailable ? "observation-unavailable" : state.enabled ? "observing" : "off")} pending:${state.pending}`);
+        ctx.ui?.setStatus?.("ace-eyes", `eyes ${state.retired ? "retired" : state.breaker?.reason || (state.observationUnavailable ? "observation-unavailable" : state.wakeLimitedUntil && state.pending ? `wake-limited until ${new Date(state.wakeLimitedUntil).toISOString()}` : state.enabled ? "observing" : "off")} pending:${state.pending}`);
         if (state.breaker || state.retired) stopTimer();
       },
       observe: (config) => observe(ctx.cwd, config),

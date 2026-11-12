@@ -39,7 +39,7 @@ module Ace
         #   disposition: "created" | "reused" | "updated" | "planned" (dry-run)
         # @raise [Error] when a leg cannot be commissioned (unknown role,
         #   task/assignment mismatch, invalid assembly)
-        def call(task:, sequence:, overseer:, dry_run: false)
+        def call(task:, sequence:, overseer:, hitl_case: nil, dry_run: false)
           validate_role_names!(Array(sequence))
 
           # Pre-resolve EVERY leg first (dry-run commission pass): a late
@@ -57,6 +57,7 @@ module Ace
             entry = entry.dup
             entry["task"] = task
             entry["overseer"] = overseer
+            entry["hitl_case"] = hitl_case if entry["role"] == "second-captain"
             entry["resolved_config"] =
               entry["assignment"].to_s.strip.empty? ? nil : resolve_leg(entry)
             entry
@@ -83,8 +84,12 @@ module Ace
           # the leg config without touching the disk.
           resolved = commission.call(role: entry["role"], task: entry["task"],
             assignment: entry["assignment"], overseer: entry["overseer"],
-            force: true, dry_run: true)
+            **case_options(entry), force: true, dry_run: true)
           YAML.safe_dump(resolved.config)
+        end
+
+        def case_options(entry)
+          entry["role"] == "second-captain" ? {hitl_case: entry["hitl_case"]} : {}
         end
 
         def target_path(role)
@@ -105,7 +110,7 @@ module Ace
             commission = @commission_factory.call(@worktree_path, target)
             commission.call(role: role, task: entry["task"],
               assignment: entry["assignment"], overseer: entry["overseer"],
-              force: true, dry_run: false)
+              **case_options(entry), force: true, dry_run: false)
             existing.nil? ? "created" : "updated"
           end
 

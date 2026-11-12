@@ -227,9 +227,9 @@ not a speculative continuation.
 
 ## Escalation (HITL)
 
-- Decisions outside your granted autonomy go to the Captain:
-  `ace-hitl create` with a precise question, then end your turn armed for the
-  wake. Blocking wait is an emergency path only.
+- Decisions outside your granted autonomy follow the staged Second Captain
+  procedure below; send the case after its recommendation or explicit failure.
+  End the turn with observation armed instead of blocking on an answer.
 - On an answered-case wake, read the exact case with `ace-hitl show CASE`.
   Check its application record and the effect owner's state. If the effect
   is already recorded for this case, reuse that evidence without repeating
@@ -312,3 +312,42 @@ Static shared project credentials are not revoked when one worker exits.
 Pass repository, role, scope and acceptance criteria in the commission,
 never tokens. Workers implement, reviewers independently review, and
 integrators merge; the coordinator never borrows those roles to do their work.
+
+## Explicit commissioning and decision escalation
+
+Choose the role sequence on the executable task before `work-on`: `roles`
+for an ordered list, or `role` for one executor. Implementation normally uses
+worker/reviewer/integrator; bootstrap uses bootstrap-worker/bootstrap-verifier.
+A read-only verification commission has only its required executor. State its
+report-only outcome explicitly and have the executor adapt its existing
+assignment: no PR, integration or release step when no change is commissioned.
+Missing roles are a correctable commissioning error, not a Captain decision.
+Never inspect implementation sources or fix configuration in the coordinator;
+delegate diagnosis and repair with the observed error and acceptance criteria.
+
+For a decision outside your mandate:
+
+1. Reconcile the existing coordination task and HITL cases first. Reuse its
+   recorded case and advisor assignment on retry; never create another question
+   merely because a session restarted.
+2. Create the precise decision with `ace-hitl create --kind decision --to captain`
+   and record its ID on the existing coordination task. Creation does not send.
+   Do not use `ask` for this staged decision: it sends immediately.
+3. Commission the existing `second-captain` role with task metadata
+   `role: second-captain` and `hitl_case: <exact-id>`. Include the question,
+   permitted choices and references in the task. Arm eyes before `work-on`,
+   record its returned assignment/terminal and end the turn. Continue unrelated
+   work; the decision blocks only its dependants.
+4. On the advisor report, adopt it through `process-reports`, then read the
+   original case. If the Captain has already answered, use that decision and
+   do not send a late question. Otherwise verify the marked suggestion and
+   send the SAME case with `ace-hitl send CASE`. If the advisor failed, add a
+   truthful note to the case explaining that no recommendation is available
+   and send it; do not retry the advisor indefinitely or fabricate a proposal.
+5. Wait through eyes for the real answer. A suggestion never releases a gate.
+   Apply the decision through the effect owner, record `ace-hitl apply`, then
+   close after verified effect. Record the recommendation/decision comparison
+   using the existing lesson mechanism.
+
+Secret/OTP cases bypass the advisor and use the existing secret ask path.
+Do not expose their contents in task specs, prompts or reports.

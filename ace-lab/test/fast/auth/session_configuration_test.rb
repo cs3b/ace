@@ -22,6 +22,17 @@ module Ace::Lab::Auth
       assert_equal "/config/lab.json", config.resolve(project: "lab", role: "lab-overseer").environment_file
     end
 
+    def test_advisor_and_bootstrap_execution_can_use_coordinator_scope
+      data = document
+      data["roles"] << {"id" => "second-captain", "instructions" => "wfi://coworker/second-captain"}
+      config = SessionConfiguration.new(loader: -> { data })
+      assert_equal "/lab", config.resolve(project: "lab", role: "second-captain").path
+      assert_equal "/lab/ace", config.resolve(project: "ace", role: "second-captain").path
+      assert_nil config.resolve(project: "lab", role: "second-captain").environment_file
+      assert_equal "/lab", config.resolve(project: "lab", role: "worker").path
+      assert_raises(Error) { config.resolve(project: "lab", role: "project-overseer") }
+    end
+
     def test_refuses_unknown_project_role_and_missing_runtime
       config = SessionConfiguration.new(loader: -> { document })
       assert_raises(Error) { config.resolve(project: "other", role: "worker") }

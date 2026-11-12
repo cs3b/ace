@@ -326,3 +326,22 @@ Final observation snapshot at2026-11-12T00:10:18UTC: lab eyes enabled, all sourc
 - Project availability revision included ordinary working/idle transitions. Normalize those to available and verify actual agent presence even when only one pane exists. Retained dead shell regression added.
 
 No new GLM work or VM reset has been run in this phase. Provider usage unknown (not measured).
+
+
+### 2026-11-12 — review catches integration gaps before VM deployment
+
+- Advisor composition existed but installed launch rejected `second-captain` and
+  coordinator scope. Added explicit role and scope selection, without inheriting
+  worker tokens. Real-child environment tests cover both scopes. Live advisor
+  delivery and human decision remain pending.
+- Closed-history report shortcut trusted report ID before cleanup. A changed
+  allocation could retire the wrong executor. Validate task/assignment/role/result
+  against the accepted private step before any shortcut. Altered duplicate tests
+  prove no retirement or continuation; incomplete continuations keep normal checks.
+- Native received descriptors needed CLOEXEC before any restored shell spawns;
+  origin import needed RAII before validation. Corrected both. Test must inspect
+  the original incoming fd, not a clone that silently sets CLOEXEC itself.
+- Recursive child observation resolved the alias `overseer` in the wrong scope
+  and reread unrelated histories. Read existing local HITL owner rows directly,
+  compare the lab-resolved address, and project only relevant rows. Two-project
+  alias regression and progress-without-revision tests pass. Live timing pending.

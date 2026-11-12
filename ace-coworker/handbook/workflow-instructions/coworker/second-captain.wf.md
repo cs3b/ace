@@ -82,7 +82,8 @@ do not open a new case, do not apply or await the answer.
 - A question marked `secret: true` (e.g. OTP) is NEVER delegated to you; if
   you receive one, report the mismatch and stop.
 - If the Captain already answered, DISCARD your late proposal, mark your
-  assignment complete, and do not notify anyone — the human decision stands
+  assignment complete, and report the obsolete commission to the Overseer through
+  the normal report path. Do not notify the Captain; the human decision stands
   and needs no second approval.
 - Your advisory rights cover reading the case and its referenced evidence
   only — no merges, no releases, no token use.

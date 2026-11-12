@@ -23,7 +23,8 @@ module Ace
             {"key" => Digest::SHA256.hexdigest(event.file_path.to_s),
              "id" => event.id, "revision" => Digest::SHA256.hexdigest(JSON.generate(canonical(semantic))),
              "type" => event.type, "status" => event.status, "result" => event.result,
-             "task" => event.metadata["task"], "assignment" => event.metadata["assignment"]}
+             "task" => event.metadata["task"], "assignment" => event.metadata["assignment"],
+             "recipient" => event.recipient}
           end
           {"schema" => "ace.hitl.observation/v1", "events" => rows.sort_by { |row| row["key"] }}
         end

@@ -134,14 +134,21 @@ module Ace
           launcher.ready!
           ref = entry.fetch(:ref)
           task = entry.fetch(:task)
+          roles = task.metadata["roles"] || (task.metadata["role"] && [task.metadata["role"]])
+          unless roles.is_a?(Array) && !roles.empty? && roles.all? { |role| role.is_a?(String) && !role.empty? && role == role.strip } && roles.uniq == roles
+            raise Error, "task #{task.id} requires an explicit nonempty role sequence (roles or role); choose roles for this commission before work-on"
+          end
+          if roles.include?("second-captain") && task.metadata["hitl_case"].to_s.strip.empty?
+            raise Error, "second-captain commission requires hitl_case naming the existing decision; do not create another case on retry"
+          end
           lifecycle_exclusion.with_shared(lifecycle_exclusion.task_key(ref), reset_removed: true) do
             lifecycle_exclusion.with_exclusive("delegate:#{ref}") do
               worktree = @worktree_provisioner.provision(ref)
               root = worktree.fetch(:worktree_path)
-              roles = task.metadata["roles"] || (task.metadata["role"] ? [task.metadata["role"]] : %w[worker reviewer integrator])
               sequence = Ace::Coworker::Molecules::RoleSequenceComposer.new(project_root: root).call(task: task.id, roles: roles)
               configs = Ace::Coworker::Organisms::StartConfigWriter.new(worktree_path: root).call(
-                task: task.id, sequence: sequence, overseer: @config["owner"] || launcher.recipient)
+                task: task.id, sequence: sequence, overseer: @config["owner"] || launcher.recipient,
+                hitl_case: task.metadata["hitl_case"])
               state = Molecules::HandoffProbe.new.probe(root, task_id: task.id)
               leg = state.fetch(:legs).find { |candidate| candidate["state"] != "completed" }
               raise Error, "all prepared roles are complete; reconcile the task instead of starting again" unless leg

@@ -136,6 +136,30 @@ and continuation without launching duplicate work. Readiness requires the
 coordinator's completed first turn and active eyes, so both lab and project
 first turns arm observation and settle before dispatch.
 
+Delegation requires explicit role metadata. Implementation selects worker,
+reviewer and integrator; bootstrap selects bootstrap-worker and
+bootstrap-verifier; report-only verification selects its one required role.
+Missing roles fail before a worktree is created. Second Captain is a configured
+ordinary execution role at either coordinator or project scope. The private
+step records `hitl_case`; its one-step assignment attaches a suggestion to that
+exact existing case. The overseer sends the case to the Captain only after a
+suggestion or a recorded advisor failure. A suggestion never supplies consent;
+a Captain answer takes precedence. Secret cases bypass the advisor.
+
+Visibility and wake relevance differ. Assignment progress remains readable
+without revising its actionable state. The lab reads project HITL rows addressed
+to its concrete configured address (aliases are resolved at the lab once), plus
+project coordinator availability. Project turn transitions are not availability
+changes. Source degradation and recovery retain stable revision semantics;
+when the wake budget is exhausted, eyes shows pending work and its resume time.
+
+`process-reports` prints elapsed times for collection, matching, verification,
+acceptance, executor cleanup and continuation. Its private task snapshot lasts
+only for that invocation and refreshes a manager after mutation. Accepted,
+closed history checks immutable report identity before cleanup, skipping costly
+completion verification; unfinished continuation still reconciles through the
+normal owner gates. A retained panel without its agent is not a live coordinator.
+
 These operations and `status` / `prune` use the same files; they do not
 introduce another state owner.
 

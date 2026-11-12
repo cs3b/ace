@@ -78,6 +78,24 @@ class SessionEnvironmentTest < AceOverseerTestCase
     end
   end
 
+  def test_advisor_launches_in_both_scopes_without_inheriting_worker_credentials
+    @document["roles"] << {"id" => "second-captain", "instructions" => "wfi://coworker/second-captain"}
+    %w[/lab/.ace-wt/decision /lab/ace/.ace-wt/decision].each do |root|
+      environment.with_environment(root: root, role: "second-captain") do |file, directory, args|
+        @directories << directory
+        values = JSON.parse(File.read(file))
+        out, err, status = Open3.capture3(values, RbConfig.ruby, "-rjson", "-e", "puts JSON.generate(ENV.to_h)", unsetenv_others: true)
+        assert status.success?, err
+        child = JSON.parse(out)
+        assert_equal "installed", child["ACE_TOOLCHAIN"]
+        assert_equal ["--model", "test/local"], args
+        refute child.key?("FORGEJO_TOKEN")
+        refute child.key?("ADMIN_TOKEN")
+        assert_equal ["test"], JSON.parse(File.read(File.join(directory, "auth.json"))).keys
+      end
+    end
+  end
+
   def test_missing_executable_or_unsafe_credential_source_refuses_before_launch
     File.chmod(0o600, @runtime)
     assert_raises(Ace::Overseer::Error) { environment.with_environment(root: "/lab/ace", role: "worker") { flunk "launched" } }

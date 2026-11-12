@@ -118,6 +118,39 @@ class ReportProcessorTest < AceOverseerTestCase
 
 
 
+  def test_mutated_duplicate_cannot_retire_another_assignment_or_continue
+    completed = step("8xg.t.mgr.0", status: "done", metadata: {
+      "assignment" => "w1", "role" => "worker", "worktree" => "/wt/prj",
+      "processed_report" => "ab12cd", "report_result" => "success"})
+    tree = manager(steps: [completed]); tree.status = "done"
+    [{"assignment" => "other"}, {"task" => "other"}, {"role" => "integrator"}, {"result" => "error"}].each do |mutation|
+      subject = Ace::Overseer::Organisms::ReportProcessor.new(
+        inbox: FakeInbox.new([report.merge(mutation)]), task_manager: FakeTaskManager.new([tree]),
+        retire: ->(**) { flunk "mutated report must not retire any executor" },
+        handoff: ->(**) { flunk "mutated report must not continue" })
+      assert_equal :unmatched, subject.call[:outcomes].first[:status]
+    end
+  end
+
+  def test_closed_history_reads_private_index_once_without_rechecking_completed_assignments
+    completed = step("8xg.t.mgr.0", status: "done", metadata: {
+      "assignment" => "w1", "processed_report" => "ab12cd", "report_result" => "success"})
+    tree = manager(steps: [completed])
+    tree.status = "done"
+    tasks = FakeTaskManager.new([tree])
+    lists = 0
+    tasks.define_singleton_method(:list) { |**| lists += 1; [tree] }
+    messages = []
+    subject = Ace::Overseer::Organisms::ReportProcessor.new(inbox: FakeInbox.new([report, report]),
+      task_manager: tasks, completion_check: ->(**) { flunk "accepted closed history should not recheck assignment" },
+      retire: ->(**) {}, handoff: ->(**) { flunk "closed history must not continue" })
+    result = subject.call(on_progress: ->(message) { messages << message })
+    assert_equal 1, lists
+    assert_equal 2, result[:counts][:duplicate]
+    assert messages.any? { |message| message.match?(/Completed collect reports \(\d+\.\d{3}s\)/) }
+    assert_empty tasks.updates
+  end
+
   def test_success_report_updates_step_and_starts_next_unblocked_step_via_work_on
     managers = [manager(steps: [
       step("8xg.t.mgr.0", status: "progress", metadata: {"assignment" => "w1"}),

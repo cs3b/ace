@@ -153,8 +153,7 @@ module Ace
               "type" => "executor"}.merge(payload)
             assignments = report[:assignments].map do |assignment|
               {"key" => "assignment:#{assignment["id"]}",
-               "revision" => revision({"id" => assignment["id"], "state" => assignment["state"],
-                                       "progress" => assignment["progress"]}),
+               "revision" => revision({"id" => assignment["id"], "state" => assignment["state"]}),
                "type" => "assignment", "id" => assignment["id"],
                "state" => assignment["state"], "progress" => assignment["progress"]}
             end

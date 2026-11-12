@@ -16,3 +16,23 @@ Status: in-progress. Approved one preserved UTM/Forgejo/Pi-GLM run; no reset or 
 ## Evidence
 
 Baseline main a84d2eae19a5395a57f6adb382d0f51d7d808c05. Published five gems are not assumed deployed. Earlier evidence remains in 2026-11-11-live-cycle-acceptance.md. Record stage durations and model usage only where measured; unknown otherwise.
+
+### Local implementation evidence
+
+Native source `84753e6b9955fac56a316e1e99d3cbe7219fad9b`, source tree
+`e948aca926f1511806e03bbea4933c32630122b8`: schema 2 transfers terminal ID,
+guarded origin and original Linux pidfd. Descriptor adoption is RAII and
+CLOEXEC precedes shell restoration. Parent reparenting after handoff is expected;
+birth and kernel handle remain authoritative. 58 handoff tests pass on macOS
+(nextest 3635979c-278e-4a7a-a022-e24beabaf8f8). Linux-only probes and real live handoffs remain pending.
+The old schema 1 VM needs a controlled first restart; it cannot export identity
+it never recorded in its handoff payload.
+
+ARM64 binary SHA256 `43e5390f4f8c7ffe9d18aef0ec29cfcdcf801db061695a4684671cae4f23f918`;
+provenance SHA256 `d524bba67f31798263262f6cd644e75ec2e1fba293382e1e6ef71aa6cba25201`.
+
+Package runs: overseer 600/2889 (one skip), HITL 411/2116 (six skips),
+Herdr 629/2600, coworker 424/2012 and wake JS wrapper 2/7, all zero failures.
+Latest additional guards: overseer targeted 43/284 (445a8a84-2bd8-45f2-a1e9-f3b03dd31ee7),
+lab targeted 48/350 (5043b889-c1df-4d74-8ef3-1990e232a1a2), zero failures.
+These are component evidence, not live autonomy acceptance.

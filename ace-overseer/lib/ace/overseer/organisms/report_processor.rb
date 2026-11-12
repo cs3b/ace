@@ -31,25 +31,47 @@ module Ace
         # @return [Hash] {dry_run:, outcomes: [...], counts: {...}}
         def call(dry_run: false, on_progress: nil)
           progress = on_progress || ->(_msg) {}
-          events = @inbox.incoming_events
+          events = timed(progress, "collect reports") { @inbox.incoming_events }
+          @manager_snapshot = timed(progress, "read private tasks") { @task_manager.list(in_folder: "_overseer") }
           progress.call("Incoming ace-hitl events: #{events.size}")
 
           outcomes = events.map do |event|
-            process_event(event, dry_run: dry_run, progress: progress)
+            result = process_event(event, dry_run: dry_run, progress: progress)
+            if !dry_run && result[:manager_ref]
+              ref = result[:manager_ref]
+              current = @task_manager.show(ref)
+              @manager_snapshot = @manager_snapshot.reject { |manager| manager.id.to_s == ref }
+              @manager_snapshot << current if current
+            end
+            result
           end
 
           counts = OUTCOME_STATUSES.to_h { |status| [status, outcomes.count { |o| o[:status] == status }] }
           {dry_run: dry_run, outcomes: outcomes, counts: counts}
+        ensure
+          @manager_snapshot = nil
         end
 
         private
 
         def process_event(event, dry_run:, progress:)
-          verdict = Atoms::ReportInterpretation.evaluate(event: event, managers: private_managers)
+          verdict = timed(progress, "match #{event['id']}") do
+            Atoms::ReportInterpretation.evaluate(event: event, managers: private_managers)
+          end
+          if verdict[:status] == :duplicate && (reason = duplicate_identity_error(verdict, event))
+            return outcome({status: :unmatched, reason: reason}, event, nil, reason)
+          end
+          if accepted_closed_report?(verdict, event)
+            progress.call("Event #{event['id']}: accepted closed history; only reconcile executor cleanup")
+            retirement = dry_run ? nil : timed(progress, "retire #{event['id']}") { retire_executor(verdict, event) }
+            return outcome(verdict, event, retirement, retirement ? retirement[:reason] : "closed report already accepted; no continuation")
+          end
 
           if verdict[:status] == :success || (verdict[:status] == :duplicate && verdict[:recorded_result] == "success")
-            refusal = @completion_check.call(event: event,
-              manager: @task_manager.show(verdict[:manager_ref]), step: @task_manager.show(verdict[:step_ref]))
+            refusal = timed(progress, "verify #{event['id']}") do
+              @completion_check.call(event: event,
+                manager: @task_manager.show(verdict[:manager_ref]), step: @task_manager.show(verdict[:step_ref]))
+            end
             verdict = {status: :unmatched, reason: refusal} if refusal
           end
 
@@ -84,7 +106,7 @@ module Ace
         # incomplete executor cleanup. A dry run changes nothing.
         def resume_duplicate_continuation(verdict, event, dry_run:, progress:)
           unless dry_run
-            retirement = retire_executor(verdict, event)
+            retirement = timed(progress, "retire #{event['id']}") { retire_executor(verdict, event) }
             return outcome(verdict, event, retirement, retirement[:reason]) if retirement
           end
           unless verdict[:recorded_result] == Atoms::ReportInterpretation::SUCCESS_RESULT && !dry_run
@@ -93,7 +115,7 @@ module Ace
               "nothing re-run")
           end
 
-          continuation = continue_queue(verdict[:manager_ref], progress: progress)
+          continuation = timed(progress, "continue #{event['id']}") { continue_queue(verdict[:manager_ref], progress: progress) }
           outcome(verdict, event, continuation,
             "report #{event['id']} already recorded on #{verdict[:step_ref]} (result: #{verdict[:recorded_result]}); " \
             "continuation re-checked - #{continuation_description(continuation)}")
@@ -108,14 +130,14 @@ module Ace
             return outcome(verdict, event, nil, message)
           end
 
-          unless @task_manager.update(verdict[:step_ref], set: verdict[:set])
+          unless timed(progress, "accept #{event['id']}") { @task_manager.update(verdict[:step_ref], set: verdict[:set]) }
             reason = "task #{verdict[:step_ref]} no longer resolves - moved or archived since the event matched"
             message = "report #{event['id']} not recorded: #{reason}; kept in ace-hitl for clarification"
             progress.call("Event #{event['id']}: #{message}")
             return outcome(verdict, event, {action: "blocked", reason: reason}, message)
           end
           progress.call("Event #{event['id']}: recorded #{verdict[:status]} on #{verdict[:step_ref]}")
-          retirement = retire_executor(verdict, event)
+          retirement = timed(progress, "retire #{event['id']}") { retire_executor(verdict, event) }
           return outcome(verdict, event, retirement, retirement[:reason]) if retirement
 
           if verdict[:status] == :error
@@ -125,7 +147,7 @@ module Ace
             return outcome(verdict, event, nil, message)
           end
 
-          continuation = continue_queue(verdict[:manager_ref], progress: progress)
+          continuation = timed(progress, "continue #{event['id']}") { continue_queue(verdict[:manager_ref], progress: progress) }
           outcome(verdict, event, continuation,
             "step #{verdict[:step_ref]} done (report #{event['id']}); #{continuation_description(continuation)}")
         end
@@ -247,7 +269,42 @@ module Ace
         end
 
         def private_managers
-          @task_manager.list(in_folder: "_overseer")
+          @manager_snapshot || @task_manager.list(in_folder: "_overseer")
+        end
+
+        def duplicate_identity_error(verdict, event)
+          manager = @task_manager.show(verdict[:manager_ref])
+          step = @task_manager.show(verdict[:step_ref])
+          return "accepted report allocation no longer exists" unless manager && step
+          return "duplicate report task differs from accepted allocation" unless event["task"].to_s == manager.metadata["project_task"].to_s
+          return "duplicate report assignment differs from accepted allocation" unless event["assignment"].to_s == step.metadata["assignment"].to_s
+          return "duplicate report result differs from accepted result" unless event["result"].to_s == verdict[:recorded_result].to_s
+          if !event["role"].to_s.empty? && event["role"] != step.metadata["role"]
+            return "duplicate report role differs from accepted allocation"
+          end
+          nil
+        end
+
+        def accepted_closed_report?(verdict, event)
+          return false unless verdict[:status] == :duplicate && verdict[:recorded_result] == "success"
+          manager = private_managers.find { |candidate| candidate.id.to_s == verdict[:manager_ref] }
+          return false unless manager
+          family = [manager, *Array(manager.subtasks)]
+          step = family.find { |candidate| candidate.id.to_s == verdict[:step_ref] }
+          step && step.metadata["processed_report"] == event["id"] && family.all? do |candidate|
+            Ace::Task::Atoms::TaskValidationRules.terminal_status?(candidate.status.to_s)
+          end
+        end
+
+        def timed(progress, label)
+          started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          progress.call("Starting #{label}")
+          result = yield
+          progress.call("Completed #{label} (#{format('%.3f', Process.clock_gettime(Process::CLOCK_MONOTONIC) - started)}s)")
+          result
+        rescue StandardError
+          progress.call("Failed #{label} (#{format('%.3f', Process.clock_gettime(Process::CLOCK_MONOTONIC) - started)}s)")
+          raise
         end
 
         def outcome(verdict, event, continuation, message)

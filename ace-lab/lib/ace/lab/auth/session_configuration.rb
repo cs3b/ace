@@ -9,7 +9,7 @@ module Ace
       # Passive launch data from the installed manifest. Roles select a brief
       # and a project-specific environment, not an operating-system identity.
       class SessionConfiguration
-        ROLES = %w[lab-overseer project-overseer worker verifier integrator].freeze
+        ROLES = %w[lab-overseer project-overseer worker verifier integrator second-captain].freeze
         Selection = Data.define(:project, :path, :role, :instructions, :gem_home, :runtime, :environment_file)
 
         def initialize(loader: -> { Molecules::InstallManifestLoader.load })
@@ -20,9 +20,9 @@ module Ace
           document = @loader.call
           raise Error, "session role is not supported" unless ROLES.include?(role)
 
-          scope = if role == "lab-overseer"
-            document["coordinator"] if document.dig("coordinator", "id") == project
-          else
+          scope = if document.dig("coordinator", "id") == project
+            document["coordinator"] unless role == "project-overseer"
+          elsif role != "lab-overseer"
             document.fetch("projects").find { |entry| entry["id"] == project }
           end
           selected_role = document.fetch("roles").find { |entry| entry["id"] == role }

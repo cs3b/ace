@@ -38,6 +38,24 @@ module Ace
           assert repeated.all? { |entry| entry["disposition"] == "existing" }
         end
 
+        def test_advisor_commission_round_trips_exact_case_and_reuses_assignment
+          task = "8xu.t.abc"
+          folder = File.join(@root, ".ace-tasks", "#{task}-decision")
+          FileUtils.mkdir_p(folder)
+          File.write(File.join(folder, "#{task}-decision.s.md"), "---\nid: #{task}\nstatus: pending\n---\n# Decision\n")
+          composer = RoleSequenceComposer.new(project_root: @root, gem_sequences_dir: SHIPPED_SEQUENCES)
+          first = composer.call(task: task, roles: ["second-captain"])
+          writer = Ace::Coworker::Organisms::StartConfigWriter.new(worktree_path: @root)
+          written = writer.call(task: task, sequence: first, overseer: "overseer", hitl_case: "8yb123")
+          config = YAML.safe_load_file(File.join(@root, written.first.fetch("path")))
+          assert_equal "8yb123", config["case"]
+          assert_includes config["start_prompt"], "8yb123"
+          repeated = composer.call(task: task, roles: ["second-captain"])
+          assert_equal first.first["assignment"], repeated.first["assignment"]
+          assert_equal "reused", writer.call(task: task, sequence: repeated, overseer: "overseer", hitl_case: "8yb123").first["disposition"]
+          assert_equal 1, step_files(first.first["assignment"]).length
+        end
+
         def teardown
           FileUtils.remove_entry(@root)
           super
