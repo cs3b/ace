@@ -345,3 +345,33 @@ No new GLM work or VM reset has been run in this phase. Provider usage unknown (
   and reread unrelated histories. Read existing local HITL owner rows directly,
   compare the lab-resolved address, and project only relevant rows. Two-project
   alias regression and progress-without-revision tests pass. Live timing pending.
+
+
+### 2026-11-12 — deployment operator corrections
+
+Candidate72ef4dd68062ed82e3db43a0961710f7043d3baa installed with one
+`bundle install --local` in4.91s. No VM, Forgejo or task reset.
+Installer API invocation for extension projection initially omitted the selected
+`ACE_TOOLCHAIN=installed`, assigning declared account mo instead of protected
+root ownership. Start correctly refused. Operator restored only projection-owned
+paths/receipt to root, reran installed ExtensionProvisioner from manifest; passed.
+This was operator error, not permission to relax the guard. Also corrected wrong
+`/eyes off` command (refused without state change), native artifact verify directory
+(extra files in /var/tmp refused; dedicated artifact directory verified), and
+standalone host probe interpreter (mise outside repo chose3.4.9 against3.4.8
+native gems; explicit selected3.4.8 passed). These interventions are disclosed.
+Old schema1 Herdr stopped only after both Pi sessions quit. Current source
+restarted via `ace-herdr start`, retaining task and transcript data; old panels
+explicitly require coordinator relaunch because they lack a fresh environment.
+
+
+### 2026-11-12 — foreground launch removed native terminal context
+
+`ace-herdr start` succeeded after the deployment correction, but foreground
+`ace-overseer start` produced a screen-detected Pi with no native session/ready
+metadata. Cause: cleaned SessionEnvironment removed HERDR_ENV and PANE_ID,
+disabling the installed Pi integration. Preserve four inherited terminal-context
+keys only for the foreground launch; delegate destination context remains owned
+by native Herdr. Real-child regression failed before fix (ea3d4c94-020b-43d5-bfe7-b40b98f98b86).
+Stopped only the new incomplete Pi first turn via /quit; task/eyes files retained.
+No autonomous completion credited. Candidate pre.2/live retest pending.

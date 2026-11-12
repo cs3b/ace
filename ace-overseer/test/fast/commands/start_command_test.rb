@@ -95,6 +95,32 @@ module Commands
       FileUtils.remove_entry(credentials) if credentials && File.exist?(credentials)
     end
 
+    def test_foreground_child_retains_native_terminal_context_but_not_unrelated_environment
+      keys = %w[HERDR_ENV HERDR_PANE_ID HERDR_TAB_ID HERDR_WORKSPACE_ID TEST_ADMIN_SECRET]
+      previous = keys.to_h { |key| [key, ENV[key]] }
+      values = %w[1 w2:p7 w2:t7 w2 must-not-leak]
+      keys.zip(values).each { |key, value| ENV[key] = value }
+      Dir.mktmpdir("foreground-environment") do |directory|
+        file = File.join(directory, "env.json")
+        File.write(file, "{}")
+        environment = Object.new
+        environment.define_singleton_method(:with_environment) { |**_, &block| block.call(file, nil, []) }
+        child = 'require "json"; puts JSON.generate(ENV.to_h)'
+        report = {"status" => "foreground", "scope" => "lab", "root" => Dir.pwd,
+          "command" => [RbConfig.ruby, "-e", child]}
+        out, err = capture_subprocess_io do
+          Ace::Overseer::Molecules::SessionEnvironment.stub(:new, environment) do
+            Ace::Overseer::CLI::Commands::Start.new(orchestrator: FakeOrchestrator.new(report)).call
+          end
+        end
+        inherited = JSON.parse(out)
+        keys.take(4).zip(values).each { |key, value| assert_equal value, inherited[key], err }
+        refute inherited.key?("TEST_ADMIN_SECRET")
+      end
+    ensure
+      previous.each { |key, value| ENV[key] = value } if previous
+    end
+
     def test_real_bare_cli_waits_in_current_cwd_without_any_herdr_call_or_environment
       Dir.mktmpdir("bare-start") do |root|
         bin = File.join(root, "bin")

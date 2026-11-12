@@ -90,6 +90,9 @@ module Ace
             Molecules::SessionEnvironment.new.with_environment(root: report.fetch("root"), role: role) do |path, credentials, _args|
               directory = credentials
               environment = JSON.parse(File.read(path))
+              # Foreground Pi occupies this terminal; delegated launches receive
+              # their destination context from native Herdr instead.
+              environment.merge!(ENV.to_h.slice("HERDR_ENV", "HERDR_PANE_ID", "HERDR_TAB_ID", "HERDR_WORKSPACE_ID"))
               system(environment, *report.fetch("command"), unsetenv_others: true)
               status = $?
               unless status&.success?

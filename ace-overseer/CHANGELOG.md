@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0.pre.2] - 2026-11-12
+
+### Fixed
+
+- Preserve native terminal context for foreground Pi so Herdr receives session identity and readiness hooks; delegated launches still obtain their destination context from Herdr.
+
 ## [0.31.0.pre.1] - 2026-11-12
 
 ### Changed
