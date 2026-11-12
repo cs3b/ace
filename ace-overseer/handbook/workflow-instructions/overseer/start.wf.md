@@ -99,6 +99,9 @@ running agent or write a second launch script around it.
 
 Record returned assignment, worktree, terminal and role on the matching
 private coordination step, then END THE TURN. Eyes observes the result.
+When closing a private coordination family, keep it done in the Git-ignored
+`_overseer` folder; do not move it into the ordinary archive. The queue workflow
+defines same-family recovery if a private record was moved out by mistake.
 On replay, reconcile the recorded execution. An uncertain launch blocks a new
 start; never invent another name to bypass it. A missing observer, runtime or
 credential source is a concrete blocker to report, not a repair for you to do.

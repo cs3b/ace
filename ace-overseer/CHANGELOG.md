@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0.pre.10] - 2026-11-12
+
+### Fixed
+
+- Keep completed private coordination families in their ignored owner folder and restore misplaced records through the existing task move operation, preserving status and report identities.
+
 ## [0.31.0.pre.9] - 2026-11-12
 
 ### Fixed

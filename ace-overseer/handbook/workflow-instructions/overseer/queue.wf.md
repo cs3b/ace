@@ -210,6 +210,14 @@ implementation, review, integration, and any project-required step) is
 terminal with verified results. Implementation completion alone never closes
 it. Closing a step family updates the owning project task with the results.
 
+Mark private coordination tasks done in `.ace-tasks/_overseer/`; do not use
+`--move-to archive` for these families. The ordinary archive is not necessarily
+Git-ignored. Keep their accepted-report and assignment references in the private
+owner location so restart/replay can still reconcile them. If a private family
+was moved out, restore that same family with `ace-task update ID --move-to _overseer`
+and verify Git ignores its actual path; preserve its terminal status and evidence.
+Ordinary executable project tasks follow their normal archive workflow.
+
 ## Worked example
 
 Two features, B needing A's merge:

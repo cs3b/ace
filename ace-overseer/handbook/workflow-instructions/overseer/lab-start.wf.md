@@ -116,6 +116,9 @@ blocker and end the turn. Reconcile existing work before dispatching new work.
 
 - The lab root is a coordination directory with its own `_overseer`; project
   locations come from the lab topology (`ace-lab`), never from names.
+- Completed private coordination tasks remain done in the ignored `_overseer`
+  folder; never move them into the ordinary project archive. Follow the queue
+  workflow to restore any misplaced family without changing its identity.
 - Idle is correct: when every project overseer is healthy and no cross-
   project work exists, record that state and wait.
 - Capabilities not yet delivered are reported as gaps, not simulated.
