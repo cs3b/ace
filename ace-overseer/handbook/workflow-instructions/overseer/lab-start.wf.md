@@ -168,9 +168,13 @@ For a decision outside your mandate:
    truthful note to the case explaining that no recommendation is available
    and send it; do not retry the advisor indefinitely or fabricate a proposal.
 5. Wait through eyes for the real answer. A suggestion never releases a gate.
-   Apply the decision through the effect owner, record `ace-hitl apply`, then
-   close after verified effect. Record the recommendation/decision comparison
-   using the existing lesson mechanism.
+   Apply the decision through the effect owner and record `ace-hitl apply`.
+   When the case has a suggestion, record the recommendation/decision comparison
+   with `ace-hitl lesson` BEFORE closing the case; terminal cases reject lessons.
+   Then close after verifying the effect and the required lesson. If the advisor
+   failed and no suggestion exists, record that absence; do not invent a comparison.
+   If a case was already closed without its lesson, preserve the gap on the owning
+   task instead of reopening or rewriting the terminal case.
 
 Secret/OTP cases bypass the advisor and use the existing secret ask path.
 Do not expose their contents in task specs, prompts or reports.

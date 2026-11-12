@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0.pre.9] - 2026-11-12
+
+### Fixed
+
+- Record the recommendation/decision lesson before closing HITL; retain an explicit owning-task gap when an earlier terminal case missed its lesson.
+
 ## [0.31.0.pre.8] - 2026-11-12
 
 ### Fixed
