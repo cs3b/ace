@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0.pre.8] - 2026-11-12
+
+### Fixed
+
+- Keep between-step paused/running transitions silent for the exact live native executor, including role-specific commissions; preserve actual readable states, failure, completion and missing-session signals.
+
 ## [0.31.0.pre.7] - 2026-11-12
 
 ### Fixed

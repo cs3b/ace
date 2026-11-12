@@ -125,8 +125,9 @@ module Ace
         # executor probe reads the worktree's commissioned config and the
         # ace-assign inventory (existing run identifiers — assignment
         # ids, never pane names), the ActiveExecutorRule decides live vs
-        # stale, and each in-flight assignment projects its own progress
-        # row so a step report revises that assignment only.
+        # stale. Progress remains readable; between-step paused/running
+        # transitions of an identified live native executor are not wake
+        # reasons. Native completion/disappearance and reports remain signals.
         def coworker_events(overseer_tasks)
           result = @worktrees.list_all
           raise Error, result[:error] || "failed to list worktrees" unless result[:success]
@@ -149,16 +150,36 @@ module Ace
             end
             payload = {"path" => worktree.path, "active" => verdict[:active],
               "evidence" => verdict[:evidence], "sessions" => visible, "missing_sessions" => missing}
-            executor = {"key" => "executor:#{identity}", "revision" => revision(payload),
+            live_assignments = report[:assignments].filter_map do |assignment|
+              id = assignment["id"]
+              id if visible.any? { |session| session["agent"] == "coworker-#{id}" } &&
+                missing.none? { |binding| binding["assignment"] == id }
+            end
+            actionable_assignments = report[:assignments].map do |assignment|
+              assignment.merge("state" => actionable_assignment_state(assignment, live_assignments))
+            end
+            actionable_verdict = Ace::Coworker::Atoms::ActiveExecutorRule.evaluate(
+              config: report[:config], assignments: actionable_assignments
+            )
+            fingerprint = payload.merge("active" => actionable_verdict[:active], "evidence" => actionable_verdict[:evidence])
+            executor = {"key" => "executor:#{identity}", "revision" => revision(fingerprint),
               "type" => "executor"}.merge(payload)
             assignments = report[:assignments].map do |assignment|
               {"key" => "assignment:#{assignment["id"]}",
-               "revision" => revision({"id" => assignment["id"], "state" => assignment["state"]}),
+               "revision" => revision({"id" => assignment["id"],
+                 "state" => actionable_assignment_state(assignment, live_assignments)}),
                "type" => "assignment", "id" => assignment["id"],
                "state" => assignment["state"], "progress" => assignment["progress"]}
             end
             [executor] + assignments
           end
+        end
+
+        def actionable_assignment_state(assignment, live_assignments)
+          state = assignment["state"]
+          return "running" if state == "paused" && live_assignments.include?(assignment["id"])
+
+          state
         end
 
         # A coordinator's durable binding also detects a session that

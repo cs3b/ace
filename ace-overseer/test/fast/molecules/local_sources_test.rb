@@ -194,6 +194,49 @@ module Molecules
       refute_equal progressed["revision"], row.call["revision"]
     end
 
+    def test_live_commission_step_transitions_do_not_wake_but_failure_and_exit_do
+      assert_live_step_transitions({"assignment" => "job-7"})
+    end
+
+    def test_role_specific_config_does_not_require_a_default_commission_to_suppress_step_transitions
+      assert_live_step_transitions(nil)
+    end
+
+    def assert_live_step_transitions(config)
+      worktree = Worktree.new("/lab/ace/.ace-wt/feature", "work", false)
+      assignment = {"id" => "job-7", "state" => "paused", "progress" => {"done" => 0}}
+      agents = [{"terminal_id" => "term_123abc", "cwd" => worktree.path, "name" => "coworker-job-7"}]
+      herdr = Object.new
+      herdr.define_singleton_method(:agent_list) { Struct.new(:parsed_json).new({"result" => {"agents" => agents}}) }
+      probe = FakeProbe.new({config: config, assignments: [assignment]})
+      observer = sources(worktrees: [worktree], probe: probe, herdr: herdr, env: {"ACE_RUNTIME" => "herdr"})
+      rows = -> { observer.call.fetch("events").select { |row| %w[executor assignment].include?(row["type"]) } }
+      revisions = -> { rows.call.map { |row| row.fetch("revision") } }
+      before = revisions.call
+      assignment["state"] = "running"
+      assignment["progress"] = {"done" => 1}
+      assert_equal before, revisions.call
+      assert_equal "running", rows.call.find { |row| row["type"] == "assignment" }.fetch("state")
+      assert_equal "running", rows.call.find { |row| row["type"] == "executor" }.dig("evidence", "state")
+      assignment["state"] = "paused"
+      assert_equal before, revisions.call
+      %w[stalled failed completed unknown].each do |state|
+        assignment["state"] = state
+        revisions.call.zip(before).each { |actual, original| refute_equal original, actual, state }
+      end
+      assignment["state"] = "paused"
+      agents.first["name"] = "coworker-job-8"
+      unrelated = revisions.call
+      assignment["state"] = "running"
+      refute_equal unrelated, revisions.call, "another coworker in the same worktree is not this commission"
+      assignment["state"] = "paused"
+      agents.clear
+      refute_equal before, revisions.call, "disappearance during a step gap must remain actionable"
+      absent = revisions.call
+      assignment["state"] = "running"
+      refute_equal absent, revisions.call, "without a live session, retain exact assignment states"
+    end
+
     def test_worktree_failure_degrades_only_the_worktree_dependent_sources
       result = sources(worktree_error: "tmux socket gone").call
 
