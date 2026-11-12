@@ -315,3 +315,14 @@ Report sweep exceeded initial60s coordinator timeout; retry150s completed withou
 
 
 Final observation snapshot at2026-11-12T00:10:18UTC: lab eyes enabled, all sources healthy/errors0/breaker null, but wakes20/20 and pending1. Project at00:10:22 has pending0,wakes2/20,healthy. The final lab silence is rate-limited and is NOT another idle pass; the earlier393.514second unthrottled measurement remains the accepted idle evidence. Rate-cap backlog is an operational follow-up; delivery/recovery ownership is complete. Do not describe both coordinators as fully settled/unthrottled at final snapshot.
+
+
+## 2026-11-12 — owner relevance and handoff repair (in progress)
+
+- Live handoff preserved processes but discarded terminal IDs and guarded origin. Repair transfers original IDs and kernel pidfds; protocol2 requires a controlled first upgrade, then new-to-new handoff verifies retention. macOS handoff tests58pass; Linux live proof pending. Review caught parent PID change after old-server exit, ownership before fallible import, and CLOEXEC on received descriptors; all included in current patch.
+- Lab recursively ran full project observation under a project-local interpretation of its recipient alias. This both over-observed progress and could miss actual escalations. Replace with direct HITL owner reads filtered by the lab's resolved address; no credentials or project remote probes needed for reading these local files. Two-config regression passes.
+- Default three-role sequence prepared unused review/integration for verification-only work. Require explicit roles before worktree creation; whitespace duplicates refused. Advisor now has its own existing-role sequence and exact case reaches commissioned config.
+- Report processor performed repeated private tree scans and completion checks on closed history. Add stage duration/progress, one per-call private index with targeted refresh, and closed accepted-history fast path retaining cleanup recovery. No constant wait added. Tests pass; VM timing pending.
+- Project availability revision included ordinary working/idle transitions. Normalize those to available and verify actual agent presence even when only one pane exists. Retained dead shell regression added.
+
+No new GLM work or VM reset has been run in this phase. Provider usage unknown (not measured).
