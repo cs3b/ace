@@ -449,3 +449,16 @@ shared-bundle hot-update window remains a disclosed maintenance caveat.
   than an actual loss of readiness. Existing eyes acknowledgements deduplicate
   the marker; product still rechecks readiness before success. Independent PASS;
   focused regression16/56 and wake suite green; live continuation pending.
+
+- **Local candidate staging overwrote the executable wrapper:** disabling staged
+  binstubs let RubyGems replace ace-overseer with env-ruby launcher. Canonical
+  bundle binstubs ace-overseer --force restored configured runtime; observations
+  recovered. Candidate install5.44s, same live processes. Keep launcher projection
+  in the established bundle install configuration; staging must account for it.
+- **Readiness continuation proven:** d97fee245 / overseer0.31.0.pre.5 led to lab's
+  own ready1/1 at13:21:21UTC; record then ack, no duplicate session.
+- **Whitespace-only review delta omitted:** reviewer independently found default
+  ace-git whitespace filtering hides newline-only fix delta; inspected raw diff
+  and reran checks under the existing reviewer workflow. Product review material
+  should preserve exact candidate changes; do not call empty material a clean
+  review. Broader filtering correction not claimed in this candidate.

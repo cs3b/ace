@@ -213,3 +213,31 @@ reconciles actual start readiness before recording success.
 Focused regression:16tests/56assertions; ace-wake wrapper2tests/7assertions
 executes the JavaScript suite including ack/disappearance/restart. Independent
 read-only review PASS; reviewer did not independently rerun tests. No VM reset.
+
+
+Candidate d97fee24566a78b57cc5042f9f59826a2401e495 / overseer0.31.0.pre.5
+SHA2560eba5b66b42ef6535317b3454bb1dba28b72988ca5ea089169a8e94fa95b0113:
+full600tests2881assertions0fail/errors1skip; standalone installed load passed.
+One local bundle install took5.44s with old active selection retained during
+installation. Operator staging omitted Bundler binstub regeneration; RubyGems
+replaced ace-overseer wrapper, briefly making observation unavailable. Restored
+through bundle binstubs ace-overseer --force against canonical Gemfile. No agent
+restart. This deployment intervention is disclosed, not a product autonomy claim.
+
+At13:21:21.873UTC the lab reacted to project-ready, independently reconciled
+and obtained ready1/1 on existingw3:pP, saved the task effect and acknowledged
+the marker. No new project session or reviewer was created. This completes the
+controlled project restart and readiness continuation evidence.
+
+Additional high-level goal delivered to project coordinator: obtain Captain's
+choice of next fixture direction (optional CLI JSON / persistent counter / stop
+at current scope), recommendation first, then backlog only after real answer.
+No answer has been supplied; existing delivery tasks continue independently.
+
+After project restart, direct process-reports evidence at13:06:28UTC:
+collect0.147s, private tasks0.038s; accepted base allocation recheck4.528s,
+retire0.068s, continuation reconciliation0.150s; docs recheck3.099s,
+retire0.059s, continuation reconciliation0.173s. Existing reviewers were reused,
+not launched again. Historical closed report cleanup0.000–0.127s. These are
+measured stage costs, not a fixed60second wait. Receipt report-timings-restart.json.
+Final independent verdict explicitly bound to d97fee24566a78b57cc5042f9f59826a2401e495.
