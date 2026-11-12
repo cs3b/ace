@@ -480,3 +480,95 @@ shared-bundle hot-update window remains a disclosed maintenance caveat.
   no send adapter. Same decision8ybk3j/recommendation was presented through chat
   user-input as disclosed manual delivery; no delivered status fabricated, no
   human answer supplied by operator. Release4 stays independently gated.
+
+- **Review/coordination cost observations:** repeated exact-HEAD review rounds and
+  conflicts in historical task metadata dominate elapsed delivery time, not the
+  5–8second local gem update. Single-event eyes acknowledgements also require many
+  model/tool turns when a batch is large; transcript cache-read usage grows during
+  active reconciliation. Record as measured workflow cost; no quota increase or
+  relaxed review scope was used to hide it in this run.
+
+- **Routine step transitions woke the coordinator:** paused/running snapshots
+  revised assignment and executor rows although the same native reviewer was
+  alive. Normalize only the fingerprint for that exact native identity; preserve
+  raw states and actionable failures/death. Independent review rejected a broad
+  CWD match and default-config assumption; both corrected. First idle baseline
+  invalidated, final silence must be measured again after deployment.
+- **Nested review provider timeout:** documentation review returned no report
+  after600seconds. Process/output inspection performed; aborted attempt was not
+  counted as review evidence. Reviewer continued same candidate in a fresh
+  provider attempt; no blanket environment reset or fabricated verdict.
+
+- **Guide ordered lesson after terminal close:** the Captain's actual C answer
+  was applied and case8ybk3j closed, then lesson correctly refused by existing
+  HITL terminal immutability. Coordinator preserved comparison plus lesson_gap
+  on its owning decision task. Cause: packaged step5 listed close before lesson.
+  Fix: apply effect, record lesson if suggestion exists, then verified close;
+  preserve a truthful owning-task gap for already-closed historical cases. No
+  reopening, terminal mutation exception, new case, or invented human answer.
+
+- **Stage evidence discarded by the tested agent:** later process-reports calls
+  were piped to tail despite repository guidance. Product emitted stage progress,
+  but the transcript retained only the tail; those acceptance/continuation splits
+  are unknown, not reconstructed from wall time. Earlier complete stage evidence
+  remains available (verification2.051s, acceptance0.177s, retirement0.433s,
+  continuation12.099s for base review→integration). Do not rerun external effects
+  merely to recreate missing measurements.
+
+- **Private coordination families explicitly moved to public archive:** done
+  managers irq/irs/k3f were no longer Git-ignored after ordinary --move-to archive.
+  No auto-archive defect: ace-task already excludes ignored families from automatic
+  archival; explicit relocation follows the requested destination. Packaged close
+  guidance now keeps private done families in _overseer and restores misplaced
+  same-ID families through ace-task. No new permission layer/state. pre.10 source
+  35b72a6ffb3ea59a04ec45e0f3aab88e01d653a6,11/99 tests+independent PASS+isolated
+  artifact probe. Install5.89s. Disclosed maintenance goal sent to actual project
+  coordinator; host did not directly move its task records. Restoration proof pending.
+
+  Recovery confirmed: actual coordinator moved all three same-ID private families back; Git ignores their owner location and status is clean for _overseer. Existing case remains closed with C and explicit lesson gap.
+
+- **Worktree report omitted and new revisions acknowledged from stale memory:**
+  bootstrap guide prescribed eyes scope=current; docs report8yblu5 remained in
+  its linked worktree, unseen as HITL even though report-consumer scopeall could
+  read it. Native completion arrived, but coordinator reused an earlier working
+  interpretation and acked without fresh owner readback. Fixguide scopeall with
+  recipient filter; require current revision/owner evidence before ack. pre.11
+  82cef09fbe2277007b0b74b991516481ba1ff4a1,22/128 tests+independentPASS.
+  Delegate same-state config repair, no report replay/review restart. Earlier
+  project idle observation is not full coverage acceptance; final repeat pending.
+
+- **Recovery allocation typo and transient readiness refusal:** coordinator
+  copied iqr into the docs manager instead of iqu; matching refused correctly and
+  it self-corrected.8yblu5 accepted, continuation then refused active-eyes proof.
+  A same-report retry after owner readback started prepared8ybisn2; no duplicated
+  review/report/executor. Exact transient-proof failure cause is unknown.
+
+- **Small configuration verification inherits broad review ceremony:** after the
+  scope fix, independent reviewer8ybmhc spent several minutes navigating generic
+  review tooling for a two-key local JSON configuration. This is workflow overhead,
+  not package installation time. Actual validation must still be independent, but
+  future commission design should match the existing role's verification scope to
+  the target and preserve explicit report-only/no-PR constraints. Do not bypass
+  the current review or claim a measured total until it finishes.
+
+- **Nested model usage differs from the visible Pi model:** coordinator and
+  coworker sessions run zai/glm-5.3-flash, while code-valid review invokes
+  pi:zai/glm-5.3:high. Confirmed in review8ybmmw and reviewer transcript. Pi-session
+  token counters do not include all nested review provider usage; report them as
+  partial usage, never total lab consumption. User dashboard aggregates must not
+  be attributed wholly to this run without matching its date/account scope.
+
+  Captain changed test policy to Flash-only. Cause was inherited development
+  llm.roles, not the visible Pi launcher setting. Fixture now pins all25effective
+  roles (including default-gem aliases) and disables fallback; same installed
+  configuration readback confirmed on live roots. 120/552 deterministic testsPASS.
+  Preserved configs backed up; no VM reset or accepted work repeated.
+
+- **Recovery outcome:** worker8ybm6c report8ybmff and independent verifier8ybmhc
+  report8ybn3i were accepted on private manager8yb.t.mgd; verifier retired and
+  coordinator re-armed scopeall eyes. Final346.703seconds with five snapshots
+  show no model turns/token increase, healthy advancing observations, pending0,
+  wakes0/20 and1/20. All three fixture PRs merged with exact-HEAD approvals;
+  release4 open; actual Captain C closed in same case. Assisted run complete,
+  not unattended autonomy. Missing Captain transport, historical lesson gap and
+  incomplete aggregate model-usage accounting remain explicit limitations.
