@@ -97,7 +97,7 @@ module Ace
             # Reconciliation preserves dead panels for diagnostics. Native
             # agent presence, not the retained tab, identifies the live owner.
             owners = owners.select { |owner| live_agent?(owner.fetch(:id)) }
-            raise Error, "project overseer has ambiguous sessions: #{label}" unless owners.length == 1
+            raise Error, "project overseer has ambiguous sessions: #{label}" if owners.length > 1
           end
           pane = owners.first
           pane = nil if pane && !live_agent?(pane.fetch(:id))

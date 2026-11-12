@@ -92,6 +92,19 @@ class ProjectSessionsTest < Minitest::Test
     assert_equal row, @observer.call.fetch(0)
   end
 
+  def test_all_retained_panels_without_agents_are_absent_not_ambiguous
+    @control.tabs = [{id: "t1", title: "overseer-ace"}, {id: "t2", title: "overseer-ace"}]
+    @control.panes = [{id: "p1", tab: "t1", cwd: @project, agent_status: "idle"},
+                      {id: "p2", tab: "t2", cwd: @project, agent_status: "idle"}]
+    def @executor.agent_get(_pane) = raise(Ace::Herdr::AgentNotFoundError, "exited")
+
+    row = @observer.call.fetch(0)
+    assert_equal "absent", row.fetch("state")
+    assert_nil row.fetch("pane")
+    refute row.key?("error")
+    assert_equal row, @observer.call.fetch(0)
+  end
+
   def test_missing_project_does_not_hide_healthy_project
     File.write(File.join(@root, ".ace/lab/config.yml"),
       {"topology" => {"projects" => [{"id" => "ace", "path" => @project},

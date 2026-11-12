@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0.pre.4] - 2026-11-12
+
+### Fixed
+
+- Treat retained panels with zero live project agents as absent, allowing one fresh coordinator after a crash without deleting diagnostic panels. Multiple live owners still block start.
+
 ## [0.31.0.pre.3] - 2026-11-12
 
 ### Fixed

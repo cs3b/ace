@@ -417,3 +417,17 @@ record and missing field. Acceptance predicates unchanged; no default inferred.
 Focused8tests35assertions pass. Coordinator independently found and filled roles
 on all six private legs before this fix was deployed; recovery attempt pending.
 No host metadata edit or instruction revealing the answer was sent.
+
+
+### 2026-11-12 — coordinator restart with retained dead panels
+
+Controlled project Pi exit after both reviewers started woke lab once, correctly.
+However both observe and start classified zero live agents among multiple retained
+old panels as ambiguous. Reconcile blocked; lab began operational HITL escalation.
+The previous fix covered one live replacement but omitted the all-dead case.
+Repair zero/one/many semantics: zero live means absent and starts one fresh
+session, one live is reused, multiple live remains blocked. No pane is deleted
+or chosen arbitrarily. Regressions cover observation and actual start orchestration.
+This is a product defect found by the restart acceptance, not a Captain decision.
+First fault attempt refused to kill while project was working; the subsequent
+idle-only attempt killed Pi232138. VM/workers/Forgejo remained running.

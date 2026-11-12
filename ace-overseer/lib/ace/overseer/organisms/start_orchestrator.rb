@@ -507,10 +507,12 @@ module Ace
           end
           if owners.length > 1
             # A replaced dead owner may retain its tab. Only a single live
-            # agent identifies an unambiguous current owner; never pick the
-            # first of multiple live or dead candidates.
+            # agent identifies an unambiguous current owner. When all agents
+            # exited, keep their panels for diagnostics and create a fresh one;
+            # there is no live owner to choose or take over.
             live = owners.select { |pane| !agent_state(pane[:id]).nil? }
-            unless live.length == 1
+            return nil if live.empty?
+            if live.length > 1
               raise Ace::Overseer::Error,
                 "multiple overseer tabs '#{label}' have no unique live owner; refusing an ambiguous session"
             end

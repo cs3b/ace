@@ -4,13 +4,13 @@ Status: in-progress. Approved one preserved UTM/Forgejo/Pi-GLM run; no reset or 
 
 ## Implementation and acceptance
 
-- [ ] Native live handoff retains terminal identity and guarded origin; new terminals remain unique.
+- [x] Native live handoff retains terminal identity and guarded origin; new terminals remain unique.
 - [ ] Observation wakes the responsible owner only: lab commissions/project availability/escalations; project commissions/reports/failures/integration transitions. Routine progress is visible without waking.
 - [ ] Exact revision acknowledgement, restart/replay idempotence and visible wake budget remain.
-- [ ] Explicit role sequences; no implicit worker/reviewer/integrator for report-only commissions.
+- [x] Explicit role sequences; no implicit worker/reviewer/integrator for report-only commissions.
 - [ ] One HITL case: advisor recommendation before Captain delivery, safe failure delivery, no forged consent; secrets bypass advisor.
 - [ ] Report stage timings, one-pass owner reads, accepted-before-retired-before-continued recovery.
-- [ ] Local tests, independent review, SHA-bound gems/native artifact installed locally.
+- [x] Local tests, independent review, SHA-bound gems/native artifact installed locally.
 - [ ] Preserved live run: bootstrap readiness, base/dependent/docs merges, release open, worker interruption/replay, real Captain choice, unthrottled five-minute idle.
 
 ## Evidence
@@ -141,3 +141,31 @@ Recovery transcript receipt records dry-run12:38:03.384, successfulwork-on
 12:38:29.206, assignment8ybisn unchanged; elapsed130.944seconds from injectedexit.
 The coordinator did not execute ace-test: read-only transcript audit found zero
 such commands. A worker incorrectly inferred otherwise from the process tree.
+
+
+### First real worker→reviewer transitions and replay
+
+Project coordinator independently corrected missing role metadata and accepted
+8ybj75 fromworker8ybis5; process-reports retired its process and launched
+reviewer8ybis51 at12:50:59UTC inw3:pM/term_66013c356f4a64. Docsworker8ybisn
+reported8ybjbc, accepted with reviewer8ybisn1 launched at12:53:32UTC in
+w3:pN/term_66013cc6864e55. Both original workers no longer appear as live agents.
+PR11baseHEAD90a07e53271c0e2f44f478cc5d5823460cc14abf;
+PR12docsHEADa784ab304c20769f1a315e5d7d8ec8342bc10581. Neither is merged yet.
+
+Operator replay via public ace-coworker report reused event8ybj75. Read-only
+process-reports --dry-run recognizes both reports as duplicates, accepts no
+new work and starts nothing.18events:16duplicate,2unmatched readiness events;
+collect0.094s/private taskread0.206s, current allocation verify2.022s/2.323s.
+Closed historical reports skip expensive verification. Project's original docs
+acceptance+next executor took25.8s (tool walltime); its piped tail discarded
+individual stage lines, so those exact accept/start durations are unknown.
+No claim that the dry-run proves continuation mutation; actual agent inventory
+and stored private legs prove the two original transitions.
+
+Diagnostic candidate149a118c70fa3a00eb07acfb0b5e6dcc4a381e8c independently
+approved; full overseer594tests2855assertions,0fail/errors1skip
+(cace7a82-0ea3-41ab-ba54-fff9836393d0). ace-overseer0.31.0.pre.3 SHA256
+b0105d88ff1b85a4be8b8105202b12927d195c3dbbb00de076765abf5430fc97 installed
+in3.72s, standalone gem load passed. Public CLI gets the new diagnostic;
+existing actor instructions were not forcibly restarted mid-review.

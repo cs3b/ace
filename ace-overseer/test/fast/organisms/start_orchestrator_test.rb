@@ -288,6 +288,22 @@ module Organisms
       assert_empty executor.tabs
     end
 
+    def test_multiple_retained_dead_tabs_allow_one_fresh_session
+      panes = %w[p7 p8].map do |id|
+        {"id" => id, "tab_label" => "overseer-project", "title" => "shell", "cwd" => @root}
+      end
+      executor = FakeExecutor.new(panes: panes, alive: false,
+        pane_current: {"result" => {"workspace_id" => "ws1"}})
+
+      report = orchestrator(executor).call
+
+      assert_equal "started", report["status"], report.inspect
+      assert_equal "p1", report["pane"]
+      assert_nil report["replaced_pane"], "no retained panel is taken over"
+      assert_equal 1, executor.tabs.length
+      assert_equal 1, executor.agent_started.length
+    end
+
     def test_split_owner_tab_is_ambiguous_and_never_taken_over
       panes = %w[p7 p8].map do |id|
         {"id" => id, "tab_id" => "t7", "tab_label" => "overseer-project", "title" => "shell", "cwd" => @root}
