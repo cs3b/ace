@@ -119,6 +119,12 @@ class OverseerEventObservationTest < AceOverseerTestCase
       tasks.update(step.id, set: {"processed_report" => "report-1", "report_result" => "success"})
       assert_equal [event], work_events(observer.call(owner: "overseer"))
       tasks.update(step.id, set: {"status" => "done"})
+      # A settled allocation without the matching project binding cannot
+      # suppress another project's report, even when IDs coincide.
+      assert_equal [event], work_events(observer.call(owner: "overseer"))
+      tasks.update(manager.id, set: {"project_root" => "/lab/other"})
+      assert_equal [event], work_events(observer.call(owner: "overseer"))
+      tasks.update(manager.id, set: {"project_root" => "/lab/ace"})
       settled = observer.call(owner: "overseer")
       assert_empty work_events(settled)
       assert_equal [event], settled["settled"]
