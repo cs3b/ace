@@ -7,75 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.30.2.pre.12] - 2026-11-12
+## [0.30.2] - 2026-11-12
 
 ### Fixed
 
 - Resume a failed executor in a fresh pane after native terminal identity replacement, preserving assignment/session and reconciling uncertain dispatch without duplicates.
-
-## [0.30.2.pre.11] - 2026-11-11
-
-### Fixed
-
 - Retry failed session resumption only after native proof that the original terminal contains only its shell.
-
-## [0.30.2.pre.10] - 2026-11-11
-
-### Fixed
 - Retrying work-on resumes a positively dead executor's existing Pi transcript and running assignment in its original terminal with fresh role credentials; uncertain start or prompt outcomes cannot duplicate execution.
-
-## [0.30.2.pre.9] - 2026-11-11
-
-### Fixed
 - Project-session observation recognizes one live replacement when a dead predecessor panel remains after restart, matching managed start ownership checks.
-
-## [0.30.2.pre.8] - 2026-11-11
-
-### Fixed
-
 - Judge recovery progress from changed owner artifacts against the recorded baseline, rather than an unchanged native state-transition counter or missing final report.
-
-## [0.30.2.pre.7] - 2026-11-11
-
-### Fixed
-
 - Distinguish same-session continuation after provider failure from duplicate startup dispatch; reconcile current owners before acknowledging completion and bound recovery with the existing eyes deadline.
-
-## [0.30.2.pre.6] - 2026-11-11
-
-### Fixed
-
 - Observe native worker turn completions even when provider failures leave a live panel without an assignment report; unchanged completion sequences remain silent.
-
-## [0.30.2.pre.5] - 2026-11-11
-
-### Fixed
-
 - Preserve native worker launch receipts while Pi publishes its session identity; resume the same verified idle executor without duplicating a process or an uncertain prompt.
-
-## [0.30.2.pre.4] - 2026-11-11
-
-### Fixed
-
 - Direct Forgejo sessions to their configured client before treating anonymous API refusal as missing access or requesting temporary credentials.
-
-## [0.30.2.pre.3] - 2026-11-11
-
-### Fixed
-
 - Namespace native overseer agent names by canonical root so lab and project sessions coexist on one Herdr server.
-
-## [0.30.2.pre.2] - 2026-11-11
-
-### Fixed
-
 - Consume configured project reports from the lab, bind all outcomes to their project, and resolve completion and continuation in the project checkout while retaining the lab task owner.
-
-## [0.30.2.pre.1] - 2026-11-11
-
-### Fixed
-
-- Specify the supported bootstrap workflow command and refuse substituting checkout instructions in installed mode. Local VM candidate.
+- Specify the supported bootstrap workflow command and refuse substituting checkout instructions in installed mode.
 
 ## [0.30.1] - 2026-11-11
 
