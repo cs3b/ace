@@ -7,23 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.1.pre.3] - 2026-11-12
+## [0.4.0] - 2026-11-12
 
 ### Changed
-- Initialize configured eyes and compose report processing with healthy observation and exact revision acknowledgements.
 
-## [0.3.1.pre.2] - 2026-11-12
+- Initialize configured eyes and compose report processing with healthy observation and exact revision acknowledgements.
+- Show the pending wake-budget resume deadline in eyes status.
 
 ### Fixed
 
 - Describe the eyes deadline timestamp as absolute epoch milliseconds in the agent tool schema, preventing durations from being mistaken for future deadlines.
-
-## [0.3.1.pre.1] - 2026-11-12
-
-### Changed
-
-- Show the pending wake-budget resume deadline in eyes status.
-- Local UTM acceptance candidate; publication is not part of this run.
 
 
 ## [0.3.0] - 2026-11-10

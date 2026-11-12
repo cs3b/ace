@@ -7,17 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.10.0.pre.2] - 2026-11-12
+## [0.10.0] - 2026-11-12
 
 ### Changed
+
 - Separate operational verification from code review and include referenced execution evidence plus structured failure receipts.
-
-## [0.10.0.pre.1] - 2026-11-12
-
-### Changed
-
 - Commission Second Captain with an exact HITL case and report obsolete advisor work to its overseer.
-- Local UTM acceptance candidate; publication is not part of this run.
 
 
 ## [0.9.1] - 2026-11-12

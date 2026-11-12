@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-overseer v0.31.0**: bind manager roles before dispatch (`--manager <id>`), process exact report receipts (`--report <id>`), automatically arm scoped `eyes` on session start, close completed coordination through state owners, accept `idle`/`done` agent status on session resume, and unwrap `HitlEvent` in advisor pending-decision checks.
 - **ace-overseer v0.30.2**: bind delegated reports to their project, observe worker completions and live replacement sessions, and resume interrupted assignments without repeating completed work. Preserve installed runtime and explicit role environments.
 - **ace-herdr v0.11.1**: preserve child CLI arguments in the native explicit-environment launcher, including Pi session resumption.
 - **ace-assign v0.73.3**: target explicit steps and assignment IDs consistently when starting and finishing work.
@@ -12,8 +13,9 @@ All notable changes to this project will be documented in this file.
 
 
 ### Changed
+- **ace-overseer v0.31.0, ace-coworker v0.10.0, ace-hitl v0.27.0, ace-wake v0.4.0, ace-herdr v0.11.2, ace-lab v0.16.1:** simplify connections between Overseer, Coworker, HITL, and Wake (`8y0.t.x27.b`–`g`): automatic `eyes` start and reload-safe state, `process_reports` extension tool with exact revision acknowledgements, explicit `--manager` allocation binding and `--report` acceptance, separate operational verification vs code review gates, and atomic `ace-hitl close <case> --lesson-file` decision closure; verified end-to-end on the live UTM ARM64 VM.
 - **ace-lab v0.16.0, ace-herdr v0.11.0, ace-overseer v0.30.0:** install one locked runtime bundle; keep diagnostics explicit; start Herdr and Overseer from configuration without manual shell setup. Failed bundle updates preserve the previously working runtime.
-- **Simple delegated sessions (8y0.t.x27):** prepare ACE workers as worktrees and ordinary Herdr processes with explicit installed environments and project credentials. Real executor bindings, observation-driven report acceptance, independent review and exact-HEAD integration share the existing state owners. Remove the experimental system issuer and mount isolation requirement. Prepare 19 coordinated packages plus native Herdr; local deterministic verification and artifact rehearsal are distinct from the still-open UTM autonomy acceptance. TS-MONO-003/004 retain local Forgejo and can repeat fixtures without reinstalling the OS.
+- **Simple delegated sessions (8y0.t.x27):** prepare ACE workers as worktrees and ordinary Herdr processes with explicit installed environments and project credentials. Real executor bindings, observation-driven report acceptance, independent review and exact-HEAD integration share the existing state owners. Remove the experimental system issuer and mount isolation requirement. Prepare 19 coordinated packages plus native Herdr; local deterministic verification and artifact rehearsal are distinct from the UTM autonomy acceptance. TS-MONO-003/004 retain local Forgejo and can repeat fixtures without reinstalling the OS.
 
 ### Added
 - **ace-hitl v0.26.0**: expose audited local case cancellation with `cancel --case --reason`, without fabricating answers or contacting a relay.
