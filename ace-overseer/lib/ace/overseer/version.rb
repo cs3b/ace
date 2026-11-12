@@ -2,6 +2,6 @@
 
 module Ace
   module Overseer
-    VERSION = "0.31.0.pre.12"
+    VERSION = "0.31.0"
   end
 end

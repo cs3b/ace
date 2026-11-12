@@ -7,76 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.31.0.pre.12] - 2026-11-12
+## [0.31.0] - 2026-11-12
 
 ### Changed
+
 - Bind manager roles before dispatch, process exact report receipts, automatically arm scoped eyes, and close completed coordination through state owners.
-
-## [0.31.0.pre.11] - 2026-11-12
-
-### Fixed
-
-- Prepare project eyes with linked-worktree scope so executor reports reach their configured owner; require current revision/owner readback instead of stale key interpretations before acknowledgement.
-
-## [0.31.0.pre.10] - 2026-11-12
-
-### Fixed
-
-- Keep completed private coordination families in their ignored owner folder and restore misplaced records through the existing task move operation, preserving status and report identities.
-
-## [0.31.0.pre.9] - 2026-11-12
-
-### Fixed
-
-- Record the recommendation/decision lesson before closing HITL; retain an explicit owning-task gap when an earlier terminal case missed its lesson.
-
-## [0.31.0.pre.8] - 2026-11-12
-
-### Fixed
-
-- Keep between-step paused/running transitions silent for the exact live native executor, including role-specific commissions; preserve actual readable states, failure, completion and missing-session signals.
-
-## [0.31.0.pre.7] - 2026-11-12
-
-### Fixed
-
-- Specify the existing private allocation fields for advisor report acceptance and retirement, keeping the human-decision step open; unmatched reports cannot be replaced by a manual acceptance note.
-
-## [0.31.0.pre.6] - 2026-11-12
-
-### Fixed
-
-- Defer project setup when Overseer provisions an executor checkout, including stale-worktree recovery. Reject Git-ignored coordination tasks before dispatch and distinguish the advisor's executable task from its private decision manager.
-
-## [0.31.0.pre.5] - 2026-11-12
-
-### Fixed
-- Emit a stable, session-bound project readiness confirmation after the first turn and active eyes, so lab supervision can finish reconciliation without waking again for inconclusive transcript samples or ordinary project turns.
-
-## [0.31.0.pre.4] - 2026-11-12
-
-### Fixed
-
-- Treat retained panels with zero live project agents as absent, allowing one fresh coordinator after a crash without deleting diagnostic panels. Multiple live owners still block start.
-
-## [0.31.0.pre.3] - 2026-11-12
-
-### Fixed
-
-- Name the exact private coordination record and missing field when report acceptance lacks allocation metadata; include the commissioned role in the guide command.
-
-## [0.31.0.pre.2] - 2026-11-12
-
-### Fixed
-
-- Preserve native terminal context for foreground Pi so Herdr receives session identity and readiness hooks; delegated launches still obtain their destination context from Herdr.
-
-## [0.31.0.pre.1] - 2026-11-12
-
-### Changed
-
 - Require explicit commissions, scope lab observations to its recipients, validate duplicate reports and expose processing stage timings.
-- Local UTM acceptance candidate; publication is not part of this run.
+
+### Fixed
+
+- Accept both `idle` and `done` agent statuses when resuming an interrupted executor session or recovering a replacement terminal.
+- Unwrap the `HitlEvent` from `HitlManager#show` in `ReportProcessor#pending_decision` when checking if an advisor's decision case is already answered.
+- Prepare project eyes with linked-worktree scope so executor reports reach their configured owner; require current revision/owner readback instead of stale key interpretations before acknowledgement.
+- Keep completed private coordination families in their ignored owner folder and restore misplaced records through the existing task move operation, preserving status and report identities.
+- Record the recommendation/decision lesson before closing HITL; retain an explicit owning-task gap when an earlier terminal case missed its lesson.
+- Keep between-step paused/running transitions silent for the exact live native executor, including role-specific commissions; preserve actual readable states, failure, completion and missing-session signals.
+- Specify the existing private allocation fields for advisor report acceptance and retirement, keeping the human-decision step open; unmatched reports cannot be replaced by a manual acceptance note.
+- Defer project setup when Overseer provisions an executor checkout, including stale-worktree recovery. Reject Git-ignored coordination tasks before dispatch and distinguish the advisor's executable task from its private decision manager.
+- Emit a stable, session-bound project readiness confirmation after the first turn and active eyes, so lab supervision can finish reconciliation without waking again for inconclusive transcript samples or ordinary project turns.
+- Treat retained panels with zero live project agents as absent, allowing one fresh coordinator after a crash without deleting diagnostic panels. Multiple live owners still block start.
+- Name the exact private coordination record and missing field when report acceptance lacks allocation metadata; include the commissioned role in the guide command.
+- Preserve native terminal context for foreground Pi so Herdr receives session identity and readiness hooks; delegated launches still obtain their destination context from Herdr.
 
 
 ## [0.30.2] - 2026-11-12
