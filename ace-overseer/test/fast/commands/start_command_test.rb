@@ -115,6 +115,9 @@ module Commands
         end
         inherited = JSON.parse(out)
         keys.take(4).zip(values).each { |key, value| assert_equal value, inherited[key], err }
+        assert_equal "w2:p7", inherited["HERDR_PANE"]
+        assert_equal "w2", inherited["HERDR_SESSION"]
+        assert_equal :herdr, Ace::Runtime::Atoms::Detector.detect(env: inherited)
         refute inherited.key?("TEST_ADMIN_SECRET")
       end
     ensure

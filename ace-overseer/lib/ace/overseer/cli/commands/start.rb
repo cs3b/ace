@@ -93,6 +93,8 @@ module Ace
               # Foreground Pi occupies this terminal; delegated launches receive
               # their destination context from native Herdr instead.
               environment.merge!(ENV.to_h.slice("HERDR_ENV", "HERDR_PANE_ID", "HERDR_TAB_ID", "HERDR_WORKSPACE_ID"))
+              environment["HERDR_PANE"] = environment["HERDR_PANE_ID"] if environment["HERDR_PANE_ID"]
+              environment["HERDR_SESSION"] = environment["HERDR_WORKSPACE_ID"] if environment["HERDR_WORKSPACE_ID"]
               system(environment, *report.fetch("command"), unsetenv_others: true)
               status = $?
               unless status&.success?
