@@ -80,3 +80,6 @@ The preserved run delivered bootstrap, separate execution/review/integration, co
 
 
 Final closeout: canonical HITL8yazhc.application.state=cancelled at2026-11-12T00:09:05UTC, audited reason links completed8yaz1k/report8yb04e; answered=false and no invented answer. Project returned idle with eyes enabled/pending0. Independent reviewer approved this qualified evidence report; it does not warrant completing the broader parent task or claiming unattended autonomy.
+
+
+Final observation snapshot at2026-11-12T00:10:18UTC: lab eyes enabled, all sources healthy/errors0/breaker null, but wakes20/20 and pending1. Project at00:10:22 has pending0,wakes2/20,healthy. The final lab silence is rate-limited and is NOT another idle pass; the earlier393.514second unthrottled measurement remains the accepted idle evidence. Rate-cap backlog is an operational follow-up; delivery/recovery ownership is complete. Do not describe both coordinators as fully settled/unthrottled at final snapshot.
