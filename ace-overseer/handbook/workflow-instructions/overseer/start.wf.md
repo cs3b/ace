@@ -140,7 +140,7 @@ Immediately add the returned terminal and agent to the private coordination
 leg as structured task fields, including for one-off commissions:
 
 ```bash
-ace-task update <coordination-step> --set assignment=<id> --set worktree=<path> --set terminal=<returned-terminal> --set agent=<returned-agent>
+ace-task update <coordination-step> --set role=<commissioned-role> --set assignment=<id> --set worktree=<path> --set terminal=<returned-terminal> --set agent=<returned-agent>
 ```
 
 Cancel it when the pinned assignment has an active step or a report.

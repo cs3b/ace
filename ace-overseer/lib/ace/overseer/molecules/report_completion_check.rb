@@ -25,7 +25,9 @@ module Ace
           role = step.metadata["role"].to_s
           worktree = step.metadata["worktree"].to_s
           worktree = manager.metadata["worktree"].to_s if worktree.empty?
-          return "success requires recorded project task, role and worktree" if [task, role, worktree].any?(&:empty?)
+          return "private coordination task #{manager.id} is missing project_task" if task.empty?
+          return "private coordination step #{step.id} is missing role; record its commissioned role with ace-task update #{step.id} --set role=<role>" if role.empty?
+          return "private coordination step #{step.id} (or its parent) is missing worktree" if worktree.empty?
           return "report task disagrees with the allocation" unless event["task"].to_s == task
           return "confirm-start requires coordinator session evidence" if role == "confirm-start"
           return "report assignment disagrees with the allocation" unless step.metadata["assignment"].to_s == assignment

@@ -3,12 +3,12 @@ require_relative "../../test_helper"
 require_relative "../../support/prune_git_fixtures"
 
 class ReportCompletionCheckTest < AceOverseerTestCase
-  Task = Struct.new(:metadata)
+  Task = Struct.new(:metadata, :id)
 
   def setup
     @event = {"id" => "8xuk0q", "task" => "8xu.t.jh8", "assignment" => "8xujj4"}
-    @manager = Task.new({"project_task" => "8xu.t.jh8"})
-    @step = Task.new({"assignment" => "8xujj4", "role" => "bootstrap-worker", "worktree" => "/tmp/commission"})
+    @manager = Task.new({"project_task" => "8xu.t.jh8"}, "8xu.t.jh9")
+    @step = Task.new({"assignment" => "8xujj4", "role" => "bootstrap-worker", "worktree" => "/tmp/commission"}, "8xu.t.jh9.0")
     @legs = [{"assignment" => "8xujj4", "role" => "bootstrap-worker"}]
     @state = "completed"
     @steps = [{number: 10, name: "bootstrap", status: "done"}]
@@ -73,7 +73,13 @@ class ReportCompletionCheckTest < AceOverseerTestCase
     assert_includes check, "task disagrees"
     @event["task"] = "8xu.t.jh8"
     @step.metadata.delete("role")
-    assert_includes check, "recorded project task, role and worktree"
+    assert_includes check, "private coordination step 8xu.t.jh9.0 is missing role"
+    assert_includes check, "ace-task update 8xu.t.jh9.0 --set role=<role>"
+    @step.metadata["role"] = "bootstrap-worker"
+    @step.metadata.delete("worktree")
+    assert_includes check, "private coordination step 8xu.t.jh9.0 (or its parent) is missing worktree"
+    @manager.metadata.delete("project_task")
+    assert_includes check, "private coordination task 8xu.t.jh9 is missing project_task"
   end
 
   def test_unavailable_assignment_owner_is_a_refusal

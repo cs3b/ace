@@ -395,3 +395,25 @@ No autonomous completion credited. Candidate pre.2/live retest pending.
   available and must be checked for actual run/test status; do not accept truncated
   tails or a no-test target as successful coverage. This instruction-compliance
   limitation is disclosed rather than silently credited as perfect autonomy.
+
+
+Wakepre.2 deployed from285ee3a82 (6.3s localbundle), extensions refreshed and
+coordinator Pi /reload preserved sessions. A concurrently issued worker CLI saw
+transient GemNotFound during bundle replacement; retry after update succeeded.
+Lesson: an in-place shared-bundle change has a short maintenance interval;
+report it honestly and retry the failed public operation after installation.
+No queue/registry or permanent workaround added. Worker inferred Overseer ran
+tests from process ancestry; actual coordinator transcript has no ace-test calls.
+
+
+### 2026-11-12 — report acceptance names the missing private allocation field
+
+Worker8ybis5 produced report8ybj75 for tested PR11. Private step8yb.t.irq.1
+had assignment/terminal/agent but no role. The guide paragraph required role,
+while its copyable update example omitted it. Generic completion refusal named
+three fields and no owner record, causing coordinator to inspect project task
+history instead. Fix: example includes role; diagnostic names the exact private
+record and missing field. Acceptance predicates unchanged; no default inferred.
+Focused8tests35assertions pass. Coordinator independently found and filled roles
+on all six private legs before this fix was deployed; recovery attempt pending.
+No host metadata edit or instruction revealing the answer was sent.

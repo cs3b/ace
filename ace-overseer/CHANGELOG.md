@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0.pre.3] - 2026-11-12
+
+### Fixed
+
+- Name the exact private coordination record and missing field when report acceptance lacks allocation metadata; include the commissioned role in the guide command.
+
 ## [0.31.0.pre.2] - 2026-11-12
 
 ### Fixed

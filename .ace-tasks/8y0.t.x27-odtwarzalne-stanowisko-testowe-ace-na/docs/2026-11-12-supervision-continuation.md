@@ -122,3 +122,22 @@ Measured actual process-reports sweeps: lab collect0.196s/readtasks0.032s;
 project collect0.083s/readtasks0.097s for16events, closed-history cleanup each
 0–0.071s. No fixed60second wait. These stage timings exclude CLI startup;
 fresh report verification/continuation measurements remain pending.
+
+
+Follow-up285ee3a82a7aa167068adfebceef58a43a728c87: fixture Ruby PATH and explicit
+deadline tool units. Independent reviewer PASS. Tests wake2/7 and monorepo119/471,
+zero failures (1749045d-fa7b-4db8-9647-590d90670166,
+9ba05740-71cd-41bd-932e-06bc12af7467). ace-wake0.3.1.pre.2 SHA256
+4a65ec9ad4a2867e55a57fe86505fd9b1aa28760bd08b0f4380fc1525382aea5 installed
+locally in6.3s and extensions projected through installed ExtensionProvisioner.
+Both idle coordinators received Pi /reload, keeping their processes/transcripts;
+no worker was restarted. Standalone outside-checkout gem loading also passed.
+Existing tools briefly saw GemNotFound while Bundler was replacing selection;
+worker observed this and retried successfully after installation. This is a
+maintenance-window limitation of an in-place bundle update, not an assignment
+failure or a reason to reset the lab.
+
+Recovery transcript receipt records dry-run12:38:03.384, successfulwork-on
+12:38:29.206, assignment8ybisn unchanged; elapsed130.944seconds from injectedexit.
+The coordinator did not execute ace-test: read-only transcript audit found zero
+such commands. A worker incorrectly inferred otherwise from the process tree.
