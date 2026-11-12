@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0.pre.2] - 2026-11-12
+
+### Changed
+- Separate operational verification from code review and include referenced execution evidence plus structured failure receipts.
+
 ## [0.10.0.pre.1] - 2026-11-12
 
 ### Changed

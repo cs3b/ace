@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.1.pre.2] - 2026-11-12
+
+### Changed
+- Close applied decisions with an atomic lesson and expose consistent semantic report revisions.
+
 ## [0.26.1.pre.1] - 2026-11-12
 
 ### Changed

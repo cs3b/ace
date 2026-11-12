@@ -2,6 +2,6 @@
 
 module Ace
   module Wake
-    VERSION = "0.3.1.pre.2"
+    VERSION = "0.3.1.pre.3"
   end
 end

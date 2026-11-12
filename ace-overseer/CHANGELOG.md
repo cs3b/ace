@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0.pre.12] - 2026-11-12
+
+### Changed
+- Bind manager roles before dispatch, process exact report receipts, automatically arm scoped eyes, and close completed coordination through state owners.
+
 ## [0.31.0.pre.11] - 2026-11-12
 
 ### Fixed
