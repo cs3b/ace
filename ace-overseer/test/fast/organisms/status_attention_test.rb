@@ -375,4 +375,40 @@ class StatusAttentionTest < AceOverseerTestCase
     # The archived stale task never surfaces as a project blocker.
     refute rows.any? { |r| r[:task_id] == "a9" }
   end
+
+  def test_operation_summary_deduplicates_overseer_tasks_and_excludes_archived_tasks
+    collector_obj = collector(healthy_sources(
+      "project_tasks" => FakeSource.new(data: tasks(
+        {id: "p1", status: "done"},
+        {id: "p2", status: "pending"},
+        {id: "o1", status: "done", special_folder: "_overseer"},
+        {id: "o2", status: "pending", special_folder: "_overseer"},
+        {id: "a1", status: "done", special_folder: "_archive"}
+      )),
+      "overseer_tree" => FakeSource.new(data: tasks(
+        {id: "o1", status: "done", special_folder: "_overseer"},
+        {id: "o2", status: "pending", special_folder: "_overseer"}
+      ))
+    ))
+    summary = collector_obj.to_sources_h(collector_obj.collect_sources).fetch(:operation)
+
+    assert_equal %w[p1 o1], summary[:completed]
+    assert_equal %w[p2 o2], summary[:waiting]
+  end
+
+  def test_default_hitl_owner_respects_lab_scope_configuration
+    owners = []
+    fake_inbox = Object.new
+    fake_inbox.define_singleton_method(:incoming_events) { [] }
+    Ace::Overseer::Molecules::HitlInbox.stub(:new, ->(**kwargs) {
+      owners << kwargs[:owner]
+      fake_inbox
+    }) do
+      ATTENTION.new(config: {"start" => {"scope" => "lab"}}).scan(sources: {})
+      ATTENTION.new(config: {"start" => {"scope" => "project"}}).scan(sources: {})
+      ATTENTION.new(config: {"owner" => "custom-overseer", "start" => {"scope" => "project"}}).scan(sources: {})
+    end
+
+    assert_equal %w[lab-overseer overseer custom-overseer], owners
+  end
 end

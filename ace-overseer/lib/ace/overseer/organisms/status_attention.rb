@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "json"
 require "set"
 
 module Ace
@@ -38,8 +39,9 @@ module Ace
 
         # @param hitl_events [Proc] -> Array<Hash> incoming ace-hitl
         #   events (the existing HitlInbox molecule, read-only)
-        def initialize(hitl_events: default_hitl_events)
-          @hitl_events = hitl_events
+        def initialize(hitl_events: nil, config: nil)
+          @config = config
+          @hitl_events = hitl_events || default_hitl_events
         end
 
         # @param snapshot [Hash] {sources:, unknown_keys:} as produced by
@@ -74,7 +76,29 @@ module Ace
         end
 
         def default_hitl_events
-          -> { Molecules::HitlInbox.new.incoming_events }
+          -> { Molecules::HitlInbox.new(owner: configured_owner).incoming_events }
+        end
+
+        def configured_owner
+          config = @config || Ace::Overseer.config
+          owner = config["owner"].to_s.strip
+          return owner unless owner.empty?
+
+          scope = config.dig("start", "scope").to_s.strip
+          return "lab-overseer" if scope == "lab"
+          return "overseer" if scope == "project"
+
+          eyes_recipient || "overseer"
+        end
+
+        def eyes_recipient
+          return nil unless File.file?(".ace-local/overseer/eyes.json")
+
+          data = JSON.parse(File.read(".ace-local/overseer/eyes.json"))
+          recipient = data.is_a?(Hash) ? data["recipient"].to_s.strip : ""
+          recipient.empty? ? nil : recipient
+        rescue JSON::ParserError, SystemCallError
+          nil
         end
 
         def fetch_hitl_events

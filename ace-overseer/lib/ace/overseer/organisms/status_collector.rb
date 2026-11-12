@@ -2,6 +2,7 @@
 
 require "json"
 require "open3"
+require "rbconfig"
 
 module Ace
   module Overseer
@@ -22,7 +23,7 @@ module Ace
           @project_root = project_root
           @config = config
           @sources = sources
-          @attention = attention || Organisms::StatusAttention.new
+          @attention = attention || Organisms::StatusAttention.new(config: config)
         end
 
         # Aggregate the configurable status sources (L7.2). Each enabled
@@ -62,14 +63,16 @@ module Ace
           sources = snapshot[:sources] || {}
           tasks = %w[project_tasks overseer_tree].flat_map do |name|
             source = sources[name]
-            source && source[:status] == "ok" && source[:data].is_a?(Array) ? source[:data] : []
+            next [] unless source && source[:status] == "ok" && source[:data].is_a?(Array)
+
+            source[:data].reject { |row| name == "project_tasks" && !row[:special_folder].to_s.empty? }
           end
           coworkers = sources.dig("coworkers", :data)
           coworkers = [] unless coworkers.is_a?(Array)
           attention = snapshot[:attention] || {}
-          {completed: tasks.select { |row| row[:status] == "done" }.map { |row| row[:id] },
-           running: coworkers.select { |row| row[:active] }.map { |row| row[:worktree] },
-           waiting: tasks.reject { |row| %w[done cancelled skipped].include?(row[:status]) }.map { |row| row[:id] },
+          {completed: tasks.select { |row| row[:status] == "done" }.map { |row| row[:id] }.uniq,
+           running: coworkers.select { |row| row[:active] }.map { |row| row[:worktree] }.uniq,
+           waiting: tasks.reject { |row| %w[done cancelled skipped].include?(row[:status]) }.map { |row| row[:id] }.uniq,
            blocked: Array(attention[:blockers]) + Array(attention[:failures]) + Array(attention[:missing_data]),
            evidence: sources.map { |name, source| {source: name, origin: source[:origin], status: source[:status]} }}
         end
@@ -407,7 +410,7 @@ module Ace
               pipe_read.close
               $stdout.reopen(pipe_write)
               pipe_write.close
-              exec("ruby", "-e", worker_script, worktree.path.to_s)
+              exec(RbConfig.ruby, "-e", worker_script, worktree.path.to_s)
               exit!(1) # unreachable unless exec fails
             end
             pipe_write.close
