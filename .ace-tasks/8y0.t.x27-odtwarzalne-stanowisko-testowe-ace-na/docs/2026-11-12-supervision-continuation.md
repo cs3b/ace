@@ -44,3 +44,52 @@ lab 771 / 3652, 0 failures/errors, 4 skips
 replacing recursive projection tests, not a newly disabled suite. Independent
 Ruby/workflow reviewer PASS binds to 87dc65e6ae1abfcb63e909cabb616b2f55c37d5a;
 native reviewer found no remaining code blocker, with Linux acceptance pending.
+
+### Preserved VM deployment and first live repairs
+
+Initial six gems plus published ace-assign0.73.3 installed from candidate manifest
+in4.91seconds; backup `/var/tmp/ace-supervision-before-20261112T121059` on VM.
+Installed extension projection corrected after an operator mode omission (retro).
+Native-source verify accepted exact ARM64 artifact and provenance. Two successive
+live handoffs retained `term_660133db49e562`, shell230601 and full guarded origin
+(runtime incarnation fac0ae21-3852-4808-a74b-9c93468c8c3c), after prior server exits.
+Evidence local `.ace-local/simple-runtime-start/supervision-candidate/handoff-shell.json`.
+This initial proof is a shell, not yet an assignment/agent session.
+
+Foreground Pi start exposed stripped native terminal context. Fixed in
+9ed6b08aa +4e1ecb33dce866df7d0618ce84cbd938d568a17a, real-child regression
+failed before; 22tests108assertions passed after (e63e6107-8033-4cf0-94ec-7e4abd6048a4).
+Independent reviewer PASS binds to4e1ecb33d. New ace-overseer0.31.0.pre.2
+SHA2564d4c6a8bbfbb2dee52605f449750ea142bd88467431871e11097303e48b311d8
+installed locally in4.35seconds; no other gem/native/server restart.
+Standalone installed rehearsal loads all six candidate packages from installed
+gem directories outside checkout bundle; new sequence and role are packaged.
+
+
+Two further live handoffs with real Pi231234 and wrapper231230 retained the same
+terminal and guarded origin, with identical Pi session
+01a1cfb2-29c2-7661-a4cf-f0057a70c5ff. Evidence handoff-pi.json and native agent
+readback confirm ongoing turn; this is stronger than shell-only proof. Agent
+assignment binding continuity still awaits the worker stage. Foreground startup
+now registers session through native integration; initial reconciliation is live.
+
+Test goals: additive local Forgejo issues8(reset primitive),9(dependent --start
+CLI),10(independent contribution docs), existing release4 stays open. No previous
+issues/merges were removed or reopened. Main before this stage remains
+6aa71d99606b9184cb88202faa6242f32d341a40. This manual preserved-run extension follows
+the user's current acceptance plan; it is not reported as a fresh automated
+TS-MONO-003 bootstrap case. Existing TC-001 required new worker/verifier; the
+current explicit instruction permits reusing their accepted prior readiness.
+
+Lab independently ran `ace-overseer start --reconcile` and launched project
+w3:pH /term_660135db9f4524 /session01a1cfb5-b3f4-748a-a344-88dd08d4e2f0.
+Initial result explicitly withheld readiness pending first turn and active eyes;
+no false success credited. Project first turn in progress.
+
+Lab's actual reconcile receipt at2026-11-12T12:23:27.290Z is success:
+`1/1 project overseers ready`, projectace reusedw3:pH without duplicate.
+The first attempt at12:22:37.455Z correctly returned partial while initializing.
+Delivered next goal forissues8/9/10 after reading this receipt. Operator also
+supplied factual maintenance context when lab misclassified the intentional
+upgrade stop as a spontaneous third crash. No HITL answer was supplied; this
+assistance is disclosed and will be assessed separately from autonomy.
