@@ -178,13 +178,16 @@ absent, preserve its assignment and worktree. Assess unfinished work with
 `ace-coworker resume --config <recorded-prepare-config> --dry-run` from that
 worktree. For a running assignment, retry
 `ace-overseer work-on --task <same-project-task> --runtime herdr` from the
-project root. This resumes the recorded Pi transcript in the original terminal
-with fresh role credentials and a continuation prompt. It does not create a
-new assignment or advance to the next role. Record the returned identity and
-arm a single five-minute recovery deadline; cancel on verified progress.
-Do not use `handoff` to bypass an unfinished role. Missing transcript, changed
-terminal or uncertain start/prompt remains a blocker: preserve the binding and
-escalate; never clear it or mark steps complete to force another launch.
+project root. This resumes the recorded Pi transcript with fresh role credentials
+and a continuation prompt. Normally it uses the original terminal. After a failed
+resume and native terminal replacement, the product may verify executor absence
+and resume that same transcript in a fresh pane, leaving the old pane untouched.
+It preserves the assignment and does not advance to the next role. Record the
+returned pane/session identity and any explicit previous-terminal receipt; arm a
+single five-minute recovery deadline and cancel on verified progress.
+Do not use `handoff` to bypass an unfinished role. Missing transcript, unverified
+terminal replacement or uncertain start/prompt remains a blocker: preserve the
+binding and escalate; never clear it or mark steps complete to force a launch.
 
 ### Ended worker turns and provider failures
 
