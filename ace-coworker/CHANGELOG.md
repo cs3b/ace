@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0.pre.1] - 2026-11-12
+
+### Changed
+
+- Commission Second Captain with an exact HITL case and report obsolete advisor work to its overseer.
+- Local UTM acceptance candidate; publication is not part of this run.
+
+
 ## [0.9.1] - 2026-11-12
 
 ### Fixed

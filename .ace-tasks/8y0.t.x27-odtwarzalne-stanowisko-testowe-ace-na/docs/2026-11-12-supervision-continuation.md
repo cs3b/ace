@@ -36,3 +36,11 @@ Herdr 629/2600, coworker 424/2012 and wake JS wrapper 2/7, all zero failures.
 Latest additional guards: overseer targeted 43/284 (445a8a84-2bd8-45f2-a1e9-f3b03dd31ee7),
 lab targeted 48/350 (5043b889-c1df-4d74-8ef3-1990e232a1a2), zero failures.
 These are component evidence, not live autonomy acceptance.
+
+Final component reruns after review corrections: overseer 593 tests / 2841
+assertions, 0 failures/errors, 1 skip (e4de91c7-2850-46da-bfda-3231c3f661f1);
+lab 771 / 3652, 0 failures/errors, 4 skips
+(ea50e3c5-9b41-4403-8867-f003ca30a24e). Different overseer count reflects
+replacing recursive projection tests, not a newly disabled suite. Independent
+Ruby/workflow reviewer PASS binds to 87dc65e6ae1abfcb63e909cabb616b2f55c37d5a;
+native reviewer found no remaining code blocker, with Linux acceptance pending.

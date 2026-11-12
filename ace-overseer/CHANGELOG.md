@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0.pre.1] - 2026-11-12
+
+### Changed
+
+- Require explicit commissions, scope lab observations to its recipients, validate duplicate reports and expose processing stage timings.
+- Local UTM acceptance candidate; publication is not part of this run.
+
+
 ## [0.30.2] - 2026-11-12
 
 ### Fixed

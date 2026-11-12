@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1.pre.1] - 2026-11-12
+
+### Changed
+
+- Show the pending wake-budget resume deadline in eyes status.
+- Local UTM acceptance candidate; publication is not part of this run.
+
+
 ## [0.3.0] - 2026-11-10
 
 ### Added

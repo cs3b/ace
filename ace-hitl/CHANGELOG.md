@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.1.pre.1] - 2026-11-12
+
+### Changed
+
+- Include the recipient in semantic observation for cross-project ownership filtering.
+- Local UTM acceptance candidate; publication is not part of this run.
+
+
 ## [0.26.0] - 2026-11-12
 
 ### Added

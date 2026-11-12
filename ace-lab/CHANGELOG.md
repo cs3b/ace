@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1.pre.1] - 2026-11-12
+
+### Changed
+
+- Permit configured Second Captain environments and ordinary coordinator-scope executors.
+- Local UTM acceptance candidate; publication is not part of this run.
+
+
 ## [0.16.0] - 2026-11-11
 
 ### Changed

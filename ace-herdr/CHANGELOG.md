@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.2.pre.1] - 2026-11-12
+
+### Changed
+
+- Pin native handoff schema 2 retaining terminal IDs and guarded process handles with close-on-exec descriptors.
+- Local UTM acceptance candidate; publication is not part of this run.
+
+
 ## [0.11.1] - 2026-11-12
 
 ### Fixed

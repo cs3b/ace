@@ -53,7 +53,7 @@ PATH
 PATH
   remote: ace-coworker
   specs:
-    ace-coworker (0.9.1)
+    ace-coworker (0.10.0.pre.1)
       ace-assign (~> 0.72, >= 0.73.3)
       ace-git-worktree (~> 0.27, >= 0.27.4)
       ace-hitl (~> 0.22, >= 0.25.1)
@@ -206,7 +206,7 @@ PATH
 PATH
   remote: ace-herdr
   specs:
-    ace-herdr (0.11.1)
+    ace-herdr (0.11.2.pre.1)
       ace-hitl-contract (~> 0.3.0)
       ace-runtime (~> 0.3, >= 0.4.2)
       ace-support-cli (~> 0.6, >= 0.6.10)
@@ -232,7 +232,7 @@ PATH
 PATH
   remote: ace-hitl
   specs:
-    ace-hitl (0.26.0)
+    ace-hitl (0.26.1.pre.1)
       ace-b36ts (~> 0.14)
       ace-hitl-contract (~> 0.3.0)
       ace-runtime (~> 0.3)
@@ -255,7 +255,7 @@ PATH
 PATH
   remote: ace-lab
   specs:
-    ace-lab (0.16.0)
+    ace-lab (0.16.1.pre.1)
       ace-git-forgejo (~> 0.7, >= 0.9.0)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -296,14 +296,14 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.30.2)
+    ace-overseer (0.31.0.pre.1)
       ace-assign (~> 0.70, >= 0.73.3)
-      ace-coworker (~> 0.8, >= 0.9.1)
+      ace-coworker (~> 0.9, >= 0.10.0.pre.1)
       ace-git (~> 0.30, >= 0.33.0)
       ace-git-worktree (~> 0.27, >= 0.27.4)
-      ace-herdr (~> 0.9, >= 0.11.1)
-      ace-hitl (~> 0.24, >= 0.26.0)
-      ace-lab (~> 0.8, >= 0.16.0)
+      ace-herdr (~> 0.11, >= 0.11.2.pre.1)
+      ace-hitl (~> 0.26, >= 0.26.1.pre.1)
+      ace-lab (~> 0.16, >= 0.16.1.pre.1)
       ace-review (~> 0.62.2, >= 0.62.3)
       ace-runtime (~> 0.3, >= 0.4.2)
       ace-support-cli (~> 0.6, >= 0.6.10)
@@ -511,7 +511,7 @@ PATH
 PATH
   remote: ace-wake
   specs:
-    ace-wake (0.3.0)
+    ace-wake (0.3.1.pre.1)
       ace-runtime (~> 0.4, >= 0.4.2)
 
 GEM
