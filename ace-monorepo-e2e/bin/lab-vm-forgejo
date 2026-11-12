@@ -121,6 +121,11 @@ begin
     FileUtils.mkdir_p(File.join(repository, ".ace/hitl"))
     FileUtils.cp(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/fixtures/ace/.ace/hitl/config.yml"),
       File.join(repository, ".ace/hitl/config.yml"))
+    # Test tool calls use the same inexpensive model as their interactive Pi
+    # sessions. Do not inherit the source project's reviewer/provider policy.
+    FileUtils.mkdir_p(File.join(repository, ".ace/llm"))
+    FileUtils.cp(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/fixtures/llm-config.yml"),
+      File.join(repository, ".ace/llm/config.yml"))
     legacy_route = ".ace/hitl/native-route.json"
     route_path = File.join(repository, legacy_route)
     if File.exist?(route_path) || File.symlink?(route_path)

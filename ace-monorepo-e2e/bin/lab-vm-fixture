@@ -108,13 +108,15 @@ begin
         install -o mo -g mo -m 0600 /home/lab-operator/ace-e2e-auth.json /etc/lab/ace-lab/pi-auth.json
         rm -f /home/lab-operator/ace-e2e-auth.json
         install -o root -g root -m 0644 /home/lab-operator/fixture.bundle /tmp/ace-e2e-fixture.bundle
+        runuser -u mo -- git clone -q -b main /tmp/ace-e2e-fixture.bundle /lab/ace
+        runuser -u mo -- mkdir -p /lab/.ace/llm
+        runuser -u mo -- cp /lab/ace/.ace/llm/config.yml /lab/.ace/llm/config.yml
         runuser -u mo -- git -C /lab init -q -b main
         runuser -u mo -- git -C /lab config user.name 'ACE E2E Lab'
         runuser -u mo -- git -C /lab config user.email 'ace-e2e@example.invalid'
         runuser -u mo -- git -C /lab add .gitignore .ace
         runuser -u mo -- git -C /lab -c core.hooksPath=/dev/null commit -q -m 'Configure disposable lab fixture'
         runuser -u mo -- mkdir -p /lab/.ace-tasks/_overseer /lab/.ace-local/hitl
-        runuser -u mo -- git clone -q -b main /tmp/ace-e2e-fixture.bundle /lab/ace
         runuser -u mo -- git -C /lab/ace remote set-url origin http://127.0.0.1:3000/#{repo}.git
         runuser -u mo -- git -C /lab/ace config user.name 'ACE E2E Worker'
         runuser -u mo -- git -C /lab/ace config user.email 'ace-e2e@example.invalid'

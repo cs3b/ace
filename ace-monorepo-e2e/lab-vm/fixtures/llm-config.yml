@@ -1,0 +1,34 @@
+# Disposable lab policy: all model-backed tools use GLM-5.3-Flash.
+# Role names (including review preset aliases) do not select another model.
+llm:
+  providers:
+    active: [pi]
+  roles:
+    _utility: ["pi:zai/glm-5.3-flash:high"]
+    _utility-lite: ["pi:zai/glm-5.3-flash:high"]
+    _assign-worker: ["pi:zai/glm-5.3-flash:high@yolo"]
+    doctor: ["pi:zai/glm-5.3-flash:high@yolo"]
+    planner: ["pi:zai/glm-5.3-flash:high@ro"]
+    review-default: ["pi:zai/glm-5.3-flash:high@ro"]
+    review-synthesizer: ["pi:zai/glm-5.3-flash:high@ro"]
+    review-codex: ["pi:zai/glm-5.3-flash:high@ro"]
+    review-astra: ["pi:zai/glm-5.3-flash:high@ro"]
+    review-claude: ["pi:zai/glm-5.3-flash:high@ro"]
+    review-gemini: ["pi:zai/glm-5.3-flash:high@ro"]
+    assign-executor: ["pi:zai/glm-5.3-flash:high@yolo"]
+    assign-engineer: ["pi:zai/glm-5.3-flash:high@yolo"]
+    assign-orchestrator: ["pi:zai/glm-5.3-flash:high@yolo"]
+    e2e-runner: ["pi:zai/glm-5.3-flash:high@yolo"]
+    e2e-executor: ["pi:zai/glm-5.3-flash:high@yolo"]
+    e2e-verifier: ["pi:zai/glm-5.3-flash:high@ro"]
+    e2e-reporter: ["pi:zai/glm-5.3-flash:high@ro"]
+    prompt-enhance: ["pi:zai/glm-5.3-flash:high"]
+    commit: ["pi:zai/glm-5.3-flash:high"]
+    docs-analysis: ["pi:zai/glm-5.3-flash:high"]
+    compressor: ["pi:zai/glm-5.3-flash:high"]
+    idea-enhance: ["pi:zai/glm-5.3-flash:high@ro"]
+    sim-primary: ["pi:zai/glm-5.3-flash:high@ro"]
+    sim-synthesis: ["pi:zai/glm-5.3-flash:high"]
+  fallback:
+    enabled: false
+    providers: []
