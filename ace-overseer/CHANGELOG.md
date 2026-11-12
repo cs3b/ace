@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0.pre.11] - 2026-11-12
+
+### Fixed
+
+- Prepare project eyes with linked-worktree scope so executor reports reach their configured owner; require current revision/owner readback instead of stale key interpretations before acknowledgement.
+
 ## [0.31.0.pre.10] - 2026-11-12
 
 ### Fixed

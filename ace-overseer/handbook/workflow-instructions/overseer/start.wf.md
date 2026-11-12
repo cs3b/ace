@@ -247,6 +247,12 @@ not a speculative continuation.
   redelivery. Acknowledge the answered revision after closure or after
   recording a concrete blocker through the existing owner.
 
+Before acknowledging any pending revision, read its current projection and
+the relevant owner state. A familiar key with a new revision is not the old
+state: never reuse a prior "reviewer still working" interpretation from memory.
+If a report exists, adopt that same report through `process-reports` and verify
+the saved receipt and continuation before acknowledging its revision.
+
 ## Standing observation
 
 After start, call the `ace_eyes` tool with action `start` and `configPath`

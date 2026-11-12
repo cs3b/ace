@@ -119,8 +119,10 @@ project Overseer arms the prepared configuration; it does not create or edit it.
 Describe the required project observation and recipient in the commission.
 Leave configuration syntax to the executor and its installed validator.
 `scope: project` belongs to the Overseer start configuration. For the eyes
-JSON, use `"scope": "current"` to observe the current project and set
-`"recipient"` to that project's configured recipient. Add sync routes only
+JSON, use `"scope": "all"` to include this project's linked worktrees, where
+executors publish their reports. `"current"` reads only the observer checkout
+and misses those reports. Set `"recipient"` to that project's configured
+recipient; the owner address still filters unrelated recipients. Add sync routes only
 when the commission requires them.
 The project's private task directory is `<project>/.ace-tasks/_overseer`;
 never require or create a top-level `<project>/_overseer` directory.
