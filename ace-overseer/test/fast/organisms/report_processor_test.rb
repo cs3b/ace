@@ -651,5 +651,28 @@ class ReportProcessorTest < AceOverseerTestCase
     assert_empty retirements
   end
 
+  def test_pending_decision_unwraps_hitl_manager_show_hash_and_closes_only_after_applied_or_closed
+    tasks = [manager(steps: [step("8xg.t.mgr.0", metadata: {"assignment" => "w1", "worktree" => "/wt/prj"})],
+      metadata: {"project_task" => "8xg.t.prj", "hitl_case" => "8ybubn"})]
+    owner = FakeTaskManager.new(tasks)
+    fake_event = Struct.new(:answered, :metadata) do
+      def answered? = answered
+    end
+    unanswered_mgr = Object.new
+    unanswered_mgr.define_singleton_method(:show) { |ref, scope:| {event: fake_event.new(false, {})} }
+    instance = Ace::Overseer::Organisms::ReportProcessor.new(inbox: FakeInbox.new([report]),
+      task_manager: owner, completion_check: ->(**) { nil }, retire: ->(**) {})
+    first = Ace::Hitl::Organisms::HitlManager.stub(:new, unanswered_mgr) { instance.call }
+    assert_equal "blocked", first[:outcomes].first[:continuation][:action]
+    assert_includes first[:outcomes].first[:continuation][:reason], "decision 8ybubn is not applied; manager remains open"
+    assert_equal "in-progress", tasks.first.status
+
+    closed_mgr = Object.new
+    closed_mgr.define_singleton_method(:show) { |ref, scope:| {event: fake_event.new(true, {"application" => {"state" => "closed"}})} }
+    second = Ace::Hitl::Organisms::HitlManager.stub(:new, closed_mgr) { instance.call }
+    assert_equal "none", second[:outcomes].first[:continuation][:action]
+    assert_equal "done", tasks.first.status
+  end
+
 end
 

@@ -247,7 +247,7 @@ module Ace::Overseer::Molecules
         return resume_dead(execution, brief, worktree_path, pane, save)
       end
       unless agent.is_a?(Hash) && same_executor?(agent, execution) && agent["cwd"] == worktree_path &&
-          agent["name"] == execution["agent"] && agent["interactive_ready"] == true && agent["agent_status"] == "idle"
+          agent["name"] == execution["agent"] && agent["interactive_ready"] == true && %w[idle done].include?(agent["agent_status"])
         raise Ace::Overseer::Error, "resumed executor is not the expected idle session; inspect before retrying"
       end
       execution["state"] = "resume_prompting"
@@ -282,7 +282,7 @@ module Ace::Overseer::Molecules
       rows = replacement_matches(execution)
       row = rows.one? && rows.first
       unless row && row["name"] == execution["agent"] && row["cwd"] == worktree_path && row["terminal_id"] &&
-          row["interactive_ready"] == true && row["agent_status"] == "idle" && session_identity(row) == execution["agent_session"]
+          row["interactive_ready"] == true && %w[idle done].include?(row["agent_status"]) && session_identity(row) == execution["agent_session"]
         raise Ace::Overseer::Error, "replacement resume is unconfirmed; inspect before retrying"
       end
       execution.merge!("pane" => row["pane_id"], "terminal_id" => row["terminal_id"])

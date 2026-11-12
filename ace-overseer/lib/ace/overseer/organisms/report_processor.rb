@@ -260,7 +260,8 @@ module Ace
         def pending_decision(manager)
           refs = [manager, *Array(manager.subtasks)].filter_map { |task| task.metadata["hitl_case"] }.uniq
           refs.each do |ref|
-            event = Ace::Hitl::Organisms::HitlManager.new.show(ref, scope: "all")
+            shown = Ace::Hitl::Organisms::HitlManager.new.show(ref, scope: "all")
+            event = shown.is_a?(Hash) ? shown[:event] : shown
             unless event && event.answered? && %w[applied closed].include?(event.metadata.dig("application", "state"))
               return "decision #{ref} is not applied; manager remains open"
             end

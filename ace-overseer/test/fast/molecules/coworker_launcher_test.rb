@@ -543,4 +543,14 @@ class CoworkerLauncherTest < AceOverseerTestCase
     worker.ready!
     refute_includes observed.last.fetch(:required_sources), "project_sessions"
   end
+
+  def test_resume_dead_accepts_done_agent_status_from_previous_turn_on_pane
+    interrupted_worker
+    @executor.agent_status = "done"
+    result = launch
+    assert_equal "running", result.fetch("state")
+    assert result.fetch("resumed")
+    assert_equal 2, @executor.starts.length
+    assert_equal 2, @executor.prompts.length
+  end
 end
