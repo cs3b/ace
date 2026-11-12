@@ -260,3 +260,58 @@ rejects Git-ignored coordination state before readiness/provision/dispatch with
 an actionable separate commission error. Both guides distinguish the private
 manager from the ordinary report-only advisor task and reuse the same HITL case.
 36focusedtests/213assertions pass; independent read-only PASS, no new state.
+
+
+Advisor fix candidate b7e9c95e720fd747fd4d71253180cff1cfc208f0 / overseer0.31.0.pre.6
+SHA256455f4f1be4b78afbe5f0fc151b32db375b6b8d057e379d8ce304438d287d11df:
+full601tests2890assertions0fail/errors1skip, installed rehearsal pass,
+independent verdict bound to exact commit. One bundle install plus canonical
+binstub regeneration took6.47s. Coordinator received a disclosed maintenance
+notice pointing to the corrected packaged contract, not a fabricated decision.
+It created ordinary advisor task8yb.t.kbo, launched assignment8ybkc2 at13:33:36UTC
+inw3:pR/term_660145b9868408. Earlier private task attempt had eventually prepared
+paused assignment8ybk5y but never a live advisor; keep this failed preparation in
+the record. Exactly one actual advisor process runs for original case8ybk3j.
+
+First new merge: integrator8ybis52 inw3:pQ/term_6601454bbcaed7 started13:31:39UTC;
+PR11 merged13:34:54UTC toac8698757a14ff0edea3031b73607dd9999b3b8f.
+Accepted candidate4e76c8c2160ac59cc9d14abc0666e4e033466772, formal reviewer
+account e2e-reviewer approval4 at13:26:22UTC, exact same HEAD. Tests12/31direct
+and129/399package,0fail/errors19pre-existing skips. Issue8closed, release4open.
+No operator implementation, review approval or merge of the fixture change.
+
+Review docs round exceeded5minutes: diagnosed process tree and session files;
+provider process ended and synthesis began around6m43s. No reset/retry by host.
+
+
+Advisor8ybkc2 wrote exactly one marked suggestion at13:37:38UTC on8ybk3j,
+recommending C after current8/9/10 deliveries. It completed and reported8ybkhd;
+case Answer remained empty. Operator presented that exact choice and recommendation
+through the chat's user-input tool, awaiting real Captain response. Local fixture
+recipient is folder-form utm-e2e/.ace-local/hitl; no send adapter is configured,
+so automated send is not credited. Chat delivery is an explicit manual bridge,
+not a fabricated delivery-state mutation or human answer.
+
+Measured new reviewer report8ybk6e transition: match0.000s, verify2.051s,
+accept0.177s, retire0.433s, continue/start integrator12.099s. Prior duplicate
+continuation reconciliation in that same call cost4.271/4.524s; no second actors.
+These stage lines survived in the actual coordinator tool result, unlike its
+other tailed calls. Role outcome and launch are distinct measurements.
+
+Issue9 worker8ybkhu was launched only after issue8's integrator result was
+adopted and dependency/task closure recorded; public work-on took45.2s including
+checkout and three assignment preparations. This is dispatch cost, not report
+acceptance. Capturing exact terminal binding next.
+
+
+### Advisor report allocation correction
+
+Public process-reports returned8ybkhd unmatched: manager8yb.t.k3f recorded
+advisor_* notes, but lacked project_task/project_root and a direct allocation
+child with role/assignment. Coordinator substituted an advisor_adopted note;
+this is NOT credited as product report acceptance/retirement. Advisor remained
+alive. Updated packaged staged-decision instructions explicitly reuse the queue
+contract, add a direct advisor child and separate open human-decision child,
+repair existing references for the same report, and distinguish saved report
+from successful cleanup. Independent review caught and corrected missing
+cross-project project_root and premature retirement wording. No new state/API.

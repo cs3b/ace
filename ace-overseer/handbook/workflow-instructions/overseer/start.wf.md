@@ -339,11 +339,23 @@ For a decision outside your mandate:
    executor worktree cannot load it. Commission the existing `second-captain`
    role on that project task with metadata `role: second-captain` and
    `hitl_case: <exact-id>`, reusing the original case. Include the question,
-   permitted choices and references in the task. Arm eyes before `work-on`,
-   record its returned assignment/terminal and end the turn. Continue unrelated
-   work; the decision blocks only its dependants.
+   permitted choices and references in the task. Use the existing queue allocation
+   contract: set the private manager's `project_task` to this ordinary task ID
+   and `project_root` to its canonical project directory;
+   create a direct advisor subtask with `role: second-captain`, and a separate
+   direct decision subtask that stays open until the Captain's answer is applied.
+   Arm eyes before `work-on`. Record the returned `assignment`, `terminal` and
+   `worktree` on the advisor subtask, then end the turn. Continue unrelated work;
+   the decision blocks only its dependants.
 4. On the advisor report, adopt it through `process-reports`, then read the
-   original case. If the Captain has already answered, use that decision and
+   original case. An unmatched report is not adopted: repair its allocation
+   references on the existing private manager/advisor subtask and rerun the same
+   report; do not replace acceptance with an arbitrary note or acknowledge it.
+   Acceptance records the report before cleanup. Check the outcome separately:
+   if advisor retirement or continuation is incomplete, retry the same report
+   to finish it before acknowledging; never claim that recording implies cleanup.
+   The separate decision subtask keeps the manager open. If the Captain has
+   already answered, use that decision and
    do not send a late question. Otherwise verify the marked suggestion and
    send the SAME case with `ace-hitl send CASE`. If the advisor failed, add a
    truthful note to the case explaining that no recommendation is available

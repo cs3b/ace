@@ -469,3 +469,14 @@ shared-bundle hot-update window remains a disclosed maintenance caveat.
   early actionable ignored-task rejection, clarified executable commission vs
   private decision manager. Same case8ybk3j retained, no advisor assignment yet.
   Focused36/213pass and independentPASS; continuation pending.
+
+- **Advisor report manually noted but not adopted:** private manager stored
+  advisor_* metadata rather than existing project_task/project_root plus direct
+  role/assignment allocation. process-reports correctly returned unmatched;
+  coordinator's manual advisor_adopted note is insufficient. Clarified existing
+  allocation and same-report cleanup recovery in packaged guides; no new CLI.
+  Awaiting actual product acceptance and retirement on the preserved VM.
+- **Captain local transport missing:** fixture captain is folder-form and has
+  no send adapter. Same decision8ybk3j/recommendation was presented through chat
+  user-input as disclosed manual delivery; no delivered status fabricated, no
+  human answer supplied by operator. Release4 stays independently gated.

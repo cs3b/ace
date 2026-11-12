@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0.pre.7] - 2026-11-12
+
+### Fixed
+
+- Specify the existing private allocation fields for advisor report acceptance and retirement, keeping the human-decision step open; unmatched reports cannot be replaced by a manual acceptance note.
+
 ## [0.31.0.pre.6] - 2026-11-12
 
 ### Fixed
