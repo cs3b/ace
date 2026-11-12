@@ -55,7 +55,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-fs", "~> 0.3"
   spec.add_dependency "ace-support-nav", "~> 0.28", ">= 0.28.8"
   spec.add_dependency "ace-task", "~> 0.41", ">= 0.41.1"
-  spec.add_dependency "ace-assign", "~> 0.72", ">= 0.73.2"
+  spec.add_dependency "ace-assign", "~> 0.72", ">= 0.73.3"
   spec.add_dependency "ace-hitl", "~> 0.22", ">= 0.25.1"
   spec.add_dependency "ace-git-worktree", "~> 0.27", ">= 0.27.4"
   spec.add_dependency "ace-review", "~> 0.62.2", ">= 0.62.3"
