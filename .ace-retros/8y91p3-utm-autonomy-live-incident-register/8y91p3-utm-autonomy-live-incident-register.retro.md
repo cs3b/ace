@@ -462,3 +462,10 @@ shared-bundle hot-update window remains a disclosed maintenance caveat.
   and reran checks under the existing reviewer workflow. Product review material
   should preserve exact candidate changes; do not call empty material a clean
   review. Broader filtering correction not claimed in this candidate.
+
+- **Advisor never started:** private ignored coordination task passed to work-on;
+  worktree provisioning also omitted existing defer_setup:true and attempted
+  project trust/setup in the coordinator. Fixed both provisioning paths, added
+  early actionable ignored-task rejection, clarified executable commission vs
+  private decision manager. Same case8ybk3j retained, no advisor assignment yet.
+  Focused36/213pass and independentPASS; continuation pending.

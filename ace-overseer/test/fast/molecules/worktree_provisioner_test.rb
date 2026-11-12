@@ -24,7 +24,8 @@ class WorktreeProvisionerTest < AceOverseerTestCase
       @switch_result
     end
 
-    def create_task(task_ref)
+    def create_task(task_ref, defer_setup:)
+      raise "coordinator attempted project setup" unless defer_setup
       @create_task_calls << task_ref
       return @create_results.shift if @create_results && !@create_results.empty?
 

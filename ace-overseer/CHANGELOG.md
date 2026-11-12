@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0.pre.6] - 2026-11-12
+
+### Fixed
+
+- Defer project setup when Overseer provisions an executor checkout, including stale-worktree recovery. Reject Git-ignored coordination tasks before dispatch and distinguish the advisor's executable task from its private decision manager.
+
 ## [0.31.0.pre.5] - 2026-11-12
 
 ### Fixed

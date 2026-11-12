@@ -17,7 +17,7 @@ module Ace
             return recover_from_stale_worktree(task_ref_str, source: :switch, previous_result: switch_result)
           end
 
-          create_result = @manager.create_task(task_ref_str)
+          create_result = @manager.create_task(task_ref_str, defer_setup: true)
           raise Error, create_result[:error] || "Failed to provision worktree for task #{task_ref}" unless create_result[:success]
 
           created = !create_result[:existing]
@@ -44,7 +44,7 @@ module Ace
         def recover_from_stale_worktree(task_ref, source:, previous_result:)
           @manager.prune
 
-          retry_result = @manager.create_task(task_ref)
+          retry_result = @manager.create_task(task_ref, defer_setup: true)
           raise Error, retry_result[:error] || "Failed to provision worktree for task #{task_ref}" unless retry_result[:success]
 
           created = !retry_result[:existing]

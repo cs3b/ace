@@ -140,8 +140,12 @@ For a decision outside your mandate:
 2. Create the precise decision with `ace-hitl create --kind decision --to captain`
    and record its ID on the existing coordination task. Creation does not send.
    Do not use `ask` for this staged decision: it sends immediately.
-3. Commission the existing `second-captain` role with task metadata
-   `role: second-captain` and `hitl_case: <exact-id>`. Include the question,
+3. Keep the private coordination task as the owner of this decision. Create a
+   separate ordinary project task for the advisor's report-only commission;
+   do not pass the Git-ignored private task itself to `work-on`, because an
+   executor worktree cannot load it. Commission the existing `second-captain`
+   role on that project task with metadata `role: second-captain` and
+   `hitl_case: <exact-id>`, reusing the original case. Include the question,
    permitted choices and references in the task. Arm eyes before `work-on`,
    record its returned assignment/terminal and end the turn. Continue unrelated
    work; the decision blocks only its dependants.

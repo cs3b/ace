@@ -241,3 +241,22 @@ retire0.059s, continuation reconciliation0.173s. Existing reviewers were reused,
 not launched again. Historical closed report cleanup0.000–0.127s. These are
 measured stage costs, not a fixed60second wait. Receipt report-timings-restart.json.
 Final independent verdict explicitly bound to d97fee24566a78b57cc5042f9f59826a2401e495.
+
+
+### Advisor commissioning exposed setup and private-task boundary gaps
+
+Coordinator created exactly one decision8ybk3j and private manager8yb.t.k3f,
+then passed that private task to work-on. First attempt hit inconclusive eyes
+proof, retry entered worktree preparation and failed; subsequent retry correctly
+found no task in the linked checkout (private Git-ignored specs do not travel).
+No advisor assignment/process was created. Coordinator recorded failure and
+selected the documented truthful no-recommendation fallback; no human response
+has been supplied. Existing base review completed with formal reviewer approval
+at4e76c8c2160ac59cc9d14abc0666e4e033466772 (Forgejo review4).
+
+Product fix: WorktreeProvisioner now passes the existing defer_setup:true on
+both create and stale-recovery paths, matching coworker provisioning. Work-on
+rejects Git-ignored coordination state before readiness/provision/dispatch with
+an actionable separate commission error. Both guides distinguish the private
+manager from the ordinary report-only advisor task and reuse the same HITL case.
+36focusedtests/213assertions pass; independent read-only PASS, no new state.

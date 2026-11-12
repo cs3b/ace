@@ -33,10 +33,11 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
   end
 
   class FakeTask
-    attr_reader :metadata, :subtasks, :status, :id, :dependencies
+    attr_reader :metadata, :subtasks, :status, :id, :dependencies, :path, :file_path
 
     def initialize(data)
       @metadata = data[:metadata] || {}
+      @path, @file_path = data.values_at(:path, :file_path)
       @status = data[:status]
       @id = data[:id]
       @dependencies = Array(data[:dependencies])
@@ -147,6 +148,31 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       error = assert_raises(Ace::Overseer::Error) { orchestrator.call(task_ref: "task") }
       assert_includes error.message, "explicit nonempty role sequence"
       assert_empty provisioner.calls
+    end
+  end
+
+  def test_ignored_coordination_task_is_rejected_before_setup_or_dispatch
+    Dir.mktmpdir("private-commission") do |root|
+      assert system("git", "init", "-q", root)
+      File.write(File.join(root, ".gitignore"), "/private/\n")
+      folder = File.join(root, "private", "advisor")
+      FileUtils.mkdir_p(folder)
+      spec = File.join(folder, "advisor.s.md")
+      File.write(spec, "private coordinator data")
+      provisioner = FakeWorktreeProvisioner.new({})
+      launcher = Object.new
+      def launcher.ready! = raise("must fail before launcher readiness")
+      task = {id: "advisor", status: "pending", path: folder, file_path: spec,
+        metadata: {"role" => "second-captain", "hitl_case" => "existing-case"}}
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: FakeTaskManager.new("advisor" => task),
+        lifecycle_exclusion: @exclusion, coworker_launcher: launcher,
+        config: {"runtime" => "herdr"}, worktree_provisioner: provisioner)
+      error = assert_raises(Ace::Overseer::Error) { orchestrator.call(task_ref: "advisor") }
+      assert_includes error.message, "Git-ignored coordination state"
+      assert_includes error.message, "separate project task"
+      assert_empty provisioner.calls
+      refute Dir.exist?(File.join(root, ".ace-local"))
     end
   end
 

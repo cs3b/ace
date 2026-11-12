@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative "../molecules/coworker_launcher"
+require "ace/task/molecules/git_ignored_path"
 
 module Ace
   module Overseer
@@ -131,9 +132,13 @@ module Ace
 
         def delegate(entry, progress:)
           launcher = @coworker_launcher || Molecules::CoworkerLauncher.new
-          launcher.ready!
           ref = entry.fetch(:ref)
           task = entry.fetch(:task)
+          if Ace::Task::Molecules::GitIgnoredPath.ignored_task?(task)
+            raise Error, "task #{task.id} is Git-ignored coordination state and cannot be loaded in an executor worktree; " \
+              "create a separate project task with the commission, roles and existing hitl_case, then record its assignment on this coordination task"
+          end
+          launcher.ready!
           roles = task.metadata["roles"] || (task.metadata["role"] && [task.metadata["role"]])
           unless roles.is_a?(Array) && !roles.empty? && roles.all? { |role| role.is_a?(String) && !role.empty? && role == role.strip } && roles.uniq == roles
             raise Error, "task #{task.id} requires an explicit nonempty role sequence (roles or role); choose roles for this commission before work-on"
