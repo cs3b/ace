@@ -241,3 +241,5 @@ Paused the stuck model with Esc; delivered one continuation goal for same HITL8y
 ## Live same-assignment recovery confirmed — 12:21 UTC
 
 Public `work-on --task 8ye.t.hsy --manager 8ye.t.hsx --runtime herdr` completed in11.5s: existing assignment8yehtj bound and started. Native owner independently reports coworker-8yehtj interactive_ready:true, working, cwd `/lab/ace/.ace-wt/ace-t.hsy`, pane w3:p18, terminal term_6604fb194281519. New session01a1df27-5428-7001-b35c-1e559d8c82f8 uses zai/glm-5.3-flash (model_change12:20:59.232Z). Old orphan was retired by the product, no manual binding edit. HITL8yehss still pending, no human answer yet.
+
+At12:23:12UTC the actual Second Captain wrote `Suggestion` on8yehss, author second-captain, proposal A (short result with evidence links), preserving empty Answer and answered:false. Operator independently read the case and presented A/B to the human via HITL bridge. Decision pending; this is not release approval.
