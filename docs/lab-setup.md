@@ -1,13 +1,35 @@
+---
+doc-type: user
+title: Instalacja i upgrade laba ACE
+purpose: Bezpieczna aktualizacja zainstalowanego runtime bez resetu pracy laba.
+ace-docs:
+  last-updated: '2026-11-15'
+  last-checked: '2026-11-15'
+---
+
 # Wdrożenie i aktualizacja laba ACE z RubyGems
 
-Instrukcja uruchomienia nowego środowiska (lab) oraz aktualizacji działającego
-laba do najnowszych wydań z RubyGems (stan na `2026-11-12`: `ace-lab 0.16.1`,
-`ace-overseer 0.31.0`, `ace-coworker 0.10.0`, `ace-hitl 0.27.0`,
-`ace-wake 0.4.0`, `ace-herdr 0.11.2`). Źródłem prawdy dla schematów są pliki
-dostarczane z gemami: [ace-lab/docs/usage.md](../ace-lab/docs/usage.md),
-[ace-overseer/docs/usage.md](../ace-overseer/docs/usage.md),
-[ace-herdr/docs/usage.md](../ace-herdr/docs/usage.md) oraz mapa właścicieli
-stanu w [docs/lab-flow.md](lab-flow.md).
+Stan sprawdzony **2026-11-15**. Procedura dotyczy zainstalowanego runtime,
+nie bundle'a rozwijanego projektu. Nie resetuje VM, Forgejo, zadań ani sesji.
+
+| Pakiet | RubyGems (sprawdzone API) | Lokalny kandydat użyty w UTM |
+|---|---|---|
+| ace-lab | 0.16.1 | 0.16.2 |
+| ace-runtime | 0.4.2 | 0.4.3 |
+| ace-overseer | 0.31.1 | 0.31.2 |
+| ace-herdr | 0.11.3 | ten sam |
+
+**Nie aktualizuj starego laba według samych numerów kandydatów.** Trzy
+poprawki nie są jeszcze opublikowane. `ace-lab 0.16.2` naprawia źródło Gemfile
+oraz prawa odczytu zainstalowanych gemów; runtime/overseer naprawiają odzyskanie
+przydziału po odmowie startu. Przebieg UTM korzystał z tych lokalnych artefaktów.
+Przed wydaniem sprawdź publikację i sumy artefaktów; sam merge nie publikuje gemów.
+
+Źródła kontraktu: [ace-lab](../ace-lab/docs/usage.md),
+[runtime bundle](../ace-lab/docs/runtime-bundle.md),
+[Overseer](../ace-overseer/docs/usage.md), [Herdr](../ace-herdr/docs/usage.md)
+i [właściciele stanu](lab-flow.md). Aktualne ograniczenia odbioru:
+[raport instalacji i HITL](../.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/docs/2026-11-15-final-acceptance.md).
 
 ## Wymagania
 
@@ -18,34 +40,16 @@ Ruby ≥ 3.2 (zalecane 3.4), Bundler, Git, Node.js (dla Pi oraz rozszerzenia
 
 ## 1. Instalacja bazowa i `ACE_TOOLCHAIN=installed`
 
-```bash
-gem install \
-  ace-lab:0.16.1 \
-  ace-overseer:0.31.0 \
-  ace-coworker:0.10.0 \
-  ace-hitl:0.27.0 \
-  ace-wake:0.4.0 \
-  ace-herdr:0.11.2 \
-  ace-handbook
-```
+Instalator jest jedynym gemem potrzebnym do bootstrapu. Użyj zatwierdzonej,
+opublikowanej wersji `ace-lab`; docelowe pakiety przypina manifest poniżej.
+Nie instaluj każdego pakietu osobno i nie uruchamiaj instalatora ze źródeł projektu.
+Na starym labie sprawdź rzeczywistą ścieżkę instalatora: samo zainstalowanie
+nowszego gemu nie przełącza binstuba zablokowanego starym Gemfile.lock.
 
-`ace-handbook` (oraz `ace-handbook-integration-pi`) dostarcza instrukcje
-`wfi://...` dla procesu `work-on-task` i ról nadzorcy/wykonawców. Pozostałe
-zależności (`ace-task`, `ace-assign`, `ace-review`, `ace-git`,
-`ace-git-worktree`) rozwiążą się automatycznie z RubyGems lub przez zablokowany
-bundle zarządzany przez `ace-lab install`.
-
-Weryfikacja wersji CLI:
-
-```bash
-ace-lab --version && ace-overseer --version && ace-coworker --version && ace-hitl --version && ace-herdr --version
-```
-
-W środowisku wykonawczym ustaw:
-
-```bash
-export ACE_TOOLCHAIN=installed
-```
+Tryb `installed` zapisz w konfiguracji Herdr i Overseera (`toolchain: installed`).
+Sesje dostają środowisko z konfiguracji produktu. Nie wymagają ręcznego `source`.
+Administrator podczas instalacji również jawnie zachowuje ten tryb:
+`sudo env ACE_TOOLCHAIN=installed /pełna/ścieżka/ace-lab install`.
 
 W trybie `installed` checkout projektu jest wyłącznie źródłem zadań i
 konfiguracji domenowej, a nie kodu ACE. Nie używaj `bin/ace-*`, `bundle exec`
@@ -66,7 +70,7 @@ ace-lab status                 # oczekiwane: configured + projekt
 
 ## 2'. Ścieżka B — pełny install z manifestu (`/etc/lab/ace-lab/install.yml`)
 
-Dla autonomicznego laba управляanego przez manifest wdrożeniowy administrator
+Dla autonomicznego laba zarządzanego przez manifest wdrożeniowy administrator
 umieszcza plik `/etc/lab/ace-lab/install.yml` (własność `root:root`, tryb
 `0644`; brak flagi `--manifest` jest celowy — manifest musi leżeć poza kaskadą
 zapisywalną przez agentów):
@@ -112,11 +116,11 @@ gemset:
   bin_dir: /opt/ace/runtime/bin
   gems:
     - { name: ace-lab, version: 0.16.1 }
-    - { name: ace-overseer, version: 0.31.0 }
+    - { name: ace-overseer, version: 0.31.1 }
     - { name: ace-coworker, version: 0.10.0 }
     - { name: ace-hitl, version: 0.27.0 }
     - { name: ace-wake, version: 0.4.0 }
-    - { name: ace-herdr, version: 0.11.2 }
+    - { name: ace-herdr, version: 0.11.3 }
     - { name: ace-handbook-integration-pi, version: 0.9.1 }
   extensions:
     - gem: ace-wake
@@ -131,7 +135,7 @@ session_runtime:
     - /opt/ace/toolchains/node/bin
     - /usr/bin
   provider: zai
-  model: glm-5.3
+  model: glm-5.3-flash
   credentials: /etc/lab/ace-lab/pi-auth.json
   herdr:
     account: mo
@@ -141,58 +145,85 @@ session_runtime:
 Wykonanie instalacji i weryfikacji:
 
 ```bash
-sudo ace-lab install --dry-run   # predykcja zmian bez zapisu
-sudo ace-lab install             # jedno wywołanie Bundlera + projekcja rozszerzeń + granty
+sudo env ACE_TOOLCHAIN=installed ace-lab install --dry-run   # predykcja zmian bez zapisu
+sudo env ACE_TOOLCHAIN=installed ace-lab install             # jedno wywołanie Bundlera + projekcja rozszerzeń + granty
 ace-lab verify --format json     # odczytowa weryfikacja gotowości pod kontami docelowymi
 ```
 
-## 3. Aktualizacja istniejącego laba (Upgrade do nowych wydań)
+## 3. Upgrade istniejącego laba — bez odtwarzania środowiska
 
-Aby zaktualizować działający lab do nowego zestawu wydań:
-
-1. **Zaktualizuj wersje w `/etc/lab/ace-lab/install.yml`** w sekcji `gemset.gems`
-   (np. `ace-lab: 0.16.1`, `ace-overseer: 0.31.0`, `ace-coworker: 0.10.0`,
-   `ace-hitl: 0.27.0`, `ace-wake: 0.4.0`, `ace-herdr: 0.11.2`). Jeśli zmienił się
-   kontrakt natywnego Herdr (np. `ace-herdr 0.11.2`), zaktualizuj również
-   binarium `herdr` i sprawdź `ace-herdr native-source verify`.
-2. **Sprawdź plan zmian i zastosuj konwergencję**:
+1. **Zapisz punkt wyjścia.** Zachowaj małą kopię z datą: manifest
+   `/etc/lab/ace-lab/install.yml`, Gemfile i Gemfile.lock z katalogu bundle,
+   konfiguracje Herdr/Overseer oraz wersje i identyfikatory żywych sesji.
+   Kopie zawierające poświadczenia muszą być prywatne. Nie eksportuj całej VM.
+   Nie kasuj `.ace-local`, `.ace-tasks`, worktree ani danych Forgejo.
+2. **Wybierz jeden sprawdzony zestaw.** Zmień wyłącznie odpowiednie piny
+   `gemset.gems` w istniejącym manifeście. Nie zastępuj konfiguracji starego
+   laba przykładem z tej strony. Zachowaj projekty, koordynatora, granty,
+   ścieżki i źródła środowiska ról. Jeśli konfiguracja nadal wymaga starego
+   wystawcy systemowego, najpierw dopasuj ją do bieżącego kontraktu
+   [środowiska sesji](../ace-lab/docs/usage.md); aktualizacja gemów nie jest
+   automatyczną migracją dowolnego starego hosta.
+3. **Użyj poprawionego instalatora i sprawdź plan.** Polecenia wykonuje operator
+   z Ruby, Bundlerem i Git dostępnymi również w kontekście administratora.
+   Zweryfikuj ścieżkę CLI oraz wersję przed zastosowaniem zmian:
    ```bash
-   sudo ace-lab install --dry-run
-   sudo ace-lab install --format json
+   command -v ace-lab
+   ace-lab --version
+   sudo env ACE_TOOLCHAIN=installed ace-lab install --dry-run
+   sudo env ACE_TOOLCHAIN=installed ace-lab install --format json
    ```
-   `ace-lab install` instaluje kompletny zestaw jednym wywołaniem Bundlera z
-   trwałym `Gemfile`/`Gemfile.lock` w `gem_home` (w razie błędu przywraca
-   poprzedni działający lockfile), wystawia binstuby i aktualizuje projekcję
-   rozszerzenia `ace-wake` w `gemset.extensions`.
-3. **Zweryfikuj gotowość runtime**:
+   `dry-run` przewiduje zmiany; brak błędu procesu nie oznacza, że nie ma
+   konfliktów w raporcie. Właściwy install wykonuje **jeden `bundle install`**,
+   wystawia binstuby, projektuje rozszerzenia i uzgadnia konfigurację laba.
+   Nie instaluje ponownie systemu, Node, Pi ani Forgejo.
+4. **Sprawdź wynik raz, jawnie:**
    ```bash
-   ace-lab verify
+   ace-lab verify --format json
    ```
-4. **Przeładuj rozszerzenie `ace-wake` / sesje nadzorców**:
-   - Jeśli raport `ace-lab install` zawiera `"restart_required": true` dla
-     projekcji `ace-wake`, uruchomione procesy Pi trzymają w pamięci poprzednią
-     wersję rozszerzenia.
-   - W działających sesjach nadzorców (`/lab` oraz `/lab/<projekt>`) wykonaj
-     `/reload` — od `ace-wake 0.4.0` i `ace-overseer 0.31.0` przeładowanie
-     automatycznie odtwarza `eyes` z `ACE_OVERSEER_EYES_CONFIG` i zachowuje
-     stan okna budżetu, `acknowledged` oraz `pending` bez zerowania liczników.
-   - Następnie potwierdź spójność sesji:
-     ```bash
-     ace-overseer start --scope lab --reconcile --format json
-     ```
+   Błąd dostępu do `ruby`/`gem`, niezgodność rozszerzeń lub brak źródła to
+   niezaliczona gotowość, nie powód do ponownej instalacji wszystkiego.
+   `unknown` dla zdalnego repo wymaga osobnego odczytowego sprawdzenia forge.
+   Projekt pozostaje własnością `mo:mo`, runtime i chronione rozszerzenia
+   własnością administratora. Nie zmieniaj właściciela projektu na root.
+   Jeśli administrator dostaje Git `dubious ownership`, zaufanie może
+   dotyczyć tylko sprawdzonej ścieżki, np. `sudo git config --global --add
+   safe.directory /lab/ace`; nigdy `safe.directory '*'`.
+5. **Przeładuj tylko to, co zmienione.** Dla zmienionego rozszerzenia Pi użyj
+   `/reload` w istniejącej sesji; zachowaj pending, acknowledgements i budżet
+   eyes. Nie zakładaj, że ponowne `start` przeładowuje żywy proces — może go
+   ponownie wykorzystać. Natywny Herdr aktualizuj tylko, gdy wymaga tego
+   kontrakt nowego `ace-herdr`, zgodnie z `native-source`; gem i binarium
+   natywne są osobnymi artefaktami.
+6. **Potwierdź działanie z katalogu laba, jako jego operator:**
+   ```bash
+   cd /lab
+   ace-herdr status --format json
+   ace-overseer start --scope lab --reconcile --format json
+   ```
+   Sprawdź faktyczne sesje, zakres i zdrowie eyes oraz zachowanie przydziałów.
+   Sam istniejący panel nie potwierdza gotowości nadzorcy. Nie wysyłaj ponownie
+   wykonanych zadań. W razie błędu zachowaj stan i popraw ostatni etap.
 
-## 4. Uruchomienie i autonomiczna praca (`ace-overseer 0.31.0`)
+Nieudane rozwiązywanie bundle przywraca poprzedni Gemfile/lock/config Bundlera;
+nie jest to rollback wszystkich zmian konfiguracji laba. Nie usuwaj starych
+artefaktów potrzebnych do diagnostyki. Lokalny kandydat musi mieć jawne SHA
+źródeł i sumy `.gem`; nie przedstawiaj go jako wydania RubyGems.
+
+## 4. Uruchomienie i autonomiczna praca
 
 ### 4.1. Start serwera Herdr i nadzorców (`--scope lab`)
 
 ```bash
-ace-herdr start --format json
+cd /lab
+ace-herdr start
+# W terminalu/panelu Herdr, z katalogu /lab:
 ace-overseer start --scope lab --format json
 ```
 
-- `ace-overseer start --scope lab` uruchamia (lub uzgadnia z `--reconcile`)
-  sesję Lab Overseera w `/lab` oraz sesje Project Overseerów dla każdego
-  skonfigurowanego projektu.
+- `ace-overseer start --scope lab` uruchamia lub wykorzystuje sesję Lab
+  Overseera. Jawne `--reconcile` uzgadnia nadzorców skonfigurowanych projektów
+  bez restartowania koordynatora.
 - Start przekazuje `ACE_OVERSEER_EYES_CONFIG` w środowisku procesu Pi, dzięki
   czemu rozszerzenie `ace-wake` automatycznie uzbraja `eyes` podczas
   inicjalizacji sesji (zanim pojawi się pierwszy prompt).
@@ -209,22 +240,15 @@ jawnym powiązaniem `--manager`:
 
 ```bash
 # 1. Start pierwszej roli (np. worker) — zapisuje powiązanie w managerze przed uruchomieniem:
-ace-overseer work-on --task <TASK_ID> --manager <MANAGER_ID> --runtime herdr --format json
+ace-overseer work-on --task <TASK_ID> --manager <MANAGER_ID> --runtime herdr --json
 
-# 2. Odbiór raportu po przebudzeniu przez eyes:
-# W sesji Pi nadzorca używa narzędzia rozszerzenia `process_reports`
-# (które wywołuje process-reports i potwierdza dokładne rewizje obserwacji).
-# Z poziomu CLI odpowiednikiem dla konkretnego raportu jest:
-ace-overseer process-reports \
-  --report <REPORT_ID> \
-  --manager <MANAGER_ID> \
-  --task <TASK_ID> \
-  --role <ROLE> \
-  --assignment <ASSIGNMENT_ID> \
-  --json
+# 2. Odbiór raportów po przebudzeniu przez eyes:
+# W Pi użyj ace_eyes z action="process-reports": odbiór i dokładne potwierdzenie.
+# CLI odbiera raporty; samo nie zastępuje potwierdzenia rozszerzenia:
+ace-overseer process-reports --json
 
 # 3. Przekazanie do kolejnej roli z sekwencji (np. worker -> reviewer -> integrator):
-ace-overseer handoff --task <TASK_ID> --manager <MANAGER_ID> --runtime herdr --format json
+ace-overseer handoff --task <TASK_ID> --manager <MANAGER_ID> --runtime herdr --json
 ```
 
 - Zwykłe dostarczanie kodu przechodzi przez sekwencję `worker → reviewer → integrator`
@@ -232,8 +256,8 @@ ace-overseer handoff --task <TASK_ID> --manager <MANAGER_ID> --runtime herdr --f
   dokładnym SHA kandydata przed merge’em).
 - Operacyjna weryfikacja konfiguracji (`bootstrap-verifier`) sprawdza dowody
   wykonania z raportu workera bez wywoływania `ace-review`, PR ani `integrator`.
-- Gdy wszystkie role zadeklarowane w `metadata.roles` zadania managera zostaną
-  zaakceptowane, `ReportProcessor` automatycznie zamyka zadanie managera jako
+- Po spełnieniu wymaganej sekwencji ról i warunków zakończenia (w tym startu
+  projektu dla bootstrapu lub integracji kodu), procesor zamyka managera jako
   `done` w `.ace-tasks/_overseer/`.
 
 ### 4.3. Decyzje HITL, Second Captain i lekcje (`ace-hitl 0.27.0`)
@@ -251,7 +275,7 @@ Gdy pojawia się pytanie decyzyjne do Kapitana (`ace-hitl ask --to captain`):
    lekcją porównującą rekomendację z decyzją Kapitana:
    ```bash
    ace-hitl apply <CASE_ID> --ref <MANAGER_ID>
-   ace-hitl close <CASE_ID> --lesson-file < LESSON_FILE >
+   ace-hitl close <CASE_ID> --lesson-file lesson.yml
    ```
    Po zamknięciu powiązanych spraw HITL i zadań potomnych manager decyzji w
    `_overseer` przechodzi w stan `done`.

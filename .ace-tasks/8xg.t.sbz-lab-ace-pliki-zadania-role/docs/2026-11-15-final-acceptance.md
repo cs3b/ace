@@ -255,3 +255,26 @@ Compact local evidence: `8yehss-closed.hitl.s.md` and `hitl-decision-applied.jso
 Report-quality correction: model initially titled its report acceptance on published packages and positive acceptance without the local-candidate/operator-intervention qualification. Operator provided exact versions and requested correction of report wording only; no test replay or state repair. Whole-program/RubyGems acceptance remains open.
 
 The corrected report A explicitly identifies ace-lab0.16.2/runtime0.4.3/overseer0.31.2 as unpublished local fixes, operator interventions, assisted-run scope, and open release/program acceptance. The agent ended its turn; native terminal view shows eyes pending0. No tasks or test effects were repeated for this documentation correction. Root Git change was an exact safe.directory setting, not a repository ownership change.
+
+
+## Upgrade documentation readiness check — 2026-11-15
+
+Read-only recheck before the Captain upgrades an older lab:
+
+- RubyGems API still exposes lab0.16.1/runtime0.4.2/overseer0.31.1/herdr0.11.3.
+  Lab0.16.2/runtime0.4.3/overseer0.31.2 remain local candidates, not published acceptance.
+- Preserved VM responds over SSH; installed CLI reports lab0.16.2/overseer0.31.2.
+  Project `/lab/ace` is mo:mo0755; runtime bundle and extension root are root:root0755.
+- Herdr lists lab w2:p8 and project w3:pZ as done; historical empty panes remain.
+  This is terminal visibility, not a new proof of healthy eyes or idle acceptance.
+- Forgejo HTTP listener answers on127.0.0.1:3000 and refuses unauthenticated API access.
+  The generic system unit named forgejo is inactive; no service restart was attempted.
+- Public `ace-lab verify --format json` from the noninteractive operator SSH context
+  exits1: role checks cannot find ruby, gem checks cannot find gem, and extension
+  inventory differs from ace-wake0.4.0. Diagnostic-context versus actual-session
+  readiness needs resolution; do not mark this lab ready or reinstall everything.
+- Three task files remain modified in the project; preserved without reset.
+- Updated docs/lab-setup.md correct unsupported command flags, bundle location,
+  published-versus-candidate distinction and non-destructive upgrade procedure.
+
+Older Omarchy lab was not accessed or changed. Its readiness is not inferred from UTM.

@@ -31,7 +31,11 @@ A failed update restores the previous Gemfile, lockfile and bundle configuration
 Already installed sibling versions remain on disk; the lockfile selects the
 runtime. Diagnostics of a bundled runtime use frozen, read-only `bundle check`.
 
-For updates, change the manifest pins and run `ace-lab install` once. To rerun
+For updates, preserve `ACE_TOOLCHAIN=installed`, change the manifest pins and run
+`ace-lab install` once. Use the installer version that contains the required fixes;
+installing a newer gem does not switch an older locked binstub. See the
+[operator upgrade procedure](../../docs/lab-setup.md#3-upgrade-istniejącego-laba--bez-odtwarzania-środowiska)
+for backups, publication status, reloads and readiness checks. To rerun
 installation of an unchanged runtime directly:
 
 ```sh

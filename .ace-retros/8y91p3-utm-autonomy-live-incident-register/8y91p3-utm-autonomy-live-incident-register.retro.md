@@ -759,3 +759,16 @@ Resume currently reuses verified staged inputs before native installation; post-
 
 - Captain A received15:25:20; existing eyes woke15:25:47.053 without manual resume. Application closed with accepted lesson15:27:16; private manager8ye.t.hsx done. ReportA emitted; duplicate35-report processing created no executor; eyes empty/healthy15:28:50.
 - Reporting issue: original goal said published packages, while later in-place corrections were local candidates. Final model report retained the old qualification and overclaimed acceptance. Operator explicitly corrected artifact provenance and intervention scope; requested report correction only. Lesson: supply changed acceptance scope along with deployment versions, and independently verify final claims against artifacts. No product success was fabricated.
+
+
+## 2026-11-15 — Pre-upgrade documentation and readiness gap
+
+- Symptom: upgrade guide used stale versions and nonexistent process-reports flags;
+  user assumed all fixes were published. Registry still lacks three local candidates.
+- Correction: current upgrade guide distinguishes registry/candidates, preserves state,
+  uses actual CLI options and explicitly checks installed mode and permissions.
+- Verification: preserved VM public verify fails from SSH (ruby/gem absent from diagnostic
+  PATH, extension inventory mismatch). Cause not yet established; no manual source or
+  reset used to conceal the failure. Old production lab remains unverified.
+- Lessons: terminal presence and successful prior HITL do not replace upgrade readiness;
+  documentation must distinguish current running artifacts from public releases.
