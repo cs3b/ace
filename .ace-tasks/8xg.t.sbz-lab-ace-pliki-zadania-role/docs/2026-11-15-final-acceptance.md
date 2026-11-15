@@ -209,3 +209,31 @@ Created separate working clone E4505D76-C9F5-42F6-942F-5C78871F1674
 This operation used main checkout state only; preserved lab A98D75CB and its
 worktree state were not reset. No retained full VM export was created.
 Fresh installation and live acceptance remain pending.
+
+## Published-session report replay and idle observation
+
+On preserved VM A98D75CB, published overseer0.31.1/herdr0.11.3 processed34 already accepted reports twice (79.279s and42.213s). No new executor was started. The sole continuation record was action=none: manager8yb.t.mgd closed through ace-task. Exact pending revision acknowledged, all6 observation sources healthy.
+
+Idle window after assistant completion:361.683s,12 additional observations, wakes1→1, pending0, no new assistant turn or compaction, same process generation. Evidence: `.ace-local/release/acceptance-20261115/published-report-replay.json` and `published-idle-observation.json`. This proves the observed window, not general autonomy.
+
+The overseer used an explicit worker credential path to inspect issues instead of its own role environment. No secret value was exported in the evidence. Record as a role-boundary violation, not a passed autonomy condition.
+
+## Fresh installation resumed in place — candidate acceptance
+
+VM E4505D76-C9F5-42F6-942F-5C78871F1674 now has the installed runtime and verified native Herdr. No disk/Forgejo reset. Ruby3.4.8 reused; native SHA43e5390f4f8c7ffe9d18aef0ec29cfcdcf801db061695a4684671cae4f23f918 reused from cache.
+
+Published ace-lab0.16.1 failed fresh installation (Gem::Source serialized as object identity). Local candidate0.16.2 from ff2f830f26fd9ff22826850182f94992beccb683 fixes the URI and shared runtime permissions. SHA256 ae05fd1e26938b45526f0922ea8619a10d4f4af593fedc3c9e7cb272a9b721f9. This candidate is NOT published. Older provisional artifact retained only under local superseded evidence; active manifest points to corrected hash.
+
+Installer/verify:59 pass,0failed/unknown. Locked runtime:55 declared artifacts activated exactly; Ruby defaults come from pinned Ruby. As unprivileged mo, actual ACE CLIs, Pi0.86.1 and Herdr0.9.3 load successfully. Provision helper exit0. `ace-lab` suite771tests/3655assertions/0failures/4skips; E2E deterministic suite132tests/611assertions/0failures.
+
+## Current HITL continuation
+
+Actual format-choice case8yehss exists; manager8ye.t.hsx, advisor task8ye.t.hsy, assignment8yehtj. No Captain answer has been fabricated. Pre-start extension ownership drift fixed after comparing12 packaged files;17 paths restored to root:root. Operator resumed same goal. It exposed stranded launching recovery; paused the active model with Esc after no useful progress, preserving all session/task data. Product fix under local tests/review. Full report/HITL acceptance remains open.
+
+## Refused-launch correction deployed — 12:20 UTC
+
+Local candidate source94ea1b9514a92d92fd844cb7d500b2a5a00f738f: ace-runtime0.4.3 SHA256bf2bd576023de8bf644b2a0b8fb2c7a7de3cadc55ba0d895e3e95ee0b919655d; ace-overseer0.31.2 SHA256a81715d756920673b57cf3650a8d474bc7fce684d67bae4c46d1a1cf849922d1. Alongside ace-lab0.16.2 above, installed on preserved VM via product installer using verified local gem repository. Final install Result:ok,11.634s, existing repository/overseer/registry/grants preserved. Backup `/var/tmp/ace-resume-before-20261115T122007`.
+
+Operator correction: root Git refused mo-owned `/lab/ace` as dubious ownership. Added root-only exact `safe.directory=/lab/ace`; did not change repository ownership or trust wildcard paths. Installer had misleadingly classified this as foreign directory.
+
+Paused the stuck model with Esc; delivered one continuation goal for same HITL8yehss/advisor8ye.t.hsy/assignment8yehtj after deployment. No process/session/assignment success manually written. Review confirms recovery checks surviving session children as well as shell generation before a replacement process. Live result still pending.

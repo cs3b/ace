@@ -750,3 +750,5 @@ Resume currently reuses verified staged inputs before native installation; post-
 - Fix: existing launcher reconciles a unique assignment-labelled shell with exact cwd and no Pi transcript, records retirement in the same execution binding, closes it, and requires both original process generation ended and OS session empty before restarting the same assignment. Unknown state stays blocked. No separate queue/store or native component update.
 - Review caught a real gap in shell-only termination proof; added whole-session absence check and surviving-child regression. Final independent review has no blocker.
 - Tests: launcher32/220; overseer626/3014 before final session-inventory addition (0failures,1skip), runtime308/1240. Live resumption pending deployment of local runtime0.4.3/overseer0.31.2.
+
+- 12:20 UTC in-place install completed in11.634s after root-only exact safe.directory=/lab/ace configuration. Root Git previously rejected the legitimate mo-owned repo; installer reported misleading foreign-directory error. Repository remains mo-owned. Runtime0.4.3/Overseer0.31.2 local artifacts installed; same advisor goal resumed, acceptance pending.
