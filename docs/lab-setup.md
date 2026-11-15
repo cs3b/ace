@@ -14,19 +14,24 @@ nie bundle'a rozwijanego projektu. Nie resetuje VM, Forgejo, zadań ani sesji.
 
 | Pakiet | RubyGems (sprawdzone API) | Lokalny kandydat użyty w UTM |
 |---|---|---|
-| ace-lab | 0.16.2 | 0.16.3 (gotowy do wydania) |
+| ace-lab | 0.16.3 | 0.16.3 (identyczna paczka) |
 | ace-runtime | 0.4.3 | 0.4.3 |
 | ace-overseer | 0.31.2 | 0.31.2 |
 | ace-herdr | 0.11.3 | ten sam |
 
-Publikacja tych trzech wersji została potwierdzona przez API konkretnych wersji
-RubyGems. Opublikowane pliki mają inne sumy niż wcześniejsze lokalne buildy UTM;
-nie traktujemy przebiegu lokalnych artefaktów jako odbioru identycznych plików.
-**Upgrade na zachowanej UTM sprawdzony z kandydatem `ace-lab 0.16.3`:**
-`ace-lab verify` uruchomione przez zwykłe SSH zwraca `ready: true`, 69 pass,
-0 fail i 1 unknown (zdalny Git, którego verifier nie odpytuje). Wersja 0.16.3
-naprawia kontekst Ruby/Gem i duplikaty rejestru rozszerzeń. Do upgrade'u starego
-laba użyj jej po publikacji; 0.16.2 nadal zawiera te dwa błędy.
+Publikację potwierdzono przez API konkretnych wersji RubyGems.
+**`ace-lab 0.16.3` jest opublikowany i ma identyczną sumę SHA256 jak paczka
+sprawdzona na UTM:**
+`f7fc76858c393d184ada9b33bc73a75db45d855fe47436a670ea29dfe8f8e482`.
+Wcześniejsze lokalne buildy runtime/overseer mają inne sumy niż ich wydania;
+nie przedstawiamy całego przebiegu jako testu identycznego zestawu z RubyGems.
+
+**Upgrade na zachowanej UTM sprawdzony:** `ace-lab verify` uruchomione przez
+zwykłe SSH zwraca `ready: true`, 69 pass, 0 fail i 1 unknown (zdalny Git,
+którego verifier nie odpytuje). Osobny odczyt Git z poświadczeniami
+skonfigurowanej roli potwierdził dostęp do Forgejo.
+Do upgrade'u starego laba użyj `ace-lab 0.16.3`; naprawia kontekst Ruby/Gem
+oraz duplikaty rejestru rozszerzeń obecne w 0.16.2.
 Nie jest to nowy pełny przebieg autonomii ani odbiór Omarchy. Istniejące procesy
 Pi zachowano; mogą nadal mieć instrukcje wczytane przed aktualizacją.
 

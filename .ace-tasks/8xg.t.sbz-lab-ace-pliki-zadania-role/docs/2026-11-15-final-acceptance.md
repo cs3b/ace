@@ -333,3 +333,14 @@ A separate read-only git ls-remote using the configured project-overseer role
 succeeded: Forgejo main=e00f33f6cadf046b06de9d17dcc19b86aeec2be8.
 Plain operator SSH has no forge credentials, by design; its unauthenticated
 attempt failed, while configured role access passed. No secret was emitted.
+
+
+## ace-lab0.16.3 publication confirmed
+
+Captain published the prepared artifact (one reused build). Version-specific
+RubyGems API confirms0.16.3 and SHA256
+`f7fc76858c393d184ada9b33bc73a75db45d855fe47436a670ea29dfe8f8e482`, identical
+to the artifact installed and verified on the preserved VM. No reinstall or
+VM reset is needed to load identical bytes. Upgrade guide now marks0.16.3
+published. This is artifact identity and existing-VM readiness evidence;
+TS-MONO-001 propagation and a fresh full published-set run were not rerun.
