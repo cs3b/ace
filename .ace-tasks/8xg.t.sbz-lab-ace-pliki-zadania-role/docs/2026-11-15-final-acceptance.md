@@ -97,3 +97,21 @@ Regression reads a valid session above64MiB and rejects malformed/truncated
 records. Overseer suite:622 tests/2985 assertions,0 failures/errors,1 skipped;
 report9428ba02-443e-47c4-bf70-0b4c2066a561. Independent streaming-reader review
 reported no blockers. Deployment and live proof remain pending.
+
+## Readiness repaired on preserved VM — 2026-11-15 10:17 UTC
+
+Source de706d90015aba9f17b0a9c94c0a07b5f92b9838; local artifacts:
+- ace-overseer0.31.1.pre.1 SHA256 bd213dadcdb3ea878002e1b77017b7a2e6edabcd60fe19f41e83fc1df38a6c9c
+- ace-herdr0.11.3.pre.1 SHA256 60eb36af3dcf4e4f0d0dfb008caea26b3ad2cfb10ebf4397d344faddce4e372a
+
+One bundle install --local completed in4.81seconds. Backup:
+/var/tmp/ace-readiness-before-20261115T101716. No native Herdr change, VM reset,
+new agent session or model goal. Public CLI from /lab returned status ready,
+ready:true, project_count:1, both prompt_failed:false, project status reused,
+replaced_pane:null, panes w2:p8 and w3:pZ unchanged. Both previously observed
+readiness failures are resolved in the installed candidate.
+
+Herdr full suite630 tests/2602 assertions, zero failures/errors; report
+3c7d3402-d532-4d82-8fee-d1eddeebec0c. Independent review of configured native
+observation reported no blockers. These two fixes are local prereleases, not
+published RubyGems; fresh published-runtime acceptance remains unaccepted.
