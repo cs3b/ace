@@ -155,3 +155,11 @@ Remaining: publication confirmation → stable deployment/smoke → separate fre
 RubyGems fixture acceptance and live report/HITL → reconcile final task statuses.
 .4.4 stays open for missing GitHub live scope; .6.2 and .9.2 not yet done;
 .9.3 cannot close while mandatory acceptance remains missing.
+
+Fixture manifest refreshed to RubyGems sources (16 archive/API checksum matches,
+2 prepared releases still awaiting publication). Native Herdr pinned to verified
+identity-preserving ARM64 artifact43e5390f... and selection9a7ff389... . No
+fresh VM created yet; existing registered VM/base remain untouched. Manifest
+checks:124 tests/577 assertions passed, report02ef4140-1163-4dfd-b67b-f3c4f2251be3.
+Publication recheck still returned404 for both new versions. Full archive copies
+were not recreated during this preparation.

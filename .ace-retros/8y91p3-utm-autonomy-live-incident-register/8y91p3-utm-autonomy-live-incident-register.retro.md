@@ -677,3 +677,36 @@ found defects that happy-path role tests missed. No VM/model acceptance claimed.
   6 samples over 300s (`21:01:30Z`–`21:06:31Z`) on `w2:p8` and `w3:pZ` showed
   `completion_seq_delta: 0`, `wakes_delta: 0`, `pending: 0`, `errors: 0`, and
   advancing 30s observations with all required sources `"ok"`.
+
+## 2026-11-15 — bounded evidence and long-lived session readiness
+
+- **Disk growth:** old reset/destroy paths permanently exported every VM disk.
+  Authorized cleanup removed45 obsolete exports, preserving identities/metadata;
+  evidence shrank from157GiB to216KB and available space rose16→138GiB.
+  Fix e317c5775 makes full archival export explicit (`--export-vm`), keeps a
+  small durable deletion receipt, and retains crash recovery. Review caught a
+  missing-VM retry falsely accepting a newly requested export; corrected and
+  regression-tested.124 deterministic tests/577 assertions passed. No live VM
+  was deleted to test this correction.
+- **Healthy session rejected:** the project transcript reached89,243,486bytes;
+  readiness rejected any file above64MiB. Fix de706d900 streams records and
+  retains only evidence fields while preserving branch/process/freshness checks.
+  A real >64MiB fixture now passes; malformed/truncated records still fail.
+- **Configured start versus readiness mismatch:** bounded Herdr observations
+  bypassed configured binary/socket environment. Same fix reuses the existing
+  executor configuration rather than requiring manual PATH/source in SSH.
+  Overseer622 tests and Herdr630 tests passed (one Overseer skip); independent
+  reviews found no remaining blockers.
+- **Resumption proof:** local candidate gems installed in4.81seconds with one
+  bundle install --local. Existing w2:p8 and w3:pZ were reused; public start
+  returned ready:true,1/1 projects ready. No VM reset or replacement agent.
+  Candidate versions0.31.1.pre.1 and0.11.3.pre.1 are not RubyGems acceptance.
+- **Stale fixture inputs:** fresh-install manifest still selected older local
+  packages/native build. Updated selection toward published artifacts;16 archive
+  checksums verified against RubyGems,2 new releases await operator publication.
+
+Lessons: retain small evidence by default; test an aged session rather than only
+fresh transcripts; all native calls must share the same configuration path.
+Continue repairing in place. Do not call candidate smoke a clean published
+installation. No new model calls were requested during these repairs; provider
+usage and remaining quota were not measured.
