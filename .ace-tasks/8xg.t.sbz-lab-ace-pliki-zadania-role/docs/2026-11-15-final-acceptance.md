@@ -237,3 +237,7 @@ Local candidate source94ea1b9514a92d92fd844cb7d500b2a5a00f738f: ace-runtime0.4.3
 Operator correction: root Git refused mo-owned `/lab/ace` as dubious ownership. Added root-only exact `safe.directory=/lab/ace`; did not change repository ownership or trust wildcard paths. Installer had misleadingly classified this as foreign directory.
 
 Paused the stuck model with Esc; delivered one continuation goal for same HITL8yehss/advisor8ye.t.hsy/assignment8yehtj after deployment. No process/session/assignment success manually written. Review confirms recovery checks surviving session children as well as shell generation before a replacement process. Live result still pending.
+
+## Live same-assignment recovery confirmed — 12:21 UTC
+
+Public `work-on --task 8ye.t.hsy --manager 8ye.t.hsx --runtime herdr` completed in11.5s: existing assignment8yehtj bound and started. Native owner independently reports coworker-8yehtj interactive_ready:true, working, cwd `/lab/ace/.ace-wt/ace-t.hsy`, pane w3:p18, terminal term_6604fb194281519. New session01a1df27-5428-7001-b35c-1e559d8c82f8 uses zai/glm-5.3-flash (model_change12:20:59.232Z). Old orphan was retired by the product, no manual binding edit. HITL8yehss still pending, no human answer yet.

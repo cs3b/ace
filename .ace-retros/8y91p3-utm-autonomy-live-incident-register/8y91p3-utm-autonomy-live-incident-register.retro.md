@@ -752,3 +752,5 @@ Resume currently reuses verified staged inputs before native installation; post-
 - Tests: launcher32/220; overseer626/3014 before final session-inventory addition (0failures,1skip), runtime308/1240. Live resumption pending deployment of local runtime0.4.3/overseer0.31.2.
 
 - 12:20 UTC in-place install completed in11.634s after root-only exact safe.directory=/lab/ace configuration. Root Git previously rejected the legitimate mo-owned repo; installer reported misleading foreign-directory error. Repository remains mo-owned. Runtime0.4.3/Overseer0.31.2 local artifacts installed; same advisor goal resumed, acceptance pending.
+
+- Live recovery confirmed12:21UTC: same task8ye.t.hsy, manager8ye.t.hsx and assignment8yehtj; work-on11.5s. Native pane w3:p18/term_6604fb194281519, GLM5.3Flash, actual working advisor. Product retired orphan and bound new process; operator did not edit execution state.
