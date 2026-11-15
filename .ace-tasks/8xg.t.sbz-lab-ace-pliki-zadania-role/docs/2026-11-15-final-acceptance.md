@@ -163,3 +163,17 @@ fresh VM created yet; existing registered VM/base remain untouched. Manifest
 checks:124 tests/577 assertions passed, report02ef4140-1163-4dfd-b67b-f3c4f2251be3.
 Publication recheck still returned404 for both new versions. Full archive copies
 were not recreated during this preparation.
+
+## Dependency closure checked before publication
+
+Loaded55 actual gem archives with the existing lab-vm/gem-graph.rb validator:
+complete pinned dependency graph,7 install roots, no missing/incompatible pins.
+53 archives downloaded and SHA256-checked; the2 prepared unpublished archives
+were used only in a separate local closure directory. No main fixture cache
+was seeded with unpublished artifacts. Install ordering is recorded in
+.ace-local/release/acceptance-20261115/install-order.json.
+
+Repeated registry readback still reports404 for herdr0.11.3/overseer0.31.1.
+The concrete external dependency is the operator's interactive RubyGems OTP
+publication. Queue and artifacts are prepared. No pending VM/test process is
+being mistaken for a running wait; fresh published acceptance has not begun.
