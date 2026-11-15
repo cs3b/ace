@@ -89,7 +89,7 @@ module LabTestHelper
           .map { |spec| [spec.name, spec.version, spec.platform] }.sort_by(&:first)
         Zlib::GzipWriter.open(File.join(repository, "#{name}.4.8.gz")) { |file| file.write(Marshal.dump(rows)) }
       end
-      Gem.stub(:sources, ["file://#{repository}"]) { yield }
+      Gem.stub(:sources, Gem::SourceList.from(["file://#{repository}"])) { yield }
     end
   end
 

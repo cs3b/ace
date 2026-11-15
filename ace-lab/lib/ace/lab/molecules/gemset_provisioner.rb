@@ -46,7 +46,7 @@ module Ace
           bundle_root = File.dirname(File.dirname(gem_home))
           gemfile = File.join(bundle_root, "Gemfile")
           raise Ace::Lab::InvalidConfigurationError, "runtime Gemfile must not be a symlink" if File.symlink?(gemfile)
-          content = "source #{Gem.sources.first.to_s.dump}\n" + gems.map do |gem|
+          content = "source #{Gem.sources.first.uri.to_s.dump}\n" + gems.map do |gem|
             "gem #{gem.fetch('name').dump}, #{gem.fetch('version').dump}\n"
           end.join
           settings_dir = File.join(bundle_root, ".bundle")

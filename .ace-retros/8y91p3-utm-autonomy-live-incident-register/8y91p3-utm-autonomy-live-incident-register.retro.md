@@ -726,3 +726,11 @@ Symptom: intermittent SSH timeouts during fresh preparation. Cause confirmed fro
 Start fixture also expected obsolete status=started and combined JSON stdout with CLI stderr. Public lab start legitimately returns partial/exit1 while a child needs bootstrap. The fixture now accepts only a structured partial with confirmed lab coordinator identity and no prompt failure, preserving separate child streams through QGA. Test uses a real subprocess emitting JSON/stdout plus error/stderr. Startup invokes ace-herdr start with a PTY and user configuration instead of native server plus profile sourcing. No additional operator privilege was provisioned.
 
 Resume currently reuses verified staged inputs before native installation; post-native retry limitations remain under review. Fresh installation and live report/HITL acceptance are not yet complete.
+
+## 2026-11-15 — Fresh runtime Gemfile source failure
+
+- Symptom: fresh installation with published ace-lab 0.16.1 failed after Ruby completed; Bundler rejected `#<Gem::Source:...>/` as a URI. The short installer error displayed the preceding root warning instead.
+- Cause: GemsetProvisioner serialized a Gem::Source object instead of its URI. The test helper substituted strings, masking the real API contract.
+- Fix: use `.uri.to_s`, and return a real Gem::SourceList from the offline repository fixture. Candidate ace-lab 0.16.2; publication remains separate.
+- Verification: regression before fix 19 tests / 1 failure (45a2ae6f); after fix 19 / 0 (c7b36807). Package suite 771 tests, 3652 assertions, no failures/errors, 4 skips (4bf36cc4). Independent reviewer found no blocking findings.
+- Resume: preserve the existing guest and compiled Ruby; retry installation with the built candidate. Live outcome pending.
