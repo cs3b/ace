@@ -734,3 +734,12 @@ Resume currently reuses verified staged inputs before native installation; post-
 - Fix: use `.uri.to_s`, and return a real Gem::SourceList from the offline repository fixture. Candidate ace-lab 0.16.2; publication remains separate.
 - Verification: regression before fix 19 tests / 1 failure (45a2ae6f); after fix 19 / 0 (c7b36807). Package suite 771 tests, 3652 assertions, no failures/errors, 4 skips (4bf36cc4). Independent reviewer found no blocking findings.
 - Resume: preserve the existing guest and compiled Ruby; retry installation with the built candidate. Live outcome pending.
+
+## 2026-11-15 — In-place runtime acceptance follow-up
+
+- Installation resumed successfully with local ace-lab 0.16.2: 59 readiness checks passed. This is candidate evidence, not RubyGems acceptance.
+- Fixture rejected an older unselected installer left on disk. Check the locked/activated bundle instead; undeclared Ruby default gems belong to pinned Ruby, not the artifact inventory. Real Bundler regression exposes an older installed spec and a default dependency.
+- Native Herdr verification as lab-operator then failed loading ace/support/fs. Archive ace-support-fs 0.3.4 contains mode100660; installation produced root-owned0640. Normalize shared runtime modes after successful Bundler installation, skip symlinks. Package tests:771/3655 assertions,0 failures/errors,4 skips; independent review no blocker.
+- Native artifact retry now verifies and reuses the existing build, rather than rejecting it solely because its directory exists.
+- Preserved lab: extension files matched ace-wake0.4.0 bytes, but17 projected paths had drifted to mo ownership. Operator restored root ownership after comparing12 source files, then resumed the same HITL goal8yehss. This is an operator intervention, not autonomous acceptance.
+- Further blocker: pre-start extension refusal left launching assignments8yehtj/8yehzl and shell-only panels. Public retry reports agent_not_found. Product recovery pending; no manual success or replacement assignment.

@@ -3,6 +3,7 @@
 require_relative "../errors"
 require "open3"
 require "fileutils"
+require "find"
 require "yaml"
 require "rbconfig"
 
@@ -66,7 +67,10 @@ module Ace
             result = @runner.call(runtime_argv(gem_home,
               ["BUNDLE_GEMFILE=#{gemfile}", "BUNDLE_USER_CONFIG=#{File::NULL}", "bundle", "install"]))
             failure = command_failure("bundle install", result) unless result["status"] == "ok"
-            install_entrypoints(gem_home, runtime["bin_dir"]) unless failure
+            unless failure
+              converge_runtime_modes(gem_home)
+              install_entrypoints(gem_home, runtime["bin_dir"])
+            end
           rescue StandardError, Interrupt
             restore_bundle(previous)
             raise
@@ -179,6 +183,19 @@ module Ace
             else
               File.unlink(path) if File.file?(path)
             end
+          end
+        end
+
+        # Archives may retain the publisher's private/group-only source modes.
+        # This shared runtime must be readable by its unprivileged consumers.
+        # Never follow a packaged symlink into a different filesystem tree.
+        def converge_runtime_modes(gem_home)
+          Find.find(gem_home) do |path|
+            stat = File.lstat(path)
+            next if stat.symlink?
+            next unless stat.directory? || stat.file?
+            mode = stat.directory? || (stat.mode & 0o111).positive? ? 0o755 : 0o644
+            File.chmod(mode, path) unless (stat.mode & 0o7777) == mode
           end
         end
 

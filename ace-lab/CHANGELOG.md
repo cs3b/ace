@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Normalize shared runtime file permissions so unprivileged agents can read gems shipped with private source modes; never follow packaged symlinks.
 - Generate the runtime Gemfile with the RubyGems source URI instead of its object representation, allowing fresh bundle installation.
 
 ## [0.16.1] - 2026-11-12

@@ -392,7 +392,19 @@ module Molecules
           out, err, status = Open3.capture3(clean, "ace-lab-runtime-probe", chdir: dir)
           assert status.success?, err
           assert_equal "1.0.0\n", out
+          installed_exe = File.join(gem_home, "gems/ace-lab-runtime-probe-1.0.0/exe/ace-lab-runtime-probe")
+          File.chmod(0o700, installed_exe)
+          private_data = File.join(gem_home, "gems/ace-lab-runtime-probe-1.0.0/private-mode.rb")
+          File.write(private_data, "# readable runtime data\n")
+          File.chmod(0o640, private_data)
+          outside = File.join(dir, "outside-private")
+          File.write(outside, "not runtime data")
+          File.chmod(0o600, outside)
+          File.symlink(outside, File.join(gem_home, "external-link"))
           assert_equal "installed", provisioner.call(runtime: section).first["status"]
+          assert_equal 0o755, File.stat(installed_exe).mode & 0o777
+          assert_equal 0o644, File.stat(private_data).mode & 0o777
+          assert_equal 0o600, File.stat(outside).mode & 0o777
           assert_equal lock, File.binread(File.join(root, "Gemfile.lock"))
           assert_equal [:ok, nil], provisioner.bundle_status(name: "ace-lab-runtime-probe", version: "1.0.0", gem_home: gem_home)
           failed = provisioner.call(runtime: section.merge("gems" => [{"name" => "ace-lab-runtime-probe", "version" => "99.0.0"}]))
