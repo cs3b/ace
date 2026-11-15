@@ -270,6 +270,35 @@ module LabVm
     save_state(state)
   end
 
+  def self.clone_mac(uuid)
+    raise "invalid VM UUID" unless uuid.match?(UUID)
+    (["02"] + Digest::SHA256.hexdigest(uuid.downcase)[0, 10].scan(/../)).join(":").upcase
+  end
+
+  def self.configure_clone_network(record)
+    assert_stopped_registration!("work", record)
+    mac = clone_mac(record.fetch("uuid"))
+    script = <<~APPLESCRIPT
+      on run argv
+        tell application "UTM"
+          set vm to virtual machine id (item 1 of argv)
+          set cfg to get configuration of vm
+          set interfaces to network interfaces of cfg
+          if (count interfaces) is not 1 then error "fixture requires one network interface"
+          set nic to item 1 of interfaces
+          set address of nic to item 2 of argv
+          set network interfaces of cfg to {nic}
+          update configuration vm with cfg
+          set cfg to get configuration of vm
+          set actual to network interfaces of cfg
+          return address of item 1 of actual
+        end tell
+      end run
+    APPLESCRIPT
+    actual = checked_command("osascript", "-e", script, "--", record.fetch("uuid"), mac)
+    raise "clone MAC update was not confirmed" unless actual.strip.upcase == mac
+  end
+
   def self.reset(export_vm: false)
     check_free_space!
     state = read_state
@@ -297,6 +326,7 @@ module LabVm
     raise "clone creation was not confirmed" unless matches.size == 1
     record = {"uuid" => matches.first.fetch("uuid"), "name" => name, "phase" => "created"}
     raise "clone identity or state is invalid" if record["uuid"].casecmp?(base.fetch("uuid")) || matches.first["status"] != "stopped"
+    configure_clone_network(record)
     state["work"] = record
     state.delete("pending_work_name")
     save_state(state)

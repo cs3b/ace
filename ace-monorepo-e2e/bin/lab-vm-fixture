@@ -133,10 +133,12 @@ begin
         install -o root -g root -m 0644 /home/lab-operator/session-fixture.rb /var/lib/ace-e2e/session-fixture.rb
         test "$(sha256sum /var/lib/ace-e2e/session-fixture.rb | cut -d' ' -f1)" = '#{Digest::SHA256.file(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/session-fixture.rb")).hexdigest}'
         ruby /var/lib/ace-e2e/session-fixture.rb '#{run_id}' '#{uuid}'
-        install -d -o root -g root -m 0755 /run/lab
-        install -d -o mo -g mo -m 0700 /run/lab/herdr
-        printf '%s\n' 'export HERDR_SOCKET_PATH=/run/lab/herdr/herdr.sock' >> /etc/profile.d/ace-e2e.sh
-        . /etc/profile.d/ace-e2e.sh
+        install -d -o mo -g mo -m 0700 /home/mo/.ace/herdr /home/mo/.config/herdr /lab/.ace/overseer
+        printf '%s\n' 'toolchain: installed' > /lab/.ace/overseer/config.yml
+        chown mo:mo /lab/.ace/overseer/config.yml
+        printf '%s\n' 'binary: /opt/ace/runtime/bin/herdr' 'socket: /home/mo/.config/herdr/herdr.sock' 'toolchain: installed' > /home/mo/.ace/herdr/config.yml
+        chown mo:mo /home/mo/.ace/herdr/config.yml
+        chmod 0600 /home/mo/.ace/herdr/config.yml
         GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=/lab/ace ace-lab install
         test "$(stat -c '%U:%G %a' /etc/lab/ace-lab/authorization.yml)" = 'root:root 644'
         # Use Herdr's own pinned native integration to report Pi lifecycle

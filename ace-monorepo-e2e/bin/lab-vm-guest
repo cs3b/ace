@@ -21,11 +21,13 @@ begin
     uuid = work.fetch("uuid")
     # Exact operator argv is deliberate fault instrumentation. No agent can
     # access this macOS helper or QEMU control channel from its guest process.
+    ARGV[0] = "/usr/local/bin/#{ARGV[0]}" if role == "mo" && ARGV[0].start_with?("ace-")
+    ARGV[0] = "/opt/ace/runtime/bin/herdr" if role == "mo" && ARGV[0] == "herdr"
     argv = if role == "operator"
       ARGV
     else
       ["/usr/sbin/runuser", "-u", "mo", "--", "/bin/sh", "-c",
-        'set -e; . /etc/profile.d/ace-e2e.sh; cd /lab; exec "$@"', "ace-e2e", *ARGV]
+        'set -e; cd /lab; exec "$@"', "ace-e2e", *ARGV]
     end
     code, output = LabVm.guest_exec(uuid, *argv, timeout_s: 120)
     puts output

@@ -34,7 +34,7 @@ manifest["session_runtime"] = {
     "/opt/ace/toolchains/ruby-#{release.fetch('ruby').fetch('version')}/bin",
     "/opt/ace/toolchains/node-v#{release.fetch('node').fetch('version')}-linux-arm64/bin", "/usr/bin"],
   "provider" => "zai", "model" => "glm-5.3-flash", "credentials" => "/etc/lab/ace-lab/pi-auth.json",
-  "herdr" => {"account" => "mo", "socket" => "/run/lab/herdr/herdr.sock"}}
+  "herdr" => {"account" => "mo", "socket" => "/home/mo/.config/herdr/herdr.sock"}}
 # Provision ready, repository-restricted role credentials once. The source
 # password belongs to fixture setup; no auth service or root agent is needed.
 password = File.read("/run/ace-e2e-forgejo/e2e-admin.password")[/password\s+is\s+'([^']+)'/i, 1]

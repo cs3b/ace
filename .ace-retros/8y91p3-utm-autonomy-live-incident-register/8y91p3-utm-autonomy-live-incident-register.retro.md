@@ -718,3 +718,11 @@ Cause: product moved to a single Bundler runtime, while fresh-VM preparation and
 Fix: align fixture paths to /opt/ace/runtime/bundle/ruby/3.4.0 and project public entrypoints into /usr/local/bin. Regression executes the actual manifest generator against the real installer with only command execution substituted.
 Validation: 125 tests/582 assertions passed, report 3eeb23ee-3784-4f96-b605-b3bdb15d1e04; independent review found no blockers. Fresh VM E4505D76 was preserved and only provision restarted. Live installation remains pending.
 Remaining fixture drift: profile sourcing and direct native Herdr startup must use product configuration before autonomous acceptance.
+
+## 2026-11-15 — cloned network identity and partial-start fixture drift
+
+Symptom: intermittent SSH timeouts during fresh preparation. Cause confirmed from both registered VM configurations: preserved VM A98D75CB and new E4505D76 shared MAC 06:AD:F9:63:35:BC. UTM clone retained the NIC address. Fix: assign a stable, locally administered address derived from each working clone UUID, only while its exact owned registration is stopped; verify UTM readback. New VM now uses 02:92:A3:7F:3E:90. Operator intervention: stopped only the new VM, updated its existing netplan MAC match via QGA, applied network configuration, resumed the same staged installation. No disk reset or export.
+
+Start fixture also expected obsolete status=started and combined JSON stdout with CLI stderr. Public lab start legitimately returns partial/exit1 while a child needs bootstrap. The fixture now accepts only a structured partial with confirmed lab coordinator identity and no prompt failure, preserving separate child streams through QGA. Test uses a real subprocess emitting JSON/stdout plus error/stderr. Startup invokes ace-herdr start with a PTY and user configuration instead of native server plus profile sourcing. No additional operator privilege was provisioned.
+
+Resume currently reuses verified staged inputs before native installation; post-native retry limitations remain under review. Fresh installation and live report/HITL acceptance are not yet complete.

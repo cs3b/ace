@@ -8,14 +8,26 @@ require "tempfile"
 load File.expand_path("lab-vm", __dir__)
 
 def guest_mo(uuid, *argv, timeout_s: 90)
-  LabVm.guest_exec(uuid, "/usr/sbin/runuser", "-u", "mo", "--", "/bin/sh", "-c",
-    'set -e; . /etc/profile.d/ace-e2e.sh; cd /lab; exec "$@"', "ace-e2e", *argv, timeout_s: timeout_s)
+  argv[0] = argv[0] == "herdr" ? "/opt/ace/runtime/bin/herdr" : "/usr/local/bin/#{argv[0]}" if argv[0].start_with?("ace-") || argv[0] == "herdr"
+  # QGA combines its own streams. Wrap the child result so CLI stderr cannot
+  # corrupt the structured stdout of a legitimate partial startup.
+  wrapper = "import json,subprocess,sys; p=subprocess.run(sys.argv[1:],capture_output=True,text=True); print(json.dumps({'code':p.returncode,'stdout':p.stdout,'stderr':p.stderr}))"
+  code, output = LabVm.guest_exec(uuid, "/usr/bin/python3", "-c", wrapper,
+    "/usr/sbin/runuser", "-u", "mo", "--", "/bin/sh", "-c",
+    'set -e; cd /lab; exec "$@"', "ace-e2e", *argv, timeout_s: timeout_s)
+  raise "guest capture failed" unless code.zero?
+  result = JSON.parse(output)
+  warn result.fetch("stderr") unless result.fetch("stderr").empty?
+  [result.fetch("code"), result.fetch("stdout")]
 end
 
-def guest_json(uuid, *argv)
+def guest_json(uuid, *argv, allow_partial_lab_start: false)
   code, output = guest_mo(uuid, *argv)
-  raise "guest command failed: #{argv.first} #{argv[1]}" unless code.zero?
   value = JSON.parse(output)
+  partial = allow_partial_lab_start && code == 1 && value.is_a?(Hash) &&
+    value["status"] == "partial" && value["scope"] == "lab" && value["root"] == "/lab" &&
+    value["prompt_failed"] == false && value["pane"].to_s.match?(/\A[A-Za-z0-9_.:-]+\z/)
+  raise "guest command failed: #{argv.first} #{argv[1]}" unless code.zero? || partial
   raise "guest command reported an error: #{argv.first} #{argv[1]}" if value.is_a?(Hash) && value["error"]
   value
 end
@@ -30,6 +42,7 @@ def save_start_receipt(path, value)
   end
 end
 
+if $PROGRAM_NAME == __FILE__
 begin
   raise "usage: lab-vm-lab-start RUN_ID" unless ARGV.length == 1 && ARGV[0].match?(/\A[a-f0-9]{16}\z/)
   run_id = ARGV[0]
@@ -67,7 +80,7 @@ begin
         file.fsync
       end
       mutated = true
-      launch = 'set -e; . /etc/profile.d/ace-e2e.sh; cd /lab; umask 077; mkdir -p .ace-local/e2e; nohup herdr server > .ace-local/e2e/herdr-server.log 2>&1 < /dev/null &'
+      launch = 'set -e; cd /lab; umask 077; mkdir -p .ace-local/e2e; nohup script -q -c /usr/local/bin/ace-herdr\ start /dev/null > .ace-local/e2e/herdr-terminal.log 2>&1 < /dev/null &'
       code, = LabVm.guest_exec(uuid, "/usr/sbin/runuser", "-u", "mo", "--", "/bin/sh", "-c", launch)
       raise "Herdr server launch failed" unless code.zero?
       deadline = LabVm.uptime + 60
@@ -79,11 +92,11 @@ begin
       end
       # Public start owns workspace selection, ordinary process startup and
       # its initial prompt. The harness supplies only the user's single goal.
-      start = guest_json(uuid, "ace-overseer", "start", "--scope", "lab", "--format", "json")
+      start = guest_json(uuid, "ace-overseer", "start", "--scope", "lab", "--format", "json", allow_partial_lab_start: true)
       pane = start["pane"]
-      unless start["status"] == "started" && start["scope"] == "lab" &&
+      unless %w[ready partial].include?(start["status"]) && start["prompt_failed"] == false && start["scope"] == "lab" &&
           start["root"] == "/lab" && pane.to_s.match?(/\A[A-Za-z0-9_.:-]+\z/)
-        raise "public start did not confirm a new lab coordinator"
+        raise "public start did not confirm a lab coordinator"
       end
       native = guest_json(uuid, "herdr", "agent", "get", pane).dig("result", "agent")
       terminal = native && native["terminal_id"]
@@ -132,4 +145,5 @@ rescue StandardError => e
   warn "lab-vm-lab-start: #{e.message}"
   warn "Inspect the preserved VM and run receipt before retrying."
   exit 1
+end
 end

@@ -404,4 +404,25 @@ class LabVmIdentityTest < AceMonorepoE2eTestCase
     File.symlink("/dev/null", File.join(@package, "config.plist"))
     assert_raises(RuntimeError) { LabVm.export_fingerprint(@package, @record) }
   end
+  def test_clone_network_identity_is_stable_and_distinct
+    first = "E4505D76-C9F5-42F6-942F-5C78871F1674"
+    second = "A98D75CB-E338-4EE1-B503-1BF7D4BCD752"
+    assert_match(/\A02(?::[0-9A-F]{2}){5}\z/, LabVm.clone_mac(first))
+    assert_equal LabVm.clone_mac(first), LabVm.clone_mac(first.downcase)
+    refute_equal LabVm.clone_mac(first), LabVm.clone_mac(second)
+    LabVm.stub(:assert_stopped_registration!, true) do
+      LabVm.stub(:checked_command, "wrong address") do
+        assert_raises(RuntimeError) { LabVm.configure_clone_network({"uuid" => first}) }
+      end
+    end
+  end
+
+  def test_clone_network_requires_stopped_owned_vm_before_mutation
+    LabVm.stub(:assert_stopped_registration!, ->(*) { raise "running VM" }) do
+      LabVm.stub(:checked_command, ->(*) { flunk "changed a running VM" }) do
+        assert_raises(RuntimeError) { LabVm.configure_clone_network(@record) }
+      end
+    end
+  end
+
 end

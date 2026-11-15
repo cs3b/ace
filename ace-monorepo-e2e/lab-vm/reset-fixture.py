@@ -17,7 +17,7 @@ class FixtureReset:
     PATHS = (
         '/lab', '/etc/forgejo', '/var/lib/forgejo', '/run/ace-e2e-forgejo',
         '/home/mo/.config/ace-e2e', '/home/mo/.pi', '/run/lab/herdr',
-        '/home/mo/.config/herdr', '/home/mo/.local/state/herdr',
+        '/home/mo/.config/herdr', '/home/mo/.ace/herdr', '/home/mo/.local/state/herdr',
         '/var/lib/lab/ace-lab/auth', '/var/lib/ace-e2e/forgejo-input',
         '/var/lib/ace-e2e/forgejo-issues.json', '/var/lib/ace-e2e/session-fixture.rb',
         '/etc/lab/ace-lab/authorization.yml', '/etc/lab/ace-lab/pi-auth.json',
