@@ -199,3 +199,13 @@ matched before cloning. Registered via existing create_base reconciliation,
 normal guest readiness checks in progress. Preserved VM A98D75CB remains
 running. No permanent disk export created.60 manifest inputs verified/cached;
 reuse avoids downloading/building them again. Fresh acceptance is not yet done.
+
+## Fresh fixture preparation completed
+
+Normal base readiness completed successfully (helper exit 0); base is clean and
+stopped, fingerprint 1c68f0dcb52a03cf7e3f6c97ac839ddf6134252a7f95eef68e0860a0c129cefd.
+Created separate working clone E4505D76-C9F5-42F6-942F-5C78871F1674
+(ace-e2e-work-a083fa24f87cb150), currently stopped and not provisioned.
+This operation used main checkout state only; preserved lab A98D75CB and its
+worktree state were not reset. No retained full VM export was created.
+Fresh installation and live acceptance remain pending.
