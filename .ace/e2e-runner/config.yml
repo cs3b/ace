@@ -33,16 +33,16 @@ cleanup:
 # Reporting defaults (suite final report LLM synthesis)
 reporting:
   # LLM model alias for suite report generation
-  model: "role:e2e-reporter"
+  model: "pi:zai/glm-5.3-flash"
   # Timeout in seconds for report generation
   timeout: 60
 
 # Execution defaults
 execution:
   # Default LLM provider:model for test execution
-  provider: "role:e2e-runner"
-  runner_provider: "role:e2e-runner"
-  verifier_provider: "role:e2e-verifier"
+  provider: "pi:zai/glm-5.3-flash"
+  runner_provider: "pi:zai/glm-5.3-flash"
+  verifier_provider: "pi:zai/glm-5.3-flash"
   # Timeout per test in seconds
   timeout: 600
   # Number of tests to run in parallel (1 = sequential)

@@ -177,3 +177,25 @@ Repeated registry readback still reports404 for herdr0.11.3/overseer0.31.1.
 The concrete external dependency is the operator's interactive RubyGems OTP
 publication. Queue and artifacts are prepared. No pending VM/test process is
 being mistaken for a running wait; fresh published acceptance has not begun.
+
+## Publication confirmed and stable VM smoke — 2026-11-15 10:44 UTC
+
+Operator published herdr0.11.3 and overseer0.31.1. Downloaded both from RubyGems;
+API and archive SHA256 exactly match the prepared manifest. Stable install on
+the preserved VM completed in4.62seconds; backup
+/var/tmp/ace-readiness-before-20261115T104407. Public start returns ready:true,
+1/1 project ready; w2:p8/w3:pZ reused, no replacement sessions.
+
+TS-MONO-001 attempted with pi:zai/glm-5.3-flash but stopped in setup before
+model execution: missing .ace-local/release/installation-manifest.json (its
+schema differs from the VM artifact manifest). This propagation proof remains
+unexecuted. Also corrected project E2E runner/verifier/reporter configuration
+to explicit Flash: CLI --provider alone did not override the verifier role,
+which previously selected ordinary GLM. No ordinary-GLM verifier was launched.
+
+Separate acceptance base DCCAF9BC-D392-46BB-8EDA-0A71E24347F0 cloned from
+verified clean base2C545973-0B40-4AFF-806B-BABD53BCA155; its source fingerprint
+matched before cloning. Registered via existing create_base reconciliation,
+normal guest readiness checks in progress. Preserved VM A98D75CB remains
+running. No permanent disk export created.60 manifest inputs verified/cached;
+reuse avoids downloading/building them again. Fresh acceptance is not yet done.
