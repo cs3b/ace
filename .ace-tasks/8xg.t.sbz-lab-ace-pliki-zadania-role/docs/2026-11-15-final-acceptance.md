@@ -115,3 +115,43 @@ Herdr full suite630 tests/2602 assertions, zero failures/errors; report
 3c7d3402-d532-4d82-8fee-d1eddeebec0c. Independent review of configured native
 observation reported no blockers. These two fixes are local prereleases, not
 published RubyGems; fresh published-runtime acceptance remains unaccepted.
+
+## Criteria reconciliation and release preparation — 10:20 UTC
+
+Live readback from Forgejo PR15 confirms author e2e-worker, reviewer
+e2e-reviewer, review7 APPROVED/official:true/stale:false/dismissed:false at
+f6ffc23c2a247c6034260a7761a604832040d294; merger e2e-integrator, merge
+ e00f33f6cadf046b06de9d17dcc19b86aeec2be8. Review URL:
+http://127.0.0.1:3000/e2e-integrator/ace/pulls/15#issuecomment-90.
+Release issue4 remains open. Sanitized live readback:
+.ace-local/release/acceptance-20261115/forgejo-approval.json.
+
+Targeted formal-approval deterministic verification:
+- Forgejo13 tests/198 assertions, report40b58436-6d68-43ec-93d8-695e98d4af92.
+- GitHub6 tests/128 assertions, report1ae4c2dd-78d3-4c63-b271-3075de707fdb.
+- Neutral lifecycle/CLI18 tests/107 assertions, reportb4757b8f-9c78-415f-b261-bf28f8ec0f3b.
+All passed. Covers author refusal, actor mismatch, head races, lost replies and
+pending recovery/refusal. GitHub live acceptance remains absent and is not
+replaced by these tests. Same-UID sessions do not prove secrecy from malicious
+peer processes; that old task requirement was superseded by the Captain's
+ordinary-process/explicit-env contract, not satisfied by an isolation test.
+
+Wake: existing deterministic eyes tests explicitly cover24h logical idle,
+quota+100 observations+restart, exact ack races, cancellation and retirement.
+Live stage5 records both panes completion_seq_delta0, wakes_delta0,
+observations_delta10, pending0/errors0 over300seconds. These are distinct
+evidence classes. Published-runtime report/HITL live acceptance is still owed;
+Nov12 local candidates and Nov15 local readiness fixes must not be relabelled
+as a clean RubyGems acceptance.
+
+Prepared from main eec974501: ace-herdr0.11.3 then ace-overseer0.31.1,
+with Overseer's dependency floor advanced to herdr0.11.3. Publisher dry-run and
+prepare succeeded; no push executed. Stable artifacts'140 runtime/instruction
+files match the tested prerelease artifacts byte-for-byte excluding version.rb.
+Checksums and comparison: .ace-local/release/acceptance-20261115/release-manifest.json.
+Operator terminal handoff sent for the publisher's interactive OTP.
+
+Remaining: publication confirmation → stable deployment/smoke → separate fresh
+RubyGems fixture acceptance and live report/HITL → reconcile final task statuses.
+.4.4 stays open for missing GitHub live scope; .6.2 and .9.2 not yet done;
+.9.3 cannot close while mandatory acceptance remains missing.
