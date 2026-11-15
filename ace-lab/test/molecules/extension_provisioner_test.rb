@@ -109,6 +109,33 @@ module Molecules
         assert_equal "0.1.0", upgraded["loaded_version"] # what the running harness still holds
         assert_equal true, upgraded["restart_required"]
         assert_equal "// v2\n", File.read(File.join(target, "ace-wake", "index.js"))
+        receipt = JSON.parse(File.read(File.join(target, RECEIPT)))
+        assert_equal ["ace-wake/index.js"], receipt.fetch("files")
+        repeated = provisioner(gem_home).call(
+          extensions: [entry(target)], gems: [{"name" => "ace-wake", "version" => "0.2.0"}]
+        ).first
+        assert_equal "unchanged", repeated.fetch("status")
+        assert_equal false, repeated.fetch("restart_required")
+      end
+    end
+
+    def test_reprojection_repairs_duplicate_receipt_entries
+      Dir.mktmpdir do |dir|
+        gem_home = File.join(dir, "gems")
+        installed_gem(gem_home, "ace-wake", "0.1.0", {"ace-wake/index.js" => "// entry\n"})
+        target = File.join(dir, "extensions")
+        gems = [{"name" => "ace-wake", "version" => "0.1.0"}]
+        provisioner(gem_home).call(extensions: [entry(target)], gems: gems)
+        receipt_path = File.join(target, RECEIPT)
+        receipt = JSON.parse(File.read(receipt_path))
+        receipt["files"] *= 11
+        File.write(receipt_path, JSON.generate(receipt))
+
+        report = provisioner(gem_home).call(extensions: [entry(target)], gems: gems).first
+        assert_equal "projected", report.fetch("status")
+        assert_equal ["ace-wake/index.js"], JSON.parse(File.read(receipt_path)).fetch("files")
+        repeated = provisioner(gem_home).call(extensions: [entry(target)], gems: gems).first
+        assert_equal "unchanged", repeated.fetch("status")
       end
     end
 

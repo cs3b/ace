@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Keep extension projection receipts unique across upgrades and repair previously duplicated entries on reprojection, so unchanged retries converge.
+
 ## [0.16.2] - 2026-11-15
 
 ### Fixed

@@ -772,3 +772,16 @@ Resume currently reuses verified staged inputs before native installation; post-
   reset used to conceal the failure. Old production lab remains unverified.
 - Lessons: terminal presence and successful prior HITL do not replace upgrade readiness;
   documentation must distinguish current running artifacts from public releases.
+
+
+## 2026-11-15 — Extension projection duplicates its own receipt
+
+- Symptom: verify rejects extension inventory after repeated updates; each of12
+  paths occurs11 times in the preserved VM receipt.
+- Cause: retained obsolete-file list also included every still-expected path,
+  then expected.keys was appended again. Version/content updates start a cycle
+  where each repair creates another mismatch.
+- Fix: skip expected paths when retaining obsolete paths. Regression covers
+  version update, unchanged retry and repair of an already-duplicated receipt.
+- Status: source correction on codex/lab-upgrade-readiness; not deployed/published.
+  SSH diagnostic PATH issue remains separate. Published0.16.2 still has this bug.

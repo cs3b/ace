@@ -172,7 +172,7 @@ module Ace
           retained = previous.filter_map do |relative|
             ExtensionProjection.validate_destination!(output_dir, relative)
             target = File.join(output_dir, relative)
-            next relative if expected.key?(relative)
+            next if expected.key?(relative)
 
             FileUtils.rm_f(target)
             File.exist?(target) ? relative : nil

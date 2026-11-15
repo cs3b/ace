@@ -278,3 +278,27 @@ Read-only recheck before the Captain upgrades an older lab:
   published-versus-candidate distinction and non-destructive upgrade procedure.
 
 Older Omarchy lab was not accessed or changed. Its readiness is not inferred from UTM.
+
+
+## Publication confirmed after the readiness check
+
+The Captain published fresh artifacts; version-specific RubyGems API confirms:
+
+| Gem | Version | Published SHA256 |
+|---|---|---|
+| ace-runtime | 0.4.3 | a8bb324faa3a61a6a9d2f791cda2596068c8a1b577122f1e4fbc43157932ebc2 |
+| ace-lab | 0.16.2 | 64d5d419b8c7b6337d96046c7dcd4f2ed9bf9b8720d59b5a9373b4be6d805d52 |
+| ace-overseer | 0.31.2 | 043ee5cd2e5df5a63efb73b16fe205e571652429dc65cb00e73ee0821774f277 |
+
+These replace the publication blocker, not the remaining readiness blockers.
+The preserved VM still has earlier local builds with different artifact hashes.
+The generic latest API was stale; concrete version endpoints confirmed publication.
+
+Extension failure reproduced: the receipt lists each of12 source files11 times.
+ExtensionProvisioner retained already-expected names and then appended expected.keys.
+Fix excludes already-expected paths from retained obsolete paths. Regression fails
+before the fix (12tests/53assertions/1failure), passes after (12/55/0), with an
+additional test covering repair of an existing duplicate receipt. No VM files
+or package versions were changed in this diagnosis.
+
+Full ace-lab regression after the receipt fix:772tests/3661assertions,0failures,0errors,4skips; report `.ace-local/test/reports/lab/fb718379-a56a-497e-96ff-1b23068089ff/`. Source correction is not yet deployed or released.
