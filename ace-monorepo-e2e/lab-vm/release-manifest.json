@@ -101,9 +101,10 @@
     },
     {
       "name": "ace-lab",
-      "version": "0.16.1",
-      "sha256": "e28957cb3468f94d24c23ffff35dd2c5aab1af085669853d115893d36be75fce",
-      "source": "https://rubygems.org"
+      "version": "0.16.2",
+      "sha256": "ae05fd1e26938b45526f0922ea8619a10d4f4af593fedc3c9e7cb272a9b721f9",
+      "source": "local",
+      "source_commit": "ff2f830f26fd9ff22826850182f94992beccb683"
     },
     {
       "name": "ace-llm",

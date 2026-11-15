@@ -140,18 +140,20 @@ chmod 0644 /etc/lab/ace-lab/install.yml
 export PATH="$GEM_HOME/bin:$PATH" ACE_TOOLCHAIN=installed
 ace-lab install
 ace-lab verify
-ruby -rjson - "$input/release-manifest.json" <<'RUBY'
+BUNDLE_GEMFILE="$runtime/runtime/bundle/Gemfile" ruby -rjson -rbundler/setup - "$input/release-manifest.json" <<'RUBY'
 manifest = JSON.parse(File.read(ARGV.fetch(0)))
 expected = manifest.fetch("gems").map { |gem| [gem.fetch("name"), gem.fetch("version")] }.sort
-actual = Gem::Specification.reject(&:default_gem?).map { |gem| [gem.name, gem.version.to_s] }.sort
-abort "external gemset differs from the pinned manifest" unless actual == expected
+# Default gems are supplied by the pinned Ruby distribution. Every explicitly
+# declared artifact still participates, even when Ruby also ships that name.
+actual = Bundler.locked_gems.specs.reject do |spec|
+  !expected.any? { |name, _| name == spec.name } && Gem.loaded_specs.fetch(spec.name).default_gem?
+end.map { |gem| [gem.name, gem.version.to_s] }.sort
+abort "external gemset differs from the pinned manifest: missing=#{expected - actual}; extra=#{actual - expected}" unless actual == expected
 expected.each do |name, version|
-  selected = Gem::Specification.find_all_by_name(name).max_by(&:version)
-  abort "a different version would activate for #{name}" unless selected && selected.version == Gem::Version.new(version)
   gem name, "= #{version}"
   abort "pinned #{name} did not activate" unless Gem.loaded_specs.fetch(name).version.to_s == version
 end
-puts "verified exact external gemset: #{actual.length} entries"
+puts "verified exact locked gemset: #{actual.length} entries"
 RUBY
 
 mkdir -p "$runtime/runtime/pi"

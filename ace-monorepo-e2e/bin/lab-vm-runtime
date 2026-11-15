@@ -120,7 +120,12 @@ begin
         export ACE_TOOLCHAIN=installed GEM_HOME=/opt/ace/runtime/bundle/ruby/3.4.0 GEM_PATH=/opt/ace/runtime/bundle/ruby/3.4.0
         export PATH="/opt/ace/runtime/bundle/ruby/3.4.0/bin:/opt/ace/toolchains/ruby-$ruby_version/bin:/usr/bin:/bin"
         ace-herdr native-source verify --artifact /opt/ace/runtime/share/herdr
-        ln -s ../share/herdr/herdr /opt/ace/runtime/bin/herdr
+        if test -L /opt/ace/runtime/bin/herdr; then
+          test "$(readlink /opt/ace/runtime/bin/herdr)" = ../share/herdr/herdr
+        else
+          test ! -e /opt/ace/runtime/bin/herdr
+          ln -s ../share/herdr/herdr /opt/ace/runtime/bin/herdr
+        fi
       SH
       code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", install)
       puts output

@@ -23,10 +23,20 @@ selection=$(find "$GEM_HOME/gems" -path '*/ace-herdr-*/lib/ace/herdr/native_sour
 test -f "$selection"
 printf '%s  %s\n' "$expected_selection" "$selection" | sha256sum -c -
 
-test ! -e "$HOME/herdr-source"
-test ! -e "$HOME/herdr-build"
 expected_artifact=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["herdr"]["artifact_sha256"])' "$manifest")
 expected_provenance=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["herdr"]["provenance_sha256"])' "$manifest")
+# A failed later installation step must not rebuild an already verified artifact.
+if [ -e "$HOME/herdr-build" ] || [ -L "$HOME/herdr-build" ]; then
+  test -d "$HOME/herdr-build" && test ! -L "$HOME/herdr-build"
+  test -f "$HOME/herdr-build/herdr" && test ! -L "$HOME/herdr-build/herdr"
+  test -f "$HOME/herdr-build/provenance.json" && test ! -L "$HOME/herdr-build/provenance.json"
+  printf '%s  %s\n' "$expected_artifact" "$HOME/herdr-build/herdr" | sha256sum -c -
+  printf '%s  %s\n' "$expected_provenance" "$HOME/herdr-build/provenance.json" | sha256sum -c -
+  ace-herdr native-source verify --artifact "$HOME/herdr-build"
+  printf '%s\n' 'Existing verified native Herdr artifact reused.'
+  exit 0
+fi
+test ! -e "$HOME/herdr-source"
 cache="$input/artifacts/herdr-native"
 if [ -e "$cache" ] || [ -L "$cache" ]; then
   test -d "$cache" && test ! -L "$cache"
