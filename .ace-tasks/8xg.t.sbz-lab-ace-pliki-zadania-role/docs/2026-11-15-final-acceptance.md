@@ -73,3 +73,27 @@ Full deterministic monorepo-e2e package:124 tests/577 assertions, zero failures
 or errors; report cc50e683-6623-42ba-acbc-9fcdcf402c3c. Independent review
 review_vm_retention found one recovery edge case, fixed and regression-tested;
 re-review reported no remaining concrete blockers. Live deletion was not tested.
+
+## Published-session smoke — readiness gap found
+
+Sent /reload through ace-herdr to existing w2:p8 and w3:pZ; no replacement
+terminal or VM reset. Published ace-overseer0.31.0 start reuses both but returns
+partial. Project session file is 89,243,486 bytes, above EyesSessionEvidence's
+64MiB MAX_BYTES check. Latest eyes snapshot has all six sources healthy,
+errors0 and pending empty. Long-lived session size therefore prevents readiness
+proof even though observation is live. Lab rejection requires separate diagnosis.
+Do not reset session/history to bypass this product condition; fix bounded
+session evidence reading and regress long-lived sessions before accepting smoke.
+
+Readiness diagnosis continued: native BoundedObservation passed an explicit
+PATH-only default binary and bypassed HerdrExecutor's configured environment.
+Configured start worked but readiness could not locate/bind the same native
+runtime from a plain SSH shell. Fix inherits configured binary and wraps native
+queries with the existing environment builder; ps remains unchanged.
+
+Eyes session reader now streams records and keeps only readiness fields while
+retaining branch validation, process birth/foreground checks and freshness.
+Regression reads a valid session above64MiB and rejects malformed/truncated
+records. Overseer suite:622 tests/2985 assertions,0 failures/errors,1 skipped;
+report9428ba02-443e-47c4-bf70-0b4c2066a561. Independent streaming-reader review
+reported no blockers. Deployment and live proof remain pending.

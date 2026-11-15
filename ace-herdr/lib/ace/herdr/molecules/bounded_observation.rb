@@ -8,7 +8,7 @@ module Ace
       # Read-only native attribution under one absolute deadline, including all
       # ancestry probes. Never renew the budget for another process in the chain.
       class BoundedObservation < HerdrExecutor
-        def initialize(deadline:, binary: DEFAULT_BINARY, process: BoundedProcess)
+        def initialize(deadline:, binary: nil, process: BoundedProcess)
           super(binary: binary, process: process)
           @deadline = deadline
         end
@@ -26,7 +26,7 @@ module Ace
         private
 
         def observe!(argv)
-          result = bounded(argv)
+          result = bounded(native_command(argv))
           execution = ExecutionResult.new(stdout: result.stdout.strip, stderr: result.stderr.strip,
             success: result.status.success?, exit_code: result.status.exitstatus || -1)
           raise classify(execution, argv) unless execution.success?

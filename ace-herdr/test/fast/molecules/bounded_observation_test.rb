@@ -7,6 +7,23 @@ module Ace
   module Herdr
     module Molecules
       class BoundedObservationTest < Minitest::Test
+        def test_native_observation_uses_the_configured_binary_and_socket
+          commands = []
+          runner = Object.new
+          runner.define_singleton_method(:call) do |argv, **_options|
+            commands << argv
+            BoundedProcess::Result.new("{}", "", Struct.new(:success?, :exitstatus).new(true, 0), false)
+          end
+          Ace::Herdr.stub(:config, {"binary" => "/opt/ace/bin/herdr", "socket" => "/tmp/lab.sock", "toolchain" => "installed"}) do
+            probe = BoundedObservation.new(deadline: monotonic + 1, process: runner)
+            probe.pane_get("w1:p1")
+            probe.capture2("ps", "-p", "123")
+          end
+          assert_equal ["env", "HERDR_SOCKET_PATH=/tmp/lab.sock", "ACE_TOOLCHAIN=installed",
+            "/opt/ace/bin/herdr", "pane", "get", "w1:p1"], commands.first
+          assert_equal ["/bin/ps", "-p", "123"], commands.last
+        end
+
         def test_one_budget_covers_native_queries_and_process_ancestry
           budgets = []
           runner = Object.new

@@ -55,6 +55,37 @@ class EyesSessionEvidenceTest < Minitest::Test
     assert ready?
   end
 
+  def test_long_running_session_over_64_mib_keeps_readiness_without_retaining_tool_output
+    File.open(@path, "w") do |file|
+      file.puts(JSON.generate(@records.first))
+      parent = nil
+      65.times do |i|
+        id = "large-#{i}"
+        file.puts(JSON.generate({"id" => id, "parentId" => parent, "type" => "message",
+          "message" => {"role" => "toolResult", "content" => "x" * (1024 * 1024)}}))
+        parent = id
+      end
+      @records[1]["parentId"] = parent
+      @records.drop(1).each { |entry| file.puts(JSON.generate(entry)) }
+    end
+    assert_operator File.size(@path), :>, 64 * 1024 * 1024
+    assert ready?
+    File.open(@path) do |file|
+      _, branch = @reader.send(:branch_for, file, "first")
+      assert_operator JSON.generate(branch).bytesize, :<, 20_000
+    end
+    @executor.processes = []
+    refute ready?
+  end
+
+  def test_rejects_truncated_or_non_object_trailing_records
+    ["null\n", "[]\n", '{"id":"partial"}'].each do |tail|
+      write_session
+      File.open(@path, "a") { |file| file.write(tail) }
+      refute ready?
+    end
+  end
+
   def test_actual_local_process_birth_matches_wake_and_proves_readiness
     skip "exact birth unsupported on this host" unless RUBY_PLATFORM.match?(/linux|darwin/)
     extension = File.expand_path("../../../../ace-wake/handbook/extensions/ace-wake/wake/eyes-runtime.js", __dir__)

@@ -12,7 +12,7 @@ module Ace
       # Reconstruct Pi's current persisted branch and bind its eyes evidence
       # to the live Herdr pane and process, without persisting another copy.
       class EyesSessionEvidence
-        MAX_BYTES = 64 * 1024 * 1024
+        MAX_ENTRY_BYTES = 64 * 1024 * 1024
         MAX_ENTRIES = 200_000
         SESSION_PATH = %r{\A/[^\0]*_([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})\.jsonl\z}
 
@@ -54,12 +54,11 @@ module Ace
           path = before.fetch("path")
           file = @file_opener.call(path)
           stat = file.stat
-          return false unless stat.file? && stat.size.between?(1, MAX_BYTES)
-          content = file.read(MAX_BYTES + 1)
-          return false unless content && content.bytesize == stat.size && content.end_with?("\n")
+          return false unless stat.file? && stat.size.positive?
+          header, branch = branch_for(file, prompt)
           again = file.stat
-          return false unless [stat.dev, stat.ino, stat.size, stat.mtime] == [again.dev, again.ino, again.size, again.mtime]
-          header, branch = branch_for(content)
+          return false unless file.pos == stat.size &&
+            [stat.dev, stat.ino, stat.size, stat.mtime] == [again.dev, again.ino, again.size, again.mtime]
           return false unless header["cwd"] == root && header["id"].to_s.downcase == before.fetch("session_id").downcase
 
           eye = branch.reverse.find { |entry| entry["type"] == "custom" && entry["customType"] == EyesEvidence::ENTRY }
@@ -104,18 +103,51 @@ module Ace
           list.is_a?(Array) && list.any? { |row| row.is_a?(Hash) && row["pid"] == pid }
         end
 
-        def branch_for(content)
-          lines = content.lines
-          raise ArgumentError, "session entry limit" unless lines.size.between?(2, MAX_ENTRIES + 1)
-          header = JSON.parse(lines.shift, create_additions: false, max_nesting: 64, allow_duplicate_key: false)
+        # Bound individual records, not the lifetime of an otherwise healthy
+        # session. Retain only evidence fields; tool output and acknowledged
+        # event maps can dwarf the readiness proof in long-running sessions.
+        def read_entry(file)
+          line = file.gets(MAX_ENTRY_BYTES + 1)
+          return unless line
+          raise ArgumentError, "invalid session record size or terminator" unless
+            line.bytesize <= MAX_ENTRY_BYTES && line.end_with?("\n")
+          entry = JSON.parse(line, create_additions: false, max_nesting: 64, allow_duplicate_key: false)
+          raise ArgumentError, "session record must be an object" unless entry.is_a?(Hash)
+          entry
+        end
+
+        def readiness_entry(entry, prompt)
+          result = entry.slice("id", "parentId", "type", "timestamp", "customType")
+          if entry["type"] == "message" && entry["message"].is_a?(Hash)
+            message = entry["message"]
+            result["message"] = message.slice("role", "stopReason")
+            content = message["content"]
+            matched = content == prompt || content.is_a?(Array) && content.any? do |part|
+              part.is_a?(Hash) && part["type"] == "text" && part["text"] == prompt
+            end
+            result["message"]["content"] = prompt if matched
+          elsif entry["type"] == "custom" && entry["data"].is_a?(Hash)
+            keys = case entry["customType"]
+            when EyesEvidence::BINDING then %w[ownerCwd process]
+            when EyesEvidence::ENTRY then %w[ownerCwd enabled retired breaker errors config observerEvidence]
+            else []
+            end
+            result["data"] = entry["data"].slice(*keys)
+          end
+          result
+        end
+
+        def branch_for(file, prompt)
+          header = read_entry(file)
           raise ArgumentError, "invalid Pi session" unless header.is_a?(Hash) && header["type"] == "session" && header["version"] == 3
           entries = {}
           last = nil
-          lines.each do |line|
-            entry = JSON.parse(line, create_additions: false, max_nesting: 64, allow_duplicate_key: false)
+          while (entry = read_entry(file))
+            raise ArgumentError, "session entry limit" if entries.size >= MAX_ENTRIES
             raise ArgumentError, "invalid session entry" unless entry.is_a?(Hash) && entry["id"].is_a?(String) &&
               !entry["id"].empty? && !entries.key?(entry["id"]) &&
               (entry["parentId"].nil? || entries.key?(entry["parentId"]))
+            entry = readiness_entry(entry, prompt)
             entries[entry["id"]] = entry
             last = entry
           end
