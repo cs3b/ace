@@ -14,7 +14,7 @@ nie bundle'a rozwijanego projektu. Nie resetuje VM, Forgejo, zadań ani sesji.
 
 | Pakiet | RubyGems (sprawdzone API) | Lokalny kandydat użyty w UTM |
 |---|---|---|
-| ace-lab | 0.16.2 | 0.16.2 |
+| ace-lab | 0.16.2 | 0.16.3 (gotowy do wydania) |
 | ace-runtime | 0.4.3 | 0.4.3 |
 | ace-overseer | 0.31.2 | 0.31.2 |
 | ace-herdr | 0.11.3 | ten sam |
@@ -22,9 +22,13 @@ nie bundle'a rozwijanego projektu. Nie resetuje VM, Forgejo, zadań ani sesji.
 Publikacja tych trzech wersji została potwierdzona przez API konkretnych wersji
 RubyGems. Opublikowane pliki mają inne sumy niż wcześniejsze lokalne buildy UTM;
 nie traktujemy przebiegu lokalnych artefaktów jako odbioru identycznych plików.
-**Gotowość upgrade'u nadal wymaga domknięcia błędów `verify`:** kontekstu PATH
-oraz duplikatów w rejestrze projekcji rozszerzeń po aktualizacji. Nie resetuj
-laba i nie reinstaluj całego środowiska w odpowiedzi na te błędy.
+**Upgrade na zachowanej UTM sprawdzony z kandydatem `ace-lab 0.16.3`:**
+`ace-lab verify` uruchomione przez zwykłe SSH zwraca `ready: true`, 69 pass,
+0 fail i 1 unknown (zdalny Git, którego verifier nie odpytuje). Wersja 0.16.3
+naprawia kontekst Ruby/Gem i duplikaty rejestru rozszerzeń. Do upgrade'u starego
+laba użyj jej po publikacji; 0.16.2 nadal zawiera te dwa błędy.
+Nie jest to nowy pełny przebieg autonomii ani odbiór Omarchy. Istniejące procesy
+Pi zachowano; mogą nadal mieć instrukcje wczytane przed aktualizacją.
 
 Źródła kontraktu: [ace-lab](../ace-lab/docs/usage.md),
 [runtime bundle](../ace-lab/docs/runtime-bundle.md),
@@ -116,7 +120,7 @@ gemset:
   gem_home: /opt/ace/runtime/bundle/ruby/3.4.0
   bin_dir: /opt/ace/runtime/bin
   gems:
-    - { name: ace-lab, version: 0.16.2 }
+    - { name: ace-lab, version: 0.16.3 }
     - { name: ace-overseer, version: 0.31.2 }
     - { name: ace-coworker, version: 0.10.0 }
     - { name: ace-hitl, version: 0.27.0 }

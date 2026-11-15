@@ -785,3 +785,14 @@ Resume currently reuses verified staged inputs before native installation; post-
   version update, unchanged retry and repair of an already-duplicated receipt.
 - Status: source correction on codex/lab-upgrade-readiness; not deployed/published.
   SSH diagnostic PATH issue remains separate. Published0.16.2 still has this bug.
+
+
+## 2026-11-15 — Verify now binds its target runtime
+
+Gem subprocesses inherited sparse SSH PATH and role resolution could use auto
+checkout context. Fix at GemsetProvisioner pins interpreter/target paths;
+Verify uses manifest gem_home/bin/ace-nav with cleared Ruby/Bundler injection,
+installed mode and no caller ENV mutation. Missing target launcher fails.
+Independent review: no blockers. Full774tests pass(4skips). Deployed local
+ace-lab0.16.3 in16.990s without reset; public SSH verify69pass/0fail/1unknown.
+Same processes/terminals retained. Readiness no longer requires manual source.

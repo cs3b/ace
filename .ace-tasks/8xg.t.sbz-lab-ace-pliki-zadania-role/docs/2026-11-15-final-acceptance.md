@@ -302,3 +302,22 @@ additional test covering repair of an existing duplicate receipt. No VM files
 or package versions were changed in this diagnosis.
 
 Full ace-lab regression after the receipt fix:772tests/3661assertions,0failures,0errors,4skips; report `.ace-local/test/reports/lab/fb718379-a56a-497e-96ff-1b23068089ff/`. Source correction is not yet deployed or released.
+
+
+## Upgrade readiness restored with ace-lab0.16.3
+
+- Code HEAD:5ce3ec2c77ffaf526ca7bae1b4bdf15dfdffadfb; candidate artifact
+  SHA256:f7fc76858c393d184ada9b33bc73a75db45d855fe47436a670ea29dfe8f8e482.
+- Full lab tests:774/3669,0failures,0errors,4skips; report34c78210-5800-417a-bdf9-d03c3a22120a.
+- Independent reviewer review_verify_context: no blockers in receipt and runtime-context fixes.
+- In-place public install using candidate installer:16.990s; one bundle invocation;
+  backup `/var/tmp/ace-resume-before-20261115T190333`. No VM reset or session restart.
+- Public `/usr/local/bin/ace-lab verify --format json` via ordinary mo SSH,
+  without source or PATH repair:exit0,ready:true,69pass/0fail/1unknown.
+  All six role resolutions, declared gems and ace-wake projection pass.
+  Unknown is the deliberately unprobed remote Git origin.
+- Herdr preserves lab w2:p8/term_660192cde8978f/Pi360517 and project
+  w3:pZ/term_6601943daa71910/Pi363731. Their originally loaded prompt path
+  still names overseer0.31.0.pre.12; this is runtime-upgrade readiness, not a
+  claim that old sessions reloaded their system prompts or a fresh autonomy test.
+- Publication of0.16.3 pending; older production lab was not modified.
