@@ -243,3 +243,15 @@ Paused the stuck model with Esc; delivered one continuation goal for same HITL8y
 Public `work-on --task 8ye.t.hsy --manager 8ye.t.hsx --runtime herdr` completed in11.5s: existing assignment8yehtj bound and started. Native owner independently reports coworker-8yehtj interactive_ready:true, working, cwd `/lab/ace/.ace-wt/ace-t.hsy`, pane w3:p18, terminal term_6604fb194281519. New session01a1df27-5428-7001-b35c-1e559d8c82f8 uses zai/glm-5.3-flash (model_change12:20:59.232Z). Old orphan was retired by the product, no manual binding edit. HITL8yehss still pending, no human answer yet.
 
 At12:23:12UTC the actual Second Captain wrote `Suggestion` on8yehss, author second-captain, proposal A (short result with evidence links), preserving empty Answer and answered:false. Operator independently read the case and presented A/B to the human via HITL bridge. Decision pending; this is not release approval.
+
+## Human decision and automatic completion — 2026-11-15 15:25–15:28 UTC
+
+Captain selected exactly `A — krótki wynik z dowodami`. Delivered to the same8yehss through `ace-hitl reply --stdin` at15:25:20. No manual resume prompt: eyes emitted the case revision at15:25:47.053 (27seconds later). Overseer applied the decision15:26:57 and atomically closed it with accepted lesson15:27:16. Independent public owner reads confirm application.state=closed and manager8ye.t.hsx plus direct child8ye.t.hsx.0 done, still under private `_overseer`.
+
+Report A delivered15:28:06; a subsequent manager-state wake was acknowledged,35 accepted-report duplicates caused no new executor. Final assistant15:28:50.355; eyes snapshot15:28:50.367 healthy, pending empty, six sources healthy. This confirms reply→wake→apply/lesson/close→manager completion on the local candidate.
+
+Compact local evidence: `8yehss-closed.hitl.s.md` and `hitl-decision-applied.json` under `.ace-local/release/acceptance-20261115/`. No VM export or full transcript copy.
+
+Report-quality correction: model initially titled its report acceptance on published packages and positive acceptance without the local-candidate/operator-intervention qualification. Operator provided exact versions and requested correction of report wording only; no test replay or state repair. Whole-program/RubyGems acceptance remains open.
+
+The corrected report A explicitly identifies ace-lab0.16.2/runtime0.4.3/overseer0.31.2 as unpublished local fixes, operator interventions, assisted-run scope, and open release/program acceptance. The agent ended its turn; native terminal view shows eyes pending0. No tasks or test effects were repeated for this documentation correction. Root Git change was an exact safe.directory setting, not a repository ownership change.
