@@ -111,8 +111,8 @@ begin
         install -o root -g root -m 0755 /home/lab-operator/herdr-build/herdr /opt/ace/runtime/share/herdr/herdr
         install -o root -g root -m 0644 /home/lab-operator/herdr-build/provenance.json /opt/ace/runtime/share/herdr/provenance.json
         ruby_version=$(python3 -c 'import json; print(json.load(open("/var/lib/ace-e2e/input/release-manifest.json"))["ruby"])')
-        export ACE_TOOLCHAIN=installed GEM_HOME=/opt/ace/runtime/gems GEM_PATH=/opt/ace/runtime/gems
-        export PATH="/opt/ace/runtime/gems/bin:/opt/ace/toolchains/ruby-$ruby_version/bin:/usr/bin:/bin"
+        export ACE_TOOLCHAIN=installed GEM_HOME=/opt/ace/runtime/bundle/ruby/3.4.0 GEM_PATH=/opt/ace/runtime/bundle/ruby/3.4.0
+        export PATH="/opt/ace/runtime/bundle/ruby/3.4.0/bin:/opt/ace/toolchains/ruby-$ruby_version/bin:/usr/bin:/bin"
         ace-herdr native-source verify --artifact /opt/ace/runtime/share/herdr
         ln -s ../share/herdr/herdr /opt/ace/runtime/bin/herdr
       SH

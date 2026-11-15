@@ -24,14 +24,14 @@ begin
   output = File.join(root, "extensions")
   input = {extensions: [{"gem" => "ace-wake", "path" => output, "account" => "mo"}],
            gems: [{"name" => "ace-wake", "version" => wake.fetch("version")}]}
-  provisioner = Ace::Lab::Molecules::ExtensionProvisioner.new(gem_home: "/opt/ace/runtime/gems")
+  provisioner = Ace::Lab::Molecules::ExtensionProvisioner.new(gem_home: "/opt/ace/runtime/bundle/ruby/3.4.0")
   report = provisioner.call(**input).fetch(0)
   raise "projection failed: #{report['message']}" unless report["status"] == "projected"
   files = report.fetch("files") + [Ace::Lab::Molecules::ExtensionProjection::RECEIPT_NAME]
   Ace::Lab::Molecules::ExtensionProjection.validate_protected_files!(output, files)
   verifier = Ace::Lab::Organisms::Verify.new
   verify = -> { verifier.send(:extension_reason, input.fetch(:extensions).fetch(0), input.fetch(:gems).fetch(0),
-    "/opt/ace/runtime/gems", Etc.getpwnam("mo")) }
+    "/opt/ace/runtime/bundle/ruby/3.4.0", Etc.getpwnam("mo")) }
   raise "protected projection failed verification" unless verify.call.nil?
   executable = File.join(output, "ace-wake", "index.js")
   raise "managed extension is writable by mo" if system("/usr/sbin/runuser", "-u", "mo", "--", "/usr/bin/test", "-w", executable)

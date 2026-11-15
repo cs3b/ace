@@ -51,7 +51,7 @@ begin
     check = <<~SH
       set -eu
       test -x /opt/ace/runtime/bin/herdr
-      test -x /opt/ace/runtime/gems/bin/ace-overseer
+      test -x /opt/ace/runtime/bundle/ruby/3.4.0/bin/ace-overseer
       test -f /var/lib/ace-e2e/runtime-ready.sha256
       test ! -L /var/lib/ace-e2e/runtime-ready.sha256
       test "$(stat -c '%U:%G' /var/lib/ace-e2e/runtime-ready.sha256)" = root:root
@@ -160,7 +160,7 @@ begin
         # Status text is the pinned Herdr build's contract; recheck on bump.
         printf '%s\n' "$integration_status" | grep -q '^pi: current ('
         cd /lab
-        runuser -u mo -- env "PATH=$PATH" GEM_HOME=/opt/ace/runtime/gems GEM_PATH=/opt/ace/runtime/gems ACE_TOOLCHAIN=installed ace-lab resolve --id ace --format json
+        runuser -u mo -- env "PATH=$PATH" GEM_HOME=/opt/ace/runtime/bundle/ruby/3.4.0 GEM_PATH=/opt/ace/runtime/bundle/ruby/3.4.0 ACE_TOOLCHAIN=installed ace-lab resolve --id ace --format json
         test ! -e /lab/ace/.ace/overseer/config.yml
         test "$(stat -c '%U:%G' /lab/ace)" = mo:mo
         rm -f /tmp/ace-e2e-fixture.bundle /home/lab-operator/fixture.bundle

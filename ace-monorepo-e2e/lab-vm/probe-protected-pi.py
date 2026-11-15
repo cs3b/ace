@@ -17,7 +17,7 @@ versions = [gem['version'] for gem in manifest['gems'] if gem['name'] == 'ace-wa
 node_version = manifest['node']['version']
 if len(versions) != 1 or not re.fullmatch(r'[A-Za-z0-9.]+', versions[0]) or not re.fullmatch(r'[0-9.]+', node_version):
     raise SystemExit('invalid pinned runtime versions')
-source = os.path.join('/opt/ace/runtime/gems/gems', 'ace-wake-' + versions[0], 'handbook/extensions/ace-wake')
+source = os.path.join('/opt/ace/runtime/bundle/ruby/3.4.0/gems', 'ace-wake-' + versions[0], 'handbook/extensions/ace-wake')
 integration = '/opt/ace/runtime/pi-agent/extensions/herdr-agent-state.ts'
 if not os.path.isfile(os.path.join(source, 'index.js')) or not os.path.isfile(integration):
     raise SystemExit('required installed extensions are unavailable')

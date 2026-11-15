@@ -8,7 +8,7 @@ import sys
 LIMIT_SECONDS = 45 * 60
 RECONCILE_COMMAND = re.compile(
     r"""(?:cd\s+(?:/lab|"/lab"|'/lab')\s*&&\s*)?"""
-    r"(?:ACE_TOOLCHAIN=installed\s+)?(?:/opt/ace/runtime/gems/bin/)?"
+    r"(?:ACE_TOOLCHAIN=installed\s+)?(?:/opt/ace/runtime/bundle/ruby/3.4.0/bin/)?"
     r"ace-overseer\s+start\s+--reconcile(?:\s+--format\s+(?:json|table))?"
 )
 

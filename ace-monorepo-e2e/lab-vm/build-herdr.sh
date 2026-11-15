@@ -17,8 +17,8 @@ expected_channel=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]
 printf '%s  %s\n' "$expected_rustup" "$input/artifacts/rustup-init" | sha256sum -c -
 printf '%s  %s\n' "$expected_channel" "$input/artifacts/channel-rust-$rust_version.toml" | sha256sum -c -
 
-export GEM_HOME=/opt/ace/runtime/gems GEM_PATH=/opt/ace/runtime/gems ACE_TOOLCHAIN=installed
-export PATH="/opt/ace/runtime/gems/bin:/opt/ace/toolchains/ruby-$ruby_version/bin:/opt/ace/toolchains/zig-aarch64-linux-$zig_version:$HOME/.cargo/bin:/usr/bin:/bin"
+export GEM_HOME=/opt/ace/runtime/bundle/ruby/3.4.0 GEM_PATH=/opt/ace/runtime/bundle/ruby/3.4.0 ACE_TOOLCHAIN=installed
+export PATH="/opt/ace/runtime/bundle/ruby/3.4.0/bin:/opt/ace/toolchains/ruby-$ruby_version/bin:/opt/ace/toolchains/zig-aarch64-linux-$zig_version:$HOME/.cargo/bin:/usr/bin:/bin"
 selection=$(find "$GEM_HOME/gems" -path '*/ace-herdr-*/lib/ace/herdr/native_source/selection.json' -type f)
 test -f "$selection"
 printf '%s  %s\n' "$expected_selection" "$selection" | sha256sum -c -

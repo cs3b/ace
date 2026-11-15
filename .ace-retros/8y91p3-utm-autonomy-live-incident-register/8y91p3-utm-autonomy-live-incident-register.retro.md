@@ -710,3 +710,11 @@ fresh transcripts; all native calls must share the same configuration path.
 Continue repairing in place. Do not call candidate smoke a clean published
 installation. No new model calls were requested during these repairs; provider
 usage and remaining quota were not measured.
+
+## 2026-11-15 — fresh fixture still declared pre-Bundler runtime
+
+Symptom: fresh fixture generated gem_home=/opt/ace/runtime/gems, rejected by the published installer requiring ruby/3.4.0 under the bundle root. Found before guest installation.
+Cause: product moved to a single Bundler runtime, while fresh-VM preparation and its native/projection probes retained old paths.
+Fix: align fixture paths to /opt/ace/runtime/bundle/ruby/3.4.0 and project public entrypoints into /usr/local/bin. Regression executes the actual manifest generator against the real installer with only command execution substituted.
+Validation: 125 tests/582 assertions passed, report 3eeb23ee-3784-4f96-b605-b3bdb15d1e04; independent review found no blockers. Fresh VM E4505D76 was preserved and only provision restarted. Live installation remains pending.
+Remaining fixture drift: profile sourcing and direct native Herdr startup must use product configuration before autonomous acceptance.

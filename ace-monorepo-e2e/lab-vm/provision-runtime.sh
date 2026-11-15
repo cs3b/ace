@@ -97,7 +97,7 @@ if [ ! -x "$runtime/toolchains/zig-aarch64-linux-$zig_version/zig" ]; then
   tar -xJf "$input/artifacts/zig-aarch64-linux-$zig_version.tar.xz" -C "$runtime/toolchains"
 fi
 export PATH="$runtime/toolchains/ruby-$ruby_version/bin:$runtime/toolchains/node-v$node_version-linux-arm64/bin:$PATH"
-export GEM_HOME="$runtime/runtime/gems" GEM_PATH="$runtime/runtime/gems"
+export GEM_HOME="$runtime/runtime/bundle/ruby/3.4.0" GEM_PATH="$runtime/runtime/bundle/ruby/3.4.0"
 mkdir -p "$GEM_HOME" /var/lib/ace-e2e/gem-repository/gems
 
 # Bootstrap only the installer/index closure. Declare every manifest pin in
@@ -130,7 +130,7 @@ ordered_names = json.load(open('/var/lib/ace-e2e/install-gems.json'))
 gems = {g['name']: g for g in d['gems']}
 print('schema_version: 1\nmachine: utm-e2e\naccounts:\n  - username: mo\n    role: worker\n    create: false')
 print('directories:\n  - path: /lab\n    owner: mo\n    mode: "0755"')
-print('gemset:\n  gem_home: /opt/ace/runtime/gems\n  gems:')
+print('gemset:\n  gem_home: /opt/ace/runtime/bundle/ruby/3.4.0\n  bin_dir: /usr/local/bin\n  gems:')
 for name in ordered_names:
     gem = gems[name]
     print('    - name: ' + gem['name'] + '\n      version: ' + gem['version'])
@@ -159,10 +159,10 @@ cp "$input/pi/package.json" "$input/pi/package-lock.json" "$runtime/runtime/pi/"
 cd "$runtime/runtime/pi"
 npm ci --no-audit --no-fund
 cat > /etc/profile.d/ace-e2e.sh <<EOF
-export GEM_HOME=/opt/ace/runtime/gems
-export GEM_PATH=/opt/ace/runtime/gems
+export GEM_HOME=/opt/ace/runtime/bundle/ruby/3.4.0
+export GEM_PATH=/opt/ace/runtime/bundle/ruby/3.4.0
 export ACE_TOOLCHAIN=installed
-export PATH=/opt/ace/runtime/bin:/opt/ace/runtime/gems/bin:/opt/ace/runtime/pi/node_modules/.bin:/opt/ace/toolchains/ruby-$ruby_version/bin:/opt/ace/toolchains/node-v$node_version-linux-arm64/bin:\$PATH
+export PATH=/opt/ace/runtime/bin:/opt/ace/runtime/bundle/ruby/3.4.0/bin:/opt/ace/runtime/pi/node_modules/.bin:/opt/ace/toolchains/ruby-$ruby_version/bin:/opt/ace/toolchains/node-v$node_version-linux-arm64/bin:\$PATH
 EOF
 chown -R root:root "$runtime"
 chmod -R go-w "$runtime"
