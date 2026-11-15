@@ -300,7 +300,8 @@ module Ace
         def runtime_argv(gem_home, argv)
           ["env"] +
             (BUNDLER_ENV_KEYS + ENV.keys.grep(/\ABUNDLER?_/)).uniq.flat_map { |key| ["-u", key] } +
-            ["GEM_HOME=#{gem_home}", "GEM_PATH=#{gem_home}"] + argv
+            ["GEM_HOME=#{gem_home}", "GEM_PATH=#{gem_home}",
+             "PATH=#{[File.dirname(Gem.ruby), File.join(gem_home, "bin"), ENV.fetch("PATH", "")].join(File::PATH_SEPARATOR)}"] + argv
         end
 
         # `gem list <name> --exact --local` prints one `name (v1, v2)`

@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.3] - 2026-11-15
+
 ### Fixed
 
+- Bind readiness probes to the manifest runtime and the running Ruby interpreter, including noninteractive SSH environments without Ruby on PATH. Never resolve role instructions through a project binstub when a runtime is declared.
 - Keep extension projection receipts unique across upgrades and repair previously duplicated entries on reprojection, so unchanged retries converge.
 
 ## [0.16.2] - 2026-11-15

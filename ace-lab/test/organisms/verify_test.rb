@@ -1273,6 +1273,40 @@ class VerifyProbeTest < Minitest::Test
     previous&.each { |key, value| ENV[key] = value }
   end
 
+  def test_target_runtime_nav_ignores_project_binstub_and_sparse_shell_context
+    keys = %w[PATH ACE_TOOLCHAIN BUNDLE_GEMFILE RUBYOPT RUBYLIB]
+    previous = ENV.to_h.slice(*keys)
+    ENV["PATH"] = "/usr/bin:/bin"
+    ENV["ACE_TOOLCHAIN"] = "auto"
+    ENV["BUNDLE_GEMFILE"] = "/untrusted/Gemfile"
+    ENV["RUBYOPT"] = "-r/untrusted/injection.rb"
+    ENV["RUBYLIB"] = "/untrusted/lib"
+    before = ENV.to_h.slice(*keys)
+    Dir.mktmpdir do |dir|
+      home = File.join(dir, "runtime")
+      project = File.join(dir, "project")
+      FileUtils.mkdir_p([File.join(home, "bin"), File.join(project, "bin")])
+      launcher = File.join(home, "bin", "ace-nav")
+      File.write(launcher, "#!/usr/bin/env ruby\nrequire 'json'\nputs JSON.generate(ENV.to_h.slice('ACE_TOOLCHAIN','GEM_HOME','GEM_PATH','RUBYOPT','RUBYLIB','BUNDLE_GEMFILE'))\n")
+      File.chmod(0755, launcher)
+      File.write(File.join(project, "bin", "ace-nav"), "#!/bin/sh\nexit 99\n")
+      File.chmod(0755, File.join(project, "bin", "ace-nav"))
+      verify = Ace::Lab::Organisms::Verify.new
+      verify.instance_variable_set(:@runtime_gem_home, home)
+      selected = verify.send(:nav_binary, project)
+      assert_equal launcher, selected
+      result = verify.send(:run_nav, [selected], project)
+      assert_equal "ok", result["status"], result["err"]
+      assert_equal({"ACE_TOOLCHAIN" => "installed", "GEM_HOME" => home, "GEM_PATH" => home}, JSON.parse(result["out"]))
+      assert_equal before, ENV.to_h.slice(*keys)
+      File.unlink(launcher)
+      assert_raises(Ace::Support::Cli::Toolchain::Error) { verify.send(:nav_binary, project) }
+    end
+  ensure
+    keys&.each { |key| ENV.delete(key) }
+    previous&.each { |key, value| ENV[key] = value }
+  end
+
   def test_auto_mode_nav_subprocess_inherits_project_environment
     require "rbconfig"
     previous = ENV.to_h.slice("ACE_TOOLCHAIN", "BUNDLE_GEMFILE", "RUBYOPT", "RUBYLIB")

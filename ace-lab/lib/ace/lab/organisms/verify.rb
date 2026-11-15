@@ -89,6 +89,7 @@ module Ace
         #   as install/prepare
         def call
           manifest = Molecules::InstallManifestLoader.load(path: manifest_path, platform: platform)
+          @runtime_gem_home = manifest["gemset"]["gems"].empty? ? nil : manifest["gemset"]["gem_home"]
           entries = manifest["accounts"].to_h { |a| [a["username"], @account_lookup.call(a["username"])] }
           executors = target_executors(manifest, entries)
 
@@ -264,6 +265,13 @@ module Ace
         # Match the executor's resolver: installed mode always resolves the
         # installed launcher, and root never executes repository binstubs.
         def nav_binary(project_root)
+          if @runtime_gem_home
+            launcher = File.join(@runtime_gem_home, "bin", "ace-nav")
+            unless File.executable?(launcher)
+              raise Ace::Support::Cli::Toolchain::Error, "target runtime ace-nav launcher unavailable: #{launcher}"
+            end
+            return launcher
+          end
           return Ace::Support::Cli::Toolchain.executable("ace-nav") if Ace::Support::Cli::Toolchain.installed?
 
           binstub = File.join(project_root, "bin", "ace-nav")
@@ -271,8 +279,19 @@ module Ace
           use_binstub ? binstub : "ace-nav"
         end
 
+        def nav_environment
+          return Ace::Support::Cli::Toolchain.child_environment unless @runtime_gem_home
+
+          ENV.keys.grep(/\ABUNDLER?_/).to_h { |key| [key, nil] }.merge(
+            "RUBYOPT" => nil, "RUBYLIB" => nil, "ACE_TOOLCHAIN" => "installed",
+            "GEM_HOME" => @runtime_gem_home, "GEM_PATH" => @runtime_gem_home,
+            "PATH" => [File.dirname(Gem.ruby), File.join(@runtime_gem_home, "bin"),
+                       ENV.fetch("PATH", "")].join(File::PATH_SEPARATOR)
+          )
+        end
+
         def run_nav(argv, cwd)
-          out, err, status = Open3.capture3(Ace::Support::Cli::Toolchain.child_environment, *argv, chdir: cwd)
+          out, err, status = Open3.capture3(nav_environment, *argv, chdir: cwd)
           {"status" => status.success? ? "ok" : (status.exitstatus || "signal #{status.termsig}"),
            "out" => out, "err" => err}
         rescue Errno::ENOENT

@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-lab v0.16.3**: verify the declared runtime from sparse SSH environments and keep extension receipts stable across upgrades.
 - **ace-overseer v0.31.2 / ace-runtime v0.4.3**: recover refused executor launches on their existing assignments after verifying orphan terminal and OS-session retirement.
 - **ace-lab v0.16.2**: use the RubyGems source URI when generating the runtime Gemfile; fresh installs no longer fail with an invalid source address. Normalize shared runtime permissions for unprivileged executors.
 - **ace-overseer v0.31.1 / ace-herdr v0.11.3**: keep long-lived Pi sessions ready without loading their complete history into memory; use configured native Herdr paths and session environments for readiness checks.

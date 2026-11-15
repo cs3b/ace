@@ -43,7 +43,21 @@ module Molecules
     # under: bundler context stripped, GEM_HOME/GEM_PATH pinned.
     def runtime_env(gem_home)
       strip = %w[RUBYOPT RUBYLIB BUNDLER_SETUP BUNDLE_BIN_PATH BUNDLE_GEMFILE BUNDLER_VERSION BUNDLE_BUNDLER_VERSION]
-      ["env", *strip.flat_map { |key| ["-u", key] }, "GEM_HOME=#{gem_home}", "GEM_PATH=#{gem_home}"]
+      ["env", *strip.flat_map { |key| ["-u", key] }, "GEM_HOME=#{gem_home}", "GEM_PATH=#{gem_home}",
+        "PATH=#{[File.dirname(Gem.ruby), File.join(gem_home, "bin"), ENV.fetch("PATH", "")].join(File::PATH_SEPARATOR)}"]
+    end
+
+    def test_real_gem_probe_with_only_system_path
+      previous = ENV["PATH"]
+      ENV["PATH"] = "/usr/bin:/bin"
+      Dir.mktmpdir do |dir|
+        kind, versions = Ace::Lab::Molecules::GemsetProvisioner.new.runtime_versions(
+          name: "ace-no-such-readiness-gem", gem_home: dir)
+        assert_equal :ok, kind, versions.inspect
+        assert_empty versions
+      end
+    ensure
+      ENV["PATH"] = previous
     end
 
     def listing(name, versions)
