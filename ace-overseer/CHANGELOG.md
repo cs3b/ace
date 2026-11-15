@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.1] - 2026-11-15
+
+### Fixed
+
+- Read long-lived Pi sessions incrementally and retain only readiness evidence instead of rejecting histories above 64 MiB.
+
 ## [0.31.0] - 2026-11-12
 
 ### Changed

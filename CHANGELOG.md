@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-overseer v0.31.1 / ace-herdr v0.11.3**: keep long-lived Pi sessions ready without loading their complete history into memory; use configured native Herdr paths and session environments for readiness checks.
 - **ace-overseer v0.31.0**: bind manager roles before dispatch (`--manager <id>`), process exact report receipts (`--report <id>`), automatically arm scoped `eyes` on session start, close completed coordination through state owners, accept `idle`/`done` agent status on session resume, and unwrap `HitlEvent` in advisor pending-decision checks.
 - **ace-overseer v0.30.2**: bind delegated reports to their project, observe worker completions and live replacement sessions, and resume interrupted assignments without repeating completed work. Preserve installed runtime and explicit role environments.
 - **ace-herdr v0.11.1**: preserve child CLI arguments in the native explicit-environment launcher, including Pi session resumption.
