@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-11-15
+
+### Fixed
+
+- Expose positive OS-session process inventory for safe executor retirement; failed probes remain unknown.
+
 ## [0.4.2] - 2026-11-10
 
 ### Fixed

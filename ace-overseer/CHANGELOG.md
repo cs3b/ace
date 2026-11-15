@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.2] - 2026-11-15
+
+### Fixed
+
+- Recover a refused executor launch through the same assignment after closing its exact orphan shell and confirming the OS session ended. Preserve uncertainty and existing session evidence.
+
 ## [0.31.1] - 2026-11-15
 
 ### Fixed

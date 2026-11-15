@@ -20,6 +20,22 @@ module Ace
         end
       end
 
+      def test_session_inventory_distinguishes_empty_session_from_failed_probe
+        executor = Object.new
+        output = "123 123\n456 123\n789 789\n"
+        success = true
+        executor.define_singleton_method(:capture2) { |*args, **kwargs| [output, ProcessTable::Status.new(success)] }
+        observer = Ace::Runtime::Molecules::ProcessIdentity.new(executor: executor)
+        assert_equal [123, 456], observer.session_members(123)
+        assert_equal [], observer.session_members(1000)
+        output = "malformed\n"
+        assert_nil observer.session_members(123)
+        output = ""
+        assert_nil observer.session_members(123)
+        success = false
+        assert_nil observer.session_members(123)
+      end
+
       class ProcessTable
         Status = Struct.new(:ok) { def success? = ok }
         attr_accessor :rows

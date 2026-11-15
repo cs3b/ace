@@ -14,9 +14,11 @@ module Ace::Overseer::Molecules
     def initialize(executor: Ace::Herdr::Molecules::HerdrExecutor.new, env: ENV,
       environment: nil, bindings: Ace::Coworker::Molecules::ExecutionBinding.new,
       brief_factory: nil, readiness: nil, eyes: nil, root_resolver: nil,
+      process_identity: Ace::Runtime::Molecules::ProcessIdentity.new,
       identity_timeout: 10, clock: -> { Process.clock_gettime(Process::CLOCK_MONOTONIC) }, sleeper: ->(seconds) { sleep(seconds) })
       @identity_timeout, @clock, @sleeper = identity_timeout, clock, sleeper
       @executor, @env, @bindings = executor, env, bindings
+      @process_identity = process_identity
       @environment = environment || SessionEnvironment.new(env: env)
       @brief_factory = brief_factory || ->(root, path) { Ace::Coworker::Organisms::StartOrchestrator.new(project_root: root).call(config_path: path) }
       @readiness = readiness || method(:check_eyes!)
@@ -59,10 +61,14 @@ module Ace::Overseer::Molecules
             unless %w[paused empty].include?(brief.assignment_snapshot&.state.to_s)
               raise Ace::Overseer::Error, "unconfirmed executor already has assignment activity"
             end
-            recover_unprompted(execution, worktree_path, save)
-            next submit_prompt(execution, brief, save)
+            if recover_unprompted(execution, worktree_path, save)
+              next submit_prompt(execution, brief, save)
+            end
+            document.delete("execution")
+            save.call
+          else
+            next reuse(execution, brief, worktree_path, save)
           end
-          next reuse(execution, brief, worktree_path, save)
         end
         unless %w[paused empty].include?(brief.assignment_snapshot&.state.to_s)
           raise Ace::Overseer::Error, "unbound assignment is not ready for a new executor"
@@ -185,6 +191,66 @@ module Ace::Overseer::Molecules
       raw = row["agent_session"]
       execution["session_path"] = raw["value"] if raw.is_a?(Hash) && raw["kind"] == "path"
       save.call
+      true
+    rescue Ace::Herdr::AgentNotFoundError
+      retire_unstarted(execution, worktree_path, save)
+      false
+    end
+
+    # A refused launch can leave only an allocated shell. Close that exact
+    # native terminal before retrying the same assignment, so queued input
+    # cannot later start a second worker. Unknown/active evidence stays blocked.
+    def retire_unstarted(execution, worktree_path, save)
+      raise Ace::Overseer::Error, "started executor cannot be discarded" unless execution["state"] == "launching" && !execution["agent_session"]
+      directory = execution["credentials_directory"]
+      unless directory && File.directory?(directory) && !File.symlink?(directory) && Dir.glob(File.join(directory, "sessions", "**", "*.jsonl")).empty?
+        raise Ace::Overseer::Error, "unconfirmed launch has session evidence; inspect before retrying"
+      end
+      target = execution["unstarted_retirement"]
+      unless target
+        tabs = @executor.tab_list.parsed_json&.dig("result", "tabs")
+        panes = @executor.pane_list.parsed_json&.dig("result", "panes")
+        unless tabs.is_a?(Array) && panes.is_a?(Array) && (tabs + panes).all? { |row| row.is_a?(Hash) }
+          raise Ace::Overseer::Error, "unstarted executor inventory is unavailable"
+        end
+        matching_tabs = tabs.select { |row| row["label"] == execution["agent"] }
+        matching = matching_tabs.one? ? panes.select { |row| row["tab_id"] == matching_tabs.first["tab_id"] } : []
+        row = matching.one? && matching.first
+        unless row && row["cwd"] == worktree_path && row["pane_id"] && row["terminal_id"] && !row["agent"] && !row["agent_session"]
+          raise Ace::Overseer::Error, "unstarted executor shell is missing or ambiguous"
+        end
+        target = row.slice("pane_id", "terminal_id")
+        execution["unstarted_retirement"] = target
+        save.call
+      end
+      begin
+        row = pane_identity(target.fetch("pane_id"))
+        info = @executor.pane_process_info(target.fetch("pane_id")).parsed_json&.dig("result", "process_info")
+        unless row["terminal_id"] == target["terminal_id"] && row["cwd"] == worktree_path &&
+            !row["agent"] && !row["agent_session"] && shell_only?(info, target["pane_id"])
+          raise Ace::Overseer::Error, "unstarted executor terminal changed or is active"
+        end
+        identity = @process_identity.capture(info.fetch("shell_pid"))
+        unless identity && (!target["process_identity"] || target["process_identity"] == identity)
+          raise Ace::Overseer::Error, "unstarted executor process identity is unavailable or changed"
+        end
+        members = @process_identity.session_members(info.fetch("shell_pid"))
+        unless members.is_a?(Array) && members.include?(info.fetch("shell_pid"))
+          raise Ace::Overseer::Error, "unstarted executor OS session is unavailable"
+        end
+        target["process_identity"] = identity
+        save.call
+        @executor.pane_close(target.fetch("pane_id"))
+        pane_identity(target.fetch("pane_id"))
+        raise Ace::Overseer::Error, "unstarted executor closure is unconfirmed"
+      rescue Ace::Herdr::PaneNotFoundError
+        # The native owner confirms destruction of the recorded terminal.
+      end
+      unless @process_identity.generation_status(target["process_identity"])["liveness"] == "ended" &&
+          @process_identity.session_members(target.dig("process_identity", "pid")) == []
+        raise Ace::Overseer::Error, "unstarted executor process termination is unconfirmed"
+      end
+      SessionEnvironment.cleanup(directory)
     end
 
     def reuse(execution, brief, worktree_path, save)

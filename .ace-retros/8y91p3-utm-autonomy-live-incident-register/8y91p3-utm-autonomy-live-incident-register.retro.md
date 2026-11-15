@@ -743,3 +743,10 @@ Resume currently reuses verified staged inputs before native installation; post-
 - Native artifact retry now verifies and reuses the existing build, rather than rejecting it solely because its directory exists.
 - Preserved lab: extension files matched ace-wake0.4.0 bytes, but17 projected paths had drifted to mo ownership. Operator restored root ownership after comparing12 source files, then resumed the same HITL goal8yehss. This is an operator intervention, not autonomous acceptance.
 - Further blocker: pre-start extension refusal left launching assignments8yehtj/8yehzl and shell-only panels. Public retry reports agent_not_found. Product recovery pending; no manual success or replacement assignment.
+
+## 2026-11-15 — Recover refused launches without replacing assignments
+
+- Cause: dispatcher allocated a terminal before local extension validation failed. The existing execution receipt remained launching, and retry required an agent that never existed.
+- Fix: existing launcher reconciles a unique assignment-labelled shell with exact cwd and no Pi transcript, records retirement in the same execution binding, closes it, and requires both original process generation ended and OS session empty before restarting the same assignment. Unknown state stays blocked. No separate queue/store or native component update.
+- Review caught a real gap in shell-only termination proof; added whole-session absence check and surviving-child regression. Final independent review has no blocker.
+- Tests: launcher32/220; overseer626/3014 before final session-inventory addition (0failures,1skip), runtime308/1240. Live resumption pending deployment of local runtime0.4.3/overseer0.31.2.

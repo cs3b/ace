@@ -165,6 +165,107 @@ class CoworkerLauncherTest < AceOverseerTestCase
     worker.call(worktree_path: @root, config_path: @path)
   end
 
+  def refused_launch
+    @executor.dead = true
+    @executor.define_singleton_method(:agent_start) do |**values|
+      unless @refused
+        @refused = true
+        raise Ace::Herdr::ExecutorUnavailableError, "extensions unavailable"
+      end
+      super(**values)
+    end
+    @executor.define_singleton_method(:tab_create) do |**values|
+      @closes.clear
+      super(**values)
+    end
+    @executor.define_singleton_method(:pane_get) do |pane|
+      result = super(pane)
+      row = result.parsed_json.dig("result", "pane")
+      row.delete("agent") if dead
+      row.delete("agent_session") if dead
+      result
+    end
+    @executor.define_singleton_method(:tab_list) do
+      Result.new({"result" => {"tabs" => [{"label" => name, "tab_id" => "w1:t1"}]}})
+    end
+    @executor.define_singleton_method(:pane_list) do
+      Result.new({"result" => {"panes" => [pane_get("w1:p1").parsed_json.dig("result", "pane").merge("tab_id" => "w1:t1")]}})
+    end
+    @executor.define_singleton_method(:pane_process_info) do |pane|
+      Result.new({"result" => {"process_info" => {"pane_id" => pane, "shell_pid" => 123,
+        "foreground_process_group_id" => 123, "foreground_processes" => [{"pid" => 123}]}}})
+    end
+    assert_raises(Ace::Overseer::Error) { launch }
+    @retained_directory = @environment.directory
+    identity = Object.new
+    identity.define_singleton_method(:capture) { |_| {"pid" => 123, "started_at" => "birth", "uid" => 1, "host" => "test"} }
+    identity.define_singleton_method(:generation_status) { |_| {"liveness" => "ended"} }
+    executor = @executor
+    identity.define_singleton_method(:session_members) { |_| executor.closes.empty? ? [123] : [] }
+    identity
+  end
+
+  def test_refused_launch_retires_shell_and_retries_same_assignment_once
+    identity = refused_launch
+    result = launch(launcher(process_identity: identity))
+    assert_equal "running", result["state"]
+    assert_equal "assignment-1", result["assignment"]
+    assert_equal 1, @executor.starts.length
+    assert_equal 1, @executor.prompts.length
+    assert launch.fetch("reused")
+    assert_equal 1, @executor.starts.length
+  end
+
+  def test_closed_pane_with_live_process_does_not_restart
+    identity = refused_launch
+    identity.define_singleton_method(:generation_status) { |_| {"liveness" => "live"} }
+    assert_raises(Ace::Overseer::Error) { launch(launcher(process_identity: identity)) }
+    assert_empty @executor.starts
+    assert YAML.safe_load_file(@path).dig("execution", "unstarted_retirement", "process_identity")
+    identity.define_singleton_method(:generation_status) { |_| {"liveness" => "ended"} }
+    assert_equal "running", launch(launcher(process_identity: identity))["state"]
+    assert_equal 1, @executor.starts.length
+  end
+
+  def test_closed_shell_with_surviving_session_child_does_not_restart
+    identity = refused_launch
+    executor = @executor
+    identity.define_singleton_method(:session_members) { |_| executor.closes.empty? ? [123, 456] : [456] }
+    assert_raises(Ace::Overseer::Error) { launch(launcher(process_identity: identity)) }
+    assert_empty @executor.starts
+    assert YAML.safe_load_file(@path).dig("execution", "unstarted_retirement")
+    identity.define_singleton_method(:session_members) { |_| [] }
+    assert_equal "running", launch(launcher(process_identity: identity))["state"]
+  end
+
+  def test_lost_orphan_close_reply_is_reconciled_before_relaunch
+    identity = refused_launch
+    @executor.define_singleton_method(:pane_close) do |pane|
+      super(pane)
+      raise Ace::Herdr::ExecutorTimeoutError, "close reply lost"
+    end
+    assert_raises(Ace::Overseer::Error) { launch(launcher(process_identity: identity)) }
+    assert_empty @executor.starts
+    assert_equal "running", launch(launcher(process_identity: identity))["state"]
+    assert_equal 1, @executor.starts.length
+  end
+
+  def test_unstarted_recovery_rejects_session_evidence_or_ambiguous_panels
+    identity = refused_launch
+    FileUtils.mkdir_p(File.join(@retained_directory, "sessions"))
+    transcript = File.join(@retained_directory, "sessions", "existing.jsonl")
+    File.write(transcript, "{}\n")
+    assert_raises(Ace::Overseer::Error) { launch(launcher(process_identity: identity)) }
+    assert_empty @executor.closes
+    File.unlink(transcript)
+    @executor.define_singleton_method(:tab_list) do
+      Result.new({"result" => {"tabs" => [{"label" => name, "tab_id" => "w1:t1"}, {"label" => name, "tab_id" => "w1:t2"}]}})
+    end
+    assert_raises(Ace::Overseer::Error) { launch(launcher(process_identity: identity)) }
+    assert_empty @executor.starts
+    assert_empty @executor.closes
+  end
+
   def test_dead_worker_resumes_same_assignment_and_transcript_in_same_terminal
     launch
     original_directory = @environment.directory

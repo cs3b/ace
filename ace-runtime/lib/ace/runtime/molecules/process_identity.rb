@@ -43,6 +43,19 @@ module Ace
           nil
         end
 
+        # An empty list is positive evidence that this OS session has ended.
+        # Failed/malformed process inventories remain unknown, never empty.
+        def session_members(session_id)
+          return nil unless session_id.is_a?(Integer) && session_id.positive?
+          output, status = @executor.capture2("ps", "-e", "-o", "pid=,sid=", stdin_data: "")
+          return nil unless status.success? && !output.strip.empty?
+          rows = output.lines.map { |line| line.strip.match(/\A([0-9]+)\s+([0-9]+)\z/) }
+          return nil if rows.any?(&:nil?)
+          rows.filter_map { |row| row[1].to_i if row[2].to_i == session_id }
+        rescue SystemCallError, IOError
+          nil
+        end
+
         def parent_pid(pid)
           output, status = @executor.capture2("ps", "-p", pid.to_s, "-o", "ppid=", stdin_data: "")
           value = output.strip
