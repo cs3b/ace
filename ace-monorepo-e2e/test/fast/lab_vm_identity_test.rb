@@ -179,7 +179,7 @@ class LabVmIdentityTest < AceMonorepoE2eTestCase
     assert_equal [["stop", UUID, "--request"], ["wait", "base"]], operations
   end
 
-  def test_missing_work_is_never_forgotten_without_the_verified_export
+  def test_missing_work_is_never_forgotten_without_a_deletion_receipt
     state = {"work" => @record.merge("phase" => "created")}
     current = {"work" => @record.merge("status" => "missing")}
     LabVm.stub(:evidence_dir, @root) do
@@ -194,10 +194,13 @@ class LabVmIdentityTest < AceMonorepoE2eTestCase
     end
   end
 
-  def test_missing_work_is_recovered_after_a_confirmed_export
+  def test_missing_work_is_recovered_after_a_recorded_deletion_request
     exported = File.join(@root, "#{UUID}.utm")
     FileUtils.cp_r(@package, exported)
-    record = @record.merge("phase" => "exported", "evidence_fingerprint" => LabVm.package_fingerprint(exported))
+    receipt = File.join(@root, "#{UUID}-removal.json")
+    File.write(receipt, JSON.generate(@record))
+    record = @record.merge("phase" => "deletion_requested", "evidence_fingerprint" => LabVm.package_fingerprint(exported),
+      "removal_receipt_sha256" => Digest::SHA256.file(receipt).hexdigest)
     state = {"work" => record}
     current = {"work" => @record.merge("status" => "missing")}
     saved = nil
@@ -227,7 +230,7 @@ class LabVmIdentityTest < AceMonorepoE2eTestCase
         LabVm.stub(:with_utm_export, exporter) do
           LabVm.stub(:export_fingerprint, "old-digest") do
             LabVm.stub(:utm_call, ->(*) { flunk "work was deleted before evidence verification" }) do
-              assert_raises(RuntimeError) { LabVm.remove_vm("work", state, current) }
+              assert_raises(RuntimeError) { LabVm.remove_vm("work", state, current, export_vm: true) }
               assert_equal UUID, state.dig("work", "uuid")
               assert_nil state.dig("work", "phase")
             end
@@ -246,15 +249,85 @@ class LabVmIdentityTest < AceMonorepoE2eTestCase
         LabVm.stub(:save_state, ->(value) { saved << value.fetch("work").dup }) do
           LabVm.stub(:assert_stopped_registration!, ->(*) { raise "registration changed" }) do
             LabVm.stub(:utm_call, ->(*) { flunk "changed registration was deleted" }) do
-              assert_raises(RuntimeError) { LabVm.remove_vm("work", state, current) }
+              assert_raises(RuntimeError) { LabVm.remove_vm("work", state, current, export_vm: true) }
             end
           end
         end
       end
     end
-    assert_equal "exported", saved.fetch(0).fetch("phase")
-    assert_equal "verified", saved.fetch(0).fetch("evidence_fingerprint")
+    assert_empty saved
+    assert_equal "verified", state.fetch("work").fetch("evidence_fingerprint")
+    # Registration failure precedes any recorded deletion intent.
+    assert_nil state.dig("work", "phase")
     assert File.directory?(File.join(@root, "#{UUID}.utm"))
+  end
+
+  def test_default_removal_keeps_only_receipt_and_recovers_interrupted_delete
+    state = {"work" => @record.dup}
+    current = {"work" => @record.merge("status" => "stopped")}
+    operations = []
+    LabVm.stub(:evidence_dir, @root) do
+      LabVm.stub(:with_utm_export, ->(*) { flunk "default removal exported disks" }) do
+        LabVm.stub(:assert_stopped_registration!, true) do
+          LabVm.stub(:save_state, ->(*) {}) do
+            LabVm.stub(:utm_call, ->(*args) { operations << args; raise "interrupted response" }) do
+              assert_raises(RuntimeError) { LabVm.remove_vm("work", state, current) }
+            end
+            assert_equal [["delete", UUID]], operations
+            assert_equal "deletion_requested", state.dig("work", "phase")
+            receipt = File.join(@root, "#{UUID}-removal.json")
+            assert_equal UUID, JSON.parse(File.read(receipt)).dig("vm", "uuid")
+            refute File.exist?(File.join(@root, "#{UUID}.utm"))
+            missing = {"work" => @record.merge("status" => "missing")}
+            error = assert_raises(RuntimeError) { LabVm.remove_vm("work", state, missing, export_vm: true) }
+            assert_includes error.message, "cannot export a missing VM"
+            assert_equal UUID, state.dig("work", "uuid")
+            LabVm.remove_vm("work", state, missing)
+            assert_empty state
+          end
+        end
+      end
+    end
+  end
+
+  def test_repeated_removals_do_not_accumulate_disk_exports
+    LabVm.stub(:evidence_dir, @root) do
+      LabVm.stub(:with_utm_export, ->(*) { flunk "unrequested export" }) do
+        LabVm.stub(:assert_stopped_registration!, true) do
+          LabVm.stub(:save_state, ->(*) {}) do
+            LabVm.stub(:utm_call, ->(*args) { args.first == "list" ? "UUID Status Name\n" : "" }) do
+              3.times do |i|
+                record = @record.merge("uuid" => UUID.sub(/1$/, i.to_s))
+                state = {"work" => record}
+                LabVm.remove_vm("work", state, {"work" => record.merge("status" => "stopped")})
+                assert_empty state
+              end
+            end
+          end
+        end
+      end
+    end
+    assert_equal 3, Dir.glob(File.join(@root, "*-removal.json")).size
+    assert_equal [@package], Dir.glob(File.join(@root, "*.utm"))
+  end
+
+  def test_receipt_failure_preserves_vm
+    File.symlink("/dev/null", File.join(@root, "#{UUID}-removal.json"))
+    LabVm.stub(:evidence_dir, @root) do
+      LabVm.stub(:assert_stopped_registration!, true) do
+        LabVm.stub(:utm_call, ->(*) { flunk "deleted before durable receipt" }) do
+          assert_raises(RuntimeError) do
+            LabVm.remove_vm("work", {"work" => @record}, {"work" => @record.merge("status" => "stopped")})
+          end
+        end
+      end
+    end
+  end
+
+  def test_export_flag_is_rejected_on_non_destructive_commands
+    [%w[status --export-vm], %w[prepare --export-vm], %w[reset --export-vm --export-vm]].each do |args|
+      capture_io { assert_equal 2, LabVm.run(args) }
+    end
   end
 
   def test_reset_rejects_changed_base_before_touching_work

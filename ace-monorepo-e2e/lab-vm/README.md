@@ -17,21 +17,25 @@ ace-monorepo-e2e/bin/lab-vm destroy
 
 The first `prepare` downloads the pinned Debian image and creates and cleans a
 base VM; `reset` creates a working clone. The base contains an SSH operator and
-QEMU guest agent but no ACE or provider credentials. `reset` exports and
-verifies the existing working VM before deleting its registered identity and
-cloning the frozen base; the export is retained locally for diagnostics.
-`--rebuild-base` also exports the prior base. `destroy` removes only registered
-VMs whose UUID and name match the private state file. Before removal, UTM
-exports the stopped VM to a fresh directory under the worktree's private
-evidence path. The helper verifies the exported identity and self-contained
-disks, records the full package fingerprint, then rechecks the stopped
-registration. It retains verified exports. Lifecycle operations hold a
-single-writer lock.
+QEMU guest agent but no ACE or provider credentials. Destructive operations
+retain a small removal receipt (identity, saved state and timestamp) alongside
+existing host reports. They do not archive guest disks by default. Guest-only
+logs, tasks and credentials are discarded with the VM; collect anything needed
+before requesting deletion. A failed test does not automatically delete its VM.
 
-UTM owns the original package path. The helper uses UTM's registered identity
-and verifies the location and contents of the export in the worktree. It
-does not read UTM's protected App Data directory. The first AppleScript
-invocation may still need macOS Automation consent for UTM.
+For a full diagnostic archive, explicitly use `reset --export-vm`,
+`destroy --export-vm` or `prepare --rebuild-base --export-vm`. The helper verifies
+the exported identity and self-contained disks before deleting anything.
+Export or receipt failures preserve the VM. Exports can contain credentials;
+keep them private and remove them when no longer needed.
+
+Deletion checks the saved UUID/name against UTM, confirms stopped state, saves
+a durable deletion intent, then deletes only that registered identity. An
+interrupted deletion can be reconciled from its receipt; an unexpectedly missing
+VM is an error. Lifecycle operations hold a single-writer lock. UTM owns the
+original package location; the helper never deletes packages by guessed paths.
+Base integrity checks still use temporary verified exports, cleaned up after use.
+The first AppleScript invocation may need macOS Automation consent for UTM.
 Provisioning requires at least 25 GiB of free host disk.
 
 `bin/lab-vm-artifacts` downloads the release manifest's public gem, Ruby, Node,

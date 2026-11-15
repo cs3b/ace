@@ -210,33 +210,56 @@ module LabVm
     end
   end
 
-  def self.remove_vm(role, state, current)
+  def self.remove_vm(role, state, current, export_vm: false)
     vm = current[role]
     return unless vm
     record = state.fetch(role)
     evidence = File.join(evidence_dir, "#{record.fetch('uuid')}.utm")
+    receipt = File.join(evidence_dir, "#{record.fetch('uuid')}-removal.json")
     if vm["status"] == "missing"
-      unless record["phase"] == "exported" && File.directory?(evidence) && !File.symlink?(evidence) &&
-          record["evidence_fingerprint"] == export_fingerprint(evidence, record)
-        raise "#{role} VM is missing without a verified export; preserve state and investigate"
+      unless record["phase"] == "deletion_requested" && File.file?(receipt) && !File.symlink?(receipt) &&
+          record["removal_receipt_sha256"] == Digest::SHA256.file(receipt).hexdigest
+        raise "#{role} VM is missing without a recorded deletion request; preserve state and investigate"
+      end
+      raise "cannot export a missing VM" if export_vm && !record["evidence_fingerprint"]
+      if record["evidence_fingerprint"] &&
+          record["evidence_fingerprint"] != export_fingerprint(evidence, record)
+        raise "requested VM export is missing or changed; preserve state and investigate"
       end
     else
+      export_vm ||= !record["evidence_fingerprint"].nil?
       if vm["status"] != "stopped"
         utm_call("stop", vm.fetch("uuid"), "--request")
         wait_stopped(role)
       end
-      with_utm_export(role, record) do |package, digest|
-        raise "evidence destination is a symlink" if File.symlink?(evidence)
-        if File.exist?(evidence)
-          raise "existing evidence differs from the fresh export" unless export_fingerprint(evidence, record) == digest
-        else
-          File.rename(package, evidence)
+      if export_vm
+        with_utm_export(role, record) do |package, digest|
+          raise "evidence destination is a symlink" if File.symlink?(evidence)
+          if File.exist?(evidence)
+            raise "existing evidence differs from the fresh export" unless export_fingerprint(evidence, record) == digest
+          else
+            File.rename(package, evidence)
+          end
+          File.open(evidence_dir, File::RDONLY, &:fsync)
+          record["evidence_fingerprint"] = digest
         end
-        File.open(evidence_dir, File::RDONLY, &:fsync)
-        record["phase"] = "exported"
-        record["evidence_fingerprint"] = digest
-        save_state(state)
       end
+      assert_stopped_registration!(role, record)
+      # Keep a small durable receipt, not another copy of every guest disk.
+      # Existing host run reports remain in place. Guest-only data is discarded
+      # unless the operator explicitly requests --export-vm.
+      Tempfile.create(["removal-", ".json"], evidence_dir) do |file|
+        file.write(JSON.pretty_generate({"role" => role, "vm" => record,
+          "export_vm" => export_vm, "recorded_at" => Time.now.utc.to_s}))
+        file.flush
+        file.fsync
+        raise "removal receipt is a symlink" if File.symlink?(receipt)
+        File.rename(file.path, receipt)
+      end
+      File.open(evidence_dir, File::RDONLY, &:fsync)
+      record["phase"] = "deletion_requested"
+      record["removal_receipt_sha256"] = Digest::SHA256.file(receipt).hexdigest
+      save_state(state)
       assert_stopped_registration!(role, record)
       utm_call("delete", vm.fetch("uuid"))
       if parse_inventory(utm_call("list")).any? { |item| item["uuid"].casecmp?(vm.fetch("uuid")) }
@@ -247,7 +270,7 @@ module LabVm
     save_state(state)
   end
 
-  def self.reset
+  def self.reset(export_vm: false)
     check_free_space!
     state = read_state
     current = status
@@ -257,7 +280,7 @@ module LabVm
     digest = with_utm_export("base", state.fetch("base")) { |_, fingerprint| fingerprint }
     expected = state.dig("base", "fingerprint")
     raise "base VM has changed; rebuild it before reset" unless expected && digest == expected
-    remove_vm("work", state, current)
+    remove_vm("work", state, current, export_vm: export_vm)
 
     name = state["pending_work_name"] || "ace-e2e-work-#{SecureRandom.hex(8)}"
     raise "invalid pending work name" unless name.match?(/\Aace-e2e-work-[a-f0-9]{16}\z/)
@@ -280,12 +303,12 @@ module LabVm
     {"base" => base, "work" => matches.first, "created" => true}
   end
 
-  def self.destroy
+  def self.destroy(export_vm: false)
     state = read_state
     raise "pending VM creation must be reconciled before destruction" if state["pending_base_name"] || state["pending_work_name"]
     current = status
-    remove_vm("work", state, current)
-    remove_vm("base", state, current)
+    remove_vm("work", state, current, export_vm: export_vm)
+    remove_vm("base", state, current, export_vm: export_vm)
     {"destroyed" => true, "evidence_dir" => evidence_dir}
   end
 
@@ -369,6 +392,7 @@ module LabVm
       file.fsync
       File.rename(file.path, STATE)
     end
+    File.open(dir, File::RDONLY, &:fsync)
   end
 
   def self.checked_command(*args)
@@ -595,9 +619,15 @@ module LabVm
 
   def self.run(argv)
     command = argv.shift
-    rebuild = command == "prepare" && argv == ["--rebuild-base"]
-    unless %w[status prepare reset destroy].include?(command) && (argv.empty? || rebuild)
-      warn "Usage: lab-vm status | prepare [--rebuild-base] | reset | destroy"
+    rebuild = command == "prepare" && argv.include?("--rebuild-base")
+    export_vm = argv.include?("--export-vm")
+    allowed = case command
+    when "prepare" then rebuild ? %w[--rebuild-base --export-vm] : []
+    when "reset", "destroy" then %w[--export-vm]
+    when "status" then []
+    end
+    unless allowed && argv.uniq == argv && (argv - allowed).empty?
+      warn "Usage: lab-vm status | prepare [--rebuild-base [--export-vm]] | reset [--export-vm] | destroy [--export-vm]"
       return 2
     end
     output = if command == "status"
@@ -608,7 +638,7 @@ module LabVm
         when "prepare"
           if rebuild
             check_free_space!
-            destroy
+            destroy(export_vm: export_vm)
           end
           begin
             prepare_base
@@ -625,8 +655,8 @@ module LabVm
             end
             raise
           end
-        when "reset" then reset
-        when "destroy" then destroy
+        when "reset" then reset(export_vm: export_vm)
+        when "destroy" then destroy(export_vm: export_vm)
         end
       end
     end
